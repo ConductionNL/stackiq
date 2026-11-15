@@ -13,17 +13,36 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCP\ISession;
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCP\IAppConfig;
+use OCP\ICacheFactory;
+use OCP\IConfig;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for tracking and reporting progress of long-running operations
+ *
+ * Progress lives in Nextcloud's distributed cache, not in the user's session,
+ * so a background job can write it and any other request (another login, an
+ * admin, the request after a cron run) can read it. Without a cache every
+ * server and the CLI share, ProgressStore keeps it in the app config instead.
+ * Who may read an operation is decided by SettingsController::getProgress(),
+ * not by where it is stored.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one step of an
+ * operation's life (start, phase, progress, warning, error, statistics, complete, fail,
+ * cancel, clear a cancel) that an import calls on the same snapshot; splitting them would hand that
+ * snapshot from class to class.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service
@@ -33,7 +52,7 @@ use Psr\Log\LoggerInterface;
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  */
-class ProgressTracker {
+class ProgressTracker implements ProgressTrackerInterface {
 	/**
 	 * Operation phases and their relative weights for progress calculation
 	 */
@@ -47,6 +66,16 @@ class ProgressTracker {
 		'processing_relationships' => ['weight' => 15, 'description' => 'Processing relationships'],
 		'processing_organizations' => ['weight' => 10, 'description' => 'Processing organizations'],
 		'processing_views' => ['weight' => 10, 'description' => 'Processing views'],
+		// The CMDB import's reconciliation of records missing from the source
+		// (openspec/changes/cmdb-import-archive-reconciliation). Weight 0, so the
+		// weighted percentage of the ArchiMate import's phases is unchanged; the
+		// CMDB section computes its own percentage from the item counts.
+		'reconciling' => ['weight' => 0, 'description' => 'Reconciling records missing from the source'],
+		// The organisation sync's own phases (operations-sync-status-and-progress).
+		// Weight 0, like `reconciling`, so the ArchiMate import's weighted
+		// percentage is unchanged; the sync reports its items per phase.
+		'processing_contacts' => ['weight' => 0, 'description' => 'Processing contact persons'],
+		'processing_users' => ['weight' => 0, 'description' => 'Processing users'],
 		'finalizing' => ['weight' => 5, 'description' => 'Finalizing import'],
 		'completed' => ['weight' => 0, 'description' => 'Completed'],
 	];
@@ -74,15 +103,31 @@ class ProgressTracker {
 	];
 
 	/**
+	 * The shared store for progress snapshots and cancel requests.
+	 *
+	 * @var ProgressStore
+	 */
+	private ProgressStore $store;
+
+	/**
 	 * Constructor for ProgressTracker
 	 *
-	 * @param ISession $session The session service for storing progress
+	 * @param ICacheFactory $cacheFactory Cache factory; progress goes into its distributed cache when that is shared
+	 * @param IUserSession $userSession The signed-in user, the default owner of a new operation
 	 * @param LoggerInterface $logger The logger interface
+	 * @param IConfig $config System config, which names the distributed cache class
+	 * @param IAppConfig $appConfig App config, the store when no shared cache is configured
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function __construct(
-		private readonly ISession $session,
+		ICacheFactory $cacheFactory,
+		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		IConfig $config,
+		IAppConfig $appConfig,
 	) {
+		$this->store = new ProgressStore(cacheFactory: $cacheFactory, config: $config, appConfig: $appConfig);
 	}//end __construct()
 
 	/**
@@ -90,19 +135,79 @@ class ProgressTracker {
 	 *
 	 * @param string $operationType Type of operation (import, export)
 	 * @param array $options Operation options and metadata
-	 * @param string|null $ownerUid UID of the user who owns this operation
+	 * @param string|null $ownerUid UID of the user who owns this operation; when null, the
+	 *                              signed-in user of this request, or no owner in a background job
+	 * @param string|null $operationId Id the caller chose, so a page can follow an operation
+	 *                                 whose request has not returned yet; when null, a new id
 	 *
 	 * @return string Unique operation ID
 	 *
-	 * @spec openspec/specs/progress-tracking/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
 	 */
-	public function startOperation(string $operationType, array $options = [], ?string $ownerUid = null): string {
-		$operationId = uniqid(prefix: $operationType . '_', more_entropy: true);
+	public function startOperation(
+		string $operationType,
+		array $options = [],
+		?string $ownerUid = null,
+		?string $operationId = null
+	): string {
+		$operationId = $this->resolveOperationId(operationType: $operationType, operationId: $operationId);
 
 		$this->progress = [
 			'operation_id' => $operationId,
 			'operation_type' => $operationType,
-			'owner_uid' => $ownerUid,
+			'owner_uid' => $this->resolveOwnerUid(ownerUid: $ownerUid),
+		] + $this->freshProgress(options: $options);
+
+		$this->store->removeExpired();
+		$this->saveProgress();
+		$this->store->setCurrent(operationType: $operationType, operationId: $operationId);
+		$this->logStarted();
+
+		return $operationId;
+	}//end startOperation()
+
+	/**
+	 * The caller's operation id, or a new one prefixed with the operation type.
+	 *
+	 * @param string      $operationType Type of operation (import, export).
+	 * @param string|null $operationId   The id the caller chose, or null.
+	 *
+	 * @return string The operation id.
+	 */
+	private function resolveOperationId(string $operationType, ?string $operationId): string {
+		if ($operationId === null) {
+			$operationId = uniqid(prefix: $operationType . '_', more_entropy: true);
+		}
+
+		return $operationId;
+	}//end resolveOperationId()
+
+	/**
+	 * The given owner, or the signed-in user of this request (null in a background job).
+	 *
+	 * @param string|null $ownerUid The owner the caller named, or null.
+	 *
+	 * @return string|null The owner UID.
+	 */
+	private function resolveOwnerUid(?string $ownerUid): ?string {
+		if ($ownerUid === null) {
+			$ownerUid = $this->userSession->getUser()?->getUID();
+		}
+
+		return $ownerUid;
+	}//end resolveOwnerUid()
+
+	/**
+	 * The state of an operation that has just started, after its id, type and owner.
+	 *
+	 * @param array $options Operation options and metadata (`total_items`, `statistics`).
+	 *
+	 * @return array<string, mixed> The progress fields.
+	 */
+	private function freshProgress(array $options): array {
+		return [
+			'status' => 'running',
 			'phase' => 'initializing',
 			'phase_description' => self::PHASES['initializing']['description'],
 			'total_items' => $options['total_items'] ?? 0,
@@ -116,20 +221,23 @@ class ProgressTracker {
 			'warnings' => [],
 			'statistics' => $options['statistics'] ?? [],
 		];
+	}//end freshProgress()
 
-		$this->saveProgress();
-
+	/**
+	 * Log that the current operation started.
+	 *
+	 * @return void
+	 */
+	private function logStarted(): void {
 		$this->logger->info(
 			'Started progress tracking',
 			[
-				'operation_id' => $operationId,
-				'operation_type' => $operationType,
+				'operation_id' => $this->progress['operation_id'],
+				'operation_type' => $this->progress['operation_type'],
 				'total_items' => $this->progress['total_items'],
 			]
 		);
-
-		return $operationId;
-	}//end startOperation()
+	}//end logStarted()
 
 	/**
 	 * Set the current phase of the operation
@@ -298,6 +406,7 @@ class ProgressTracker {
 	public function completeOperation(array $finalStatistics = []): void {
 		$this->progress['phase'] = 'completed';
 		$this->progress['phase_description'] = self::PHASES['completed']['description'];
+		$this->progress['status'] = 'completed';
 		$this->progress['percentage'] = 100;
 		$this->progress['processed_items'] = $this->progress['total_items'];
 		$this->progress['estimated_completion'] = time();
@@ -307,6 +416,7 @@ class ProgressTracker {
 		}
 
 		$this->saveProgress();
+		$this->clearCurrent();
 
 		$this->logger->info(
 			'Operation completed',
@@ -321,24 +431,164 @@ class ProgressTracker {
 	}//end completeOperation()
 
 	/**
+	 * Mark the current operation as failed, keeping the percentage it reached.
+	 *
+	 * A page following the operation then sees it stop as failed rather than
+	 * as running until the snapshot expires, or as completed at 100%.
+	 *
+	 * @param string $message Why the operation failed
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/progress-tracking/spec.md
+	 */
+	public function failOperation(string $message): void {
+		$this->progress['errors'][] = [
+			'message' => $message,
+			'context' => [],
+			'timestamp' => time(),
+		];
+		$this->progress['phase_description'] = 'Failed';
+		$this->progress['status'] = 'failed';
+		$this->progress['estimated_completion'] = time();
+		$this->saveProgress();
+		$this->clearCurrent();
+
+		if ($this->progress['operation_id'] !== null) {
+			$this->store->clearCancel(operationId: $this->progress['operation_id']);
+		}
+
+		$this->logger->error(
+			'Operation failed',
+			[
+				'operation_id' => $this->progress['operation_id'],
+				'message' => $message,
+			]
+		);
+	}//end failOperation()
+
+	/**
+	 * Ask a running operation to stop.
+	 *
+	 * The operation runs in another request, which PHP cannot interrupt, so the
+	 * request is a flag in the shared store that the operation reads between
+	 * its batches.
+	 *
+	 * @param string $operationId The operation to cancel
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function setCancelRequested(string $operationId): void {
+		$this->store->requestCancel(operationId: $operationId);
+	}//end setCancelRequested()
+
+	/**
+	 * Whether a cancel was requested for an operation, from any request.
+	 *
+	 * @param string $operationId The operation to check
+	 *
+	 * @return bool True when a cancel was requested
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function isCancelRequested(string $operationId): bool {
+		return $this->store->isCancelRequested(operationId: $operationId);
+	}//end isCancelRequested()
+
+	/**
+	 * Drop a cancel request for an operation, from any request.
+	 *
+	 * For a caller that reuses an id: a cancel that arrived after the previous
+	 * run's last check would otherwise stop the next run before its first item.
+	 *
+	 * @param string $operationId The operation whose cancel request goes
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	public function clearCancelRequested(string $operationId): void {
+		$this->store->clearCancel(operationId: $operationId);
+	}//end clearCancelRequested()
+
+	/**
+	 * Mark the current operation as stopped on a cancel, keeping the counts it reached.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function cancelOperation(): void {
+		$this->progress['phase'] = 'completed';
+		$this->progress['phase_description'] = 'Cancelled';
+		$this->progress['status'] = 'cancelled';
+		$this->progress['estimated_completion'] = time();
+		$this->saveProgress();
+		$this->clearCurrent();
+
+		if ($this->progress['operation_id'] !== null) {
+			$this->store->clearCancel(operationId: $this->progress['operation_id']);
+		}
+	}//end cancelOperation()
+
+	/**
+	 * The running operation of an operation type, or null when none runs.
+	 *
+	 * A pointer whose operation has ended or expired counts as none, so a run
+	 * that died without completing does not show as running for ever.
+	 *
+	 * @param string $operationType The operation type, e.g. `organisation_sync`.
+	 *
+	 * @return array<string, mixed>|null The running operation's progress.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function getCurrentOperation(string $operationType): ?array {
+		$operationId = $this->store->getCurrent(operationType: $operationType);
+		if ($operationId === null) {
+			return null;
+		}
+
+		$progress = $this->getProgress(operationId: $operationId);
+		if ($progress === null || ($progress['status'] ?? null) !== 'running') {
+			return null;
+		}
+
+		return $progress;
+	}//end getCurrentOperation()
+
+	/**
+	 * Point the current operation's type at no running operation, when it still points at this one.
+	 *
+	 * @return void
+	 */
+	private function clearCurrent(): void {
+		$type = ($this->progress['operation_type'] ?? null);
+		$id   = ($this->progress['operation_id'] ?? null);
+		if (is_string($type) === false || is_string($id) === false) {
+			return;
+		}
+
+		if ($this->store->getCurrent(operationType: $type) === $id) {
+			$this->store->setCurrent(operationType: $type, operationId: null);
+		}
+	}//end clearCurrent()
+
+	/**
 	 * Get current progress state
 	 *
 	 * @param string $operationId Operation ID to get progress for
 	 *
 	 * @return array|null Progress data or null if not found
 	 *
-	 * @spec openspec/specs/progress-tracking/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(?string $operationId = null): ?array {
 		if ($operationId !== null && $operationId !== $this->progress['operation_id']) {
-			// Load progress from session for different operation.
-			$sessionKey = 'progress_' . $operationId;
-			$storedProgress = $this->session->get($sessionKey);
-			if ($storedProgress !== null && $storedProgress !== false) {
-				return $storedProgress;
-			}
-
-			return null;
+			// Load an operation another request or a background job wrote.
+			return $this->store->getProgress(operationId: $operationId);
 		}
 
 		if ($this->progress['operation_id'] !== null) {
@@ -405,19 +655,24 @@ class ProgressTracker {
 	}//end calculateEstimatedCompletion()
 
 	/**
-	 * Save progress to session
+	 * Save progress to the shared store.
+	 *
+	 * Each write renews the entry for ProgressStore::STORE_TTL seconds.
 	 *
 	 * @return void
 	 */
 	private function saveProgress(): void {
 		if ($this->progress['operation_id'] !== null) {
-			$sessionKey = 'progress_' . $this->progress['operation_id'];
-			$this->session->set($sessionKey, $this->progress);
+			$this->store->setProgress(operationId: $this->progress['operation_id'], progress: $this->progress);
 		}
 	}//end saveProgress()
 
 	/**
-	 * Clean up old progress entries from session
+	 * Clean up old progress entries.
+	 *
+	 * Nothing to do: every entry in the shared store expires
+	 * ProgressStore::STORE_TTL seconds after its last write, and app config
+	 * entries are removed when the next operation starts.
 	 *
 	 * @param int $maxAge Maximum age in seconds (default: 1 hour)
 	 *
@@ -425,8 +680,6 @@ class ProgressTracker {
 	 * @spec   openspec/specs/progress-tracking/spec.md
 	 */
 	public function cleanupOldProgress(int $maxAge = 3600): void {
-		// Note: This would need to iterate through session keys to find and clean old progress entries.
-		// Implementation depends on session storage capabilities.
-		$this->logger->debug('Progress cleanup requested', ['max_age' => $maxAge]);
+		$this->logger->debug('Progress cleanup requested; stored entries expire on their own', ['max_age' => $maxAge]);
 	}//end cleanupOldProgress()
 }//end class

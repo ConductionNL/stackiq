@@ -227,4 +227,39 @@ final class MigrateSchemaApplicationIdTest extends TestCase {
 		))->getName());
 
 	}//end testShippedIdsAreWellFormed()
+
+	/**
+	 * When only the old application id cannot be read, the step logs it and does nothing.
+	 *
+	 * @return void
+	 */
+	public function testAFailedReadOfTheOldAppIdIsLoggedAndSkipped(): void {
+		$taken = $this->createMock(IResult::class);
+		$taken->method('fetchAll')->willReturn([['slug' => 'case']]);
+		$calls = 0;
+		$db    = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturnCallback(
+			function () use (&$calls, $taken): IResult {
+				$calls++;
+				if ($calls === 2) {
+					throw new \OCP\DB\Exception('old read failed');
+				}
+
+				return $taken;
+			}
+		);
+		$db->expects(self::never())->method('executeStatement');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'MigrateSchemaApplicationId: could not read schemas on the old application id; skipping.',
+			['exception' => 'old read failed']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('MigrateSchemaApplicationId: no schemas on the old application id; nothing to do.');
+
+		(new MigrateSchemaApplicationId($db, $logger))->run($output);
+	}//end testAFailedReadOfTheOldAppIdIsLoggedAndSkipped()
 }//end class

@@ -1,0 +1,342 @@
+{
+    "ArchiMateService stored json": {
+        "result": {
+            "register_id": "3",
+            "views_schema": "9"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "ArchiMateService default": {
+        "result": [],
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "ArchiMateService malformed json": {
+        "result": {
+            "register_id": "11",
+            "elements_schema": "7"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_register",
+                ""
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_model_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_model_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_elements_schema",
+                ""
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_relationships_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_relationships_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_views_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_views_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_organizations_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_organizations_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_folders_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_folders_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_property_definitions_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_property_definitions_schema"
+                }
+            ]
+        ]
+    },
+    "ArchiMateService read throws": {
+        "result": {
+            "success": false,
+            "error": "config down"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "log.error",
+                "Failed to get AMEF configuration",
+                {
+                    "error": "config down"
+                }
+            ]
+        ]
+    },
+    "ArchiMateImportService stored json": {
+        "result": {
+            "register_id": "3",
+            "views_schema": "9"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "ArchiMateImportService default": {
+        "result": [],
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "ArchiMateImportService malformed json": {
+        "result": {
+            "register_id": "11",
+            "elements_schema": "7"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_register",
+                ""
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_model_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_model_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_elements_schema",
+                ""
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_relationships_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_relationships_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_views_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_views_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_organizations_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_organizations_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_folders_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_folders_schema"
+                }
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_property_definitions_schema",
+                ""
+            ],
+            [
+                "log.warning",
+                "ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string",
+                {
+                    "key": "amef_property_definitions_schema"
+                }
+            ]
+        ]
+    },
+    "ArchiMateImportService read throws": {
+        "result": {
+            "success": false,
+            "error": "config down"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting AMEF configuration",
+                []
+            ],
+            [
+                "config.getValueString",
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "log.error",
+                "Failed to get AMEF configuration",
+                {
+                    "error": "config down"
+                }
+            ]
+        ]
+    }
+}

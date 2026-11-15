@@ -1,0 +1,108 @@
+{
+    "other event": [],
+    "decidiq, other app": [],
+    "decidiq, own": [
+        [
+            "resolveContractForOutcome",
+            [
+                "subject-1",
+                "ext-1",
+                "decision-1"
+            ]
+        ],
+        [
+            "projectOutcome",
+            [
+                "contract-1",
+                "approved"
+            ]
+        ]
+    ],
+    "decidesk, own": [
+        [
+            "resolveContractForOutcome",
+            [
+                "subject-1",
+                "ext-2",
+                "decision-2"
+            ]
+        ],
+        [
+            "projectOutcome",
+            [
+                "contract-1",
+                "rejected"
+            ]
+        ]
+    ],
+    "no subject": [
+        [
+            "resolveContractForOutcome",
+            [
+                "",
+                "ext-1",
+                "decision-1"
+            ]
+        ],
+        [
+            "projectOutcome",
+            [
+                "contract-1",
+                "approved"
+            ]
+        ]
+    ],
+    "no contract resolved": [
+        [
+            "resolveContractForOutcome",
+            [
+                "subject-1",
+                "ext-1",
+                "decision-1"
+            ]
+        ]
+    ],
+    "resolve fails": [
+        [
+            "resolveContractForOutcome",
+            [
+                "subject-1",
+                "ext-2",
+                "decision-2"
+            ]
+        ],
+        [
+            "error",
+            "DecisionConcludedListener: projecting contract outcome failed",
+            {
+                "decisionId": "decision-2",
+                "error": "register down"
+            }
+        ]
+    ],
+    "projection fails": [
+        [
+            "resolveContractForOutcome",
+            [
+                "subject-1",
+                "ext-1",
+                "decision-1"
+            ]
+        ],
+        [
+            "projectOutcome",
+            [
+                "contract-1",
+                "approved"
+            ]
+        ],
+        [
+            "error",
+            "DecisionConcludedListener: projecting contract outcome failed",
+            {
+                "decisionId": "decision-1",
+                "error": "write failed"
+            }
+        ]
+    ]
+}

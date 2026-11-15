@@ -6,8 +6,11 @@ on:
       - main
       - beta
 
+permissions:
+  contents: read
+
 jobs:
-  protect:
+  branch-protection:
     # The callee's `check-branch` job is a single bash comparison of
     # `github.base_ref` against `github.head_ref` — no checkout, no network, no
     # API call. It needs nothing, so it gets nothing. `{}` is an explicit empty

@@ -50,7 +50,8 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.3-unstable.20260912202721</version>
+    <version>0.2.7-unstable.20261020120000</version>
+    <!-- @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Stackiq</namespace>
@@ -91,7 +92,7 @@ Vrij en open source onder de EUPL-licentie.
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
     </dependencies>
 
 	<background-jobs>
@@ -122,6 +123,15 @@ Vrij en open source onder de EUPL-licentie.
 			-->
 			<step>OCA\Stackiq\Repair\MigrateAppConfigKeys</step>
 			<step>OCA\Stackiq\Repair\MigrateUserPreferences</step>
+			<!--
+				WIDGET-ID RESTORE (#1261). Stable 0.1.148 to 0.2.0 and beta shipped the
+				concept organisations widget under the renamed id; restoring the frozen
+				id dropped it from every dashboard that chose it in that window. The
+				Dashboard app keeps that choice in `oc_preferences` under its own app id,
+				so this rewrites the renamed id to the frozen one for every seen user.
+				Upgrade-only: a fresh install has no dashboards to repair.
+			-->
+			<step>OCA\Stackiq\Repair\RepointDashboardWidgetId</step>
 			<!--
 				`oc_jobs` stores the background job's CLASS NAME as a string. The
 				namespace rename orphans all four rows: the class no longer exists,
@@ -221,9 +231,14 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
+			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
@@ -240,6 +255,20 @@ Vrij en open source onder de EUPL-licentie.
 				instead of failing.
 			-->
 			<step>OCA\Stackiq\Repair\RenameDutchCatalogValues</step>
+			<!--
+				Stores the CMDB import's sheet packs in OpenRegister's migration-pack
+				store, where an administrator edits them; the import reads them from
+				there. Creates a missing pack and replaces one nobody edited with this
+				release's shipped pack; an edited pack is kept and reported. Never
+				throws, and does nothing without OpenRegister's store.
+			-->
+			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!--
+				The organisation sync job honours its switch
+				(operations-sync-status-and-progress): warn once where it is off,
+				so nobody wonders why syncs stopped. Changes nothing.
+			-->
+			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -313,7 +342,13 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
+			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
 		</install>
 	</repair-steps>
 
@@ -324,6 +359,14 @@ Vrij en open source onder de EUPL-licentie.
 		     shared `contractNumber`: a wrong cross-app link is worse than an
 		     empty one. -->
 		<command>OCA\Stackiq\Command\ReferencesAuditCommand</command>
+		<!-- Link an organisatie to an existing OpenRegister organisation. The
+		     organisation sync leaves an organisatie unlinked when another
+		     organisation already has its name; only an administrator links them. -->
+		<command>OCA\Stackiq\Command\OrganisationLinkCommand</command>
+		<!-- Back-fill the GEMMA standard links an import before the link fix
+		     saved without. Writes only link properties that differ; a second run
+		     writes nothing. dry-run reports without writing. -->
+		<command>OCA\Stackiq\Command\GemmaStandardLinksCommand</command>
 	</commands>
 
 	<settings>

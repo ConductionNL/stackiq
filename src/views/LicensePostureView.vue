@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="postureView">
 		<div class="pv-header">
@@ -151,6 +155,58 @@
 					</div>
 				</div>
 			</section>
+
+			<!-- Seats: licences in use against licences bought -->
+			<section class="pv-section" data-testid="posture-seats">
+				<h3 class="pv-sectionTitle">
+					{{ t('stackiq', 'Seats') }}
+				</h3>
+				<NcEmptyContent
+					v-if="seatTableRows.length === 0"
+					:name="t('stackiq', 'No licence contracts with counts')" />
+				<table v-else class="pv-table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('stackiq', 'Application') }}</th>
+							<th scope="col">{{ t('stackiq', 'Organisation') }}</th>
+							<th scope="col">{{ t('stackiq', 'Licence metric') }}</th>
+							<th scope="col">
+								{{ t('stackiq', 'Licences bought') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Licences in use') }}
+							</th>
+							<th scope="col">{{ t('stackiq', 'Status') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="row in seatTableRows"
+							:key="row.contractId"
+							:class="{ 'pv-row--over': row.isOver }"
+							data-testid="posture-seat-row">
+							<td>
+								<router-link
+									v-if="row.contractId"
+									:to="{
+										name: 'ContractDetail',
+										params: { id: row.contractId },
+									}">
+									{{ row.applicationName }}
+								</router-link>
+								<template v-else>
+									{{ row.applicationName }}
+								</template>
+							</td>
+							<td>{{ row.organisationName }}</td>
+							<td>{{ row.metricLabel }}</td>
+							<td>{{ row.boughtLabel }}</td>
+							<td>{{ row.inUseLabel }}</td>
+							<td>{{ row.stateLabel }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
 		</template>
 	</div>
 </template>
@@ -162,12 +218,30 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { objectStore } from '../store/store.js'
 import {
-	LICENSE_TYPE,
+	licenceMixCounts,
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
+	SEAT_STATE,
+	seatRows,
 } from '../utils/licensePosture.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { indexByUuid } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
+import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
+
+/**
+ * A record's display name (of its object envelope when it has one), else
+ * the given UUID.
+ *
+ * @param {object} record The record.
+ * @param {string} id Its UUID.
+ * @return {string} The name.
+ * @spec openspec/specs/software-license-posture/spec.md
+ */
+function displayNameOr(record, id) {
+	const data = record.object || record
+	return data.name || data.title || id
+}
 
 /**
  * @class LicensePostureView
@@ -254,22 +328,38 @@ export default {
 		},
 
 		/**
+		 * The Seats section rows, names resolved and labels translated.
+		 *
+		 * @return {Array<object>} One row per counted licence contract, over-licence first.
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
+		 */
+		seatTableRows() {
+			return seatRows(this.contracts, this.usages).map((row) => ({
+				...row,
+				applicationName:
+					this.moduleNameIndex[row.moduleId]
+					|| row.contractNumber
+					|| t('stackiq', 'Contract'),
+				organisationName: this.organisatieIndex[row.consumerId] || '',
+				metricLabel: licenceMetricLabel(row.metric),
+				boughtLabel: row.bought.toLocaleString(),
+				inUseLabel: row.inUse === null ? '' : row.inUse.toLocaleString(),
+				stateLabel: seatStateLabel(row),
+				isOver: row.state === SEAT_STATE.OVER,
+			}))
+		},
+
+		/**
 		 * Organisation UUID → display name.
 		 *
 		 * @return {object} Lookup map.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		organisatieIndex() {
-			const index = {}
-			for (const org of objectStore.getCollection('organization')?.results
-				|| []) {
-				const data = org.object || org
-				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('organization')?.results || [],
+				displayNameOr,
+			)
 		},
 
 		/**
@@ -279,15 +369,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		moduleNameIndex() {
-			const index = {}
-			for (const m of this.modules) {
-				const data = m.object || m
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(this.modules, displayNameOr)
 		},
 
 		/**
@@ -320,23 +402,7 @@ export default {
 		 */
 		vendorRows() {
 			return perVendorRollup(this.modules, this.usages, this.contracts)
-				.map((row) => ({
-					vendorId: row.vendorId,
-					vendorName:
-						this.organisatieIndex[row.vendorId]
-						|| row.vendorId
-						|| t('stackiq', 'Unknown vendor'),
-					deployments: row.deployments,
-					mix: {
-						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
-						closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
-						unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
-					},
-					costLabel:
-						row.annualCost === null
-							? '—'
-							: this.formatCurrency(row.annualCost),
-				}))
+				.map((row) => this.vendorRow(row))
 				.sort((a, b) => b.deployments - a.deployments)
 		},
 
@@ -446,22 +512,50 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
+			await fetchObjectTypeCollection(objectStore, type)
+		},
+
+		/**
+		 * The display name of a vendor, else its id, else a placeholder.
+		 *
+		 * @param {string} vendorId The vendor id.
+		 * @return {string} The name.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorLabel(vendorId) {
+			return (
+				this.organisatieIndex[vendorId]
+				|| vendorId
+				|| t('stackiq', 'Unknown vendor')
+			)
+		},
+
+		/**
+		 * A yearly cost as a currency label, or a dash when unknown.
+		 *
+		 * @param {number|null} annualCost The cost.
+		 * @return {string} The label.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		costText(annualCost) {
+			return annualCost === null ? '—' : this.formatCurrency(annualCost)
+		},
+
+		/**
+		 * One vendor rollup row resolved to its display name, licence mix
+		 * counts and cost label.
+		 *
+		 * @param {object} row The rollup row.
+		 * @return {object} The vendor row.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorRow(row) {
+			return {
+				vendorId: row.vendorId,
+				vendorName: this.vendorLabel(row.vendorId),
+				deployments: row.deployments,
+				mix: licenceMixCounts(row.mix),
+				costLabel: this.costText(row.annualCost),
 			}
 		},
 
@@ -542,6 +636,10 @@ export default {
 .pv-kpiLabel {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
+}
+
+.pv-row--over td {
+	color: var(--color-error-text);
 }
 
 .pv-table {

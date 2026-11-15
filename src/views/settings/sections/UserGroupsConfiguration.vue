@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -30,6 +34,15 @@
 		:hasInfoContent="true"
 		@save="saveAllGroups"
 		@refresh="loadAllGroups">
+		<NcNoteCard
+			v-if="transportUnset"
+			type="warning"
+			data-testid="usergroups-transport-warning">
+			<p>
+				{{ t('stackiq', 'No mail transport is set, so registration, activation and account mails are not sent.') }}
+				<a href="#section-email">{{ t('stackiq', 'Set up the mail transport') }}</a>
+			</p>
+		</NcNoteCard>
 		<StandardTabs
 			:tabs="[
 				{ key: 'generic-groups', title: 'Generic Groups' },
@@ -394,6 +407,7 @@
 
 import { showError, showSuccess } from '@nextcloud/dialogs'
 // Nextcloud Vue components
+import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
@@ -403,6 +417,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import StandardTabs from '../../../components/StandardTabs.vue'
 import { settingsStore } from '../../../store/store.js'
+import { isTransportUnset } from '../../../utils/emailTemplates.js'
 
 // Nextcloud Vue components
 
@@ -452,6 +467,14 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @return {boolean} Whether no mail transport is set, so no mail goes out.
+		 * @spec openspec/changes/mail-template-editor-saves/specs/email-delivery/spec.md#requirement-the-settings-say-when-mail-is-not-being-sent-req-011
+		 */
+		transportUnset() {
+			return isTransportUnset(this.store.emailSettings)
+		},
+
 		// Store-connected computed properties
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -536,6 +559,8 @@ export default {
 	},
 
 	methods: {
+		t,
+
 		/**
 		 * Get description for a group
 		 *

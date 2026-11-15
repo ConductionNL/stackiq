@@ -1,0 +1,1926 @@
+{
+    "aanbod-accept/anonymous": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "aanbod-accept/empty-id": [
+        400,
+        {
+            "success": false,
+            "error": "Aanbod UUID is required",
+            "aanbod": null
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod//accept",
+                    "method": "PUT",
+                    "aanbod_id": ""
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/zero-id": [
+        400,
+        {
+            "success": false,
+            "error": "Aanbod UUID is required",
+            "aanbod": null
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/0/accept",
+                    "method": "PUT",
+                    "aanbod_id": "0"
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-0": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-0-p": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-1": [
+        404,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-1-p": [
+        404,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-2": [
+        500,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-2-p": [
+        500,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-3": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-3-p": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-4": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-4-p": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Accept aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-5": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "aanbod": null
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to accept aanbod object",
+                {
+                    "aanbod_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "aanbod-accept/result-5-p": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "aanbod": null
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Accepting aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/accept",
+                    "method": "PUT",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to accept aanbod object",
+                {
+                    "aanbod_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/anonymous": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "aanbod-deny/empty-id": [
+        400,
+        {
+            "success": false,
+            "error": "Aanbod UUID is required",
+            "deleted": false
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod//deny",
+                    "method": "DELETE",
+                    "aanbod_id": ""
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/zero-id": [
+        400,
+        {
+            "success": false,
+            "error": "Aanbod UUID is required",
+            "deleted": false
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/0/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "0"
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-0": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": true,
+                    "deleted": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-0-p": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": true,
+                    "deleted": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-1": [
+        404,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-1-p": [
+        404,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-2": [
+        500,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-2-p": [
+        500,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-3": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-3-p": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-4": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-4-p": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Deny aanbod request completed",
+                {
+                    "aanbod_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-5": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "deleted": false
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to deny aanbod object",
+                {
+                    "aanbod_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "aanbod-deny/result-5-p": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "deleted": false
+        },
+        [
+            [
+                "abc",
+                {
+                    "gebruikId": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Denying aanbod object",
+                {
+                    "endpoint": "/api/aanbod/abc/deny",
+                    "method": "DELETE",
+                    "aanbod_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to deny aanbod object",
+                {
+                    "aanbod_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/anonymous": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "gebruik-self/empty-id": [
+        400,
+        {
+            "success": false,
+            "error": "Gebruik ID is required",
+            "usage": null
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik//set-self",
+                    "method": "PUT",
+                    "gebruik_id": ""
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/zero-id": [
+        400,
+        {
+            "success": false,
+            "error": "Gebruik ID is required",
+            "usage": null
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/0/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "0"
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-0": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-0-p": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-1": [
+        500,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-1-p": [
+        500,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-2": [
+        404,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-2-p": [
+        404,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-3": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-3-p": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-4": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-4-p": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Set gebruik @self property request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-5": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "usage": null
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to set gebruik @self property",
+                {
+                    "gebruik_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "gebruik-self/result-5-p": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "usage": null
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Setting gebruik @self property to active org",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/set-self",
+                    "method": "PUT",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to set gebruik @self property",
+                {
+                    "gebruik_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/anonymous": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "gebruik-deny/empty-id": [
+        400,
+        {
+            "success": false,
+            "error": "Gebruik ID is required",
+            "deleted": false
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik//deny",
+                    "method": "DELETE",
+                    "gebruik_id": ""
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/zero-id": [
+        400,
+        {
+            "success": false,
+            "error": "Gebruik ID is required",
+            "deleted": false
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/0/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "0"
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-0": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": true,
+                    "deleted": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-0-p": [
+        200,
+        {
+            "success": true,
+            "aanbod": {
+                "id": "x"
+            },
+            "deleted": true
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": true,
+                    "deleted": true,
+                    "status_code": 200
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-1": [
+        500,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-1-p": [
+        500,
+        {
+            "success": false,
+            "error": "Aanbod object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-2": [
+        404,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-2-p": [
+        404,
+        {
+            "success": false,
+            "error": "Gebruik object not found"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 404
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-3": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-3-p": [
+        403,
+        {
+            "success": false,
+            "error": "Operation not allowed: not a party"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 403
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-4": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-4-p": [
+        500,
+        {
+            "success": false,
+            "error": "Something else"
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "info",
+                "API: Delete gebruik as afnemer request completed",
+                {
+                    "gebruik_id": "abc",
+                    "success": false,
+                    "deleted": false,
+                    "status_code": 500
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-5": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "deleted": false
+        },
+        [
+            [
+                "abc",
+                []
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to delete gebruik as afnemer",
+                {
+                    "gebruik_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "gebruik-deny/result-5-p": [
+        500,
+        {
+            "success": false,
+            "error": "Internal server error: service down",
+            "deleted": false
+        },
+        [
+            [
+                "abc",
+                {
+                    "uuid": "abc",
+                    "note": "n",
+                    "0": "z"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Deleting gebruik object as afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/abc/deny",
+                    "method": "DELETE",
+                    "gebruik_id": "abc"
+                }
+            ],
+            [
+                "error",
+                "API: Failed to delete gebruik as afnemer",
+                {
+                    "gebruik_id": "abc",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ]
+}

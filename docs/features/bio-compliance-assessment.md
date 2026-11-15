@@ -120,8 +120,8 @@ PHP notification service):
     { "kind": "object-acl", "permission": "manage" }
   ],
   "subject": {
-    "nl": "DPIA-beoordeling verlopen: {{naam}} (uiterlijk {{dpiaVolgendeBeoordeling}})",
-    "en": "DPIA review overdue: {{naam}} (due {{dpiaVolgendeBeoordeling}})"
+    "nl": "DPIA-beoordeling verlopen: {{name}} (uiterlijk {{dpiaNextAssessment}})",
+    "en": "DPIA review overdue: {{name}} (due {{dpiaNextAssessment}})"
   }
 }
 ```

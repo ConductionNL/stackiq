@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -40,14 +41,14 @@ class ModuleEventProcessor {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container for lazy service resolution.
-	 * @param SettingsService $settings Settings service for schema ID lookup.
+	 * @param RegisterConfigReaderInterface $settings Settings service for schema ID lookup.
 	 * @param LoggerInterface $logger Logger instance.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settings,
+		private readonly RegisterConfigReaderInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

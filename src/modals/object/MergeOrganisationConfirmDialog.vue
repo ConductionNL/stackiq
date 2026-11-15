@@ -122,7 +122,7 @@ export default {
 			default: '',
 		},
 
-		/** Dry-run `counts` object: `{gebruik, contract, contactpersoon, aanbod, compliancy, groupMembers}`. */
+		/** Dry-run `counts` object, keyed as MergeOrganisatieService counts: `{usage, contactPerson, aanbod, module, catalogService, catalogContract, compliancy, moduleOwnership, catalogServiceOwnership, groupMembers}`. */
 		counts: {
 			type: Object,
 			default: () => ({}),
@@ -152,9 +152,13 @@ export default {
 		countRows() {
 			const labels = {
 				usage: t('stackiq', 'Usage records'),
-				contract: t('stackiq', 'Contracts'),
+				catalogContract: t('stackiq', 'Contracts'),
 				contactPerson: t('stackiq', 'Contact persons'),
 				aanbod: t('stackiq', 'Offerings'),
+				module: t('stackiq', 'Applications supplied'),
+				catalogService: t('stackiq', 'Services supplied'),
+				moduleOwnership: t('stackiq', 'Applications managed'),
+				catalogServiceOwnership: t('stackiq', 'Services managed'),
 				compliancy: t('stackiq', 'Compliance records'),
 				groupMembers: t('stackiq', 'Group members'),
 			}

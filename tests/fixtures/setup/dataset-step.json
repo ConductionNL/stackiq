@@ -1,0 +1,200 @@
+{
+    "load, nothing chosen": {
+        "status": 400,
+        "data": {
+            "success": false,
+            "message": "Pick a dataset first."
+        },
+        "calls": []
+    },
+    "load, stored demo": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "Imported 7 demo object(s)."
+        },
+        "calls": [
+            [
+                "install"
+            ],
+            [
+                "setValueString",
+                "demo_dataset",
+                "demo"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "installed"
+            ]
+        ]
+    },
+    "load, stored none": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "No example data was loaded."
+        },
+        "calls": [
+            [
+                "setValueString",
+                "demo_dataset",
+                "none"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "skipped"
+            ]
+        ]
+    },
+    "load, posted demo over stored none": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "Imported 7 demo object(s)."
+        },
+        "calls": [
+            [
+                "install"
+            ],
+            [
+                "setValueString",
+                "demo_dataset",
+                "demo"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "installed"
+            ]
+        ]
+    },
+    "load, posted none": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "No example data was loaded."
+        },
+        "calls": [
+            [
+                "setValueString",
+                "demo_dataset",
+                "none"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "skipped"
+            ]
+        ]
+    },
+    "load, posted unknown": {
+        "status": 400,
+        "data": {
+            "success": false,
+            "message": "No dataset is called \"nope\"."
+        },
+        "calls": []
+    },
+    "load, posted list": {
+        "status": 400,
+        "data": {
+            "success": false,
+            "message": "A dataset is named by a string."
+        },
+        "calls": []
+    },
+    "load, posted number": {
+        "status": 400,
+        "data": {
+            "success": false,
+            "message": "No dataset is called \"5\"."
+        },
+        "calls": []
+    },
+    "load, install fails": {
+        "status": 500,
+        "data": {
+            "success": false,
+            "message": "Could not import the demo data: register missing"
+        },
+        "calls": [
+            [
+                "install"
+            ],
+            [
+                "error",
+                "Setup install-demo-data failed: register missing"
+            ]
+        ]
+    },
+    "legacy install, nothing chosen": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "Imported 7 demo object(s)."
+        },
+        "calls": [
+            [
+                "install"
+            ],
+            [
+                "setValueString",
+                "demo_dataset",
+                "demo"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "installed"
+            ]
+        ]
+    },
+    "legacy install, stored none": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "No example data was loaded."
+        },
+        "calls": [
+            [
+                "setValueString",
+                "demo_dataset",
+                "none"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "skipped"
+            ]
+        ]
+    },
+    "skip": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "message": "No example data was loaded."
+        },
+        "calls": [
+            [
+                "setValueString",
+                "demo_dataset",
+                "none"
+            ],
+            [
+                "setValueString",
+                "demo_data_decided",
+                "skipped"
+            ]
+        ]
+    },
+    "unknown action": {
+        "status": 404,
+        "data": {
+            "success": false,
+            "message": "Unknown setup action: do-something"
+        },
+        "calls": []
+    }
+}
