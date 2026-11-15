@@ -278,14 +278,14 @@ class ConnectionReportCallersTest extends TestCase {
 	 * The hand-built factories pass the reporter by name.
 	 *
 	 * FederationService and EolSyncService are registered with explicit
-	 * factories in Application::register(). The constructor default is null,
+	 * factories in Service\Registration\ServiceFactories. The constructor default is null,
 	 * so a factory that leaves the argument out builds a service that never
 	 * reports, and nothing anywhere says so.
 	 *
 	 * @return void
 	 */
 	public function testTheHandBuiltFactoriesPassTheReporter(): void {
-		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/Service/Registration/ServiceFactories.php');
 
 		foreach (['FederationService', 'EolSyncService'] as $service) {
 			$matched = preg_match(

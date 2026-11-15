@@ -31,6 +31,10 @@ use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\SettingsService;
@@ -114,8 +118,8 @@ class StackiqEventListener implements IEventListener {
 	public function handle(Event $event): void {
 		try {
 			$logger = $this->container->get(LoggerInterface::class);
-			$contactSvc = $this->container->get(ContactpersoonService::class);
-			$settingsService = $this->container->get(SettingsService::class);
+			$contactSvc = $this->container->get(ContactpersoonServiceInterface::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 
 			$logger->info(
 				'Stackiq: Processing event',
@@ -207,13 +211,13 @@ class StackiqEventListener implements IEventListener {
 	 * `int|null` map keeps callers from having to repeat the `(int)` cast and the
 	 * null guard.
 	 *
-	 * @param SettingsService $settingsService The settings service handle.
+	 * @param SettingsServiceInterface $settingsService The settings service handle.
 	 *
 	 * @return array{organization:int|null, contactPerson:int|null, contactgegevens:int|null, usage:int|null}
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
-	private function resolveCatalogSchemaIds(SettingsService $settingsService): array {
+	private function resolveCatalogSchemaIds(SettingsServiceInterface $settingsService): array {
 		$cast = static function ($raw): ?int {
 			if ($raw === null || $raw === '') {
 				return null;
@@ -281,7 +285,7 @@ class StackiqEventListener implements IEventListener {
 	): void {
 		$objectId = $object->getUuid();
 		try {
-			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get(OrganizationSyncServiceInterface::class);
 			$result = $orgSyncService->processSpecificOrganization($object);
 			$logger->info(
 				'Stackiq: Successfully processed organization ' . $phase,
@@ -326,7 +330,7 @@ class StackiqEventListener implements IEventListener {
 	): void {
 		$objectId = $object->getUuid();
 		try {
-			$gebruikSyncService = $this->container->get(GebruikSyncService::class);
+			$gebruikSyncService = $this->container->get(GebruikSyncServiceInterface::class);
 			$result = $gebruikSyncService->processSpecificGebruik($object);
 			$logger->info(
 				'Stackiq: Successfully processed gebruik ' . $phase,
@@ -358,7 +362,7 @@ class StackiqEventListener implements IEventListener {
 	 * lived in the middle of the lifecycle handler.
 	 *
 	 * @param string $objectId The organisation uuid.
-	 * @param SettingsService $settingsService Settings handle for the register/schema lookup.
+	 * @param SettingsServiceInterface $settingsService Settings handle for the register/schema lookup.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @return \OCA\OpenRegister\Db\ObjectEntity|null
@@ -367,7 +371,7 @@ class StackiqEventListener implements IEventListener {
 	 */
 	private function refetchOrganizationWithContactpersonen(
 		string $objectId,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 	): ?\OCA\OpenRegister\Db\ObjectEntity {
 		try {

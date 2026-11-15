@@ -25,10 +25,11 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
-use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -66,16 +67,16 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Settings service for configuration access.
 	 *
-	 * @var SettingsService
+	 * @var RegisterConfigReaderInterface
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Contact person handler for user operations.
 	 *
-	 * @var ContactPersonHandler
+	 * @var ContactPersonHandlerInterface
 	 */
-	private ContactPersonHandler $contactPersonHandler;
+	private ContactPersonHandlerInterface $contactPersonHandler;
 
 	/**
 	 * User manager for user operations.
@@ -115,18 +116,18 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Contactpersoon service for business logic.
 	 *
-	 * @var ContactpersoonService
+	 * @var ContactpersoonServiceInterface
 	 */
-	private ContactpersoonService $contactSvc;
+	private ContactpersoonServiceInterface $contactSvc;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param SettingsService $settingsService Settings service
-	 * @param ContactPersonHandler $contactPersonHandler Contact person handler
-	 * @param ContactpersoonService $contactSvc Contactpersoon service
+	 * @param RegisterConfigReaderInterface $settingsService Settings service
+	 * @param ContactPersonHandlerInterface $contactPersonHandler Contact person handler
+	 * @param ContactpersoonServiceInterface $contactSvc Contactpersoon service
 	 * @param IUserManager $userManager User manager
 	 * @param IGroupManager $groupManager Group manager
 	 * @param IUserSession $userSession User session
@@ -135,16 +136,17 @@ class ContactpersonenController extends Controller {
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
-	 * @param ContactPersonOrganisationGuard $organisationGuard Decides whether the caller may add the contact to its organisation
+	 * @param ContactPersonOrganisationGuardInterface $organisationGuard Decides whether the caller may add the contact to its organisation
+ * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		SettingsService $settingsService,
-		ContactPersonHandler $contactPersonHandler,
-		ContactpersoonService $contactSvc,
+		RegisterConfigReaderInterface $settingsService,
+		ContactPersonHandlerInterface $contactPersonHandler,
+		ContactpersoonServiceInterface $contactSvc,
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IUserSession $userSession,
@@ -152,7 +154,8 @@ class ContactpersonenController extends Controller {
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
-		private readonly ContactPersonOrganisationGuard $organisationGuard,
+		private readonly ContactPersonOrganisationGuardInterface $organisationGuard,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -164,6 +167,26 @@ class ContactpersonenController extends Controller {
 		$this->secureRandom = $secureRandom;
 		$this->logger = $logger;
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Get contactpersonen for an organisation with user status.
@@ -393,6 +416,8 @@ class ContactpersonenController extends Controller {
 	 * method is still longer than it should be and SHOULD be decomposed further (task 5 of
 	 * `method-decomposition` already carved out the permission check); that is a deliberate
 	 * follow-up rather than something to smuggle into a quality-gate-only change.
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function convertToUser(string $contactPersonId): JSONResponse {
 		$authError = $this->validateConvertToUserPermission();
@@ -457,8 +482,9 @@ class ContactpersonenController extends Controller {
 				);
 			}
 
-			// Validate email address before attempting user creation.
-			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+			// Validate email address before attempting user creation. The
+			// linked Nextcloud contact holds it (contactsUid).
+			$email = $this->contactPersonEmailOf(contactData: $contactData);
 			$emailError = $this->contactPersonHandler->validateEmailForUsername($email);
 			if ($emailError !== null) {
 				return new JSONResponse(
@@ -1382,6 +1408,8 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function disableUser(string $contactPersonId): JSONResponse {
 		$refusal = $this->validateConvertToUserPermission();
@@ -1435,6 +1463,8 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function enableUser(string $contactPersonId): JSONResponse {
 		$refusal = $this->validateConvertToUserPermission();

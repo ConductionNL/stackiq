@@ -140,7 +140,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "settings.initialize"
@@ -239,7 +239,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "settings.initialize"
@@ -370,7 +370,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "settings.initialize"
@@ -490,7 +490,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "settings.initialize"

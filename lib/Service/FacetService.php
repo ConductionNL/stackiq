@@ -28,6 +28,8 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserSession;
@@ -62,7 +64,7 @@ use RuntimeException;
  * deliberate follow-up; splitting it is a behaviour-affecting refactor and is out of scope for a
  * quality-gate-only change.
  */
-class FacetService {
+class FacetService implements FacetServiceInterface {
 
 	/**
 	 * Distributed cache for facet responses.
@@ -102,13 +104,6 @@ class FacetService {
 	private const SUPPORTED_SCHEMAS = ['module', 'catalogService'];
 
 	/**
-	 * GEMMA dimensions always present in the response (even when empty).
-	 *
-	 * @var string[]
-	 */
-	private const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain'];
-
-	/**
 	 * The element property the domain dimension reads: the register's
 	 * `element` schema declares it as `domein`, and the GEMMA import stores
 	 * the "Domein" property under that lower-cased name.
@@ -121,7 +116,7 @@ class FacetService {
 	 * Constructor for FacetService.
 	 *
 	 * @param ContainerInterface $container PSR-11 container interface (for lazy ObjectService lookup).
-	 * @param SettingsService $settingsService Settings service for voorzieningen register/schema configuration.
+	 * @param CatalogueLocator $catalogue The voorzieningen register/schema configuration.
 	 * @param ArchiMateService $archiMateService Reused for bounded `element`/`relationship` lookups
 	 *                                           (domain/applicationService resolution) instead of
 	 *                                           duplicating AMEF register/schema resolution logic.
@@ -132,7 +127,7 @@ class FacetService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly ArchiMateService $archiMateService,
 		private readonly ViewQueryBuilder $queryBuilder,
 		private readonly IUserSession $userSession,
@@ -261,9 +256,20 @@ class FacetService {
 
 		$dimValsByObjId = $this->buildDimensionValueMap(modulesByObjectId: $modulesByObjectId);
 
+		// Supplier (insight-supplier-facet D3): the base object's OWN provider,
+		// for a service too, keyed by organisation id and labelled by name (D2).
+		$supplierIds = [];
+		foreach ($baseObjects as $object) {
+			$objectId = $this->objectIdentifier(object: $object);
+			$ids = self::relatedIdentifier(value: ($object['provider'] ?? null));
+			$dimValsByObjId[$objectId]['supplier'] = $ids;
+			$supplierIds = array_merge($supplierIds, $ids);
+		}
+
 		$facets = $this->computeFacets(
 			dimValsByObjId: $dimValsByObjId,
-			selectedFilters: $request['filters']
+			selectedFilters: $request['filters'],
+			labels: ['supplier' => $this->organisationNames(objectService: $objectService, identifiers: array_values(array_unique($supplierIds)))]
 		);
 
 		$matchedObjectIds = $this->filterObjectIds(
@@ -352,12 +358,19 @@ class FacetService {
 	 * @param array<string,string[]> $filters Normalized filters.
 	 * @param string|null $search Free-text query.
 	 * @param string|null $organization Organisation override.
+	 * @param array $dimensions The facet dimension set the answer covers.
 	 *
 	 * @return string Cache key.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-results-are-cached
 	 */
-	private function buildCacheKey(string $schema, array $filters, ?string $search, ?string $organization): string {
+	private function buildCacheKey(
+		string $schema,
+		array $filters,
+		?string $search,
+		?string $organization,
+		array $dimensions = self::DIMENSIONS,
+	): string {
 		$user = $this->userSession->getUser();
 
 		$userId = 'anonymous';
@@ -376,6 +389,9 @@ class FacetService {
 			'search' => $search,
 			'organization' => $organization ?? $this->getCurrentOrganisation(),
 			'user' => $userId,
+			// The dimension set: an answer cached before a dimension was added
+			// (insight-supplier-facet) is not served after it.
+			'dimensions' => $dimensions,
 		];
 
 		return 'facets_' . md5(json_encode($keyData));
@@ -446,18 +462,18 @@ class FacetService {
 	 * @return array{register: mixed, schema: mixed}|null
 	 */
 	private function configuredRegisterSchema(string $schema): ?array {
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		// NOT `$schema . '_schema'`: the slugs are English now and the stored
 		// config keys are still Dutch, so the derived key would miss and this
 		// method would log "not configured" and return an empty facet set —
 		// which renders as a page with no filters rather than as an error.
 		//
-		// Read as a CONSTANT rather than through SettingsService: this class
+		// Read as a CONSTANT rather than through CatalogueLocator: this class
 		// takes that service as a collaborator and every test mocks it, so a
 		// method call here returns the mock's default and the lookup misses in
 		// exactly the tests meant to catch that.
-		$schemaKey = (SettingsService::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
+		$schemaKey = (CatalogueLocator::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
 		$schemaId = ($voorzieningenConfig[$schemaKey] ?? null);
 
 		if (empty($registerId) === true || empty($schemaId) === true) {
@@ -650,7 +666,7 @@ class FacetService {
 			return [];
 		}
 
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		$schemaId = $voorzieningenConfig['module_schema'] ?? null;
 
@@ -964,12 +980,14 @@ class FacetService {
 	 *
 	 * @param array $dimValsByObjId Object id => dimension => values.
 	 * @param array $selectedFilters Normalized selected filters.
+	 * @param array<string, array<string, string>> $labels Per dimension, the label of a value (the supplier's name
+	 *                                                     by its id); a value without one is its own label.
 	 *
 	 * @return array<string,array<int,array{value:string,label:string,count:int}>>
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 	 */
-	private function computeFacets(array $dimValsByObjId, array $selectedFilters): array {
+	private function computeFacets(array $dimValsByObjId, array $selectedFilters, array $labels = []): array {
 		$facets = [];
 
 		foreach (self::DIMENSIONS as $dimension) {
@@ -991,9 +1009,10 @@ class FacetService {
 
 			$bucket = [];
 			foreach ($counts as $value => $count) {
+				$value = (string)$value;
 				$bucket[] = [
 					'value' => $value,
-					'label' => $value,
+					'label' => ($labels[$dimension][$value] ?? $value),
 					'count' => $count,
 				];
 			}
@@ -1045,6 +1064,85 @@ class FacetService {
 
 		return $matched;
 	}//end filterObjectIds()
+
+	/**
+	 * The identifier of a single related object: a uuid string, or an object
+	 * carrying `id` (or `@self.id`). An empty relation (`{}` or null) gives
+	 * none. Unlike {@see self::extractRelatedIdentifiers()} this never reads
+	 * the fields of a related object as a list of identifiers.
+	 *
+	 * @param mixed $value The relation value.
+	 *
+	 * @return list<string> Zero or one identifier.
+	 *
+	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 */
+	private static function relatedIdentifier(mixed $value): array {
+		if (is_string($value) === true && trim($value) !== '') {
+			return [trim($value)];
+		}
+
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$id = ($value['id'] ?? $value['@self']['id'] ?? null);
+		if ((is_string($id) === true && $id !== '') || is_int($id) === true) {
+			return [(string)$id];
+		}
+
+		return [];
+	}//end relatedIdentifier()
+
+	/**
+	 * The names of the organisations, by id, from one bounded read on the
+	 * configured organisation schema (insight-supplier-facet D2). An
+	 * organisation without a name, or one the read did not return, is
+	 * labelled by its id.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param list<string>           $identifiers   The organisation ids.
+	 *
+	 * @return array<string, string> Name by id.
+	 *
+	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 */
+	private function organisationNames(ObjectServiceInterface $objectService, array $identifiers): array {
+		$names = array_combine($identifiers, $identifiers);
+		$config = $this->catalogue->getVoorzieningenConfig();
+		$registerId = ($config['register'] ?? null);
+		$schemaId = ($config['organisatie_schema'] ?? null);
+		if ($identifiers === [] || empty($registerId) === true || empty($schemaId) === true) {
+			return $names;
+		}
+
+		try {
+			$results = $objectService->searchObjects(
+				[
+					'@self' => ['register' => (int)$registerId, 'schema' => (int)$schemaId],
+					'id' => $identifiers,
+					'_limit' => self::ELEMENT_LOOKUP_LIMIT,
+				]
+			);
+		} catch (\Exception $e) {
+			$this->logger->warning(message: 'FacetService: failed to read supplier names', context: ['error' => $e->getMessage()]);
+			return $names;
+		}
+
+		if (is_array($results) === false) {
+			return $names;
+		}
+
+		foreach ($results as $entry) {
+			$organisation = $this->normalizeObject(object: $entry);
+			$id = $this->objectIdentifier(object: $organisation);
+			if (isset($names[$id]) === true) {
+				$names[$id] = $this->elementDisplayName(element: $organisation, fallbackIdentifier: $id);
+			}
+		}
+
+		return $names;
+	}//end organisationNames()
 
 	/**
 	 * Extract related-object identifiers from an array/relation field, tolerant

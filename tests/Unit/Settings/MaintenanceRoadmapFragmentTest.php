@@ -22,6 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Settings;
 
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -187,13 +190,21 @@ class MaintenanceRoadmapFragmentTest extends TestCase {
 		$container->method('get')->willThrowException(new \Exception('not resolvable in a unit context'));
 
 		$settings = new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $container,
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $container,
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 
 		$this->assertSame(42, $settings->getSchemaIdForObjectType('maintenanceWindow'));

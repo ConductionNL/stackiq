@@ -32,6 +32,7 @@ namespace OCA\Stackiq\BackgroundJob;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionPublicationServiceInterface;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -64,7 +65,7 @@ class ModuleVersionPublicationJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory                    $time            The time factory.
-	 * @param ModuleVersionPublicationService $publication     The mirror.
+	 * @param ModuleVersionPublicationServiceInterface $publication     The mirror.
 	 * @param ObjectTypeLocatorInterface      $settingsService Resolves the module register and schema.
 	 * @param ContainerInterface              $container       Resolves OpenRegister's object service.
 	 * @param LoggerInterface                 $logger          The logger.
@@ -72,7 +73,7 @@ class ModuleVersionPublicationJob extends QueuedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly ModuleVersionPublicationService $publication,
+		private readonly ModuleVersionPublicationServiceInterface $publication,
 		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,

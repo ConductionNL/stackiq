@@ -26,6 +26,8 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -63,7 +65,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/organization-sync/spec.md#requirement-the-system-shall-process-individual-organisationcontact-records-and-ensure-their-openregister-entity-req-002
  */
-class OrganizationSyncService {
+class OrganizationSyncService implements OrganizationSyncServiceInterface {
 
 	/**
 	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.
@@ -101,9 +103,9 @@ class OrganizationSyncService {
 	/**
 	 * Settings service instance
 	 *
-	 * @var SettingsService The settings service for configuration
+	 * @var RegisterConfigReaderInterface The settings service for configuration
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Logger instance
@@ -127,7 +129,7 @@ class OrganizationSyncService {
 	 * @param SymfonyEmailService $emailService The email service.
 	 * @param IAppConfig $config The configuration service.
 	 * @param LoggerInterface $logger The logger instance.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param RegisterConfigReaderInterface $settingsService The settings service.
 	 * @param IDBConnection $db The database connection.
 	 * @param ContactPersonHandler $contactpersonHandler The contact person handler.
 	 * @param ContainerInterface $container The DI container.
@@ -153,7 +155,7 @@ class OrganizationSyncService {
 		SymfonyEmailService $emailService,
 		IAppConfig $config,
 		LoggerInterface $logger,
-		SettingsService $settingsService,
+		RegisterConfigReaderInterface $settingsService,
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,
@@ -2457,15 +2459,34 @@ class OrganizationSyncService {
 	}//end formatNumber()
 
 	/**
-	 * Records the last sync time
+	 * Records the last sync time, and the record of the run when one is given
+	 *
+	 * @param array<string, mixed>|null $result The run's record (SyncProgress::lastResult()), or null.
 	 *
 	 * @return void
 	 * @spec   openspec/specs/organization-sync/spec.md
+	 * @spec   openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
-	public function recordSyncTime(): void {
+	public function recordSyncTime(?array $result = null): void {
 		$this->config->setValueString('stackiq', 'last_sync_time', date('Y-m-d H:i:s'));
+		if ($result !== null) {
+			$this->recordSyncResult(result: $result);
+		}
 
 	}//end recordSyncTime()
+
+	/**
+	 * Keep the record of the last run in app config `last_sync_result`, next to `last_sync_time`.
+	 *
+	 * @param array<string, mixed> $result The run's record.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 */
+	private function recordSyncResult(array $result): void {
+		$this->config->setValueArray('stackiq', 'last_sync_result', $result);
+
+	}//end recordSyncResult()
 
 	/**
 	 * Process a specific organization object (called from event listener)
@@ -4029,13 +4050,17 @@ class OrganizationSyncService {
 			]
 		);
 
+		$progress = SyncProgress::start(container: $this->container, trigger: 'manual');
+
 		for ($round = 1; $round <= $maxRounds; $round++) {
 			$roundStartTime = time();
 
 			// Process organizations batch.
+			$progress->phase(phase: 'processing_organizations', statistics: $allResults);
 			$orgResults = $this->performOrganizationsSync(batchSize: $batchSize, maxExecutionSeconds: 45);
 
 			// Process contacts batch.
+			$progress->phase(phase: 'processing_contacts', statistics: $allResults);
 			$contactResults = $this->performContactSync(batchSize: $batchSize, maxExecutionSeconds: 15);
 
 			// Accumulate results.
@@ -4075,8 +4100,10 @@ class OrganizationSyncService {
 		}//end for
 
 		// Final user sync.
+		$progress->phase(phase: 'processing_users', statistics: $allResults);
 		$this->performUserSync();
-		$this->recordSyncTime();
+		$this->recordSyncTime(result: $progress->lastResult(results: $allResults));
+		$progress->complete(results: $allResults);
 
 		$allResults['totalExecutionTime'] = (time() - $totalStartTime);
 		$allResults['endTime'] = date('Y-m-d H:i:s');
@@ -4114,6 +4141,8 @@ class OrganizationSyncService {
 			]
 		);
 
+		$progress = SyncProgress::start(container: $this->container, trigger: 'scheduled');
+
 		try {
 			// Perform optimized batch synchronization.
 			// Use smaller batches for scheduled sync to ensure it completes within time limits.
@@ -4125,14 +4154,18 @@ class OrganizationSyncService {
 			// 30 seconds max for organizations.
 			$maxContactTime = 15;
 			// 15 seconds max for contacts.
+			$progress->phase(phase: 'processing_organizations');
 			$syncResults = $this->performOrganizationsSync(batchSize: $orgBatchSize, maxExecutionSeconds: $maxOrgTime);
 
+			$progress->phase(phase: 'processing_contacts', statistics: $syncResults);
 			$contactResults = $this->performContactSync(batchSize: $contactBatchSize, maxExecutionSeconds: $maxContactTime);
 			$syncResults = array_merge($contactResults, $syncResults);
 
+			$progress->phase(phase: 'processing_users', statistics: $syncResults);
 			$this->performUserSync();
-			// Record the sync time.
-			$this->recordSyncTime();
+			// Record the sync time and the record of this run.
+			$this->recordSyncTime(result: $progress->lastResult(results: $syncResults));
+			$progress->complete(results: $syncResults);
 
 			// Log summary results.
 			$this->logger->info(
@@ -4169,7 +4202,7 @@ class OrganizationSyncService {
 				]
 			);
 
-			return [
+			$failed = [
 				'organizationsProcessed' => 0,
 				'entitiesCreated' => 0,
 				'entitiesUpdated' => 0,
@@ -4181,6 +4214,10 @@ class OrganizationSyncService {
 				'endTime' => date('Y-m-d H:i:s'),
 				'duration' => '00:00:00',
 			];
+			$this->recordSyncResult(result: $progress->lastResult(results: $failed));
+			$progress->fail(message: $e->getMessage());
+
+			return $failed;
 		}//end try
 
 	}//end performScheduledSync()
@@ -4212,15 +4249,21 @@ class OrganizationSyncService {
 			]
 		);
 
+		$progress = SyncProgress::start(container: $this->container, trigger: 'manual');
+
 		try {
+			$progress->phase(phase: 'processing_organizations');
 			$syncResults = $this->performOrganizationsSync();
 
+			$progress->phase(phase: 'processing_contacts', statistics: $syncResults);
 			$syncResults = array_merge($this->performContactSync(), $syncResults);
 
+			$progress->phase(phase: 'processing_users', statistics: $syncResults);
 			$this->performUserSync();
 
 			// Record the sync time for consistency with scheduled sync.
-			$this->recordSyncTime();
+			$this->recordSyncTime(result: $progress->lastResult(results: $syncResults));
+			$progress->complete(results: $syncResults);
 
 			$this->logger->info(
 				'OrganizationSyncService: Manual organization synchronization completed via API',
@@ -4239,6 +4282,7 @@ class OrganizationSyncService {
 				'message' => 'Synchronization completed successfully',
 			];
 		} catch (\Exception $e) {
+			$progress->fail(message: $e->getMessage());
 			$this->logger->error(
 				'OrganizationSyncService: Manual organization synchronization failed via API',
 				[

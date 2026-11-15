@@ -23,7 +23,7 @@
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\GebruikService;
+use OCA\Stackiq\Kernel\Contracts\GebruikServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -59,7 +59,7 @@ class GebruikController extends Controller {
 	 * @param IUserSession $userSession The user session service
 	 * @param IGroupManager $groupManager The group manager service
 	 * @param IConfig $config The configuration service
-	 * @param GebruikService $gebruikService The gebruik service
+	 * @param GebruikServiceInterface $gebruikService The gebruik service
 	 */
 	public function __construct(
 		string $appName,
@@ -67,7 +67,7 @@ class GebruikController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly IConfig $config,
-		private readonly GebruikService $gebruikService,
+		private readonly GebruikServiceInterface $gebruikService,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()

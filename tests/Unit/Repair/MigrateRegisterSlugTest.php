@@ -40,6 +40,7 @@ use ReflectionClass;
  *
  * @covers \OCA\Stackiq\Repair\MigrateRegisterSlug
  * @covers \OCA\Stackiq\Repair\MigrateRegisterSlugDecisions
+ * @uses \OCA\Stackiq\Repair\SlugRenamePlanner
  *
  * @spec exclude No canonical spec covers the `voorzieningen` -> `stackiq`
  *  register-slug migration. Pointing this at an existing spec would report

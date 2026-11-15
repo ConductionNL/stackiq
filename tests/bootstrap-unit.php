@@ -42,6 +42,14 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
+// stackiq calls find() and findSilent() with OpenRegister main's ObjectFindOptions,
+// which the hydra-gates contract copy does not declare yet: load the test copy
+// with main's signatures first, so the fallback below leaves it in place.
+if (interface_exists('\\OCA\\OpenRegister\\Contract\\ObjectServiceInterface', false) === false) {
+	require_once __DIR__ . '/Stubs/OpenRegister/Kernel/Contracts/Value/ObjectFindOptions.php';
+	require_once __DIR__ . '/Stubs/OpenRegister/Contract/ObjectServiceInterface.php';
+}
+
 foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
@@ -64,6 +72,8 @@ spl_autoload_register(function (string $class): void {
 		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
 		// Copies of OpenRegister's kernel value objects (ObjectFindOptions, ...).
 		'OCA\\OpenRegister\\Kernel\\' => __DIR__ . '/Stubs/OpenRegister/Kernel/',
+		// OpenRegister's MCP provider interface (mcp-full-action-surface).
+		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -79,6 +89,23 @@ spl_autoload_register(function (string $class): void {
 
 		break;
 	}//end foreach
+});
+
+// OpenRegister's migration-pack validator has no stub here (CmdbImportProfile
+// reads MigrationPack\PackDefinitionValidator by name): load that namespace from
+// a sibling OpenRegister checkout when there is one, the apps-extra layout of
+// the dev environment. Only that namespace, so every other OpenRegister class
+// still comes from the stubs.
+spl_autoload_register(function (string $class): void {
+	$prefix = 'OCA\\OpenRegister\\Service\\MigrationPack\\';
+	if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+		return;
+	}
+
+	$file = __DIR__ . '/../../openregister/lib/Service/MigrationPack/' . str_replace(search: '\\', replace: '/', subject: substr($class, strlen($prefix))) . '.php';
+	if (file_exists($file) === true) {
+		require_once $file;
+	}
 });
 
 // Integriq's connection-registry events (adopt-connection-registry).

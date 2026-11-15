@@ -129,8 +129,8 @@ class DataQualityDerivation {
 	 */
 	private function applyRule(DataQualityEntryRun $run, DataQualityRuleCheck $check): void {
 		$check->weight = $this->weight(rule: $check->rule);
-		$check->score  = $this->ruleScore(type: $check->type, rule: $check->rule, value: $check->value, now: $run->now);
-		$check->met    = $this->isMet(type: $check->type, rule: $check->rule, value: $check->value, now: $run->now);
+		$check->score  = $this->ruleScore(check: $check, now: $run->now);
+		$check->met    = $this->isMet(check: $check, now: $run->now);
 
 		$run->weighted += $check->score * $check->weight;
 		$run->weights  += $check->weight;
@@ -217,57 +217,78 @@ class DataQualityDerivation {
 	/**
 	 * A rule's score for one value, between 0 and 1.
 	 *
-	 * @param string $type Rule type.
-	 * @param array<string,mixed> $rule The rule.
-	 * @param mixed $value The field value.
-	 * @param DateTimeImmutable $now Reference moment.
+	 * @param DataQualityRuleCheck $check The rule type, the rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
 	 *
 	 * @return float The score.
 	 */
-	private function ruleScore(string $type, array $rule, mixed $value, DateTimeImmutable $now): float {
-		if ($type === 'freshness') {
-			$age = $this->ageInDays(value: $value, now: $now);
+	private function ruleScore(DataQualityRuleCheck $check, DateTimeImmutable $now): float {
+		if ($check->type === 'freshness') {
+			$age = $this->ageInDays(value: $check->value, now: $now);
 			if ($age === null) {
 				return 0.0;
 			}
 
-			return 0.5 ** ($age / $this->halfLife(rule: $rule));
+			return 0.5 ** ($age / $this->halfLife(rule: $check->rule));
 		}
 
-		return (float)$this->isMet(type: $type, rule: $rule, value: $value, now: $now);
+		return (float)$this->isMet(check: $check, now: $now);
 	}//end ruleScore()
 
 	/**
 	 * Whether one value meets its rule.
 	 *
-	 * @param string $type Rule type.
-	 * @param array<string,mixed> $rule The rule.
-	 * @param mixed $value The field value.
-	 * @param DateTimeImmutable $now Reference moment.
+	 * @param DataQualityRuleCheck $check The rule type, the rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
 	 *
 	 * @return bool True when met.
 	 */
-	private function isMet(string $type, array $rule, mixed $value, DateTimeImmutable $now): bool {
-		if ($type === 'freshness') {
-			$age = $this->ageInDays(value: $value, now: $now);
-			return $age !== null && $age < $this->halfLife(rule: $rule);
+	private function isMet(DataQualityRuleCheck $check, DateTimeImmutable $now): bool {
+		if ($check->type === 'freshness') {
+			return $this->isFresh(check: $check, now: $now);
 		}
 
-		if ($this->filled(value: $value) === false) {
+		if ($this->filled(value: $check->value) === false) {
 			return false;
 		}
 
-		if ($type !== 'format') {
+		if ($check->type !== 'format') {
 			return true;
 		}
 
+		return self::matchesFormat(rule: $check->rule, value: $check->value);
+	}//end isMet()
+
+	/**
+	 * Whether a value is younger than its rule's half-life.
+	 *
+	 * @param DataQualityRuleCheck $check The rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
+	 *
+	 * @return bool
+	 */
+	private function isFresh(DataQualityRuleCheck $check, DateTimeImmutable $now): bool {
+		$age = $this->ageInDays(value: $check->value, now: $now);
+
+		return $age !== null && $age < $this->halfLife(rule: $check->rule);
+	}//end isFresh()
+
+	/**
+	 * Whether a filled value matches its rule's pattern, or its named format; true when the rule names neither.
+	 *
+	 * @param array<string,mixed> $rule  The format rule.
+	 * @param mixed               $value The field value.
+	 *
+	 * @return bool
+	 */
+	private static function matchesFormat(array $rule, mixed $value): bool {
 		$pattern = self::FORMATS[(string)($rule['format'] ?? '')] ?? null;
 		if (isset($rule['pattern']) === true && is_string($rule['pattern']) === true) {
 			$pattern = '/' . str_replace('/', '\/', $rule['pattern']) . '/';
 		}
 
 		return $pattern === null || (is_scalar($value) === true && preg_match($pattern, (string)$value) === 1);
-	}//end isMet()
+	}//end matchesFormat()
 
 	/**
 	 * Whether a value counts as filled in.

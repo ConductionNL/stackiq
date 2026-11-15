@@ -144,4 +144,54 @@ class ModuleRegistrationHandlerTest extends TestCase {
 		);
 
 	}//end testFailureStopsTheRun()
+
+	/**
+	 * A request without a modules key fails validation and registers nothing.
+	 *
+	 * @return void
+	 */
+	public function testAMissingModulesKeyFailsValidation(): void {
+		$handler = $this->handler();
+		$this->registration->expects($this->never())->method('handleModuleRegistration');
+
+		$result = $handler->handle([]);
+
+		$this->assertFalse($result['success']);
+		$this->assertSame(['modules field is required and must be an array.'], $result['errors']);
+	}//end testAMissingModulesKeyFailsValidation()
+
+	/**
+	 * An empty module list succeeds with zero registered.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyListRegistersNothing(): void {
+		$handler = $this->handler();
+		$this->registration->expects($this->never())->method('handleModuleRegistration');
+
+		$this->assertSame(
+			['success' => true, 'message' => '0 module(s) registered successfully.', 'registered' => 0],
+			$handler->handle(['modules' => []])
+		);
+		$this->assertSame(
+			[
+				['debug', 'ModuleRegistrationHandler: Resolving dependencies for modules', ['count' => 0]],
+				['info', 'ModuleRegistrationHandler: Modules registered', ['count' => 0]],
+			],
+			$this->logs
+		);
+	}//end testAnEmptyListRegistersNothing()
+
+	/**
+	 * Only exceptions are turned into a failure response; an engine error propagates.
+	 *
+	 * @return void
+	 */
+	public function testAnErrorIsNotSwallowed(): void {
+		$handler = $this->handler();
+		$this->registration->method('handleModuleRegistration')->willThrowException(new \TypeError('broken module'));
+
+		$this->expectException(\TypeError::class);
+		$handler->handle(['modules' => [['name' => 'a']]]);
+	}//end testAnErrorIsNotSwallowed()
 }//end class

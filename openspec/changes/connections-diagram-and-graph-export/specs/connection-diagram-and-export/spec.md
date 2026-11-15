@@ -23,6 +23,14 @@ The application page `ModuleDetail` SHALL show a map with the application in the
 - **THEN** the connection map shows X in the centre with Y and the national provision around it
 - **AND** the line to Y reads `api`
 
+#### Scenario: An information manager checks what a retirement touches
+@e2e tests/e2e/workflows/connections.spec.ts
+
+- **GIVEN** three applications have a readable connection that depends on application X
+- **WHEN** the information manager opens the page of X before phasing it out
+- **THEN** the connection map names the three applications, each with the connection that links it
+- **AND** a connection the user may not read is left out
+
 ### Requirement: REQ-CDX-002 The connections list can be shown as a diagram of the filtered rows
 
 The connections list `Koppelingen` SHALL offer a diagram view that draws exactly the rows the current filters return, with a stable layout: the same rows SHALL give the same positions.

@@ -22,6 +22,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\DataQualityReportServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -35,7 +37,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
  */
-class DataQualityReportService {
+class DataQualityReportService implements DataQualityReportServiceInterface {
 	/**
 	 * How many of the least complete entries the report names.
 	 */
@@ -44,7 +46,7 @@ class DataQualityReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param CatalogueLocator $catalogue Resolves the register and schema ids.
 	 * @param IAppManager $appManager Checks OpenRegister is installed.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param LoggerInterface $logger Logger.
@@ -52,7 +54,7 @@ class DataQualityReportService {
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -101,7 +103,7 @@ class DataQualityReportService {
 			throw new Exception('OpenRegister app is not installed');
 		}
 
-		$config        = $this->settingsService->getVoorzieningenConfig();
+		$config        = $this->catalogue->getVoorzieningenConfig();
 		$registerId    = (int)($config['register'] ?? 0);
 		$usageSchemaId = (int)($config['gebruik_schema'] ?? 0);
 		if ($registerId === 0 || $usageSchemaId === 0) {

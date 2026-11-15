@@ -30,6 +30,8 @@ use ReflectionProperty;
  * Pins the `API-Version` header and the problem details shape of API errors.
  *
  * @covers \OCA\Stackiq\Middleware\ApiContractMiddleware
+ * @uses   \OCA\Stackiq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Stackiq\Middleware\Support\StandardProtocolPaths
  */
 class ApiContractMiddlewareTest extends TestCase {
 
@@ -44,6 +46,7 @@ class ApiContractMiddlewareTest extends TestCase {
 	private function decorate(string|false $path, Response $response): Response {
 		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getPathInfo')->willReturn($path);
+		$request->method('getRequestUri')->willReturn('/index.php'.(string) $path.'?q=1');
 		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppVersion')->willReturn('1.2.3');
 
@@ -161,6 +164,107 @@ class ApiContractMiddlewareTest extends TestCase {
 		$this->assertSame(expected: '1.2.3', actual: $this->headersOf(response: $response)['API-Version']);
 		$this->assertSame(expected: 'gone', actual: $response->getData());
 	}//end testNonJsonErrorOnlyGetsTheHeader()
+
+	/**
+	 * An unversioned API path keeps answering and names its `/api/v1/` successor.
+	 *
+	 * @return void
+	 */
+	public function testUnversionedPathAnnouncesItsSuccessor(): void {
+		$response = $this->decorate(path: '/apps/stackiq/api/things/7/parts', response: new JSONResponse(data: ['id' => 7]));
+		$headers  = $this->headersOf(response: $response);
+
+		$this->assertSame(expected: ['id' => 7], actual: $response->getData());
+		$this->assertSame(expected: '@1794441600', actual: $headers['Deprecation']);
+		$this->assertSame(expected: '</index.php/apps/stackiq/api/v1/things/7/parts>; rel="successor-version"', actual: $headers['Link']);
+	}//end testUnversionedPathAnnouncesItsSuccessor()
+
+	/**
+	 * A versioned API path is not deprecated, and still carries the version.
+	 *
+	 * @return void
+	 */
+	public function testVersionedPathIsNotDeprecated(): void {
+		$headers = $this->headersOf(response: $this->decorate(path: '/apps/stackiq/api/v1/things/7', response: new JSONResponse(data: [])));
+
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testVersionedPathIsNotDeprecated()
+
+	/**
+	 * A path that speaks a protocol defined elsewhere keeps the contract it always
+	 * had (version header, problem details) but is not announced as deprecated.
+	 *
+	 * @return void
+	 */
+	public function testStandardProtocolPathKeepsTheContractWithoutDeprecation(): void {
+		$response = $this->decorate(path: '/apps/stackiq/api/progress/1/stream', response: new JSONResponse(data: ['error' => 'x'], statusCode: 400));
+		$headers  = $this->headersOf(response: $response);
+
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertSame(expected: 'x', actual: $response->getData()['error']);
+		$this->assertSame(expected: 400, actual: $response->getData()['status']);
+		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testStandardProtocolPathKeepsTheContractWithoutDeprecation()
+
+	/**
+	 * The detail comes from detail, then message, then error, skipping empty
+	 * and non-string members; with none usable there is no detail. (A body's
+	 * own members are merged last, so they always keep their value.)
+	 *
+	 * @return void
+	 */
+	public function testDetailPrecedenceSkipsUnusableMembers(): void {
+		$cases = [
+			[['detail' => 'Own detail', 'message' => 'm', 'error' => 'e'], 'Own detail'],
+			[['message' => 'From message', 'error' => 'e'], 'From message'],
+			[['message' => '', 'error' => 'From error'], 'From error'],
+			[['message' => ['nested'], 'error' => 'From error'], 'From error'],
+			[['message' => 42, 'error' => ''], null],
+		];
+		foreach ($cases as [$body, $detail]) {
+			$data = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: $body, statusCode: 422))->getData();
+
+			$this->assertSame(expected: 'Unprocessable Content', actual: $data['title']);
+			if ($detail === null) {
+				$this->assertArrayNotHasKey(key: 'detail', array: $data);
+				continue;
+			}
+
+			$this->assertSame(expected: $detail, actual: $data['detail']);
+		}
+	}//end testDetailPrecedenceSkipsUnusableMembers()
+
+	/**
+	 * A non-array error body and a body with its own problem type are left as
+	 * they are, with the plain JSON content type.
+	 *
+	 * @return void
+	 */
+	public function testScalarAndCustomTypedBodiesAreLeftAlone(): void {
+		$scalar = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: 'plain failure', statusCode: 500));
+		$this->assertSame(expected: 'plain failure', actual: $scalar->getData());
+		$this->assertSame(expected: 'application/json; charset=utf-8', actual: $this->headersOf(response: $scalar)['Content-Type']);
+
+		$typed = ['type' => 'https://stackiq.example/problems/quota', 'detail' => 'Over quota'];
+		$custom = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: $typed, statusCode: 429));
+		$this->assertSame(expected: $typed, actual: $custom->getData());
+	}//end testScalarAndCustomTypedBodiesAreLeftAlone()
+
+	/**
+	 * Status 399 is not an error; 400 is.
+	 *
+	 * @return void
+	 */
+	public function testTheErrorBoundaryIs400(): void {
+		$below = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: ['message' => 'x'], statusCode: 399));
+		$this->assertSame(expected: ['message' => 'x'], actual: $below->getData());
+
+		$at = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: ['message' => 'x'], statusCode: 400));
+		$this->assertSame(expected: 'Bad Request', actual: $at->getData()['title']);
+	}//end testTheErrorBoundaryIs400()
 
 	/**
 	 * The headers a response set, read without the server container that

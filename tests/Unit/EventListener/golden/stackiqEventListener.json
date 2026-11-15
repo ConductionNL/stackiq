@@ -6,11 +6,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -68,7 +68,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -96,11 +96,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -158,7 +158,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -185,11 +185,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -253,11 +253,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -321,11 +321,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -383,7 +383,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -411,11 +411,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -485,11 +485,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -574,11 +574,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -641,11 +641,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -702,7 +702,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\GebruikSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\GebruikSyncServiceInterface"
         ],
         [
             "usageSync.processSpecificGebruik",
@@ -726,11 +726,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -787,7 +787,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\GebruikSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\GebruikSyncServiceInterface"
         ],
         [
             "usageSync.processSpecificGebruik",
@@ -811,11 +811,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -886,11 +886,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -961,11 +961,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1023,7 +1023,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -1051,11 +1051,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1153,7 +1153,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -1188,11 +1188,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1290,7 +1290,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -1325,11 +1325,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1405,11 +1405,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1485,11 +1485,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1595,11 +1595,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1697,7 +1697,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -1732,11 +1732,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1818,11 +1818,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1907,11 +1907,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -1997,11 +1997,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2090,11 +2090,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2163,7 +2163,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\GebruikSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\GebruikSyncServiceInterface"
         ],
         [
             "usageSync.processSpecificGebruik",
@@ -2187,11 +2187,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2274,11 +2274,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2361,11 +2361,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2401,7 +2401,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -2429,11 +2429,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2469,7 +2469,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -2497,11 +2497,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2562,11 +2562,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2630,11 +2630,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2697,11 +2697,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2767,11 +2767,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2841,11 +2841,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2908,11 +2908,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -2973,11 +2973,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -3036,11 +3036,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -3110,11 +3110,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
@@ -3212,7 +3212,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\OrganizationSyncServiceInterface"
         ],
         [
             "orgSync.processSpecificOrganization",
@@ -3247,11 +3247,11 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\ContactpersoonService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\ContactpersoonServiceInterface"
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Kernel\\Contracts\\SettingsServiceInterface"
         ],
         [
             "log.info",
