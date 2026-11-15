@@ -31,6 +31,8 @@ use ReflectionMethod;
 
 /**
  * Builds the selection arguments of an OpenRegister search.
+ *
+ * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
  */
 final class SearchSelection {
 
