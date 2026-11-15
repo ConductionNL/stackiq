@@ -21,15 +21,14 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\ReferenceComponentCoverageService;
-use OCA\Stackiq\Service\OrganisationReportAccess;
+use OCA\Stackiq\Kernel\Contracts\PeerUsageServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Serves one organisation's reference component coverage, as JSON or CSV.
@@ -42,16 +41,16 @@ class ReferenceComponentCoverageController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param IUserSession $userSession The user session.
-	 * @param ReferenceComponentCoverageService $reportService Builds the report.
-	 * @param OrganisationReportAccess $access Who may read which organisation's report.
+	 * @param ReferenceComponentCoverageServiceInterface $reportService Builds the report.
+	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
+	 * @param PeerUsageServiceInterface|null $peerUsage What comparable organisations use (REQ-GPL-002).
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly IUserSession $userSession,
-		private readonly ReferenceComponentCoverageService $reportService,
-		private readonly OrganisationReportAccess $access,
+		private readonly ReferenceComponentCoverageServiceInterface $reportService,
+		private readonly OrganisationReportRequest $reportRequest,
+		private readonly ?PeerUsageServiceInterface $peerUsage = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -65,19 +64,12 @@ class ReferenceComponentCoverageController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse|DataDownloadResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		$organisation = (string)$this->request->getParam('organisation', '');
-		if ($organisation === '') {
-			return new JSONResponse(['message' => 'organisation is required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($this->access->mayRead(user: $user, organisationUuid: $organisation) === false) {
-			return new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
-		}
+		$organisation = $this->reportRequest->organisation();
 
 		try {
 			if ((string)$this->request->getParam('format', 'json') === 'csv') {
@@ -90,4 +82,31 @@ class ReferenceComponentCoverageController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end index()
+	/**
+	 * What comparable organisations use per reference component.
+	 *
+	 * The membership check runs before any query; the counts never name an
+	 * organisation and a count below 3 is withheld.
+	 *
+	 * @return JSONResponse The peer counts, or the refusal.
+	 *
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+	 */
+	#[NoAdminRequired]
+	public function peers(): JSONResponse {
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		if ($this->peerUsage === null) {
+			return new JSONResponse(['error' => 'Peer usage is not available'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		try {
+			return new JSONResponse($this->peerUsage->build(organisationUuid: $this->reportRequest->organisation()));
+		} catch (Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}//end peers()
 }//end class

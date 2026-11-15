@@ -73,84 +73,110 @@ class FederationMerger {
 	 *               withdraw:array<int,array<string,mixed>>}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). A three-way
-	 * reconciliation (create / update / withdraw) over two collections is inherently branchy:
-	 * each peer entry needs an id-presence guard, an ownership guard (never touch a locally-owned
-	 * entry), and a no-op-equal check before it becomes an update, and each local mirror needs the
-	 * inverse "still present at the peer?" check before it becomes a withdraw.
-	 *
-	 * @SuppressWarnings(PHPMD.NPathComplexity) NPath 255 (threshold 200) — the product of those
-	 * per-entry guards, each of which exists to keep the plan idempotent and to keep
-	 * locally-owned entries out of it.
 	 */
 	public function plan(array $peer, array $peerEntries, array $localMirrors): array {
-		$peerUrl  = $peer['url'];
-		$peerOrg  = $peer['organisation'];
-		$syncedAt = $peer['syncedAt'];
-		$create   = [];
-		$update = [];
-		$withdraw = [];
+		$run = new FederationPlanRun(
+			peer: $peer,
+			localByPeerId: $this->indexLocalMirrors(localMirrors: $localMirrors, peerUrl: $peer['url'])
+		);
 
-		// Index the local mirrors of THIS peer by their stable peer-entry id.
+		foreach ($peerEntries as $entry) {
+			$this->reconcileEntry(run: $run, entry: $entry);
+		}
+
+		// Local mirrors of this peer that the peer no longer publishes → withdraw.
+		foreach ($run->localByPeerId as $peerId => $mirror) {
+			if (isset($run->seenPeerIds[$peerId]) === false) {
+				$run->withdraw[] = $this->markWithdrawn(mirror: $mirror, syncedAt: $peer['syncedAt']);
+			}
+		}
+
+		return $run->plan();
+	}//end plan()
+
+	/**
+	 * Index the local mirrors of THIS peer by their stable peer-entry id.
+	 *
+	 * @param array<int,array<string,mixed>> $localMirrors The locally-stored mirrors of THIS peer.
+	 * @param string                         $peerUrl      The peer base URL.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function indexLocalMirrors(array $localMirrors, string $peerUrl): array {
 		$localByPeerId = [];
 		foreach ($localMirrors as $mirror) {
-			if ($this->isOwnedByPeer(mirror: $mirror, peerUrl: $peerUrl) === false) {
-				// Defensive: never reconcile an entry that is not this peer's mirror.
-				continue;
+			// Defensive: never reconcile an entry that is not this peer's mirror.
+			$peerId = null;
+			if ($this->isOwnedByPeer(mirror: $mirror, peerUrl: $peerUrl) === true) {
+				$peerId = $this->peerEntryId(mirror: $mirror);
 			}
 
-			$peerId = $this->peerEntryId(mirror: $mirror);
 			if ($peerId !== null) {
 				$localByPeerId[$peerId] = $mirror;
 			}
 		}
 
-		$seenPeerIds = [];
-		foreach ($peerEntries as $entry) {
-			$peerId = $this->stableId(entry: $entry);
-			if ($peerId === null) {
-				// Skip entries without a stable id — cannot be merged idempotently.
-				continue;
-			}
+		return $localByPeerId;
+	}//end indexLocalMirrors()
 
-			$seenPeerIds[$peerId] = true;
-
-			$mirror = $this->buildMirror(
-				entry: $entry,
-				peerUrl: $peerUrl,
-				peerOrg: $peerOrg,
-				peerId: $peerId,
-				syncedAt: $syncedAt
-			);
-
-			if (isset($localByPeerId[$peerId]) === false) {
-				$create[] = $mirror;
-				continue;
-			}
-
-			// Carry the existing local OR uuid so the caller updates in place.
-			$existing = $localByPeerId[$peerId];
-			if (isset($existing['id']) === true) {
-				$mirror['id'] = $existing['id'];
-			}
-
-			if ($this->isUnchanged(existing: $existing, fresh: $mirror) === false) {
-				$update[] = $mirror;
-			}
-		}//end foreach
-
-		// Local mirrors of this peer that the peer no longer publishes → withdraw.
-		foreach ($localByPeerId as $peerId => $mirror) {
-			if (isset($seenPeerIds[$peerId]) === true) {
-				continue;
-			}
-
-			$withdraw[] = $this->markWithdrawn(mirror: $mirror, syncedAt: $syncedAt);
+	/**
+	 * Plan one peer entry: a create when it has no local mirror, an update
+	 * when its mirror changed; entries without a stable id are skipped.
+	 *
+	 * @param FederationPlanRun   $run   The plan being built.
+	 * @param array<string,mixed> $entry The peer's published entry.
+	 *
+	 * @return void
+	 */
+	private function reconcileEntry(FederationPlanRun $run, array $entry): void {
+		$peerId = $this->stableId(entry: $entry);
+		if ($peerId === null) {
+			// Skip entries without a stable id — cannot be merged idempotently.
+			return;
 		}
 
-		return ['create' => $create, 'update' => $update, 'withdraw' => $withdraw];
-	}//end plan()
+		$run->seenPeerIds[$peerId] = true;
+		$this->planMirror(run: $run, mirror: $this->buildMirror(entry: $entry, source: $run->provenance(peerId: $peerId)));
+	}//end reconcileEntry()
+
+	/**
+	 * Plan a freshly-built mirror: a create when its peer entry has no local
+	 * mirror yet, an update when the local mirror differs.
+	 *
+	 * @param FederationPlanRun   $run    The plan being built.
+	 * @param array<string,mixed> $mirror The freshly-built mirror, stamped with its peer-entry id.
+	 *
+	 * @return void
+	 */
+	private function planMirror(FederationPlanRun $run, array $mirror): void {
+		$peerId = $mirror['_source']['peerEntryId'];
+		if (isset($run->localByPeerId[$peerId]) === false) {
+			$run->create[] = $mirror;
+			return;
+		}
+
+		$existing = $run->localByPeerId[$peerId];
+		$mirror   = $this->withLocalId(mirror: $mirror, existing: $existing);
+		if ($this->isUnchanged(existing: $existing, fresh: $mirror) === false) {
+			$run->update[] = $mirror;
+		}
+	}//end planMirror()
+
+	/**
+	 * Carry the existing local OR uuid so the caller updates in place.
+	 *
+	 * @param array<string,mixed> $mirror   The freshly-built mirror.
+	 * @param array<string,mixed> $existing The stored mirror.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withLocalId(array $mirror, array $existing): array {
+		if (isset($existing['id']) === true) {
+			$mirror['id'] = $existing['id'];
+		}
+
+		return $mirror;
+	}//end withLocalId()
 
 	/**
 	 * Decide whether a peer should be marked stale given its failure streak.
@@ -216,32 +242,16 @@ class FederationMerger {
 	/**
 	 * Build the mirror data bag for a peer entry, stamping provenance.
 	 *
-	 * @param array<string,mixed> $entry The peer's published entry.
-	 * @param string $peerUrl The peer base URL.
-	 * @param string $peerOrg The peer organisation name.
-	 * @param string $peerId The stable peer-entry id.
-	 * @param string $syncedAt The ISO-8601 sync moment.
+	 * @param array<string,mixed> $entry  The peer's published entry.
+	 * @param array<string,mixed> $source The `_source` provenance to stamp.
 	 *
 	 * @return array<string,mixed> The mirror data bag with `_source` provenance.
 	 */
-	private function buildMirror(
-		array $entry,
-		string $peerUrl,
-		string $peerOrg,
-		string $peerId,
-		string $syncedAt,
-	): array {
+	private function buildMirror(array $entry, array $source): array {
 		// Strip any inbound provenance/control keys so a peer cannot spoof its source.
 		unset($entry['_source'], $entry['id'], $entry['uuid']);
 
-		$entry['_source'] = [
-			'instance' => $peerUrl,
-			'organisation' => $peerOrg,
-			'peerEntryId' => $peerId,
-			'syncedAt' => $syncedAt,
-			'stale' => false,
-			'withdrawn' => false,
-		];
+		$entry['_source'] = $source;
 
 		return $entry;
 	}//end buildMirror()
@@ -276,18 +286,33 @@ class FederationMerger {
 	 */
 	private function stableId(array $entry): ?string {
 		foreach (['id', 'uuid'] as $key) {
-			$value = $entry[$key] ?? null;
-			if (is_string($value) === true && trim($value) !== '') {
+			$value = $this->stableIdValue(value: $entry[$key] ?? null);
+			if ($value !== null) {
 				return $value;
-			}
-
-			if (is_int($value) === true) {
-				return (string)$value;
 			}
 		}
 
 		return null;
 	}//end stableId()
+
+	/**
+	 * A usable stable id: a non-blank string as is, an integer as a string.
+	 *
+	 * @param mixed $value The candidate id.
+	 *
+	 * @return string|null The stable id, or null when the value is not one.
+	 */
+	private function stableIdValue(mixed $value): ?string {
+		if (is_string($value) === true && trim($value) !== '') {
+			return $value;
+		}
+
+		if (is_int($value) === true) {
+			return (string)$value;
+		}
+
+		return null;
+	}//end stableIdValue()
 
 	/**
 	 * The stable peer-entry id recorded on a stored mirror's provenance.

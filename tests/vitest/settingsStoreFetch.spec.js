@@ -196,6 +196,7 @@ const recorded = {}
 
 describe('settings store API actions', () => {
 	beforeEach(() => {
+		globalThis.OC = { requestToken: 'token-1' }
 		for (const level of ['info', 'warn', 'error', 'log']) {
 			vi.spyOn(console, level).mockImplementation((...args) =>
 				trace.push([`console.${level}`, ...args]),

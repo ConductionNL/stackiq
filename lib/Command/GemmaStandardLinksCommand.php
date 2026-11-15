@@ -23,7 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
-use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\Stackiq\Service\HelperFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -91,53 +93,105 @@ class GemmaStandardLinksCommand extends Command {
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objects       = $this->read(objectService: $objectService, input: $input);
-		} catch (Throwable $e) {
-			$output->writeln('<error>could not read the GEMMA objects: '.$e->getMessage().'</error>');
+		$backfill = $this->startBackfill(input: $input, output: $output);
+		if ($backfill === null) {
 			return 1;
 		}
 
-		$dryRun  = $input->getOption('dry-run') === true;
-		$changes = $this->changes(stored: $objects);
-		$counts  = ['checked' => count($objects), 'needed' => count($changes), 'written' => 0, 'failed' => 0];
-		foreach ($changes as $id => $data) {
-			if ($dryRun === true) {
-				continue;
-			}
+		$this->writeChanges(backfill: $backfill);
+		$this->report(backfill: $backfill, output: $output);
 
-			$outcome = 'failed';
-			if ($this->write(objectService: $objectService, change: ['id' => $id, 'data' => $data, 'input' => $input]) === true) {
-				$outcome = 'written';
-			}
-
-			$counts[$outcome]++;
-		}
-
-		foreach ($changes as $id => $data) {
-			$output->writeln('  '.$id.': '.implode(', ', array_keys($data)), OutputInterface::VERBOSITY_VERBOSE);
-		}
-
-		$summary = sprintf(
-			'%d GEMMA objects read, %d need links, %d written, %d failed',
-			$counts['checked'],
-			$counts['needed'],
-			$counts['written'],
-			$counts['failed']
-		);
-		if ($dryRun === true) {
-			$summary .= ' (dry run)';
-		}
-
-		$output->writeln($summary);
-
-		if ($counts['failed'] > 0) {
+		if ($backfill->counts['failed'] > 0) {
 			return 1;
 		}
 
 		return 0;
 	}//end execute()
+
+	/**
+	 * Read the GEMMA objects and work out the link changes they need.
+	 *
+	 * @param InputInterface  $input  Console input.
+	 * @param OutputInterface $output Console output, for a read failure.
+	 *
+	 * @return GemmaLinkBackfill|null The run, or null when the objects could not be read.
+	 */
+	private function startBackfill(InputInterface $input, OutputInterface $output): ?GemmaLinkBackfill {
+		$backfill        = new GemmaLinkBackfill();
+		$backfill->input = $input;
+		try {
+			$backfill->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$objects = $this->read(objectService: $backfill->objectService, input: $input);
+		} catch (Throwable $e) {
+			$output->writeln('<error>could not read the GEMMA objects: '.$e->getMessage().'</error>');
+			return null;
+		}
+
+		$backfill->dryRun  = $input->getOption('dry-run') === true;
+		$backfill->changes = $this->changes(stored: $objects);
+		$backfill->counts  = ['checked' => count($objects), 'needed' => count($backfill->changes), 'written' => 0, 'failed' => 0];
+		return $backfill;
+	}//end startBackfill()
+
+	/**
+	 * Write every change, counting the writes that landed and failed; a dry run writes nothing.
+	 *
+	 * @param GemmaLinkBackfill $backfill The run.
+	 *
+	 * @return void
+	 */
+	private function writeChanges(GemmaLinkBackfill $backfill): void {
+		foreach ($backfill->changes as $id => $data) {
+			if ($backfill->dryRun === true) {
+				continue;
+			}
+
+			$outcome = 'failed';
+			if ($this->write(objectService: $backfill->objectService, change: ['id' => $id, 'data' => $data, 'input' => $backfill->input]) === true) {
+				$outcome = 'written';
+			}
+
+			$backfill->counts[$outcome]++;
+		}
+	}//end writeChanges()
+
+	/**
+	 * List every change (verbose), then the summary.
+	 *
+	 * @param GemmaLinkBackfill $backfill The run.
+	 * @param OutputInterface   $output   Console output.
+	 *
+	 * @return void
+	 */
+	private function report(GemmaLinkBackfill $backfill, OutputInterface $output): void {
+		foreach ($backfill->changes as $id => $data) {
+			$output->writeln('  '.$id.': '.implode(', ', array_keys($data)), OutputInterface::VERBOSITY_VERBOSE);
+		}
+
+		$output->writeln($this->summary(backfill: $backfill));
+	}//end report()
+
+	/**
+	 * The one-line summary of a run.
+	 *
+	 * @param GemmaLinkBackfill $backfill The run.
+	 *
+	 * @return string The summary.
+	 */
+	private function summary(GemmaLinkBackfill $backfill): string {
+		$summary = sprintf(
+			'%d GEMMA objects read, %d need links, %d written, %d failed',
+			$backfill->counts['checked'],
+			$backfill->counts['needed'],
+			$backfill->counts['written'],
+			$backfill->counts['failed']
+		);
+		if ($backfill->dryRun === true) {
+			$summary .= ' (dry run)';
+		}
+
+		return $summary;
+	}//end summary()
 
 	/**
 	 * Read the elements and relationships in the linker's import shape.
@@ -175,7 +229,7 @@ class GemmaStandardLinksCommand extends Command {
 	 * @return array<string, array<string, mixed>> The changed link properties by object id.
 	 */
 	private function changes(array $stored): array {
-		$linked  = (new GemmaStandardLinker(logger: $this->logger))->link(objects: $stored);
+		$linked  = (new HelperFactory())->gemmaStandardLinker(logger: $this->logger)->link(objects: $stored);
 		$changes = [];
 		foreach ($linked as $position => $object) {
 			foreach (self::LINK_PROPERTIES as $property) {
@@ -221,10 +275,14 @@ class GemmaStandardLinksCommand extends Command {
 		try {
 			// Patch, so the properties the read did not return keep their values.
 			$objectService->patchObject(
-				objectId: $change['id'],
-				data: $change['data'],
-				register: (string) $change['input']->getOption('register'),
-				schema: (string) $change['input']->getOption('element-schema'),
+				new ObjectPatch(
+					objectId: $change['id'],
+					data: $change['data'],
+					target: new ObjectFindTarget(
+							register: (string) $change['input']->getOption('register'),
+							schema: (string) $change['input']->getOption('element-schema')
+						)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

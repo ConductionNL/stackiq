@@ -3,6 +3,9 @@
 /**
  * Registration / review moderation / approval-queue controller.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Admin-only endpoints to review the moderation queue and approve/reject each
  * entry, for either moderated type selected by the `type` query parameter
  * (`organisatie`, the default, or `beoordeeling` — see `ModerationService`).
@@ -29,17 +32,14 @@
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
-use OCA\Stackiq\Service\ModerationService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -58,11 +58,11 @@ class ModerationController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ModerationService $moderation The moderation service.
+	 * @param ModerationServiceInterface $moderation The moderation service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ModerationService $moderation,
+		private readonly ModerationServiceInterface $moderation,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -79,7 +79,7 @@ class ModerationController extends Controller {
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function pending(string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+	public function pending(string $type = ModerationServiceInterface::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->listPending(type: $type);
 		if ($result['ok'] === false) {
 			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
@@ -101,7 +101,7 @@ class ModerationController extends Controller {
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function approve(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+	public function approve(string $uuid, string $type = ModerationServiceInterface::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->approve($uuid, type: $type);
 		if ($result['ok'] === false) {
 			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
@@ -123,7 +123,7 @@ class ModerationController extends Controller {
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function reject(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+	public function reject(string $uuid, string $type = ModerationServiceInterface::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->reject($uuid, type: $type);
 		if ($result['ok'] === false) {
 			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);

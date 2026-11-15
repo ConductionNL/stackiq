@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -35,11 +38,14 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for the koppelingen and gebruik lookup by uuid.
  *
  * @covers \OCA\Stackiq\Service\AangebodenGebruikService
+ * @uses \OCA\Stackiq\Service\EmptyListing
+ * @uses \OCA\Stackiq\Service\OpenRegisterLookup
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
  */
@@ -223,6 +229,7 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', $args[0], $args[5] ?? null, $args[6] ?? null];
 				if (isset($this->plan['findThrows']) === true) {
 					throw new \RuntimeException('find failed');

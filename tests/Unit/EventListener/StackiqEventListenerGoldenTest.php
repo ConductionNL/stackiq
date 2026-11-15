@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -27,6 +30,10 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\EventListener\StackiqEventListener;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
@@ -35,6 +42,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for StackiqEventListener::handle().
@@ -250,16 +258,17 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			 * @return ObjectEntity
 			 */
 			public function find(...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->test->refetch(args: $args);
 			}
 		};
 
 		$services = [
 			LoggerInterface::class                      => $this->logger(),
-			ContactpersoonService::class                => $contacts,
-			SettingsService::class                      => $settings,
-			'OCA\Stackiq\Service\OrganizationSyncService' => $orgSync,
-			GebruikSyncService::class                   => $usageSync,
+			ContactpersoonServiceInterface::class       => $contacts,
+			SettingsServiceInterface::class             => $settings,
+			OrganizationSyncServiceInterface::class     => $orgSync,
+			GebruikSyncServiceInterface::class          => $usageSync,
 			'OCA\OpenRegister\Service\ObjectService'    => $objects,
 		];
 		$container = $this->createMock(ContainerInterface::class);

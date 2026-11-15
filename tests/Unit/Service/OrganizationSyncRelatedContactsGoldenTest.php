@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organization-sync/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,6 +37,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for the related contact person sync.
@@ -214,7 +218,7 @@ class OrganizationSyncRelatedContactsGoldenTest extends TestCase {
 	 */
 	private static function named(string $method, array $args): array {
 		$named = [];
-		foreach ((new \ReflectionMethod(ObjectServiceInterface::class, $method))->getParameters() as $i => $param) {
+		foreach (LegacyObjectArgs::parameters(ObjectServiceInterface::class, $method) as $i => $param) {
 			if (array_key_exists($i, $args) === false) {
 				continue;
 			}
@@ -270,6 +274,7 @@ class OrganizationSyncRelatedContactsGoldenTest extends TestCase {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', self::named(method: 'find', args: $args)];
 				$answer        = array_shift($this->plan['find']);
 				if ($answer instanceof \Throwable) {
@@ -292,6 +297,7 @@ class OrganizationSyncRelatedContactsGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->trace[] = ['objects.saveObject', self::named(method: 'saveObject', args: $args)];
 				$answer        = array_shift($this->plan['save']);
 				if ($answer instanceof \Throwable) {

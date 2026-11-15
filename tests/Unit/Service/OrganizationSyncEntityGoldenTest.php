@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organization-sync/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -38,6 +41,7 @@ if (class_exists('OCA\\OpenRegister\\Exception\\OrganisationSlugConflictExceptio
 	require_once __DIR__ . '/../../Stubs/OpenRegister/Exception/OrganisationSlugConflictException.php';
 }
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for the organisation entity sync.
@@ -233,7 +237,7 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 	 */
 	private static function named(string $method, array $args): array {
 		$named = [];
-		foreach ((new \ReflectionMethod(ObjectServiceInterface::class, $method))->getParameters() as $i => $param) {
+		foreach (LegacyObjectArgs::parameters(ObjectServiceInterface::class, $method) as $i => $param) {
 			if (array_key_exists($i, $args) === false) {
 				continue;
 			}
@@ -289,6 +293,7 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', self::named(method: 'find', args: $args)];
 				$answer        = array_shift($this->plan['find']);
 				if ($answer instanceof \Throwable) {
@@ -300,6 +305,7 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->trace[] = ['objects.saveObject', self::named(method: 'saveObject', args: $args)];
 				$answer        = array_shift($this->plan['save']);
 				if ($answer instanceof \Throwable) {
@@ -844,6 +850,27 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		self::assertContains(['config.get', 'stackiq', 'linked_organisation_o-1', true], $this->trace);
 		self::assertContains(['mapper.save', 'o-1', false], $this->trace);
 	}//end testAnAdministratorsLinkKeepsAnOlderOrganisationBound()
+
+	/**
+	 * A link made before this organisatie object existed was made for an earlier
+	 * object with the same uuid, so it does not bind this one.
+	 *
+	 * @return void
+	 */
+	public function testALinkOlderThanTheOrganisatieDoesNotBind(): void {
+		foreach (['2020-05-31 23:59:59', '2020-06-01T09:59:59+00:00', 'not a date'] as $linkedAt) {
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->ensureWithDates(
+				status: 'Active',
+				stats: $stats,
+				dates: ['2020-06-01 10:00:01 UTC', '2020-06-01 10:00:00 UTC'],
+				appConfig: ['stackiq/linked_organisation_o-1' => $linkedAt]
+			);
+
+			self::assertNull($entity, $linkedAt);
+			self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null, $linkedAt);
+		}
+	}//end testALinkOlderThanTheOrganisatieDoesNotBind()
 
 	/**
 	 * Another organisatie's link says nothing about this one.

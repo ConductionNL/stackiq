@@ -13,16 +13,23 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
+use OCA\Stackiq\Kernel\OrganizationContactSyncSchedule;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -52,36 +59,44 @@ class OrganizationContactSyncJob extends TimedJob {
 	 *
 	 * @var string
 	 */
-	public const JOB_ID = 'organization_contact_sync';
+	public const JOB_ID = OrganizationContactSyncSchedule::JOB_ID;
+
+	/**
+	 * How often the job runs, in seconds; the cronjob settings show the same value.
+	 *
+	 * @var integer
+	 */
+	public const INTERVAL_SECONDS = OrganizationContactSyncSchedule::INTERVAL_SECONDS;
 
 	/**
 	 * Organization synchronization service
 	 *
-	 * @var OrganizationSyncService The service handling sync operations
+	 * @var OrganizationSyncServiceInterface The service handling sync operations
 	 */
-	private OrganizationSyncService $orgSyncService;
+	private OrganizationSyncServiceInterface $orgSyncService;
 
 	/**
 	 * Constructor for OrganizationContactSyncJob
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for job scheduling
-	 * @param OrganizationSyncService $orgSyncService The sync service
-	 * @param StackiqContactSyncService $contactSync The Nextcloud-Contacts bridge
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution)
+	 * @param OrganizationSyncServiceInterface $orgSyncService The sync service
+	 * @param StackiqContactSyncServiceInterface $contactSync The Nextcloud-Contacts bridge
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution)
+	 * @param CronjobSettingsInterface $cronjobSettings The cronjob settings (whether this job is switched on)
 	 * @param IAppManager $appManager The Nextcloud app manager
 	 * @param LoggerInterface $logger The logger
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		OrganizationSyncService $orgSyncService,
-		private readonly StackiqContactSyncService $contactSync,
-		private readonly SettingsService $settingsService,
+		OrganizationSyncServiceInterface $orgSyncService,
+		private readonly StackiqContactSyncServiceInterface $contactSync,
+		private readonly RegisterConfigReaderInterface $settingsService,
+		private readonly CronjobSettingsInterface $cronjobSettings,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);
-		$this->setInterval(seconds: 300);
-		// 5 minutes.
+		$this->setInterval(seconds: self::INTERVAL_SECONDS);
 		$this->orgSyncService = $orgSyncService;
 	}//end __construct()
 
@@ -123,7 +138,7 @@ class OrganizationContactSyncJob extends TimedJob {
 
 		// An admin can switch the job off in the cronjob settings (for example
 		// during a migration); then neither the sync nor the link refresh runs.
-		if ($this->settingsService->isCronjobEnabled(jobId: self::JOB_ID) === false) {
+		if ($this->cronjobSettings->isCronjobEnabled(jobId: self::JOB_ID) === false) {
 			$this->logger->info('[OrganizationContactSyncJob] Switched off in the cronjob settings, skipping sync');
 			return;
 		}
@@ -193,7 +208,7 @@ class OrganizationContactSyncJob extends TimedJob {
 
 			$objects = $objectService->setRegister($registerId)
 				->setSchema($schemaId)
-				->findAll([], false, false);
+				->findAll(config: [], _rbac: false, _multitenancy: false);
 
 			foreach ($objects as $object) {
 				$this->refreshOne(
@@ -263,7 +278,15 @@ class OrganizationContactSyncJob extends TimedJob {
 				$uuidArg = $uuid;
 			}
 
-			$objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);
+			$objectService->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+					uuid: $uuidArg
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'[OrganizationContactSyncJob] Could not refresh contactsUid link — record left intact',

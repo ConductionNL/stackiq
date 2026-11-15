@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sc-handlers/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +25,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -186,12 +190,12 @@ class ContactPersonHandlerSlugConflictTest extends TestCase {
 			}
 
 			/**
-			 * @param mixed ...$args The organisation, by name.
+			 * @param mixed ...$args The organisation details, then whether the caller joins.
 			 *
 			 * @return Organisation
 			 */
 			public function createOrganisation(...$args): Organisation {
-				return $this->test->create(name: (string) ($args['name'] ?? $args[0]), refuse: $this->refuse);
+				return $this->test->create(name: ($args['details'] ?? $args[0])->name, refuse: $this->refuse);
 			}
 		};
 
@@ -206,7 +210,7 @@ class ContactPersonHandlerSlugConflictTest extends TestCase {
 			fn (string $id) => [
 				'OCA\\OpenRegister\\Db\\OrganisationMapper'      => $mapper,
 				'OCA\OpenRegister\Service\ObjectService'        => $objects,
-				'OCA\Stackiq\Service\SettingsService'           => $settings,
+				RegisterConfigReaderInterface::class           => $settings,
 				'OCA\\OpenRegister\\Service\\OrganisationService' => $organisations,
 			][$id] ?? null
 		);

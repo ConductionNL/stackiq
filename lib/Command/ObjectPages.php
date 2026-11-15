@@ -116,19 +116,48 @@ class ObjectPages {
 			return [];
 		}
 
+		return $this->entityPayload(row: $row);
+	}//end payload()
+
+	/**
+	 * The first array an entity row gives through jsonSerialize(), then getObject().
+	 *
+	 * @param object $row One entity row.
+	 *
+	 * @return array<string, mixed> The payload, empty when neither gives an array.
+	 */
+	private function entityPayload(object $row): array {
 		foreach (['jsonSerialize', 'getObject'] as $method) {
-			try {
-				$out = $row->$method();
-				if (is_array($out) === true) {
-					return $out;
-				}
-			} catch (Throwable $e) {
-				continue;
+			$out = $this->callPayload(row: $row, method: $method);
+			if ($out !== null) {
+				return $out;
 			}
 		}
 
 		return [];
-	}//end payload()
+	}//end entityPayload()
+
+	/**
+	 * What one payload method of an entity row gives, when it is an array.
+	 *
+	 * @param object $row One entity row.
+	 * @param string $method The payload method.
+	 *
+	 * @return array<string, mixed>|null The payload, or null when it fails or gives no array.
+	 */
+	private function callPayload(object $row, string $method): ?array {
+		try {
+			$out = $row->$method();
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if (is_array($out) === true) {
+			return $out;
+		}
+
+		return null;
+	}//end callPayload()
 
 	/**
 	 * One page of rows.

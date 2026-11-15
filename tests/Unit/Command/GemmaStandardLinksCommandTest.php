@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/archimate-import/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,6 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The back-fill writes only missing links, reports, and is idempotent.
@@ -31,6 +35,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * @uses   \OCA\Stackiq\Command\ObjectPages
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
+ * @uses   \OCA\Stackiq\Service\HelperFactory
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
@@ -129,6 +134,30 @@ class GemmaStandardLinksCommandTest extends TestCase {
 		self::assertSame(0, $tester->getStatusCode());
 		self::assertSame([['element', false, false], ['relation', false, false]], $this->reads);
 	}//end testTheMissingLinksAreWritten()
+
+	/**
+	 * A verbose run lists every change, then the summary; a dry run marks its summary.
+	 *
+	 * @return void
+	 */
+	public function testTheVerboseDisplayListsEveryChangeThenTheSummary(): void {
+		$listing = '  '.self::COMPONENT.': recommendedStandards, mandatoryStandards, standards, linkedStandardVersions'.PHP_EOL
+			.'  '.self::VERSION.': standard'.PHP_EOL;
+
+		$tester = $this->tester();
+		$tester->execute(['--dry-run' => true], ['verbosity' => \Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE]);
+		self::assertSame($listing.'6 GEMMA objects read, 2 need links, 0 written, 0 failed (dry run)'.PHP_EOL, $tester->getDisplay());
+
+		$this->failWrites = true;
+		$tester = $this->tester();
+		$tester->execute([], ['verbosity' => \Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE]);
+		self::assertSame($listing.'6 GEMMA objects read, 2 need links, 0 written, 2 failed'.PHP_EOL, $tester->getDisplay());
+
+		$this->failWrites = false;
+		$tester = $this->tester();
+		$tester->execute([]);
+		self::assertSame('6 GEMMA objects read, 2 need links, 2 written, 0 failed'.PHP_EOL, $tester->getDisplay());
+	}//end testTheVerboseDisplayListsEveryChangeThenTheSummary()
 
 	/**
 	 * A second run finds nothing to write.
@@ -275,13 +304,14 @@ class GemmaStandardLinksCommandTest extends TestCase {
 			 * @return array<string, mixed> The patch, echoed.
 			 */
 			public function patchObject(
-				string $objectId,
-				array $data,
-				?string $register = null,
-				?string $schema = null,
+				ObjectPatch $patch,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$register = $patch->target->register;
+				$schema = $patch->target->schema;
 				if ($this->test->failWrites === true) {
 					throw new RuntimeException('write refused');
 				}

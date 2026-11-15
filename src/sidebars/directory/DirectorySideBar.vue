@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { reactive } from 'vue'
 import { navigationStore } from '../../store/store.js'
@@ -340,6 +344,7 @@ export default {
 			fetch('/index.php/apps/opencatalogi/api/metadata', {
 				method: 'POST',
 				headers: {
+					requesttoken: OC.requestToken,
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(data),
@@ -364,6 +369,7 @@ export default {
 			fetch(`/index.php/apps/opencatalogi/api/metadata/${metadataId}`, {
 				method: 'DELETE',
 				headers: {
+					requesttoken: OC.requestToken,
 					'Content-Type': 'application/json',
 				},
 			})

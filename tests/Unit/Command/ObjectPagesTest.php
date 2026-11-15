@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/archimate-import/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -60,6 +63,60 @@ class ObjectPagesTest extends TestCase {
 		self::assertSame([], $read[400]);
 		self::assertSame([[0, true, true], [200, true, true], [400, true, true]], $service->calls);
 	}//end testEveryPageIsReadAndResolved()
+
+	/**
+	 * An entity row falls back from jsonSerialize() to getObject(); a row that gives no array reads as empty.
+	 *
+	 * @return void
+	 */
+	public function testAnEntityRowFallsBackToItsObject(): void {
+		$rows = [
+			new class() {
+				/**
+				 * @return string Not an array.
+				 */
+				public function jsonSerialize(): string {
+					return 'text';
+				}
+
+				/**
+				 * @return array<string, string>
+				 */
+				public function getObject(): array {
+					return ['id' => 'from-object'];
+				}
+			},
+			new class() {
+				/**
+				 * @return array<string, string>
+				 */
+				public function jsonSerialize(): array {
+					throw new \RuntimeException('broken');
+				}
+
+				/**
+				 * @return array<string, string>
+				 */
+				public function getObject(): array {
+					return ['id' => 'after-failure'];
+				}
+			},
+			new class() {
+				/**
+				 * @return null Nothing.
+				 */
+				public function getObject(): mixed {
+					return null;
+				}
+			},
+			new \stdClass(),
+			42,
+		];
+
+		$read = (new ObjectPages($this->service(rows: $rows)))->all('reg', 'schema');
+
+		self::assertSame([['id' => 'from-object'], ['id' => 'after-failure'], [], [], []], $read);
+	}//end testAnEntityRowFallsBackToItsObject()
 
 	/**
 	 * A system read turns RBAC and organisation scoping off.

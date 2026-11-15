@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Get the current theme from Nextcloud
  *
  * @return {string} The current theme name

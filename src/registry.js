@@ -18,6 +18,7 @@
 //   - procest #512 / launchpad #206 — first reference migrations
 
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import MoveToOrganisationLauncher from './components/organisations/MoveToOrganisationLauncher.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
@@ -25,6 +26,13 @@ import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import SoftwareCatalogSettingsPage from './views/settings/StackiqSettings.vue'
 
 export default {
+	// --- Move to organisation from a detail page (landscape-move-between-
+	//     organisations D3). The header action of the Application, Contract,
+	//     Connection and Application-in-use detail pages opens this `modal`:
+	//     it reads the record id from the route and opens the dialog the
+	//     list pages' bulk action opens. ---
+	MoveToOrganisationLauncher: { kind: 'modal', component: MoveToOrganisationLauncher },
+
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
 	//     the list and the canvas are the shared `flows` / `flow-detail`
 	//     manifest page types. CnFlowSidebar has to mount in the NC app

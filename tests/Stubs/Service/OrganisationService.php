@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 
 /**
  * Stub for OrganisationService with the surface used by Stackiq
@@ -93,18 +94,11 @@ abstract class OrganisationService {
 	/**
 	 * Create an organisation; with addCurrentUser the signed-in user becomes its owner and a member.
 	 *
-	 * @param string $name           The name.
-	 * @param string $description    The description.
-	 * @param bool   $addCurrentUser Whether the signed-in user owns and joins it.
-	 * @param string $uuid           The uuid to use.
+	 * @param NewOrganisation $details        Name, description and uuid.
+	 * @param bool            $addCurrentUser Whether the signed-in user owns and joins it.
 	 *
 	 * @return Organisation
 	 */
-	abstract public function createOrganisation(
-		string $name,
-		string $description = '',
-		bool $addCurrentUser = true,
-		string $uuid = '',
-	): Organisation;
+	abstract public function createOrganisation(NewOrganisation $details, bool $addCurrentUser = true): Organisation;
 
 }//end class
