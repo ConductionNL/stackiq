@@ -9,8 +9,8 @@
   - GIVEN an imported GEMMA view fixture with nested nodes WHEN it is drawn THEN every node sits at its stored position and size and children sit inside their parents
   - GIVEN connections with bendpoints WHEN they are drawn THEN each path runs through its bendpoints with the arrowhead of its relation type
   - GIVEN a name with markup WHEN it is drawn THEN it is escaped, and the SVG holds no script, external href or foreignObject
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewImageServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ViewImageServiceTest`)
 
 ### Task 2: Image route with RBAC on
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
@@ -18,8 +18,9 @@
 - **acceptance_criteria**:
   - GIVEN a view the caller may read WHEN `GET /api/views/{viewId}/image.svg` is called THEN the answer is `image/svg+xml` with a file name built from the view name
   - GIVEN a view OpenRegister does not return for the caller WHEN the route is called THEN the answer is 404
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewControllerImageTest`, route reachability gate)
+- [x] Implement
+- [x] Test (PHPUnit `ViewControllerImageTest`, route reachability gate)
+  - `ViewController::getViewImage()` at `GET /api/views/{viewId}/image.svg` (`NoAdminRequired`, `NoCSRFRequired`) reads the stored view through the new `ViewServiceInterface::findStoredView()`, which is the same OpenRegister `find()` with RBAC and multitenancy on that `getView()` uses, and answers 404 when it comes back empty; otherwise the `ViewImageService` SVG as `image/svg+xml` with a file name built from the view name. Documented in `openapi.json`. PHPUnit: `ViewControllerImageTest` (5), two `findStoredView` cases in `ViewServiceAccessScopeTest`.
 
 ### Task 3: filinq gateway and document route
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view

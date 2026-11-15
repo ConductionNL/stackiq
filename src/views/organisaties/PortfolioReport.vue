@@ -179,6 +179,40 @@
 				</table>
 			</section>
 
+			<!-- Applications that fulfil the same reference component (REQ-RCC-004) -->
+			<section
+				v-if="overlaps.length"
+				class="pr-section"
+				data-testid="pr-overlap">
+				<h3 class="pr-sectionTitle">
+					{{ t('stackiq', 'Overlap') }}
+				</h3>
+				<p class="pr-hint">
+					{{ overlapHint }}
+				</p>
+				<table class="pr-table">
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('stackiq', 'Reference component') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Applications') }}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="group in overlaps"
+							:key="group.componentId"
+							data-testid="pr-overlap-row">
+							<td>{{ group.component }}</td>
+							<td>{{ group.applications.join(', ') }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
 			<!-- Gebruik-level rows, grouped by quadrant (Unclassified visible, not hidden) -->
 			<section class="pr-section" data-testid="pr-rows">
 				<h3 class="pr-sectionTitle">
@@ -240,7 +274,16 @@
 								v-for="row in group.rows"
 								:key="row.uuid"
 								data-testid="pr-row">
-								<td>{{ row.moduleName }}</td>
+								<td>
+									{{ row.moduleName }}
+									<span
+										v-if="row.overlapsWith && row.overlapsWith.length"
+										class="pr-overlapMark"
+										data-testid="pr-row-overlap"
+										:title="overlapTitle(row)">
+										{{ t('stackiq', 'Overlap') }}
+									</span>
+								</td>
 								<td data-testid="pr-row-suggested">
 									<span
 										v-if="row.suggestedTimeClassification"
@@ -292,7 +335,7 @@
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
@@ -314,6 +357,7 @@ import {
 	cloudTransitionLabel,
 	formatCurrency,
 	groupRowsByQuadrant,
+	overlapGroups,
 	QUADRANT_ORDER,
 	quadrantColor,
 } from '../../utils/portfolioReport.js'
@@ -394,6 +438,31 @@ export default {
 							|| resolveUuid(org.uuid ?? org.id ?? ''),
 					}
 				},
+			)
+		},
+
+		/**
+		 * The overlapping reference components, each with its applications.
+		 *
+		 * @return {Array<object>} Overlap groups, empty without overlap.
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlaps() {
+			return overlapGroups(this.report?.rows)
+		},
+
+		/**
+		 * How many applications in use overlap, as a sentence.
+		 *
+		 * @return {string} The hint.
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlapHint() {
+			return n(
+				'stackiq',
+				'%n application in use shares a reference component with another one.',
+				'%n applications in use share a reference component with another one.',
+				this.report?.overlap || 0,
 			)
 		},
 
@@ -490,6 +559,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The components a row overlaps on, with the other applications, for its mark's tooltip.
+		 *
+		 * @param {object} row The report row.
+		 * @return {string} e.g. "Zaaksysteem: Zaken Twee".
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlapTitle(row) {
+			return (row.overlapsWith || [])
+				.map((overlap) => `${overlap.component}: ${(overlap.modules || []).join(', ')}`)
+				.join('; ')
+		},
+
 		t,
 
 		/**
@@ -775,6 +857,21 @@ export default {
 
 .pr-mismatchFilter {
 	margin-bottom: 12px;
+}
+
+.pr-overlapMark {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 0 6px;
+	border: 1px solid var(--color-warning);
+	border-radius: var(--border-radius-pill, 12px);
+	color: var(--color-warning-text);
+	font-size: 12px;
+}
+
+.pr-hint {
+	margin: 0 0 8px;
+	color: var(--color-text-maxcontrast);
 }
 
 .pr-mismatch {

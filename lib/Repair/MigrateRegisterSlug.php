@@ -66,7 +66,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\DB\Exception;
 use OCP\IAppConfig;
 use OCP\IDBConnection;

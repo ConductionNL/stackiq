@@ -12,3 +12,4 @@
 - SkContract https://identity.conduction.nl/screens/board?id=stackiq/SkContract
 
 No screen: open-data-publishing (the catalogue is free software, a property of the app and its licence).
+- SkSuiteWizard: the same wizard for an application at its summary step, with the failed save that keeps the step open (REQ-GEW-001) https://identity.conduction.nl/screens/board?id=stackiq/SkSuiteWizard

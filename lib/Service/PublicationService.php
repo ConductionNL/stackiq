@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\PublicationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Sets/clears the publicatiedatum publish gate on catalog entries.
  */
-class PublicationService {
+class PublicationService implements PublicationServiceInterface {
 	/**
 	 * The object types that carry the open-data publish gate
 	 * (publicatiedatum/depublicatiedatum + the public read predicate).

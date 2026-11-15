@@ -83,6 +83,14 @@ describe('openDataProjection.isClean', () => {
 		expect(isClean({ name: 'x', email: 'leak@x' })).toBe(false)
 		expect(isClean({ name: 'x', contactPerson: {} })).toBe(false)
 	})
+	it('rejects anything that is not an object', () => {
+		expect(isClean(null)).toBe(false)
+		expect(isClean(undefined)).toBe(false)
+		expect(isClean('name')).toBe(false)
+	})
+	it('rejects an object still carrying @self metadata', () => {
+		expect(isClean({ name: 'x', '@self': {} })).toBe(false)
+	})
 	it('accepts a clean object', () => {
 		expect(isClean({ name: 'x', uuid: 'u', license: 'CC0-1.0' })).toBe(true)
 	})

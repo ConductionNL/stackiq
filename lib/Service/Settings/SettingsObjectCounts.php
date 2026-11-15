@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -79,12 +79,12 @@ final class SettingsObjectCounts {
 	/**
 	 * Build the counter.
 	 *
-	 * @param SettingsService    $settings  The settings, for the object service and the register configs.
+	 * @param RegisterConfigReaderInterface    $settings  The settings, for the object service and the register configs.
 	 * @param ContainerInterface $container The container, for the ArchiMateService.
 	 * @param LoggerInterface    $logger    The logger.
 	 */
 	public function __construct(
-		private readonly SettingsService $settings,
+		private readonly RegisterConfigReaderInterface $settings,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 	) {

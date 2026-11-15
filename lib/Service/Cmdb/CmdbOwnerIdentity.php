@@ -95,17 +95,27 @@ class CmdbOwnerIdentity {
 
 		$secret = $this->config->getSystemValueString('secret', '');
 		if ($secret === '') {
-			if ($this->missingSecretLogged === false) {
-				$this->missingSecretLogged = true;
-				$this->logger->warning('CmdbOwnerIdentity: this instance has no secret in config.php; owners are matched without their employee number');
-			}
-
+			$this->warnMissingSecretOnce();
 			return null;
 		}
 
 		$key = hash_hmac('sha256', self::UID_PREFIX, $secret);
 		return self::UID_PREFIX . hash_hmac('sha256', $municipalityUuid . '|' . $number, $key);
 	}//end contactUid()
+
+	/**
+	 * Warn, once per instance of this class, that the instance has no secret.
+	 *
+	 * @return void
+	 */
+	private function warnMissingSecretOnce(): void {
+		if ($this->missingSecretLogged === true) {
+			return;
+		}
+
+		$this->missingSecretLogged = true;
+		$this->logger->warning('CmdbOwnerIdentity: this instance has no secret in config.php; owners are matched without their employee number');
+	}//end warnMissingSecretOnce()
 
 	/**
 	 * A random UID (UUID v4) for the contact of an owner without an employee number.

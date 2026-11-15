@@ -147,21 +147,44 @@ final class RecordVCard {
 		}
 
 		if (is_array($value) === true) {
-			foreach ($value as $candidate) {
-				if (is_array($candidate) === true) {
-					$candidate = ($candidate['value'] ?? '');
-				}
-
-				if (strtolower(trim((string)$candidate)) === $needle) {
-					return true;
-				}
-			}
-
-			return false;
+			return self::anyCandidateMatches(candidates: $value, needle: $needle);
 		}
 
-		return strtolower(trim((string)$value)) === $needle;
+		return self::comparable(value: $value) === $needle;
 	}//end valueMatches()
+
+	/**
+	 * Whether one of the values of a multi-valued vCard property equals the needle.
+	 *
+	 * @param array  $candidates The values: plain, or entries carrying a `value`.
+	 * @param string $needle     The needle, trimmed and lower-cased.
+	 *
+	 * @return boolean True when a value equals the needle.
+	 */
+	private static function anyCandidateMatches(array $candidates, string $needle): bool {
+		foreach ($candidates as $candidate) {
+			if (is_array($candidate) === true) {
+				$candidate = ($candidate['value'] ?? '');
+			}
+
+			if (self::comparable(value: $candidate) === $needle) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end anyCandidateMatches()
+
+	/**
+	 * A vCard value as it is compared: trimmed and lower-cased.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string The comparable text.
+	 */
+	private static function comparable(mixed $value): string {
+		return strtolower(trim((string)$value));
+	}//end comparable()
 
 	/**
 	 * Extract the first scalar value from a vCard property that may be an

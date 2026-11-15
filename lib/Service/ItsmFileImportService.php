@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
-class ItsmFileImportService {
+class ItsmFileImportService implements ItsmFileImportServiceInterface {
 
 	/**
 	 * The most rows one import takes.

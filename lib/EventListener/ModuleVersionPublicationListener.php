@@ -23,7 +23,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Stackiq\Service\ModuleVersionPublicationService;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionPublicationServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -41,11 +41,11 @@ class ModuleVersionPublicationListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ModuleVersionPublicationService $publication The mirror.
+	 * @param ModuleVersionPublicationServiceInterface $publication The mirror.
 	 * @param LoggerInterface                 $logger      The logger.
 	 */
 	public function __construct(
-		private readonly ModuleVersionPublicationService $publication,
+		private readonly ModuleVersionPublicationServiceInterface $publication,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

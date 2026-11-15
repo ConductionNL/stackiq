@@ -35,7 +35,9 @@ namespace OCA\Stackiq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -46,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
  */
-class PortfolioReportService {
+class PortfolioReportService implements PortfolioReportServiceInterface {
 	/**
 	 * The four Gartner TIME quadrant values, matching the gebruik schema's
 	 * `timeClassification` enum.
@@ -108,6 +110,7 @@ class PortfolioReportService {
 		'scoredOn',
 		'suggestedTimeClassification',
 		'timeMismatch',
+		'overlapsWith',
 	];
 
 	/**
@@ -122,7 +125,7 @@ class PortfolioReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param CatalogueLocator $catalogue Resolves register/schema ids.
 	 * @param IAppManager $appManager The application manager.
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
 	 * @param LoggerInterface $logger Logger.
@@ -130,7 +133,7 @@ class PortfolioReportService {
 	 * @param PortfolioReportDerivation $derivation Pure phase/EOL/cost/relation-id derivation helpers.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -169,6 +172,7 @@ class PortfolioReportService {
 			'includedGebruiken' => count($rows['rows']),
 			'truncated' => $rows['truncated'],
 			'quadrants' => $this->aggregateQuadrants(rows: $rows['rows']),
+			'overlap' => count(array_filter($rows['rows'], static fn (array $row): bool => ($row['overlapsWith'] ?? []) !== [])),
 			'rows' => $rows['rows'],
 		];
 	}//end buildReport()
@@ -277,6 +281,7 @@ class PortfolioReportService {
 			$row['scoredOn'] ?? '',
 			$row['suggestedTimeClassification'] ?? '',
 			$this->derivation->mismatchLabel(row: $row),
+			$this->derivation->overlapLabel(row: $row),
 		];
 	}//end csvFigureCells()
 
@@ -326,8 +331,14 @@ class PortfolioReportService {
 
 		$run->contractsByGebruik = $this->fetchContractsForGebruiken(gebruikIds: $this->collectGebruikIds(usages: $usages), run: $run);
 
+		$rows = $this->derivation->withOverlap(
+			rows: $this->buildRowsFor(usages: $usages, run: $run),
+			usages: $usages,
+			componentNames: $this->componentNames(usages: $usages)
+		);
+
 		return [
-			'rows' => $this->buildRowsFor(usages: $usages, run: $run),
+			'rows' => $rows,
 			'total' => $total,
 			'ceiling' => $run->ceiling,
 			'truncated' => $total > count($usages),
@@ -682,8 +693,42 @@ class PortfolioReportService {
 			return [];
 		}
 
-		return $this->indexContractsByGebruik(contracts: $this->derivation->normalizeResults(results: $result['results'] ?? []));
+		$contracts = $this->derivation->normalizeResults(results: $result['results'] ?? []);
+
+		return $this->indexContractsByGebruik(contracts: $this->ownedContracts(contracts: $contracts, organisationUuid: $run->organisationUuid));
 	}//end fetchContractsForGebruiken()
+
+	/**
+	 * The contracts the reporting organisation owns.
+	 *
+	 * The search runs without RBAC, so it also finds a contract another
+	 * organisation (a supplier) keeps on this organisation's usage. A contract
+	 * is readable only by its owner (decision 409), so the report counts only
+	 * the contracts whose owning organisation is the reporting one, and drops
+	 * a contract whose owner it cannot read.
+	 *
+	 * @param array<int,array<string,mixed>> $contracts        The contract data bags.
+	 * @param string                         $organisationUuid The reporting organisation.
+	 *
+	 * @return array<int,array<string,mixed>> The contracts it owns.
+	 *
+	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 */
+	private function ownedContracts(array $contracts, string $organisationUuid): array {
+		if ($organisationUuid === '') {
+			return [];
+		}
+
+		return array_values(
+			array_filter(
+				$contracts,
+				static function (array $contract) use ($organisationUuid): bool {
+					$owner = ($contract['@self']['organisation'] ?? $contract['_organisation'] ?? '');
+					return is_string($owner) === true && $owner === $organisationUuid;
+				}
+			)
+		);
+	}//end ownedContracts()
 
 	/**
 	 * The bounded contract query for a set of gebruik ids.
@@ -724,6 +769,32 @@ class PortfolioReportService {
 
 		return $indexed;
 	}//end indexContractsByGebruik()
+
+	/**
+	 * The names of the reference components the usages name, read once per
+	 * component through the relation cache.
+	 *
+	 * @param array<int,array<string,mixed>> $usages The usages.
+	 *
+	 * @return array<string,string> Names by component id; an unresolved component keeps its id.
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	private function componentNames(array $usages): array {
+		$names = [];
+		foreach ($usages as $usage) {
+			foreach ($this->derivation->componentIdsOf(usage: $usage) as $componentId) {
+				if (isset($names[$componentId]) === true) {
+					continue;
+				}
+
+				$component = $this->fetchRelation(id: $componentId, schemaId: null);
+				$names[$componentId] = (string)($component['name'] ?? $component['title'] ?? $componentId);
+			}
+		}
+
+		return $names;
+	}//end componentNames()
 
 	/**
 	 * Fetch and cache a single related object (moduleVersie or module) by id.
@@ -775,7 +846,7 @@ class PortfolioReportService {
 	 * @throws Exception When the voorzieningen configuration is unavailable.
 	 */
 	private function getRegisterConfig(): array {
-		$config = $this->settingsService->getVoorzieningenConfig();
+		$config = $this->catalogue->getVoorzieningenConfig();
 
 		$registerId = $config['register'] ?? null;
 		if (empty($registerId) === true) {

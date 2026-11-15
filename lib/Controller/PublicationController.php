@@ -33,8 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
-use OCA\Stackiq\Service\PublicationService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\PublicationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,7 +57,7 @@ class PublicationController extends Controller {
 	 * @param IUserSession $userSession The user session (auth guard).
 	 * @param IGroupManager $groupManager Group membership (role check).
 	 * @param IConfig $config Per-user organisation lookup.
-	 * @param PublicationService $publicationService The publication service.
+	 * @param PublicationServiceInterface $publicationService The publication service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -65,7 +65,7 @@ class PublicationController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly IConfig $config,
-		private readonly PublicationService $publicationService,
+		private readonly PublicationServiceInterface $publicationService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

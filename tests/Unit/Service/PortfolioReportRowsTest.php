@@ -28,7 +28,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
 use OCA\Stackiq\Service\PortfolioReportService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -91,11 +91,15 @@ class PortfolioReportRowsTest extends TestCase {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function contracts(): array {
+		$ownA = ['@self' => ['organisation' => 'org-a']];
 		return [
-			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'],
-			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'],
-			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually'],
-			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'],
+			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'] + $ownA,
+			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'] + $ownA,
+			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually', '_organisation' => 'org-a'],
+			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'] + $ownA,
+			// Decision 409: a supplier's contract on org-a's usage, and one without a readable owner, are not org-a's to read.
+			['usage' => 'g-1', 'cost' => 1000, 'costPeriod' => 'Annually', '@self' => ['organisation' => 'supplier-v']],
+			['usage' => 'g-2', 'cost' => 7, 'costPeriod' => 'One-off'],
 		];
 	}//end contracts()
 
@@ -156,8 +160,8 @@ class PortfolioReportRowsTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			['register' => '1', 'gebruik_schema' => '20', 'contract_schema' => '21', 'module_schema' => '22', 'moduleVersie_schema' => '23']
 		);
 		$config = $this->createMock(IAppConfig::class);
@@ -167,7 +171,7 @@ class PortfolioReportRowsTest extends TestCase {
 		$service    = $reflection->newInstanceWithoutConstructor();
 		foreach (
 			[
-				'settingsService' => $settingsService,
+				'catalogue' => $catalogue,
 				'appManager' => $appManager,
 				'container' => $container,
 				'logger' => $logger,
@@ -269,6 +273,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['SaaS'],
 				'annualisedCost' => 120.0,
 				'oneOffCost' => 99.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -290,6 +296,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['IaaS'],
 				'annualisedCost' => 5.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -311,6 +319,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => [],
 				'annualisedCost' => 0.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 		];
 	}//end expectedRows()
@@ -322,9 +332,9 @@ class PortfolioReportRowsTest extends TestCase {
 	 */
 	private function expectedCsv(): string {
 		return 'organisation,module,timeClassification,timeRationale,timeReviewDate,lifecyclePhase,eolStatus,hostingModel,annualisedCost,oneOffCost,'
-			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch\n"
-			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no\n"
-			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no\n"
-			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no\n";
+			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch,overlapsWith\n"
+			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no,\n"
+			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no,\n"
+			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no,\n";
 	}//end expectedCsv()
 }//end class

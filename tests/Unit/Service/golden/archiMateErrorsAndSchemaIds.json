@@ -1,0 +1,512 @@
+{
+    "errors []": {
+        "result": {
+            "total_count": 0,
+            "by_section": [],
+            "omschrijving": []
+        }
+    },
+    "errors {\"elements\":{\"errors\":[]},\"views\":{\"created\":3}}": {
+        "result": {
+            "total_count": 0,
+            "by_section": [],
+            "omschrijving": []
+        }
+    },
+    "errors {\"elements\":{\"errors\":[\"Missing name\",{\"message\":\"Invalid type value\",\"object_id\":\"o-1\"},{\"message\":\"Invalid type value\",\"object_id\":\"o-2\"},{\"object_id\":\"o-3\"},{\"message\":\"Duplicate identifier\"},\"Something odd\"]},\"property_definitions\":{\"errors\":[\"Encoding of character\"]},\"other\":{\"errors\":[\"ignored\"]}}": {
+        "result": {
+            "total_count": 7,
+            "by_section": {
+                "elements": {
+                    "section_name": "Elements",
+                    "total_errors": 6,
+                    "error_groups": [
+                        {
+                            "type": "validation",
+                            "message": "Missing name",
+                            "count": 3,
+                            "examples": [
+                                "o-1",
+                                "o-2"
+                            ]
+                        },
+                        {
+                            "type": "general",
+                            "message": "Unknown error",
+                            "count": 2,
+                            "examples": [
+                                "o-3"
+                            ]
+                        },
+                        {
+                            "type": "reference",
+                            "message": "Duplicate identifier",
+                            "count": 1,
+                            "examples": []
+                        }
+                    ]
+                },
+                "property_definitions": {
+                    "section_name": "Property definitions",
+                    "total_errors": 1,
+                    "error_groups": [
+                        {
+                            "type": "encoding",
+                            "message": "Encoding of character",
+                            "count": 1,
+                            "examples": []
+                        }
+                    ]
+                }
+            },
+            "omschrijving": [
+                {
+                    "type": "validation",
+                    "message": "Missing name",
+                    "total_count": 3,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "general",
+                    "message": "Unknown error",
+                    "total_count": 2,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "reference",
+                    "message": "Duplicate identifier",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "encoding",
+                    "message": "Encoding of character",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Property definitions"
+                    ]
+                }
+            ]
+        }
+    },
+    "errors {\"relationships\":{\"errors\":[{\"message\":\"Required field 1\",\"object_id\":\"m-1\"},{\"message\":\"Required field 2\",\"object_id\":\"m-2\"},{\"message\":\"Required field 3\",\"object_id\":\"m-3\"},{\"message\":\"Required field 4\",\"object_id\":\"m-4\"},{\"message\":\"Required field 5\",\"object_id\":\"m-5\"},{\"message\":\"Required field 6\",\"object_id\":\"m-6\"},{\"message\":\"Required field 7\",\"object_id\":\"m-7\"},{\"message\":\"Required field 8\",\"object_id\":\"m-8\"}]},\"organizations\":{\"errors\":[{\"message\":\"Required field 1\",\"object_id\":\"m-1\"},{\"message\":\"Required field 2\",\"object_id\":\"m-2\"}]}}": {
+        "result": {
+            "total_count": 10,
+            "by_section": {
+                "relationships": {
+                    "section_name": "Relationships",
+                    "total_errors": 8,
+                    "error_groups": [
+                        {
+                            "type": "validation",
+                            "message": "Required field 1",
+                            "count": 8,
+                            "examples": [
+                                "m-1",
+                                "m-2",
+                                "m-3",
+                                "m-4",
+                                "m-5"
+                            ]
+                        }
+                    ]
+                },
+                "organizations": {
+                    "section_name": "Organizations",
+                    "total_errors": 2,
+                    "error_groups": [
+                        {
+                            "type": "validation",
+                            "message": "Required field 1",
+                            "count": 2,
+                            "examples": [
+                                "m-1",
+                                "m-2"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "omschrijving": [
+                {
+                    "type": "validation",
+                    "message": "Required field 1",
+                    "total_count": 10,
+                    "affected_sections": [
+                        "Relationships",
+                        "Organizations"
+                    ]
+                }
+            ]
+        }
+    },
+    "errors {\"elements\":{\"errors\":[\"validation\",\"schema\",\"reference x\",\"property\",\"unique\",\"source\",\"string\",\"utf\",\"plain\",\"validation again\"]},\"views\":{\"errors\":[\"schema\",\"schema\",\"utf\",\"plain\"]}}": {
+        "result": {
+            "total_count": 14,
+            "by_section": {
+                "elements": {
+                    "section_name": "Elements",
+                    "total_errors": 10,
+                    "error_groups": [
+                        {
+                            "type": "validation",
+                            "message": "validation",
+                            "count": 2,
+                            "examples": []
+                        },
+                        {
+                            "type": "schema",
+                            "message": "schema",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "reference",
+                            "message": "reference x",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "property",
+                            "message": "property",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "constraint",
+                            "message": "unique",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "relationship",
+                            "message": "source",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "data_type",
+                            "message": "string",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "encoding",
+                            "message": "utf",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "general",
+                            "message": "plain",
+                            "count": 1,
+                            "examples": []
+                        }
+                    ]
+                },
+                "views": {
+                    "section_name": "Views",
+                    "total_errors": 4,
+                    "error_groups": [
+                        {
+                            "type": "schema",
+                            "message": "schema",
+                            "count": 2,
+                            "examples": []
+                        },
+                        {
+                            "type": "encoding",
+                            "message": "utf",
+                            "count": 1,
+                            "examples": []
+                        },
+                        {
+                            "type": "general",
+                            "message": "plain",
+                            "count": 1,
+                            "examples": []
+                        }
+                    ]
+                }
+            },
+            "omschrijving": [
+                {
+                    "type": "schema",
+                    "message": "schema",
+                    "total_count": 3,
+                    "affected_sections": [
+                        "Elements",
+                        "Views"
+                    ]
+                },
+                {
+                    "type": "validation",
+                    "message": "validation",
+                    "total_count": 2,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "encoding",
+                    "message": "utf",
+                    "total_count": 2,
+                    "affected_sections": [
+                        "Elements",
+                        "Views"
+                    ]
+                },
+                {
+                    "type": "general",
+                    "message": "plain",
+                    "total_count": 2,
+                    "affected_sections": [
+                        "Elements",
+                        "Views"
+                    ]
+                },
+                {
+                    "type": "reference",
+                    "message": "reference x",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "property",
+                    "message": "property",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "constraint",
+                    "message": "unique",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "relationship",
+                    "message": "source",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                },
+                {
+                    "type": "data_type",
+                    "message": "string",
+                    "total_count": 1,
+                    "affected_sections": [
+                        "Elements"
+                    ]
+                }
+            ]
+        }
+    },
+    "schema elements []": {
+        "result": null,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "element_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_element_schema",
+                ""
+            ]
+        ]
+    },
+    "schema elements {\"amef_config\":\"{\\\"element_schema\\\":\\\"12\\\"}\"}": {
+        "result": 12,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "schema relationships {\"amef_config\":\"{\\\"relation_schema\\\":5,\\\"relationship_schema\\\":6}\"}": {
+        "result": 5,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "schema custom {\"amef_config\":\"{\\\"custom_schema\\\":\\\"7\\\"}\"}": {
+        "result": 7,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ]
+        ]
+    },
+    "schema views {\"amef_config\":\"{\\\"view_schema\\\":\\\"0\\\"}\"}": {
+        "result": null,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "view_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_view_schema",
+                ""
+            ]
+        ]
+    },
+    "schema models {\"amef_config\":\"{\\\"model_schema\\\":\\\"abc\\\"}\"}": {
+        "result": null,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "model_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_model_schema",
+                ""
+            ]
+        ]
+    },
+    "schema organizations {\"amef_config\":\"{\\\"organization_schema\\\":null}\"}": {
+        "result": null,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "organization_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_organization_schema",
+                ""
+            ]
+        ]
+    },
+    "schema views {\"view_schema\":\"21\"}": {
+        "result": 21,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "view_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_view_schema",
+                ""
+            ]
+        ]
+    },
+    "schema views {\"view_schema\":\"21\",\"amef_view_schema\":\"22\"}": {
+        "result": 22,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "view_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_view_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_view_schema",
+                ""
+            ]
+        ]
+    },
+    "schema property_definitions {\"property_definition_schema\":\"-3\"}": {
+        "result": null,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "property_definition_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_property_definition_schema",
+                ""
+            ]
+        ]
+    },
+    "schema element {\"element_schema\":\"8\",\"amef_config\":\"{}\"}": {
+        "result": 8,
+        "reads": [
+            [
+                "stackiq",
+                "amef_config",
+                "{}"
+            ],
+            [
+                "stackiq",
+                "element_schema",
+                ""
+            ],
+            [
+                "stackiq",
+                "amef_element_schema",
+                ""
+            ]
+        ]
+    }
+}
