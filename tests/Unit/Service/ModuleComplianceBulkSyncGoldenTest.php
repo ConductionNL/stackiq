@@ -25,6 +25,8 @@ use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The result, the OpenRegister calls and the log lines of
@@ -163,13 +165,19 @@ class ModuleComplianceBulkSyncGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $register = null, $schema = null) {
-				$this->trace[] = ['objects.find', $id, $register, $schema];
+			function ($id, ?ObjectFindOptions $options = null) {
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$this->trace[] = ['objects.find', $id, ($options?->extend ?? []), ($options?->files ?? false)];
 				return $this->module(uuid: (string) $id);
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->trace[] = ['objects.saveObject', $object, $extend, $register, $schema, $uuid];
 				if (($this->plan['saveThrows'] ?? null) === $uuid) {
 					throw new \RuntimeException('save down');

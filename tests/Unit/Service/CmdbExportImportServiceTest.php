@@ -63,6 +63,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The import, row by row, against an in-memory OpenRegister.
@@ -556,7 +559,11 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->noteScope(method: 'saveObject', rbac: $_rbac, multitenancy: $_multitenancy);
 				$schema = (int)$schema;
 				if ($this->beforeSave !== null) {
@@ -620,7 +627,10 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 		);
 		$service->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+			function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->noteScope(method: 'deleteObject', rbac: $_rbac, multitenancy: $_multitenancy);
 				$this->deletes[] = [$uuid, $schema];
 				if ($this->deleteRefusedFor === $uuid) {
@@ -632,7 +642,11 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 		);
 		$service->method('find')->willReturnCallback(
-			function ($id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+			function ($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->noteScope(method: 'find', rbac: $_rbac, multitenancy: $_multitenancy);
 				if ($this->findFailure !== null) {
 					throw $this->findFailure;
