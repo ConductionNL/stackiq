@@ -87,7 +87,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#getEmailTemplateDefault', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
         ['name' => 'settings#getEmailTemplateVariables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
 
-        // Note: /api/health is served by settings#status above
+        // Health and metrics (adopt-apphost task 2.2): the OpenRegister AppHost
+        // generics, registered as Health/MetricsController in Application.php and
+        // driven by the manifest's `observability` block. Health is public (an
+        // uptime probe needs no session), metrics are administrators only.
+        // `settings#status` above is the settings configuration status, not health.
+        ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+        ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
 
         // Configuration cache management
         ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
@@ -199,6 +205,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // View API endpoints for querying and enriching ArchiMate views
         ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
+        ['name' => 'view#getViewImage', 'url' => '/api/views/{viewId}/image.svg', 'verb' => 'GET'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================

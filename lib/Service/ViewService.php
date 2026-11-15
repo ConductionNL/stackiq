@@ -196,6 +196,26 @@ class ViewService implements ViewServiceInterface {
 	}//end getView()
 
 	/**
+	 * One view as stored, read with OpenRegister's RBAC and multitenancy on;
+	 * null when the caller may not read it, it does not exist or the read fails.
+	 *
+	 * @param string $viewId The view identifier.
+	 *
+	 * @return array<string, mixed>|null The stored view object.
+	 *
+	 * @throws \RuntimeException When OpenRegister or the view configuration is missing.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	public function findStoredView(string $viewId): ?array {
+		if (trim($viewId) === '') {
+			return null;
+		}
+
+		return $this->getViewFromRegister(viewId: $viewId);
+	}//end findStoredView()
+
+	/**
 	 * The response for one view: not found, or the transformed and enriched view.
 	 *
 	 * @param string $viewId The view identifier.
@@ -206,7 +226,8 @@ class ViewService implements ViewServiceInterface {
 	private function viewResponse(string $viewId, array $options): array {
 		// Get specific view from OpenRegister.
 		$view = $this->getViewFromRegister(viewId: $viewId);
-		if ($view === null) {
+		// A drawn view answers as a missing one, so a uuid does not reveal that it exists.
+		if ($view === null || ViewOrigin::isImported(object: $view) === false) {
 			return [
 				'success' => false,
 				'error' => "View with ID '$viewId' not found",
@@ -293,7 +314,10 @@ class ViewService implements ViewServiceInterface {
 		// Query for all view objects. Bounded — an unset `_limit` means
 		// Doctrine's setMaxResults(null), i.e. no LIMIT clause at all
 		// (full-table scan). 500 is a safe ceiling for the view index load.
-		$views = $this->serialiseViews(viewEntities: $objectService->searchObjects(['@self' => $target, '_limit' => 500]));
+		// Drawn views stay with the organisation that drew them (the `view` read rule is
+		// public across organisations), so the list keeps only GEMMA's.
+		$read = $objectService->searchObjects(['@self' => $target, '_limit' => 500]);
+		$views = ViewOrigin::importedOnly(objects: $this->serialiseViews(viewEntities: $read));
 
 		// Cache the result.
 		$this->viewsCache->set(key: $cacheKey, value: $views, ttl: self::CACHE_TTL);

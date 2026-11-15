@@ -233,6 +233,50 @@ class ViewServiceAccessScopeTest extends TestCase {
 	}//end testAViewTheCallerCannotReadIsNotFound()
 
 	/**
+	 * The stored view the image route draws is read the same way: by uuid,
+	 * with RBAC and multitenancy on, and returned as stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	public function testTheStoredViewIsReadWithRbacAndReturnedAsStored(): void {
+		$this->currentUserId = 'bob';
+		$stored = ['name' => 'Overview', 'nodes' => [['viewNodeId' => 'n1', 'x' => 1]], 'xml' => ['viewRelationships' => [['id' => 'r1']]]];
+		$entity = $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
+		$entity->method('jsonSerialize')->willReturn($stored);
+		$seen = [];
+		$this->objectService->expects($this->once())->method('find')->willReturnCallback(
+			function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null, bool $_rbac=true, bool $_multitenancy=true) use (&$seen, $entity) {
+				$seen = [$id, $register, $schema, $_rbac, $_multitenancy];
+				return $entity;
+			}
+		);
+
+		$this->assertSame($stored, $this->viewService->findStoredView(viewId: 'view-1'));
+		$this->assertSame(['view-1', 'amef', 'view', true, true], $seen);
+	}//end testTheStoredViewIsReadWithRbacAndReturnedAsStored()
+
+	/**
+	 * A view OpenRegister withholds, a failed read and a blank id are all null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	public function testAStoredViewTheCallerCannotReadIsNull(): void {
+		$this->currentUserId = 'bob';
+		$this->objectService->expects($this->exactly(2))->method('find')->willReturnOnConsecutiveCalls(
+			null,
+			$this->throwException(new \RuntimeException('Forbidden'))
+		);
+
+		$this->assertNull($this->viewService->findStoredView(viewId: 'view-of-org-a'));
+		$this->assertNull($this->viewService->findStoredView(viewId: 'view-of-org-a'));
+		$this->assertNull($this->viewService->findStoredView(viewId: '  '));
+	}//end testAStoredViewTheCallerCannotReadIsNull()
+
+	/**
 	 * The scoped list one user gets is not served from the cache to another
 	 * user.
 	 *
