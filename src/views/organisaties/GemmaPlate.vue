@@ -197,6 +197,8 @@
 					</p>
 				</aside>
 			</div>
+
+			<CoverageViewMap :components="coverage.components" />
 		</template>
 	</div>
 </template>
@@ -214,6 +216,7 @@ import {
 	NcSelect,
 } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import CoverageViewMap from './CoverageViewMap.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
@@ -236,6 +239,7 @@ export default {
 		CnKpiGrid,
 		CnStatsBlock,
 		CnStatusBadge,
+		CoverageViewMap,
 		Download,
 		NcButton,
 		NcEmptyContent,
