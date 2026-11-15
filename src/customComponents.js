@@ -23,6 +23,7 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
@@ -65,6 +66,12 @@ export default {
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
 	OrganisatieCard,
+
+	// A declared sidebar tab for one integration leaf (adopt-integration-leaves
+	// 3.1). A detail page that lists its own sidebar tabs turns off the object
+	// sidebar's registry mode, so the leaves the schema declares in
+	// `linkedTypes` would not show; this widget renders the leaf's own tab.
+	IntegrationLeafTab,
 
 	// The steps of a business process as a read-only flow on CnGraphCanvas, and
 	// the applications that support a step with the hidden ones counted
