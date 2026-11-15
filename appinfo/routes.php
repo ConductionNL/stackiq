@@ -108,6 +108,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
         ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
+        // Whether the caller may export that organisation: the detail page's action asks before it shows (insight-exports-and-custom-reports).
+        ['name' => 'settings#orgExportAccess', 'url' => '/api/archimate/export/organization/{organizationUuid}/access', 'verb' => 'GET'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
 
         // ArchiMate status management routes (status reading is via main settings endpoint)
@@ -215,6 +217,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
 
         // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
         ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
+
+        // The Applications and Services lists as filtered, as CSV or XLSX (insight-exports-and-custom-reports).
+        // @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+        ['name' => 'catalogExport#export', 'url' => '/api/catalog/{schema}/export', 'verb' => 'GET'],
 
         // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
