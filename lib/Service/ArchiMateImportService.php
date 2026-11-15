@@ -124,6 +124,15 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	private const SAVE_BUCKETS = ['saved', 'updated', 'unchanged', 'invalid'];
 
 	/**
+	 * The sections whose objects carry an `origin`, so drawn objects stay apart from imported ones.
+	 *
+	 * @var string[]
+	 *
+	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+	 */
+	private const ORIGIN_SECTIONS = ['view', 'element', 'relationship'];
+
+	/**
 	 * The progress operation of the running import, or null when it is not tracked.
 	 *
 	 * @var string|null
@@ -3778,7 +3787,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 * @return array The object
 	 */
 	private function importObject(array $head, ArchiMateImportScope $scope): array {
-		return [
+		$object = [
 			'@self' => $head + [
 				'owner' => $this->cachedConfig['userId'],
 				'organisation' => $this->getCurrentOrganisation(),
@@ -3788,6 +3797,13 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 			'section' => $scope->section(),
 			'model_identifier' => $scope->modelIdentifier(),
 		];
+
+		// A view, element or relation the import writes is GEMMA content; one drawn in the view editor says `drawn`.
+		if (in_array($scope->section(), self::ORIGIN_SECTIONS, true) === true) {
+			$object['origin'] = 'imported';
+		}
+
+		return $object;
 	}//end importObject()
 
 	/**
