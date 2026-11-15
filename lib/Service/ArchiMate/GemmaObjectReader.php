@@ -207,15 +207,31 @@ class GemmaObjectReader {
 	public function endpoint(array $relationship, string $end): ?string {
 		$candidates = [$relationship[$end] ?? null, $relationship['xml'][$end] ?? null, $relationship['xml']['_attributes'][$end] ?? null];
 		foreach ($candidates as $value) {
-			if (is_array($value) === true) {
-				$value = $value['_attributes']['href'] ?? $value['_value'] ?? null;
-			}
-
-			if (is_string($value) === true && $value !== '') {
-				return $value;
+			$identifier = $this->endpointIdentifier(value: $value);
+			if ($identifier !== null) {
+				return $identifier;
 			}
 		}
 
 		return null;
 	}//end endpoint()
+
+	/**
+	 * The identifier one candidate holds: a non-empty string, or an element's href or value.
+	 *
+	 * @param mixed $value The candidate.
+	 *
+	 * @return string|null The identifier, or null when the candidate holds none.
+	 */
+	private function endpointIdentifier(mixed $value): ?string {
+		if (is_array($value) === true) {
+			$value = $value['_attributes']['href'] ?? $value['_value'] ?? null;
+		}
+
+		if (is_string($value) === true && $value !== '') {
+			return $value;
+		}
+
+		return null;
+	}//end endpointIdentifier()
 }//end class

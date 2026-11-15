@@ -64,6 +64,8 @@ spl_autoload_register(function (string $class): void {
 		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
 		// Copies of OpenRegister's kernel value objects (ObjectFindOptions, ...).
 		'OCA\\OpenRegister\\Kernel\\' => __DIR__ . '/Stubs/OpenRegister/Kernel/',
+		// OpenRegister's MCP provider interface (mcp-full-action-surface).
+		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -79,6 +81,23 @@ spl_autoload_register(function (string $class): void {
 
 		break;
 	}//end foreach
+});
+
+// OpenRegister's migration-pack validator has no stub here (CmdbImportProfile
+// reads MigrationPack\PackDefinitionValidator by name): load that namespace from
+// a sibling OpenRegister checkout when there is one, the apps-extra layout of
+// the dev environment. Only that namespace, so every other OpenRegister class
+// still comes from the stubs.
+spl_autoload_register(function (string $class): void {
+	$prefix = 'OCA\\OpenRegister\\Service\\MigrationPack\\';
+	if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+		return;
+	}
+
+	$file = __DIR__ . '/../../openregister/lib/Service/MigrationPack/' . str_replace(search: '\\', replace: '/', subject: substr($class, strlen($prefix))) . '.php';
+	if (file_exists($file) === true) {
+		require_once $file;
+	}
 });
 
 // Integriq's connection-registry events (adopt-connection-registry).

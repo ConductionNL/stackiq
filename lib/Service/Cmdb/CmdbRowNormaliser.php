@@ -104,24 +104,14 @@ class CmdbRowNormaliser {
 	 */
 	public function normaliseDate(mixed $value, bool $date1904 = false): string {
 		$text = $this->toText(value: $value);
-		if (is_numeric($text) === false) {
-			return $text;
-		}
-
-		$serial = (float)$text;
-		if ($serial < 1 || $serial > self::MAX_SERIAL) {
+		$serial = self::excelSerial(text: $text);
+		if ($serial === null) {
 			return $text;
 		}
 
 		$days = (int)floor($serial);
-		// 1900 system: 1899-12-30 plus the serial, which absorbs Excel's
-		// phantom 1900-02-29 for every serial after it. Before it (serial < 61)
-		// the base is one day later. 1904 system: serial 0 is 1904-01-01.
-		$base = '1899-12-30';
-		if ($days < 61) {
-			$base = '1899-12-31';
-		}
-
+		$base = self::serialBase1900(days: $days);
+		// 1904 system: serial 0 is 1904-01-01.
 		if ($date1904 === true) {
 			$base = '1904-01-01';
 		}
@@ -130,6 +120,44 @@ class CmdbRowNormaliser {
 
 		return $base->add(new DateInterval('P' . $days . 'D'))->format('Y-m-d');
 	}//end normaliseDate()
+
+	/**
+	 * The Excel serial a text holds.
+	 *
+	 * @param string $text The trimmed value.
+	 *
+	 * @return float|null The serial, or null when the text is not a number from 1 to the last Excel day.
+	 */
+	private static function excelSerial(string $text): ?float {
+		if (is_numeric($text) === false) {
+			return null;
+		}
+
+		$serial = (float)$text;
+		if ($serial < 1 || $serial > self::MAX_SERIAL) {
+			return null;
+		}
+
+		return $serial;
+	}//end excelSerial()
+
+	/**
+	 * The day the 1900 date system counts a serial from.
+	 *
+	 * 1899-12-30 plus the serial, which absorbs Excel's phantom 1900-02-29 for
+	 * every serial after it. Before it (serial < 61) the base is one day later.
+	 *
+	 * @param int $days The whole days of the serial.
+	 *
+	 * @return string The base date.
+	 */
+	private static function serialBase1900(int $days): string {
+		if ($days < 61) {
+			return '1899-12-31';
+		}
+
+		return '1899-12-30';
+	}//end serialBase1900()
 
 	/**
 	 * A numeric identifier without a decimal part, as a string.

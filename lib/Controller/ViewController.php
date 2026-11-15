@@ -22,10 +22,15 @@
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\ViewService;
+use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
+use OCA\Stackiq\Service\ViewImageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -57,19 +62,75 @@ class ViewController extends Controller {
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param ViewService $viewService The view service for business logic
+	 * @param ViewServiceInterface $viewService The view service for business logic
 	 * @param LoggerInterface $logger The logger service
 	 * @param IUserSession $userSession The user session service
+	 * @param ViewImageService|null $imageService Draws a view as SVG (architecture-views-to-office-documents).
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ViewService $viewService,
+		private readonly ViewServiceInterface $viewService,
 		private readonly LoggerInterface $logger,
 		private readonly IUserSession $userSession,
+		private readonly ?ViewImageService $imageService = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
+
+	/**
+	 * The view drawn as a standalone SVG file.
+	 *
+	 * API Endpoint: GET /api/views/{viewId}/image.svg
+	 *
+	 * The view is read with OpenRegister's RBAC on, so a view the caller may
+	 * not read answers 404, the same as one that does not exist.
+	 *
+	 * @param string $viewId The view identifier.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @return Response 200 `image/svg+xml` named after the view, 401 without a user, 404 when the view is not there for the caller.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function getViewImage(string $viewId): Response {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$view = $this->viewService->findStoredView(viewId: $viewId);
+		if ($view === null) {
+			return new JSONResponse(['success' => false, 'error' => 'View not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$svg = ($this->imageService ?? new ViewImageService())->renderSvg(view: $view);
+
+		return new DataDownloadResponse($svg, self::imageFileName(view: $view), 'image/svg+xml');
+	}//end getViewImage()
+
+	/**
+	 * The file name of a drawn view: its name with only letters, digits,
+	 * spaces, dots, dashes and underscores kept, `view` when nothing is left.
+	 *
+	 * @param array<string, mixed> $view The stored view.
+	 *
+	 * @return string The file name, ending in `.svg`.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/tasks.md#task-2
+	 */
+	public static function imageFileName(array $view): string {
+		$name = (string)($view['name'] ?? ($view['xml']['name'] ?? ''));
+		$name = trim((string)preg_replace('/[^\p{L}\p{N} ._-]+/u', '-', $name), " .-");
+		if ($name === '') {
+			$name = 'view';
+		}
+
+		return mb_substr($name, 0, 120).'.svg';
+	}//end imageFileName()
 
 	/**
 	 * Get all views with optional enrichment

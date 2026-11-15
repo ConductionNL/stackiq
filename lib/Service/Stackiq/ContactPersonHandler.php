@@ -22,7 +22,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -62,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactPersonHandler {
+class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * ContactPersonHandler constructor
 	 *
@@ -75,6 +77,7 @@ class ContactPersonHandler {
 	 * @param LoggerInterface $_logger Logger interface.
 	 * @param SymfonyEmailService $_emailService Email service.
 	 * @param IConfig $config Config interface.
+	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 */
 	public function __construct(
 		private readonly IUserManager $_userManager,
@@ -86,8 +89,29 @@ class ContactPersonHandler {
 		private readonly LoggerInterface $_logger,
 		private readonly SymfonyEmailService $_emailService,
 		private readonly IConfig $config,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmail(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmail()
 
 	/**
 	 * Gets the OpenRegister ObjectService if available
@@ -301,7 +325,7 @@ class ContactPersonHandler {
 			/* @var array<string, mixed> $objectData */
 			$objectData = $contactPersonObject->getObject();
 			$contactId = $contactPersonObject->getId();
-			$email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
+			$email = $this->contactPersonEmail(contactData: $objectData);
 			$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
 			$this->_logger->debug(
@@ -647,7 +671,7 @@ class ContactPersonHandler {
 			// A first contact is NOT added to the organisation admin groups.
 			// That automatic assignment was switched off on purpose in commit
 			// bc4dc9ea ("users should be assigned groups explicitly via the
-			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// admin UI"), by making getOrganizationAdminGroups() (now RoleGroupSettings)
 			// return an empty list. stackiq#1136 made that getter read the saved
 			// list again for the settings page and the export permission, so
 			// the assignment is left out here instead of being revived.
@@ -988,7 +1012,7 @@ class ContactPersonHandler {
 			}
 
 			// Get register and schema IDs dynamically from configuration.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -1546,7 +1570,7 @@ class ContactPersonHandler {
 			);
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -1660,7 +1684,7 @@ class ContactPersonHandler {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2109,7 +2133,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2198,7 +2222,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2508,7 +2532,7 @@ class ContactPersonHandler {
 			$objectService = $this->getObjectService();
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';

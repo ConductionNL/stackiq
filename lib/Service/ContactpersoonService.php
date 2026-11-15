@@ -24,7 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -62,7 +65,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactpersoonService {
+class ContactpersoonService implements ContactpersoonServiceInterface {
 	/**
 	 * ContactpersoonService constructor.
 	 *
@@ -73,7 +76,8 @@ class ContactpersoonService {
 	 * @param ContainerInterface $container Container interface.
 	 * @param IAppManager $appManager App manager.
 	 * @param IAppConfig $config Configuration service.
-	 * @param SettingsService $settingsService Settings service.
+	 * @param RegisterConfigReaderInterface $settingsService Settings service.
+	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 */
 	public function __construct(
 		private readonly ContactPersonHandler $contactPersonHandler,
@@ -83,10 +87,31 @@ class ContactpersoonService {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Tracks contact UUIDs currently being processed to prevent event recursion.
@@ -140,7 +165,7 @@ class ContactpersoonService {
 
 			self::$processingContacts[$contactId] = true;
 
-			$emailValue = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			$emailValue = $this->contactPersonEmailOf(contactData: $contactData);
 			$hasEmail = empty($emailValue) === false;
 			$hasOrganisation = empty($contactData['organisation']) === false;
 			$this->logger->info(
@@ -154,8 +179,9 @@ class ContactpersoonService {
 			);
 
 			// Check if contactpersoon has required data.
-			// Schema uses 'e-mailadres' but some data may use 'email'.
-			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			// The linked Nextcloud contact holds the address; older records carry
+			// it themselves as 'email' or 'e-mailadres'.
+			$email = $emailValue;
 			if ($this->isContactPersonEmailUsable(email: $email, contactId: (string)$contactId) === false) {
 				return false;
 			}
@@ -188,7 +214,7 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
+							$settingsService = $this->container->get(RegisterConfigReaderInterface::class);
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,

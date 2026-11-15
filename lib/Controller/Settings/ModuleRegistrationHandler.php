@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller\Settings;
 
-use OCA\Stackiq\Service\ModuleRegistrationService;
+use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,13 +38,13 @@ class ModuleRegistrationHandler {
 	/**
 	 * Constructor.
 	 *
-	 * @param ModuleRegistrationService $registrationSvc The module registration service.
+	 * @param ModuleRegistrationServiceInterface $registrationSvc The module registration service.
 	 * @param LoggerInterface $logger Logger instance.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
 	 */
 	public function __construct(
-		private readonly ModuleRegistrationService $registrationSvc,
+		private readonly ModuleRegistrationServiceInterface $registrationSvc,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

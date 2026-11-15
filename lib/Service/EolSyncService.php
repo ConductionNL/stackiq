@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,7 @@ use Psr\Log\LoggerInterface;
  * Orchestrates config resolution, mapped-module discovery, and delegated
  * matching/stamping for the EOL feed integration.
  */
-class EolSyncService {
+class EolSyncService implements EolSyncServiceInterface {
 
 	/**
 	 * The provenance source identifier stamped on every matched field.

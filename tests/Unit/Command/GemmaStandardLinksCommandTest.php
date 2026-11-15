@@ -35,6 +35,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * @uses   \OCA\Stackiq\Command\ObjectPages
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
+ * @uses   \OCA\Stackiq\Service\HelperFactory
  *
  * @spec openspec/specs/archimate-import/spec.md
  */

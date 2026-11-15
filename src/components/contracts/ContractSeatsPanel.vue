@@ -57,6 +57,17 @@ import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { SEAT_STATE, seatPosition } from '../../utils/licensePosture.js'
 import { licenceMetricLabel, seatStateLabel } from '../../utils/seatLabels.js'
 
+/**
+ * The contract in an OpenRegister object reply: the body itself when it
+ * carries `@self`, else its `object`, else the body, else an empty object.
+ *
+ * @param {object|null} data The reply body.
+ * @return {object} The contract.
+ */
+function contractOf(data) {
+	return data && data['@self'] !== undefined ? data : data?.object || data || {}
+}
+
 export default {
 	name: 'ContractSeatsPanel',
 	components: {
@@ -185,25 +196,32 @@ export default {
 			this.error = false
 			try {
 				if (this.objectId) {
-					const url = generateUrl(
-						'/apps/openregister/api/objects/{register}/{schema}/{id}',
-						{
-							register: this.register,
-							schema: this.schema,
-							id: String(this.objectId),
-						},
-					)
-					const { data } = await axios.get(url)
-					this.contract =
-						data && data['@self'] !== undefined
-							? data
-							: data?.object || data || {}
+					this.contract = await this.fetchContract()
 				}
 			} catch {
 				this.error = true
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Fetch the contract object, unwrapped from its envelope.
+		 *
+		 * @return {Promise<object>} The contract.
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 */
+		async fetchContract() {
+			const url = generateUrl(
+				'/apps/openregister/api/objects/{register}/{schema}/{id}',
+				{
+					register: this.register,
+					schema: this.schema,
+					id: String(this.objectId),
+				},
+			)
+			const { data } = await axios.get(url)
+			return contractOf(data)
 		},
 
 		/**

@@ -84,6 +84,37 @@ class GemmaStandardLinkerTest extends TestCase {
 	}//end testNoVersionsMeansNoLinkedVersions()
 
 	/**
+	 * A component lists the versions of every standard it links, in the order of its standards,
+	 * and a version links back to its standard; a version of an unlinked standard is not listed.
+	 *
+	 * @return void
+	 */
+	public function testTheVersionsOfLinkedStandardsAreListed(): void {
+		$objects = [
+			['section' => 'element', 'identifier' => 'id-rc', '@self' => ['id' => self::COMPONENT], 'gemmaType' => 'Referentiecomponent'],
+			['section' => 'element', 'identifier' => 'id-s1', '@self' => ['id' => self::STANDARD], 'gemmaType' => 'Standaard'],
+			['section' => 'element', 'identifier' => 'id-s2', '@self' => ['id' => self::OTHER], 'gemmaType' => 'Standaard'],
+			['section' => 'element', 'identifier' => 'id-s3', '@self' => ['id' => '0b1e7c2a-0000-4000-8000-00000000a003'], 'gemmaType' => 'Standaard'],
+			['section' => 'element', 'identifier' => 'id-v1', '@self' => ['id' => 'v1'], 'gemmaType' => 'Standaardversie'],
+			['section' => 'element', 'identifier' => 'id-v2', '@self' => ['id' => 'v2'], 'gemmaType' => 'Standaardversie'],
+			['section' => 'element', 'identifier' => 'id-v3', '@self' => ['id' => 'v3'], 'gemmaType' => 'Standaardversie'],
+			['section' => 'relationship', 'source' => 'id-rc', 'target' => 'id-s2', 'verbindingsrol' => 'Aanbevolen'],
+			['section' => 'relationship', 'source' => 'id-rc', 'target' => 'id-s1', 'verbindingsrol' => 'Verplicht'],
+			['section' => 'relationship', 'source' => 'id-v1', 'target' => 'id-s1', 'type' => 'Specialization'],
+			['section' => 'relationship', 'source' => 'id-s2', 'target' => 'id-v2', 'type' => 'Specialization'],
+			['section' => 'relationship', 'source' => 'id-v3', 'target' => 'id-s3', 'type' => 'Specialization'],
+		];
+
+		$linked = (new GemmaStandardLinker(new NullLogger()))->link($objects);
+
+		self::assertSame([self::OTHER, self::STANDARD], $linked[0]['standards']);
+		self::assertSame(['v2', 'v1'], $linked[0]['linkedStandardVersions']);
+		self::assertSame(self::STANDARD, $linked[4]['standard']);
+		self::assertSame(self::OTHER, $linked[5]['standard']);
+		self::assertSame('0b1e7c2a-0000-4000-8000-00000000a003', $linked[6]['standard']);
+	}//end testTheVersionsOfLinkedStandardsAreListed()
+
+	/**
 	 * Relationship ends are read from the XML when they are not flattened.
 	 *
 	 * @return void

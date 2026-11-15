@@ -43,6 +43,8 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the koppelingen and gebruik lookup by uuid.
  *
  * @covers \OCA\Stackiq\Service\AangebodenGebruikService
+ * @uses \OCA\Stackiq\Service\EmptyListing
+ * @uses \OCA\Stackiq\Service\OpenRegisterLookup
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
  */
