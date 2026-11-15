@@ -12,16 +12,19 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -50,7 +53,6 @@ use Symfony\Component\Mime\Email;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.StaticAccess)             — Transport::fromDsn is Symfony Mailer's static factory pattern
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -194,6 +196,62 @@ class SymfonyEmailService {
 	private const DEFAULT_SENDER_NAME = 'Software Catalogus';
 
 	/**
+	 * The organisation notices: the log prefix, the settings key that enables each,
+	 * the words its log lines use, the default review state, the subject and the template.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const ORGANIZATION_NOTICES = [
+		'registration' => [
+			'readyPrefix' => 'OrganizationRegistrationEmail',
+			'messagePrefix' => 'OrganizationRegistrationEmail',
+			'settingsKey' => 'organizationRegistrationEnabled',
+			'sendingKind' => 'registration',
+			'sentKind' => 'registration',
+			'beoordeling' => 'Geregistreerd',
+			'subject' => 'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
+			'template' => 'organization_registration',
+		],
+		'activation' => [
+			'readyPrefix' => 'OrganizationActivationEmail',
+			'messagePrefix' => 'OrganizationActivationEmail',
+			'settingsKey' => 'organizationActivationEnabled',
+			'sendingKind' => 'activation',
+			'sentKind' => 'activation',
+			'beoordeling' => 'Active',
+			'subject' => 'Software Catalogus - Organisatie Geactiveerd',
+			'template' => 'organization_activation',
+		],
+	];
+
+	/**
+	 * The user notices: the readiness log prefix and the prefix of the other log lines,
+	 * the settings key that enables each, the words its log lines use, the subject and the template.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const USER_NOTICES = [
+		'creation' => [
+			'readyPrefix' => 'UserCreationEmail',
+			'messagePrefix' => 'UserCreationEmail',
+			'settingsKey' => 'userCreationEnabled',
+			'sendingKind' => 'user creation',
+			'sentKind' => 'user creation',
+			'subject' => 'Welkom bij de Software Catalogus - Account Aangemaakt',
+			'template' => 'user_creation',
+		],
+		'organisation' => [
+			'readyPrefix' => 'UserOrganisationEmail',
+			'messagePrefix' => 'UserCreationEmail',
+			'settingsKey' => 'userOrganisationEnabled',
+			'sendingKind' => 'user creation',
+			'sentKind' => 'user organisation',
+			'subject' => 'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
+			'template' => 'user_organisation',
+		],
+	];
+
+	/**
 	 * Available Symfony Mailer transport types
 	 *
 	 * @var array<string, string> Transport type labels
@@ -211,11 +269,29 @@ class SymfonyEmailService {
 	];
 
 	/**
-	 * The settings service for accessing email configuration
+	 * The settings each transport type needs to be non-empty; a type with an
+	 * empty list needs no credentials, and an unknown type has no valid ones.
 	 *
-	 * @var SettingsService Settings service instance
+	 * @var array<string, string[]> Required setting keys per transport type
 	 */
-	private readonly SettingsService $settingsService;
+	private const TRANSPORT_CREDENTIAL_KEYS = [
+		'mailjet' => ['mailjetApiKey', 'mailjetSecretKey'],
+		'sendgrid' => ['sendgridApiKey'],
+		'mailgun' => ['mailgunApiKey', 'mailgunDomain'],
+		'postmark' => ['postmarkApiKey'],
+		'ses' => ['sesAccessKey', 'sesSecretKey'],
+		'smtp' => ['smtpHost'],
+		'sendmail' => [],
+		'native' => [],
+		'null' => [],
+	];
+
+	/**
+	 * The stored e-mail settings
+	 *
+	 * @var EmailSettings E-mail settings instance
+	 */
+	private readonly EmailSettings $emailSettings;
 
 	/**
 	 * Cached Symfony Mailer instance
@@ -229,14 +305,14 @@ class SymfonyEmailService {
 	 *
 	 * @param IAppConfig $config The Nextcloud configuration service
 	 * @param LoggerInterface $logger The logger instance
-	 * @param SettingsService $settingsService The settings service for email configuration
+	 * @param EmailSettings $emailSettings The stored e-mail settings
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		SettingsService $settingsService,
+		EmailSettings $emailSettings,
 	) {
-		$this->settingsService = $settingsService;
+		$this->emailSettings = $emailSettings;
 	}//end __construct()
 
 	/**
@@ -263,194 +339,9 @@ class SymfonyEmailService {
 	 * @throws \Exception If transport configuration is invalid.
 	 */
 	private function createTransport(): TransportInterface {
-		$emailSettings = $this->settingsService->getEmailSettings();
-		$transportType = $emailSettings['transportType'] ?? 'smtp';
-
-		try {
-			switch ($transportType) {
-				case 'smtp':
-					return $this->createSmtpTransport(settings: $emailSettings);
-				case 'sendmail':
-					return Transport::fromDsn('sendmail://default');
-				case 'native':
-					return Transport::fromDsn('native://default');
-				case 'null':
-					return Transport::fromDsn('null://null');
-				case 'sendgrid':
-					return $this->createSendGridTransport(settings: $emailSettings);
-				case 'mailgun':
-					return $this->createMailgunTransport(settings: $emailSettings);
-				case 'postmark':
-					return $this->createPostmarkTransport(settings: $emailSettings);
-				case 'ses':
-					return $this->createSesTransport(settings: $emailSettings);
-				case 'mailjet':
-					return $this->createMailjetTransport(settings: $emailSettings);
-				default:
-					$this->logger->warning(
-						'Unknown transport type, falling back to SMTP',
-						[
-							'transportType' => $transportType,
-						]
-					);
-					return $this->createSmtpTransport(settings: $emailSettings);
-			}//end switch
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to create email transport',
-				[
-					'transportType' => $transportType,
-					'error' => $e->getMessage(),
-				]
-			);
-			throw $e;
-		}//end try
+		$factory = new MailTransportFactory(logger: $this->logger);
+		return $factory->create(emailSettings: $this->emailSettings->getEmailSettings());
 	}//end createTransport()
-
-	/**
-	 * Creates an SMTP transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SMTP transport.
-	 */
-	private function createSmtpTransport(array $settings): TransportInterface {
-		$host = $settings['smtpHost'] ?? 'localhost';
-		$port = $settings['smtpPort'] ?? 587;
-		$encryption = $settings['smtpEncryption'] ?? 'tls';
-		$username = $settings['smtpUsername'] ?? '';
-		$password = $settings['smtpPassword'] ?? '';
-
-		$dsn = sprintf(
-			'smtp://%s:%s@%s:%d',
-			rawurlencode($username),
-			rawurlencode($password),
-			$host,
-			$port
-		);
-
-		if ($encryption === 'ssl') {
-			$dsn = str_replace('smtp://', 'smtps://', $dsn);
-		}
-
-		try {
-			return Transport::fromDsn($dsn);
-		} catch (\Exception $e) {
-			// Strip credentials from exception message before logging.
-			$safeMessage = preg_replace(
-				'~(smtp[s]?://)[^:]+:[^@]+@~i',
-				'$1***:***@',
-				$e->getMessage()
-			) ?? $e->getMessage();
-			throw new \RuntimeException('Failed to create SMTP transport: ' . $safeMessage, 0, $e);
-		}
-	}//end createSmtpTransport()
-
-	/**
-	 * Creates a SendGrid transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SendGrid transport.
-	 */
-	private function createSendGridTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['sendgridApiKey'] ?? '');
-		if (empty($apiKey) === true) {
-			throw new \InvalidArgumentException('SendGrid API key is required');
-		}
-
-		return Transport::fromDsn('sendgrid+api://' . rawurlencode($apiKey) . '@default');
-	}//end createSendGridTransport()
-
-	/**
-	 * Creates a Mailgun transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Mailgun transport.
-	 */
-	private function createMailgunTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['mailgunApiKey'] ?? '');
-		$domain = ($settings['mailgunDomain'] ?? '');
-
-		if (empty($apiKey) === true || empty($domain) === true) {
-			throw new \InvalidArgumentException('Mailgun API key and domain are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'mailgun+api://%s:%s@default',
-				rawurlencode($apiKey),
-				rawurlencode($domain)
-			)
-		);
-	}//end createMailgunTransport()
-
-	/**
-	 * Creates a Postmark transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Postmark transport.
-	 */
-	private function createPostmarkTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['postmarkApiKey'] ?? '');
-		if (empty($apiKey) === true) {
-			throw new \InvalidArgumentException('Postmark API key is required');
-		}
-
-		return Transport::fromDsn('postmark+api://' . rawurlencode($apiKey) . '@default');
-	}//end createPostmarkTransport()
-
-	/**
-	 * Creates an Amazon SES transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SES transport.
-	 */
-	private function createSesTransport(array $settings): TransportInterface {
-		$accessKey = ($settings['sesAccessKey'] ?? '');
-		$secretKey = ($settings['sesSecretKey'] ?? '');
-		$region = ($settings['sesRegion'] ?? 'us-east-1');
-
-		if (empty($accessKey) === true || empty($secretKey) === true) {
-			throw new \InvalidArgumentException('Amazon SES access key and secret key are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'ses+api://%s:%s@default?region=%s',
-				rawurlencode($accessKey),
-				rawurlencode($secretKey),
-				rawurlencode($region)
-			)
-		);
-	}//end createSesTransport()
-
-	/**
-	 * Creates a Mailjet transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Mailjet transport.
-	 */
-	private function createMailjetTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['mailjetApiKey'] ?? '');
-		$secretKey = ($settings['mailjetSecretKey'] ?? '');
-
-		if (empty($apiKey) === true || empty($secretKey) === true) {
-			throw new \InvalidArgumentException('Mailjet API key and secret key are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'mailjet+api://%s:%s@default',
-				rawurlencode($apiKey),
-				rawurlencode($secretKey)
-			)
-		);
-	}//end createMailjetTransport()
 
 	/**
 	 * Sends an organization registration email.
@@ -464,80 +355,9 @@ class SymfonyEmailService {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function sendOrganizationRegistrationEmail(array $organization): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'OrganizationRegistrationEmail',
-			settingsKey: 'organizationRegistrationEnabled',
-			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
+		return $this->sendOrganizationNotice(
+			notice: new NoticeEmail(notice: self::ORGANIZATION_NOTICES['registration'], data: $organization)
 		);
-		if ($configStatus === null) {
-			return false;
-		}
-
-		$organizationName = $organization['name'] ?? 'Onbekende Organisatie';
-
-		// Determine recipient email.
-		$recipientEmail = $this->getRecipientEmail(data: $organization);
-		if ($recipientEmail === null) {
-			$this->logger->warning(
-				'OrganizationRegistrationEmail: Cannot send without valid email address',
-				[
-					'organization' => $organization,
-					'organizationName' => $organizationName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'OrganizationRegistrationEmail: Sending registration email',
-			[
-				'organizationName' => $organizationName,
-				'recipientEmail' => $recipientEmail,
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$templateData = [
-			'organization' => [
-				'name' => $organizationName,
-				'beoordeling' => ($organization['beoordeling'] ?? 'Geregistreerd'),
-				'type' => ($organization['type'] ?? 'Organisatie'),
-				'website' => ($organization['website'] ?? ''),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $organizationName,
-				subject: 'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
-				templateName: 'organization_registration',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'OrganizationRegistrationEmail: Successfully sent registration email',
-					[
-						'organizationName' => $organizationName,
-						'recipientEmail' => $recipientEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'OrganizationRegistrationEmail: Failed to send registration email',
-				[
-					'organizationName' => $organizationName,
-					'recipientEmail' => $recipientEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
 	}//end sendOrganizationRegistrationEmail()
 
 	/**
@@ -551,80 +371,9 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendOrganizationActivationEmail(array $organization): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'OrganizationActivationEmail',
-			settingsKey: 'organizationActivationEnabled',
-			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
+		return $this->sendOrganizationNotice(
+			notice: new NoticeEmail(notice: self::ORGANIZATION_NOTICES['activation'], data: $organization)
 		);
-		if ($configStatus === null) {
-			return false;
-		}
-
-		$organizationName = ($organization['name'] ?? 'Onbekende Organisatie');
-
-		// Determine recipient email.
-		$recipientEmail = $this->getRecipientEmail(data: $organization);
-		if ($recipientEmail === null) {
-			$this->logger->warning(
-				'OrganizationActivationEmail: Cannot send without valid email address',
-				[
-					'organization' => $organization,
-					'organizationName' => $organizationName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'OrganizationActivationEmail: Sending activation email',
-			[
-				'organizationName' => $organizationName,
-				'recipientEmail' => $recipientEmail,
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$templateData = [
-			'organization' => [
-				'name' => $organizationName,
-				'beoordeling' => ($organization['beoordeling'] ?? 'Active'),
-				'type' => ($organization['type'] ?? 'Organisatie'),
-				'website' => ($organization['website'] ?? ''),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $organizationName,
-				subject: 'Software Catalogus - Organisatie Geactiveerd',
-				templateName: 'organization_activation',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'OrganizationActivationEmail: Successfully sent activation email',
-					[
-						'organizationName' => $organizationName,
-						'recipientEmail' => $recipientEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'OrganizationActivationEmail: Failed to send activation email',
-				[
-					'organizationName' => $organizationName,
-					'recipientEmail' => $recipientEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
 	}//end sendOrganizationActivationEmail()
 
 	/**
@@ -639,88 +388,10 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendUserCreationEmail(array $user, array $organization = []): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'UserCreationEmail',
-			settingsKey: 'userCreationEnabled',
-			extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
-		);
-		if ($configStatus === null) {
-			return false;
-		}
+		$notice = new NoticeEmail(notice: self::USER_NOTICES['creation'], data: $user);
+		$notice->organizationName = ($organization['name'] ?? 'Software Catalogus');
 
-		$userEmail = $user['email'] ?? '';
-		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
-		$userName = trim($userName);
-
-		if (empty($userEmail) === true) {
-			$this->logger->warning(
-				'UserCreationEmail: Cannot send without email address',
-				[
-					'user' => $user,
-					'userName' => $userName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'UserCreationEmail: Sending user creation email',
-			[
-				'userName' => $userName,
-				'userEmail' => $userEmail,
-				'organizationName' => $organization['name'] ?? 'Software Catalogus',
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$displayName = 'Gebruiker';
-		if (empty($userName) === false) {
-			$displayName = $userName;
-		}
-
-		$templateData = [
-			'user' => [
-				'name' => $displayName,
-				'email' => $userEmail,
-				'role' => ($user['role'] ?? ''),
-			],
-			'organization' => [
-				'name' => ($organization['name'] ?? 'Software Catalogus'),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $userEmail,
-				recipientName: $displayName,
-				subject: 'Welkom bij de Software Catalogus - Account Aangemaakt',
-				templateName: 'user_creation',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'UserCreationEmail: Successfully sent user creation email',
-					[
-						'userName' => $userName,
-						'userEmail' => $userEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'UserCreationEmail: Failed to send user creation email',
-				[
-					'userName' => $userName,
-					'userEmail' => $userEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
+		return $this->sendUserNotice(notice: $notice);
 	}//end sendUserCreationEmail()
 
 	/**
@@ -735,98 +406,111 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendUserUpdateEmail(array $user, array $organization = []): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'UserOrganisationEmail',
-			settingsKey: 'userOrganisationEnabled',
-			extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
-		);
+		$notice = new NoticeEmail(notice: self::USER_NOTICES['organisation'], data: $user);
+		$notice->organizationName = ($organization['name'] ?? 'Software Catalogus');
+
+		return $this->sendUserNotice(notice: $notice);
+	}//end sendUserUpdateEmail()
+
+	/**
+	 * Send an organisation notice: check delivery is ready, address the organisation, log and deliver.
+	 *
+	 * @param NoticeEmail $notice The notice and the organization data.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function sendOrganizationNotice(NoticeEmail $notice): bool {
+		$configStatus = $this->getReadyConfigStatus(notice: $notice, extraLogContext: ['organizationName' => $notice->data['name'] ?? 'Unknown']);
 		if ($configStatus === null) {
 			return false;
 		}
 
-		$userEmail = $user['email'] ?? '';
-		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
-		$userName = trim($userName);
-
-		if (empty($userEmail) === true) {
-			$this->logger->warning(
-				'UserCreationEmail: Cannot send without email address',
-				[
-					'user' => $user,
-					'userName' => $userName,
-				]
-			);
+		$notice->recipientName = ($notice->data['name'] ?? 'Onbekende Organisatie');
+		if ($notice->addressOrganization(logger: $this->logger, recipientEmail: $this->getRecipientEmail(data: $notice->data)) === false) {
 			return false;
 		}
 
-		$this->logger->info(
-			'UserCreationEmail: Sending user creation email',
-			[
-				'userName' => $userName,
-				'userEmail' => $userEmail,
-				'organizationName' => $organization['name'] ?? 'Software Catalogus',
-				'transportType' => $configStatus['transportType'],
-			]
-		);
+		$notice->logSending(logger: $this->logger, configStatus: $configStatus);
+		$notice->templateData = $notice->organizationTemplateData();
 
-		// Prepare template data.
-		$displayName = 'Gebruiker';
-		if (empty($userName) === false) {
-			$displayName = $userName;
+		return $this->deliverNotice(notice: $notice);
+	}//end sendOrganizationNotice()
+
+	/**
+	 * Send a user notice: check delivery is ready, address the user, log and deliver.
+	 *
+	 * @param NoticeEmail $notice The notice, the user data and the organisation name.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function sendUserNotice(NoticeEmail $notice): bool {
+		$configStatus = $this->getReadyConfigStatus(notice: $notice, extraLogContext: ['userEmail' => $notice->data['email'] ?? 'Unknown']);
+		if ($configStatus === null) {
+			return false;
 		}
 
-		$templateData = [
-			'user' => [
-				'name' => $displayName,
-				'email' => $userEmail,
-				'role' => ($user['role'] ?? ''),
-			],
-			'organization' => [
-				'name' => ($organization['name'] ?? 'Software Catalogus'),
-			],
-		];
+		if ($notice->addressUser(logger: $this->logger) === false) {
+			return false;
+		}
 
+		$notice->logSending(logger: $this->logger, configStatus: $configStatus);
+		$notice->describeUserNotice();
+
+		return $this->deliverNotice(notice: $notice);
+	}//end sendUserNotice()
+
+	/**
+	 * The configuration status when the email system is configured and this notice type is enabled; logs why not.
+	 *
+	 * @param NoticeEmail $notice The notice.
+	 * @param array $extraLogContext The context the readiness log lines add.
+	 *
+	 * @return array|null The configuration status, or null when the notice is not sent.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function getReadyConfigStatus(NoticeEmail $notice, array $extraLogContext): ?array {
+		return $this->ensureEmailDeliveryReady(
+			logPrefix: $notice->notice['readyPrefix'],
+			settingsKey: $notice->notice['settingsKey'],
+			extraLogContext: $extraLogContext
+		);
+	}//end getReadyConfigStatus()
+
+	/**
+	 * Send the templated email of a notice and log the outcome; a failure is logged and answered with false.
+	 *
+	 * @param NoticeEmail $notice The addressed and described notice.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function deliverNotice(NoticeEmail $notice): bool {
 		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $userEmail,
-				recipientName: $displayName,
-				subject: 'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
-				templateName: 'user_organisation',
-				templateData: $templateData
-			);
-
+			$success = $this->sendTemplatedEmail(notice: $notice);
 			if ($success === true) {
-				$this->logger->info(
-					'UserCreationEmail: Successfully sent user organisation email',
-					[
-						'userName' => $userName,
-						'userEmail' => $userEmail,
-					]
-				);
+				$this->logger->info($notice->notice['messagePrefix'] . ': Successfully sent ' . $notice->notice['sentKind'] . ' email', $notice->logContext);
 			}
 
 			return $success;
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'UserCreationEmail: Failed to send user organisation email',
-				[
-					'userName' => $userName,
-					'userEmail' => $userEmail,
-					'error' => $e->getMessage(),
-				]
+				$notice->notice['messagePrefix'] . ': Failed to send ' . $notice->notice['sentKind'] . ' email',
+				array_merge($notice->logContext, ['error' => $e->getMessage()])
 			);
 			return false;
 		}//end try
-	}//end sendUserUpdateEmail()
+	}//end deliverNotice()
 
 	/**
-	 * Sends a templated email using the configured templates.
+	 * Sends the templated email of a notice using the configured templates.
 	 *
-	 * @param string $recipientEmail The recipient email address.
-	 * @param string $recipientName The recipient name.
-	 * @param string $subject The email subject.
-	 * @param string $templateName The template name.
-	 * @param array $templateData The template data.
+	 * @param NoticeEmail $notice The addressed and described notice: recipient, subject, template and its data.
 	 *
 	 * @return bool True if email was sent successfully, false otherwise.
 	 *
@@ -834,38 +518,39 @@ class SymfonyEmailService {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function sendTemplatedEmail(
-		string $recipientEmail,
-		string $recipientName,
-		string $subject,
-		string $templateName,
-		array $templateData,
-	): bool {
+	private function sendTemplatedEmail(NoticeEmail $notice): bool {
 		try {
-			$htmlBody = $this->renderTemplate(
-				templateName: $templateName,
-				templateData: $templateData
-			);
-
-			return $this->sendEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $recipientName,
-				subject: $subject,
-				htmlBody: $htmlBody
-			);
+			return $this->sendRenderedNotice(notice: $notice);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to send templated email',
-				[
-					'recipient' => $recipientEmail,
-					'template' => $templateName,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			$notice->logTemplatedFailure(logger: $this->logger, error: $e);
 			throw $e;
-		}//end try
+		}
 	}//end sendTemplatedEmail()
+
+	/**
+	 * Render the template of a notice and send it.
+	 *
+	 * @param NoticeEmail $notice The addressed and described notice.
+	 *
+	 * @return bool True if email was sent successfully.
+	 *
+	 * @throws \Exception If email sending fails.
+	 *
+	 * @spec openspec/specs/method-decomposition/spec.md
+	 */
+	private function sendRenderedNotice(NoticeEmail $notice): bool {
+		$htmlBody = $this->renderTemplate(
+			templateName: $notice->notice['template'],
+			templateData: $notice->templateData
+		);
+
+		return $this->sendEmail(
+			recipientEmail: $notice->recipientEmail,
+			recipientName: $notice->recipientName,
+			subject: $notice->notice['subject'],
+			htmlBody: $htmlBody
+		);
+	}//end sendRenderedNotice()
 
 	/**
 	 * Render a named template against the provided data.
@@ -883,7 +568,7 @@ class SymfonyEmailService {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
 	 */
 	private function renderTemplate(string $templateName, array $templateData): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$templates = ($emailSettings['templates'] ?? []);
 		$templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
 
@@ -907,7 +592,7 @@ class SymfonyEmailService {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
 	 */
 	private function resolveSender(): array {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$senderEmail = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
 		$senderName = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
 		$transportType = ($emailSettings['transportType'] ?? 'smtp');
@@ -988,25 +673,61 @@ class SymfonyEmailService {
 			return $testReceiver;
 		}
 
-		// Try to get email from various fields.
+		// Try to get email from various fields; if no direct email, try to get from contactpersonen.
 		$email = ($data['e-mailadres'] ?? null);
-
-		// If no direct email, try to get from contactpersonen.
-		if ($email === null && isset($data['contactpersonen']) === true && is_array($data['contactpersonen']) === true) {
-			foreach ($data['contactpersonen'] as $contact) {
-				if (is_array($contact) === true && empty($contact['e-mailadres']) === false) {
-					$email = $contact['e-mailadres'];
-					break;
-				}
-			}
+		if ($email === null) {
+			$email = $this->contactPersonEmail(data: $data);
 		}
 
+		return $this->validRecipient(email: $email);
+	}//end getRecipientEmail()
+
+	/**
+	 * The address when it is a valid email address, else null.
+	 *
+	 * @param mixed $email The candidate address.
+	 *
+	 * @return string|null
+	 */
+	private function validRecipient(mixed $email): ?string {
 		if ($email !== null && $this->validateEmail(email: $email) === true) {
 			return $email;
 		}
 
 		return null;
-	}//end getRecipientEmail()
+	}//end validRecipient()
+
+	/**
+	 * The first non-empty email address among the contact persons.
+	 *
+	 * @param array $data The organization or user data.
+	 *
+	 * @return mixed The address, or null when no contact person has one.
+	 */
+	private function contactPersonEmail(array $data): mixed {
+		foreach ($this->contactPersons(data: $data) as $contact) {
+			if (is_array($contact) === true && empty($contact['e-mailadres']) === false) {
+				return $contact['e-mailadres'];
+			}
+		}
+
+		return null;
+	}//end contactPersonEmail()
+
+	/**
+	 * The contact persons of the data, or an empty list when it has none.
+	 *
+	 * @param array $data The organization or user data.
+	 *
+	 * @return array
+	 */
+	private function contactPersons(array $data): array {
+		if (isset($data['contactpersonen']) === true && is_array($data['contactpersonen']) === true) {
+			return $data['contactpersonen'];
+		}
+
+		return [];
+	}//end contactPersons()
 
 	/**
 	 * Gets the test receiver override email address.
@@ -1014,7 +735,7 @@ class SymfonyEmailService {
 	 * @return string|null The test receiver override email address or null if not set.
 	 */
 	private function getTestReceiverOverride(): ?string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$override = ($emailSettings['testReceiverOverride'] ?? '');
 
 		if (empty($override) === false && $this->validateEmail(email: $override) === true) {
@@ -1099,7 +820,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getSenderEmail(): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		return $emailSettings['senderEmail'] ?? self::DEFAULT_SENDER;
 	}//end getSenderEmail()
 
@@ -1110,7 +831,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getSenderName(): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		return $emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME;
 	}//end getSenderName()
 
@@ -1121,7 +842,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getEmailSettings(): array {
-		$settings = $this->settingsService->getEmailSettings();
+		$settings = $this->emailSettings->getEmailSettings();
 
 		// Add transport information.
 		$settings['availableTransports'] = self::TRANSPORT_TYPES;
@@ -1152,7 +873,7 @@ class SymfonyEmailService {
 			throw new \InvalidArgumentException('Invalid email address: ' . $email);
 		}
 
-		$this->settingsService->updateEmailSettings(['senderEmail' => $email]);
+		$this->emailSettings->updateEmailSettings(['senderEmail' => $email]);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setSenderEmail()
@@ -1166,7 +887,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function setSenderName(string $name): void {
-		$this->settingsService->updateEmailSettings(['senderName' => $name]);
+		$this->emailSettings->updateEmailSettings(['senderName' => $name]);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setSenderName()
@@ -1186,7 +907,7 @@ class SymfonyEmailService {
 		}
 
 		$settings = ['transportType' => $transportType] + $transportConfig;
-		$this->settingsService->updateEmailSettings($settings);
+		$this->emailSettings->updateEmailSettings($settings);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setTransportConfiguration()
@@ -1254,7 +975,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['enabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['enabled' => $enabled]);
 	}//end setEnabled()
 
 	/**
@@ -1270,7 +991,7 @@ class SymfonyEmailService {
 			throw new \InvalidArgumentException('Invalid test receiver override email address: ' . $email);
 		}
 
-		$this->settingsService->updateEmailSettings(['testReceiverOverride' => $email]);
+		$this->emailSettings->updateEmailSettings(['testReceiverOverride' => $email]);
 	}//end setTestReceiverOverride()
 
 	/**
@@ -1281,7 +1002,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setOrganizationRegistrationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['organizationRegistrationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['organizationRegistrationEnabled' => $enabled]);
 	}//end setOrganizationRegistrationEnabled()
 
 	/**
@@ -1292,7 +1013,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setOrganizationActivationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['organizationActivationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['organizationActivationEnabled' => $enabled]);
 	}//end setOrganizationActivationEnabled()
 
 	/**
@@ -1303,7 +1024,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setUserCreationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['userCreationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['userCreationEnabled' => $enabled]);
 	}//end setUserCreationEnabled()
 
 	/**
@@ -1313,7 +1034,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function isEmailSystemConfigured(): array {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 
 		// Check if emails are enabled.
 		if (($emailSettings['enabled'] ?? false) === false) {
@@ -1359,29 +1080,19 @@ class SymfonyEmailService {
 	 */
 	private function hasValidTransportCredentials(array $emailSettings): bool {
 		$transportType = ($emailSettings['transportType'] ?? 'smtp');
+		$requiredKeys  = (self::TRANSPORT_CREDENTIAL_KEYS[$transportType] ?? null);
+		if ($requiredKeys === null) {
+			return false;
+		}
 
-		switch ($transportType) {
-			case 'mailjet':
-				return empty($emailSettings['mailjetApiKey']) === false
-					&& empty($emailSettings['mailjetSecretKey']) === false;
-			case 'sendgrid':
-				return empty($emailSettings['sendgridApiKey']) === false;
-			case 'mailgun':
-				return empty($emailSettings['mailgunApiKey']) === false && empty($emailSettings['mailgunDomain']) === false;
-			case 'postmark':
-				return empty($emailSettings['postmarkApiKey']) === false;
-			case 'ses':
-				return empty($emailSettings['sesAccessKey']) === false && empty($emailSettings['sesSecretKey']) === false;
-			case 'smtp':
-				return empty($emailSettings['smtpHost']) === false;
-			case 'sendmail':
-			case 'native':
-			case 'null':
-				// These don't require credentials.
-				return true;
-			default:
+		// Sendmail, native and null don't require credentials.
+		foreach ($requiredKeys as $key) {
+			if (empty($emailSettings[$key]) === true) {
 				return false;
-		}//end switch
+			}
+		}
+
+		return true;
 	}//end hasValidTransportCredentials()
 
 	/**
@@ -1476,7 +1187,7 @@ class SymfonyEmailService {
 			return null;
 		}
 
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		if (($emailSettings[$settingsKey] ?? null) === false) {
 			$this->logger->info(
 				$logPrefix . ': Delivery disabled for this message type',

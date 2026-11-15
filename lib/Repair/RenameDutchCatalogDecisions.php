@@ -152,15 +152,30 @@ class RenameDutchCatalogDecisions {
 				continue;
 			}
 
-			foreach ($values as $old => $new) {
-				$planned[] = [
-					'column' => $column,
-					'old' => (string)$old,
-					'new' => $new,
-				];
-			}
+			array_push($planned, ...$this->columnRewrites(column: $column, values: $values));
 		}
 
 		return $planned;
 	}//end plannedRewrites()
+
+	/**
+	 * One rewrite per stored value of one column.
+	 *
+	 * @param string                $column The column the values live in.
+	 * @param array<string, string> $values Stored value => replacement.
+	 *
+	 * @return array<int, array{column: string, old: string, new: string}>
+	 */
+	private function columnRewrites(string $column, array $values): array {
+		$rewrites = [];
+		foreach ($values as $old => $new) {
+			$rewrites[] = [
+				'column' => $column,
+				'old' => (string)$old,
+				'new' => $new,
+			];
+		}
+
+		return $rewrites;
+	}//end columnRewrites()
 }//end class

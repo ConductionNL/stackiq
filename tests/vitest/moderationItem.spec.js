@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the moderation-item display helpers.
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md

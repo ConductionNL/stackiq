@@ -297,12 +297,13 @@ test('facets: the GEMMA panel renders beside the search box on the module index'
 		DIMENSIONS.length,
 	)
 
-	// …AND the pre-existing toolbar still works alongside it, which is the
-	// second half of the scenario ("the existing free-text search box ... MUST
-	// continue to render and function unchanged").
-	const search = page.locator('.faceted-catalog-index__search').first()
-	await expect(search, 'the free-text search box disappeared').toBeVisible()
-	await search.getByRole('textbox').first().fill(TOKEN)
+	// …AND the free-text search still works alongside it, which is the
+	// second half of the scenario ("the free-text search … MUST continue to
+	// render and function"): the Search tab of the Search and columns sidebar.
+	await page.getByRole('button', { name: 'Search and columns' }).first().click()
+	const search = page.locator('.app-sidebar').getByRole('textbox').first()
+	await expect(search, 'the sidebar search box did not open').toBeVisible()
+	await search.fill(TOKEN)
 	// The list re-fetches and settles on this run's seeded modules.
 	await expect(main.getByText(`${TOKEN} module 1`).first()).toBeVisible({
 		timeout: 30000,

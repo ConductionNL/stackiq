@@ -1,0 +1,156 @@
+{
+	"ran": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showSuccess",
+				"[EOL sync completed: {matched} matched, {skipped} skipped. {\"matched\":12,\"skipped\":3}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": true,
+			"matched": 12,
+			"skipped": 3,
+			"lastRun": "yesterday"
+		}
+	},
+	"not available after run": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showError",
+				"[EOL sync did not run: {reason} {\"reason\":\"No source configured\"}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": false,
+			"matched": 0,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	},
+	"reply without status": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showSuccess",
+				"[EOL sync completed: {matched} matched, {skipped} skipped. {\"matched\":1,\"skipped\":0}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": true,
+			"matched": 1,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	},
+	"empty status": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showSuccess",
+				"[EOL sync completed: {matched} matched, {skipped} skipped. {\"matched\":1,\"skipped\":0}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": true,
+			"matched": 1,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	},
+	"null reply": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showSuccess",
+				"[EOL sync completed: {matched} matched, {skipped} skipped. {\"matched\":1,\"skipped\":0}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": true,
+			"matched": 1,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	},
+	"unavailable before, no status": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showError",
+				"[EOL sync did not run: {reason} {\"reason\":\"No source configured\"}]"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": false,
+			"matched": 1,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	},
+	"request fails": {
+		"trace": [
+			[
+				"apiRequest",
+				"eol-sync/trigger",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"showError",
+				"[EOL sync failed]: timeout"
+			]
+		],
+		"syncing": false,
+		"status": {
+			"available": true,
+			"matched": 1,
+			"skipped": 0,
+			"lastRun": "yesterday"
+		}
+	}
+}

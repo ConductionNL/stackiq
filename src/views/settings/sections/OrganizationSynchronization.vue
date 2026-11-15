@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -609,6 +613,54 @@ import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { settingsStore } from '../../../store/store.js'
 import { withHeartbeat } from '../../../utils/heartbeat.js'
 
+/**
+ * Where the settings API lives.
+ */
+const SETTINGS_API = '/index.php/apps/stackiq/api/settings'
+
+/**
+ * The organisation sync request body.
+ *
+ * @param {{dryRun: boolean, batchSize: number}} options The sync options.
+ * @return {{dry_run: boolean, batch_size: number}} The request body.
+ */
+function syncPayload(options) {
+	return { dry_run: options.dryRun, batch_size: options.batchSize }
+}
+
+/**
+ * The JSON body of a reply, or an error naming the HTTP status.
+ *
+ * @param {Response} response The fetch reply.
+ * @return {Promise<object>} The parsed body.
+ */
+async function readJson(response) {
+	if (!response.ok) {
+		throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+	}
+	return await response.json()
+}
+
+/**
+ * POST a JSON payload to a settings endpoint and read the JSON reply.
+ *
+ * @param {string} url The endpoint.
+ * @param {object} payload The request body.
+ * @return {Promise<object>} The parsed reply.
+ */
+async function postJson(url, payload) {
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			requesttoken: OC.requestToken,
+			'Content-Type': 'application/json',
+			'X-Requested-With': 'XMLHttpRequest',
+		},
+		body: JSON.stringify(payload),
+	})
+	return readJson(response)
+}
+
 export default {
 	name: 'OrganizationSynchronization',
 
@@ -789,18 +841,8 @@ export default {
 			this.loadingSyncStatus = true
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
-				const response = await fetch(
-					`/index.php/apps/stackiq/api/settings/sync-status?timeWindow=${timeWindow}`,
-				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
-				this.syncStatus = data
+				const url = `${SETTINGS_API}/sync-status?timeWindow=${timeWindow}`
+				this.syncStatus = await readJson(await fetch(url))
 			} catch (error) {
 				console.error('Failed to load sync status:', error)
 				showError('Failed to load synchronization status: ' + error.message)
@@ -821,52 +863,50 @@ export default {
 
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
-
 				// Wrap the sync operation with heartbeat to prevent 504 timeouts
-				const result = await withHeartbeat(async () => {
-					const response = await fetch(
-						'/index.php/apps/stackiq/api/settings/sync',
-						{
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify({ timeWindow }),
-						},
-					)
-
-					if (!response.ok) {
-						throw new Error(
-							`HTTP ${response.status}: ${response.statusText}`,
-						)
-					}
-
-					return await response.json()
-				}, 30000) // 30-second heartbeat interval
-
-				this.syncResult = result
-
-				if (result.success) {
-					showSuccess('Manual synchronization completed successfully')
-					// Reload sync status to reflect changes
-					await this.loadSyncStatus()
-				} else {
-					throw new Error(result.message || 'Synchronization failed')
-				}
-			} catch (error) {
-				console.error('Failed to perform manual sync:', error)
-				this.syncResult = {
-					success: false,
-					message:
-						'Failed to perform manual synchronization: ' + error.message,
-				}
-				showError(
-					'Failed to perform manual synchronization: ' + error.message,
+				this.syncResult = await withHeartbeat(
+					() => postJson(`${SETTINGS_API}/sync`, { timeWindow }),
+					30000, // 30-second heartbeat interval
 				)
+				await this.confirmManualSync(this.syncResult)
+			} catch (error) {
+				this.failManualSync(error)
 			} finally {
 				this.performingSync = false
 			}
+		},
+
+		/**
+		 * Confirm a finished manual sync and reload the status, or throw when it was refused.
+		 *
+		 * @param {object} result The sync endpoint's reply.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async confirmManualSync(result) {
+			if (!result.success) {
+				throw new Error(result.message || 'Synchronization failed')
+			}
+			showSuccess('Manual synchronization completed successfully')
+			// Reload sync status to reflect changes
+			await this.loadSyncStatus()
+		},
+
+		/**
+		 * Record and show a failed manual sync.
+		 *
+		 * @param {Error} error What went wrong.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		failManualSync(error) {
+			console.error('Failed to perform manual sync:', error)
+			this.syncResult = {
+				success: false,
+				message:
+					'Failed to perform manual synchronization: ' + error.message,
+			}
+			showError('Failed to perform manual synchronization: ' + error.message)
 		},
 
 		/**
@@ -1006,48 +1046,48 @@ export default {
 			this.orgSyncResult = null
 
 			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/settings/sync/organisations',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-						body: JSON.stringify({
-							dry_run: this.orgSyncOptions.dryRun,
-							batch_size: this.orgSyncOptions.batchSize,
-						}),
-					},
-				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const result = await response.json()
-				this.orgSyncResult = result
-
-				if (result.success) {
-					const actionText = this.orgSyncOptions.dryRun
-						? 'Organisation sync preview completed'
-						: 'Organisation sync completed successfully'
-					showSuccess(actionText)
-				} else {
-					throw new Error(result.message || 'Organisation sync failed')
-				}
+				const payload = syncPayload(this.orgSyncOptions)
+				const url = `${SETTINGS_API}/sync/organisations`
+				this.orgSyncResult = await postJson(url, payload)
+				this.confirmOrganisationSync(this.orgSyncResult)
 			} catch (error) {
-				console.error('Failed to perform organisation sync:', error)
-				this.orgSyncResult = {
-					success: false,
-					message: 'Failed to perform organisation sync: ' + error.message,
-				}
-				showError('Failed to perform organisation sync: ' + error.message)
+				this.failOrganisationSync(error)
 			} finally {
 				this.performingOrgSync = false
 			}
+		},
+
+		/**
+		 * Confirm a finished organisation sync, or throw when it was refused.
+		 *
+		 * @param {object} result The sync endpoint's reply.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		confirmOrganisationSync(result) {
+			if (!result.success) {
+				throw new Error(result.message || 'Organisation sync failed')
+			}
+			const actionText = this.orgSyncOptions.dryRun
+				? 'Organisation sync preview completed'
+				: 'Organisation sync completed successfully'
+			showSuccess(actionText)
+		},
+
+		/**
+		 * Record and show a failed organisation sync.
+		 *
+		 * @param {Error} error What went wrong.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		failOrganisationSync(error) {
+			console.error('Failed to perform organisation sync:', error)
+			this.orgSyncResult = {
+				success: false,
+				message: 'Failed to perform organisation sync: ' + error.message,
+			}
+			showError('Failed to perform organisation sync: ' + error.message)
 		},
 	},
 }

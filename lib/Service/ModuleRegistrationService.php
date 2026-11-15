@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -32,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * @category Service
  * @package  OCA\Stackiq\Service
  */
-class ModuleRegistrationService {
+class ModuleRegistrationService implements ModuleRegistrationServiceInterface {
 	/**
 	 * Mapping from organisatie.type to module.registeredBy.
 	 */
@@ -47,12 +52,12 @@ class ModuleRegistrationService {
 	 * Constructor for ModuleRegistrationService.
 	 *
 	 * @param ContainerInterface $container The DI container
-	 * @param SettingsService $settingsService The settings service
+	 * @param RegisterConfigReaderInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

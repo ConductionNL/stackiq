@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\ContractStatusService;
+use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -42,13 +42,13 @@ class ContractStatusJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for scheduling.
-	 * @param ContractStatusService $statusService The contract status maintenance service.
+	 * @param ContractStatusServiceInterface $statusService The contract status maintenance service.
 	 * @param IAppManager $appManager The Nextcloud app manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		private readonly ContractStatusService $statusService,
+		private readonly ContractStatusServiceInterface $statusService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {

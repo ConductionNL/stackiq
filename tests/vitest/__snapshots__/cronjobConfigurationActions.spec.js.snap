@@ -1,0 +1,388 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CronjobConfiguration runJob > refuses a job without an organisation 1`] = `
+{
+  "after": [
+    "none",
+    "none",
+  ],
+  "busy": [],
+  "error": [
+    [
+      "Please configure and save an organisation first",
+    ],
+  ],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "",
+  },
+  "requests": [],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration runJob > reports a failed run with the server message or the error 1`] = `
+{
+  "after": [
+    "none",
+    null,
+  ],
+  "busy": [
+    [
+      "none",
+      "sync",
+    ],
+  ],
+  "error": [
+    [
+      "Failed to run background job: Server says no",
+    ],
+  ],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "org",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/sync",
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration runJob > reports a failed run with the server message or the error 2`] = `
+{
+  "after": [
+    "none",
+    null,
+  ],
+  "busy": [
+    [
+      "none",
+      "sync",
+    ],
+  ],
+  "error": [
+    [
+      "Failed to run background job: offline",
+    ],
+  ],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "org",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/sync",
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration runJob > reports a refused run with and without a message 1`] = `
+{
+  "after": [
+    "none",
+    null,
+  ],
+  "busy": [
+    [
+      "none",
+      "sync",
+    ],
+  ],
+  "error": [
+    [
+      "Busy",
+    ],
+  ],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "org",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/sync",
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration runJob > reports a refused run with and without a message 2`] = `
+{
+  "after": [
+    "none",
+    null,
+  ],
+  "busy": [
+    [
+      "none",
+      "sync",
+    ],
+  ],
+  "error": [
+    [
+      "Job execution failed",
+    ],
+  ],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "org",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/sync",
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration runJob > runs the job 1`] = `
+{
+  "after": [
+    "none",
+    null,
+  ],
+  "busy": [
+    [
+      "none",
+      "sync",
+    ],
+  ],
+  "error": [],
+  "job": {
+    "id": "sync",
+    "organisationUuid": "org",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/sync",
+    ],
+  ],
+  "success": [
+    [
+      "Background job executed successfully",
+    ],
+  ],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > reports a failed save 1`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "c",
+      "none",
+    ],
+  ],
+  "error": [
+    [
+      "Failed to save cronjob configuration",
+    ],
+  ],
+  "job": {
+    "enabled": true,
+    "id": "c",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": true,
+        "jobId": "c",
+        "organisationUuid": null,
+      },
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > reports a failed save 2`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "d",
+      "none",
+    ],
+  ],
+  "error": [
+    [
+      "Failed to save cronjob configuration",
+    ],
+  ],
+  "job": {
+    "enabled": true,
+    "id": "d",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": true,
+        "jobId": "d",
+        "organisationUuid": null,
+      },
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > reports a refused save with and without a message 1`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "a",
+      "none",
+    ],
+  ],
+  "error": [
+    [
+      "Nope",
+    ],
+  ],
+  "job": {
+    "enabled": true,
+    "id": "a",
+    "organisationUuid": "keep",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": true,
+        "jobId": "a",
+        "organisationUuid": null,
+      },
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > reports a refused save with and without a message 2`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "b",
+      "none",
+    ],
+  ],
+  "error": [
+    [
+      "Failed to save configuration",
+    ],
+  ],
+  "job": {
+    "enabled": true,
+    "id": "b",
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": true,
+        "jobId": "b",
+        "organisationUuid": null,
+      },
+    ],
+  ],
+  "success": [],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > saves the organisation and enabled flag 1`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "sync",
+      "none",
+    ],
+  ],
+  "error": [],
+  "job": {
+    "enabled": true,
+    "id": "sync",
+    "organisationUuid": "org-1",
+    "selectedOrganisation": {
+      "value": "org-1",
+    },
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": true,
+        "jobId": "sync",
+        "organisationUuid": "org-1",
+      },
+    ],
+  ],
+  "success": [
+    [
+      "Cronjob configuration saved",
+    ],
+  ],
+}
+`;
+
+exports[`CronjobConfiguration saveJobConfig > saves without an organisation 1`] = `
+{
+  "after": [
+    null,
+    "none",
+  ],
+  "busy": [
+    [
+      "sync",
+      "none",
+    ],
+  ],
+  "error": [],
+  "job": {
+    "enabled": false,
+    "id": "sync",
+    "organisationUuid": null,
+  },
+  "requests": [
+    [
+      "/index.php/apps/stackiq/api/settings/cronjobs",
+      {
+        "enabled": false,
+        "jobId": "sync",
+        "organisationUuid": null,
+      },
+    ],
+  ],
+  "success": [
+    [
+      "Cronjob configuration saved",
+    ],
+  ],
+}
+`;

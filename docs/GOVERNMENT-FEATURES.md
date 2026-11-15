@@ -58,7 +58,7 @@
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
 | T-01 | On-premise / self-hosted | Beschikbaar | Nextcloud-app |
-| T-02 | Open source | Beschikbaar | EUPL-1.2, Codeberg |
+| T-02 | Open source | Beschikbaar | EUPL-1.2, GitHub |
 | T-03 | RESTful API | Via platform | OpenRegister REST API |
 | T-04 | Database-onafhankelijkheid | Via platform | PostgreSQL, MySQL, SQLite |
 | T-05 | Containerisatie (Docker) | Beschikbaar | Docker Compose |

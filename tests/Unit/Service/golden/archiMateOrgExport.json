@@ -1,0 +1,1309 @@
+{
+    "[[],{\"noOpenRegister\":true}]": {
+        "result": {
+            "success": false,
+            "error": "ObjectService not available"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "log",
+                "error",
+                "Organization ArchiMate export failed",
+                {
+                    "error": "ObjectService not available"
+                }
+            ]
+        ]
+    },
+    "[[],{\"config\":[],\"noFallback\":true}]": {
+        "result": {
+            "success": false,
+            "error": "Organization register/schema not configured"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getVoorzieningenRegisterId"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "log",
+                "error",
+                "Organization ArchiMate export failed",
+                {
+                    "error": "Organization register/schema not configured"
+                }
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"gebruik_schema\":\"schema-gebruik\"}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getVoorzieningenRegisterId"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    31,
+                    94,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": 31,
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"findThrows\":true}]": {
+        "result": {
+            "success": false,
+            "error": "Organization not found: org-uuid"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"notFound\":true}]": {
+        "result": {
+            "success": false,
+            "error": "Organization not found: org-uuid"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"noAmef\":true}]": {
+        "result": {
+            "success": false,
+            "error": "AMEF register ID is not configured"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "log",
+                "error",
+                "Organization ArchiMate export failed",
+                {
+                    "error": "AMEF register ID is not configured"
+                }
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\"}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ]
+    },
+    "[{\"format\":\"x\"},{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": {
+                        "format": "x"
+                    }
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    {
+                        "format": "x"
+                    }
+                ]
+            ]
+        ]
+    },
+    "[{\"deelnames\":true},{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": {
+                        "deelnames": true
+                    }
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik"
+                        },
+                        "participants": "org-uuid",
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "log",
+                "info",
+                "Retrieved deelname gebruik for org export",
+                {
+                    "deelnames_count": 1,
+                    "organization_uuid": "org-uuid"
+                }
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "deelname-1"
+                        }
+                    ],
+                    {
+                        "deelnames": true
+                    }
+                ]
+            ]
+        ]
+    },
+    "[{\"deelnames\":true},{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"module_schema\":\"schema-module\"}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": {
+                        "deelnames": true
+                    }
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    {
+                        "deelnames": true
+                    }
+                ]
+            ]
+        ]
+    },
+    "[{\"deelnames\":true},{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"noDeelnames\":true}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": {
+                        "deelnames": true
+                    }
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik"
+                        },
+                        "participants": "org-uuid",
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "log",
+                "info",
+                "Retrieved deelname gebruik for org export",
+                {
+                    "deelnames_count": 0,
+                    "organization_uuid": "org-uuid"
+                }
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    {
+                        "deelnames": true
+                    }
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"orgData\":{\"@self\":{\"name\":\"Self Naam\"}}}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Self_Naam.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Self Naam",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    []
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"orgData\":[]}]": {
+        "result": {
+            "success": true,
+            "xml": "<model/>",
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Unknown.xml"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Unknown",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    []
+                ]
+            ]
+        ]
+    },
+    "[[],{\"config\":{\"register\":\"reg-v\",\"organisatie_schema\":\"schema-org\",\"gebruik_schema\":\"schema-gebruik\",\"module_schema\":\"schema-module\"},\"exportThrows\":true}]": {
+        "result": {
+            "success": false,
+            "error": "export down"
+        },
+        "calls": [
+            [
+                "log",
+                "info",
+                "Starting organization ArchiMate XML export",
+                {
+                    "organization_uuid": "org-uuid",
+                    "options": []
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                [
+                    "org-uuid",
+                    [],
+                    false,
+                    "reg-v",
+                    "schema-org",
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "settings.getAmefConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "model"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "organization"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-gebruik",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                [
+                    {
+                        "@self": {
+                            "register": "reg-v",
+                            "schema": "schema-module",
+                            "organisation": "org-uuid"
+                        },
+                        "_limit": 10000
+                    },
+                    false,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "export.exportOrganizationArchiMateXml",
+                [
+                    12,
+                    {
+                        "15": "model",
+                        "65": "element",
+                        "34": "relationship",
+                        "80": "view",
+                        "94": "organization",
+                        "11": "property_definition"
+                    },
+                    "Gemeente Test",
+                    "org-uuid",
+                    [
+                        {
+                            "id": "found-schema-gebruik"
+                        }
+                    ],
+                    [
+                        {
+                            "id": "found-schema-module"
+                        }
+                    ],
+                    [],
+                    []
+                ]
+            ],
+            [
+                "log",
+                "error",
+                "Organization ArchiMate export failed",
+                {
+                    "error": "export down"
+                }
+            ]
+        ]
+    }
+}

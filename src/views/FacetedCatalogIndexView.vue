@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
 FacetedCatalogIndexView.vue
 
 GEMMA-dimension faceted index page for the `module` (Applications) and
@@ -9,8 +13,13 @@ Layout: a `CnFacetSidebar` (from `@conduction/nextcloud-vue`, ADR-012) driven
 by the `facets` Pinia store on the left, and a self-fetching `CnIndexPage`
 (register+schema self-fetch mode) on the right.
 
-Why the facet sidebar is NOT `CnIndexPage`'s own embedded
-`sidebar.enabled`/`activeFilters` facet machinery: that machinery treats
+The free-text search and the column choice are `CnIndexPage`'s own Search
+and Columns sidebar (manifest `config.sidebar`): the list sends the term as
+`_search` and keeps it in the route, and `onListSearch` hands it to the facet
+counts.
+
+Why the GEMMA facets do NOT go through that sidebar's
+`activeFilters` facet machinery: that machinery treats
 every active-filter key as a LITERAL, directly-filterable schema field and
 applies it straight to the object-list fetch (`useListView`'s
 `onFilterChange` → `activeFilters.value[key] = values`, merged verbatim into
@@ -21,7 +30,7 @@ display NAME, not the `referentieComponenten`/`standaardVersies` identifiers
 the schema actually stores. Feeding GEMMA facet keys through that path would
 apply an incorrect direct-field filter (near-guaranteed empty results)
 alongside this feature's own narrowing. This view instead narrows the
-self-fetch list via the bounded, RBAC-scoped `{ id: matchedObjectIds }` list
+self-fetch list via the bounded, RBAC-scoped `{ _ids: matchedObjectIds }` list
 `FacetService` already computes (`_meta.matchedObjectIds` — see
 `lib/Service/FacetService.php::computeFacetsForRequest()`), and keeps GEMMA
 facet state in the URL under `_gf_`-prefixed query keys so CnIndexPage's own
@@ -49,22 +58,6 @@ generic route-query-to-filter passthrough never sees it (see the
 		</div>
 
 		<div class="faceted-catalog-index__toolbar">
-			<NcTextField
-				:modelValue="searchValue"
-				class="faceted-catalog-index__search"
-				:label="t('stackiq', 'Search')"
-				:placeholder="t('stackiq', 'Search applications and services…')"
-				@update:modelValue="onSearchInput" />
-			<NcButton
-				v-if="searchValue !== ''"
-				variant="tertiary"
-				:aria-label="t('stackiq', 'Clear search')"
-				@click="onSearchInput('')">
-				<template #icon>
-					<CloseIcon :size="18" />
-				</template>
-			</NcButton>
-
 			<NcActions :aria-label="t('stackiq', 'Saved views')">
 				<template #icon>
 					<FolderStarOutline :size="20" />
@@ -92,6 +85,18 @@ generic route-query-to-filter passthrough never sees it (see the
 			</NcActions>
 		</div>
 
+		<p
+			v-if="archivedTabIgnoresFilters"
+			class="faceted-catalog-index__archive-note"
+			role="note">
+			{{
+				t(
+					'stackiq',
+					'This tab lists the whole archive. It ignores the GEMMA filters.',
+				)
+			}}
+		</p>
+
 		<div class="faceted-catalog-index__body">
 			<CnFacetSidebar
 				:title="t('stackiq', 'GEMMA filters')"
@@ -114,7 +119,14 @@ generic route-query-to-filter passthrough never sees it (see the
 					:filter="listFilter"
 					:quickFilters="quickFilters"
 					:quickFilterMode="quickFilterMode"
-					:quickFilterMultiple="quickFilterMultiple" />
+					:quickFilterMultiple="quickFilterMultiple"
+					:sidebar="sidebar"
+					:copy="copy"
+					:rowClickToView="Boolean(detailRoute)"
+					@search="onListSearch"
+					@rowClick="openDetail"
+					@view="openDetail"
+					@quickFilterChange="onQuickFilterChange" />
 			</div>
 		</div>
 
@@ -130,19 +142,14 @@ generic route-query-to-filter passthrough never sees it (see the
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcActionButton,
-	NcActionCaption,
-	NcActions,
-	NcButton,
-	NcTextField,
-} from '@nextcloud/vue'
-import CloseIcon from 'vue-material-design-icons/Close.vue'
+import { NcActionButton, NcActionCaption, NcActions } from '@nextcloud/vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
+import { rowDetailLocation } from '../utils/applicationContracts.js'
+import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -151,30 +158,62 @@ const DIMENSION_LABELS = {
 	standard: () => t('stackiq', 'Standard'),
 	applicationService: () => t('stackiq', 'Application service'),
 	domain: () => t('stackiq', 'Domain'),
+	supplier: () => t('stackiq', 'Supplier'),
 }
 
-/** Debounce delay (ms) between search keystrokes and the facets/list refetch. */
+/**
+ * The tab CnIndexPage starts on: the first quick filter marked `default`,
+ * else the first one (the library's own rule in `useSelfFetchList.js`).
+ *
+ * @param {Array<object>|null} quickFilters The quick filters
+ * @return {number|null} The index, or null without quick filters
+ */
+function initialQuickFilterIndex(quickFilters) {
+	if (!Array.isArray(quickFilters) || quickFilters.length === 0) {
+		return null
+	}
+	const index = quickFilters.findIndex((tab) => tab && tab.default === true)
+	return index >= 0 ? index : 0
+}
+
+/** Debounce delay (ms) between search keystrokes and the facets refetch. */
 const SEARCH_DEBOUNCE_MS = 400
+
+/**
+ * The list's search term in a route query (`CnIndexPage` keeps it in `_search`).
+ *
+ * @param {object} query `$route.query`.
+ * @return {string} The term, or ''.
+ */
+function routeSearch(query) {
+	return typeof query?._search === 'string' ? query._search : ''
+}
 
 export default {
 	name: 'FacetedCatalogIndexView',
 
 	components: {
-		NcTextField,
-		NcButton,
 		NcActions,
 		NcActionButton,
 		NcActionCaption,
 		CnFacetSidebar,
 		CnIndexPage,
 		SaveFacetViewModal,
-		CloseIcon,
 		ContentSaveOutline,
 		FolderOutline,
 		FolderStarOutline,
 	},
 
 	props: {
+		/**
+		 * Named route of the page one row opens, for example `ModuleDetail`.
+		 * Empty keeps rows where they are (the Services list has no detail page).
+		 */
+		detailRoute: {
+			type: String,
+			default: '',
+		},
+
 		/** `module` or `dienst` — which GEMMA-faceted listing this page renders. */
 		schema: {
 			type: String,
@@ -213,12 +252,26 @@ export default {
 		 * with the GEMMA facet narrowing below: `CnIndexPage`'s self-fetch
 		 * merges `{ ...base(filter prop), ...activeTab.filter }` (see
 		 * `useSelfFetchList.js#fixedFilters`), and this view's own `filter`
-		 * prop only ever carries the single `id` key
-		 * (`{ id: matchedObjectIds }`, see `listFilter` below). A quick
+		 * prop only ever carries the single `_ids` key
+		 * (`{ _ids: matchedObjectIds }`, see `listFilter` below). A quick
 		 * filter's keys (`bbnLevel`, `dpiaStatus`, …) never collide with
-		 * `id`, so the merge is additive — both the facet-matched id set AND
+		 * `_ids`, so the merge is additive — both the facet-matched id set AND
 		 * the active quick filter's field constraints apply together
-		 * (logical AND), never clobbering one another.
+		 * (logical AND), never clobbering one another. The one exception is
+		 * the Archived tab of the Applications page, below.
+		 *
+		 * The exception is the Archived tab of the Applications page
+		 * (cmdb-import-archive-reconciliation): the facet id set is built from
+		 * the working set, which OpenRegister's default lens limits to objects
+		 * that are not archived, so ANDing `_ids` with `_archived=true` could
+		 * never match an archived application. That tab's filter therefore
+		 * carries an empty-string `_ids` (not an empty array, which the filter
+		 * resolver drops before the merge), which wins over this view's `_ids`
+		 * and which the request leaves out: the tab lists the whole archive
+		 * and ignores the GEMMA selection. The search term still applies,
+		 * because the list sends it as `_search`, outside the filter. The tab's
+		 * filter, not this view, owns that, so it holds however the page's
+		 * tab state is restored.
 		 */
 		quickFilters: {
 			type: Array,
@@ -235,6 +288,29 @@ export default {
 		quickFilterMultiple: {
 			type: Boolean,
 			default: false,
+		},
+
+		/**
+		 * Search and Columns sidebar, forwarded to `CnIndexPage` (manifest
+		 * `config.sidebar`), as on the other index pages. Its search is the
+		 * page's free-text search: the list sends it as `_search`, and
+		 * `onListSearch` hands it to the facet counts.
+		 */
+		sidebar: {
+			type: Object,
+			default: null,
+		},
+
+		/**
+		 * Copy settings, forwarded to `CnIndexPage` (manifest `config.copy`):
+		 * `include` lists the links a copy may take along, which the single and
+		 * mass copy dialogs then offer, ticked.
+		 *
+		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+		 */
+		copy: {
+			type: Object,
+			default: null,
 		},
 	},
 
@@ -254,6 +330,8 @@ export default {
 			showSaveViewModal: false,
 			savingView: false,
 			searchDebounceTimer: null,
+			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
+			listRemount: 0,
 		}
 	},
 
@@ -286,51 +364,96 @@ export default {
 		},
 
 		/**
-		 * @return {string} The current free-text search term for this schema.
-		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
-		 */
-		searchValue() {
-			return this.facetStore[this.schema].search
-		},
-
-		/**
-		 * Bounded `{ id: [...] }` narrowing filter for `CnIndexPage`'s
+		 * Bounded `{ _ids: [...] }` narrowing filter for `CnIndexPage`'s
 		 * self-fetch object list, sourced from the last facets response's
-		 * `_meta.matchedObjectIds`. Empty object (no narrowing) when no facet
-		 * filter or search term is active.
+		 * `_meta.matchedObjectIds`, while a GEMMA facet has a value. A search
+		 * alone does not narrow by id: the list searches itself (`_search`).
+		 * `listNarrowingFilter` says why.
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 		 */
 		listFilter() {
-			if (!this.facetStore.hasActiveFilterOrSearchFor(this.schema)) {
-				return {}
-			}
-
-			const ids = this.facetStore.matchedObjectIdsFor(this.schema)
-			// A real (if unlikely) id can never collide with this sentinel —
-			// forces a correct EMPTY list rather than `CnIndexPage` treating
-			// an empty `id` array as "no filter" (showing everything).
-			return { id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'] }
+			return listNarrowingFilter(
+				this.facetStore[this.schema].activeFilters,
+				this.facetStore.matchedObjectIdsFor(this.schema),
+			)
 		},
 
 		/**
-		 * Remount key for `CnIndexPage`: its self-fetch mode has no reactive
-		 * watcher on the `filter` prop (only route/quick-filter/tab changes
-		 * trigger an internal refetch), so this view forces a clean remount —
-		 * and therefore a fresh `onMounted()` fetch with the current
-		 * `listFilter` — whenever the narrowing id set changes.
+		 * Whether the active quick-filter tab drops the facet id set: a tab
+		 * whose filter carries the empty-string `_ids` override (the Archived
+		 * tab, see the `quickFilters` prop). The facet sidebar stays on
+		 * screen, so the page says so. The search term still applies: the
+		 * list sends it as `_search`, outside the filter.
 		 *
-		 * @return {string} A key that changes exactly when `listFilter` does.
+		 * @return {boolean} True while such a tab is active.
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 */
+		archivedTabIgnoresFilters() {
+			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
+			return tab?.filter?._ids === ''
+		},
+
+		/**
+		 * Remount key for `CnIndexPage`. A change of the `filter` prop needs
+		 * no remount: the self-fetch list watches it and refetches (2.65.0 and
+		 * later), so the sidebar search keeps its focus while the facet counts
+		 * follow the term. The list reads its search term from the route only
+		 * when it mounts, so a saved view or a legacy `_gf_search` link that
+		 * puts a term in the route bumps `listRemount`.
+		 *
+		 * @return {string} A key that changes when `listRemount` does.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
 		indexPageKey() {
-			return `${this.schema}-${JSON.stringify(this.listFilter)}`
+			return `${this.schema}-${this.listRemount}`
 		},
 	},
 
+	watch: {
+		/**
+		 * CnIndexPage is remounted when the key changes and starts on its
+		 * default tab again, so the tab this view remembers goes back to it.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 */
+		indexPageKey() {
+			this.activeQuickFilterIndex = initialQuickFilterIndex(this.quickFilters)
+		},
+	},
+
+	/**
+	 * Restore the facet selection and the search term from the route.
+	 *
+	 * The list restores its search from `_search`; the facet counts follow
+	 * the same term. A link from before the sidebar search carries the term
+	 * as `_gf_search`: it moves to `_search` and the list remounts to read it.
+	 *
+	 * @return {void}
+	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
+	 */
 	created() {
-		this.facetStore.setFiltersFromQuery(this.schema, this.$route.query)
+		const query = this.$route.query
+		this.facetStore.setFiltersFromQuery(this.schema, query)
+		const legacy =
+			routeSearch(query) === '' && typeof query._gf_search === 'string'
+				? query._gf_search
+				: ''
+		this.facetStore.setSearch(this.schema, legacy || routeSearch(query))
+		if (legacy !== '') {
+			const next = { ...query, _search: legacy }
+			delete next._gf_search
+			this.$router
+				.replace({ query: next })
+				.catch(() => {
+					// NavigationDuplicated — same query, no-op.
+				})
+				.then(() => {
+					this.listRemount++
+				})
+		}
 	},
 
 	/**
@@ -349,6 +472,33 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Remember which quick-filter tab is active (single-select mode emits the
+		 * tab index; multi-select emits an array, which never selects the
+		 * Archived tab here).
+		 *
+		 * @param {number|number[]} index The tab index, or the selected indices
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 */
+		onQuickFilterChange(index) {
+			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
+		},
+
+		/**
+		 * Open the detail page of a clicked row, or of the row whose View action was used.
+		 *
+		 * @param {object} row The row
+		 * @return {void}
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-004-the-applications-list-opens-the-application-page
+		 */
+		openDetail(row) {
+			const location = rowDetailLocation(this.detailRoute, row)
+			if (location) {
+				this.$router.push(location)
+			}
+		},
+
 		/**
 		 * Re-fetch this schema's facet counts (search + active filters
 		 * already live in the store).
@@ -376,11 +526,15 @@ export default {
 				}
 			})
 
+			// The search term lives in the list's own `_search`, not in `_gf_search`.
+			const facetQuery = this.facetStore.filtersToQuery(this.schema)
+			delete facetQuery._gf_search
+
 			const nextQuery = {
 				...currentQuery,
-				...this.facetStore.filtersToQuery(this.schema),
+				...facetQuery,
 			}
-			this.$router.replace({ query: nextQuery }).catch(() => {
+			return this.$router.replace({ query: nextQuery }).catch(() => {
 				// NavigationDuplicated — same query, no-op.
 			})
 		},
@@ -411,18 +565,18 @@ export default {
 		},
 
 		/**
-		 * Debounced search-box handler.
+		 * The list's search changed (sidebar Search tab): the list has
+		 * already searched itself; the facet counts follow, debounced.
 		 *
 		 * @param {string} value The new search term.
 		 * @return {void}
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
 		 */
-		onSearchInput(value) {
+		onListSearch(value) {
 			this.facetStore.setSearch(this.schema, value)
 			clearTimeout(this.searchDebounceTimer)
 			this.searchDebounceTimer = setTimeout(
 				() => {
-					this.syncUrl()
 					this.refetch()
 				},
 				value === '' ? 0 : SEARCH_DEBOUNCE_MS,
@@ -437,9 +591,21 @@ export default {
 		 *
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
 		 */
-		applySavedView(view) {
+		async applySavedView(view) {
 			this.facetStore.applyView(this.schema, view)
-			this.syncUrl()
+			const search = this.facetStore[this.schema].search.trim()
+			const query = { ...this.$route.query }
+			if (search === '') {
+				delete query._search
+			} else {
+				query._search = search
+			}
+			await this.$router.replace({ query }).catch(() => {
+				// NavigationDuplicated — same query, no-op.
+			})
+			await this.syncUrl()
+			// Remount the list so it reads the view's search from the route.
+			this.listRemount++
 			this.refetch()
 		},
 
@@ -493,9 +659,11 @@ export default {
 	padding: calc(var(--default-grid-baseline, 8px) * 2);
 }
 
-.faceted-catalog-index__search {
-	max-width: 400px;
-	flex: 1;
+.faceted-catalog-index__archive-note {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+	padding: 0 calc(var(--default-grid-baseline, 8px) * 2)
+		calc(var(--default-grid-baseline, 8px) * 2);
 }
 
 .faceted-catalog-index__body {

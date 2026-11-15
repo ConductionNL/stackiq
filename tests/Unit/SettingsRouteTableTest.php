@@ -157,4 +157,22 @@ class SettingsRouteTableTest extends TestCase {
 		$this->assertNotNull($catchAllIndex, 'The SPA catch-all is missing — test premise is stale.');
 		$this->assertLessThan($catchAllIndex, $updateIndex);
 	}
+
+	/**
+	 * The old ArchiMate round-trip test is gone (#1075): it let any signed-in
+	 * user write a test model into the live register and could never succeed.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/tasks.md#task-4
+	 */
+	public function testTheOldArchiMateRoundTripIsNotRoutedOrCallable(): void {
+		foreach ($this->routes() as $route) {
+			$this->assertNotSame('settings#testArchiMateRoundTrip', $route['name'] ?? null);
+			$this->assertNotSame('/api/archimate/test-round-trip', $route['url'] ?? null);
+		}
+
+		$this->assertFalse(method_exists(\OCA\Stackiq\Controller\SettingsController::class, 'testArchiMateRoundTrip'));
+		$this->assertFalse(method_exists(\OCA\Stackiq\Service\ArchiMateService::class, 'testRoundTrip'));
+		$store = (string)file_get_contents(__DIR__ . '/../../src/store/modules/settings.js');
+		$this->assertStringNotContainsString('test-round-trip', $store);
+	}
 }

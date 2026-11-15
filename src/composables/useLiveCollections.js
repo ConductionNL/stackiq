@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import { useObjectSubscription } from '@conduction/nextcloud-vue'
 /**
  * useLiveCollections — collection-scoped live updates for module views.

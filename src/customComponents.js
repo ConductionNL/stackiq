@@ -18,17 +18,31 @@
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
 import { generateUrl } from '@nextcloud/router'
+import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
+import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
+import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
+import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
+import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
+import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
+import DataQualityReportView from './views/organisaties/DataQualityReport.vue'
+import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
@@ -39,7 +53,10 @@ export default {
 	// (adopt-connection-registry). A FUNCTION, because it leaves the app for
 	// integriq's Connections overview and a header action's `navigate` only
 	// pushes a route inside this app. CnIndexPage resolves a handler name
-	// against this map.
+	// against this map. It navigates in JavaScript because the library renders
+	// every header action as a button; once a header action can carry an
+	// `href` (ConductionNL/nextcloud-vue#1314) this becomes a link in the
+	// manifest and the handler goes.
 	...createConnectionHandlers({
 		generateUrl,
 		assign: (url) => window.location.assign(url),
@@ -49,6 +66,27 @@ export default {
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
 	OrganisatieCard,
+
+	// A declared sidebar tab for one integration leaf (adopt-integration-leaves
+	// 3.1). A detail page that lists its own sidebar tabs turns off the object
+	// sidebar's registry mode, so the leaves the schema declares in
+	// `linkedTypes` would not show; this widget renders the leaf's own tab.
+	IntegrationLeafTab,
+
+	// The steps of a business process as a read-only flow on CnGraphCanvas, and
+	// the applications that support a step with the hidden ones counted
+	// (architecture-process-mapping D3, D4): neither is a list a built-in
+	// widget expresses.
+	ProcessStepFlow,
+	ProcessStepUsages,
+
+	// The architecture view editor and the version compare
+	// (architecture-views-editor D4, D6): an authoring canvas that places
+	// elements, draws connections backed by relation objects and takes the
+	// object lock, and two marked read-only canvases side by side. Neither is
+	// a page type or widget the library has.
+	ArchitectureViewEditor,
+	ViewVersionCompare,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
@@ -79,7 +117,34 @@ export default {
 	// integration registry and projected back onto the contract; stackiq
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
+	// The contracts behind an application, a bodyWidgets section on ModuleDetail
+	// (landscape-application-page): two hops, so not an object-list widget.
+	ApplicationContractsPanel,
+
 	ContractApprovalPanel,
+
+	// Licences in use against licences bought (contracts-licence-seats).
+	ContractSeatsPanel,
+
+	// The supplier's roadmap statement and the product's versions on a timeline,
+	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
+	// it reads the module and its versions, which no built-in widget combines.
+	ProductRoadmap,
+
+	// End of support of the version a usage runs and the vulnerabilities of its
+	// application, next to the risk score on the usage page
+	// (lifecycle-application-value-assessment): it joins the usage, its version
+	// and the vulnerabilities, which no built-in widget does.
+	UsageRiskSignals,
+
+	// The name of a contact person on its detail page (landscape-usage-registration):
+	// the name lives in Nextcloud Contacts, read through /api/contact-names,
+	// which no built-in widget does.
+	ContactPersonName,
+
+	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
+	// it reads the object's files and their tags, which no built-in widget lists per tag.
+	AiActChecklist,
 
 	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
 	// Dry-run preview + confirm dialog + execute for folding a source
@@ -121,7 +186,7 @@ export default {
 	// object) and `referentiecomponent`/`standaard` are exposed here by display
 	// NAME, not the identifiers the schema stores — feeding them through that
 	// path would break the list. Stays a custom page (wrapping `CnFacetSidebar`
-	// + a standalone `CnIndexPage` narrowed via `{ id: matchedObjectIds }`) until
+	// + a standalone `CnIndexPage` narrowed via `{ _ids: matchedObjectIds }`) until
 	// the lib grows a facet-sidebar mode whose counts/narrowing are computed by
 	// an external, non-schema-field aggregation (see FacetedCatalogIndexView.vue).
 	FacetedCatalogIndexView,
@@ -135,6 +200,17 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// --- Lib gap: the organisation-scoped data quality report. ---
+	// GET /api/data-quality evaluates the usage schema's declared quality
+	// rules over one organisation's usages, bounded like the portfolio report.
+	// @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	DataQualityReportView,
+	// --- Lib gap: the GEMMA plate. ---
+	// GET /api/reference-component-coverage joins one organisation's usages
+	// with the GEMMA reference components; a component nobody uses has no
+	// facet bucket, so no index or dashboard page can show the gaps.
+	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+	GemmaPlateView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
 	// (name/version/purl/licenses), summary counts, an upload control, and a
@@ -160,4 +236,10 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
+	// The library's roadmap and store pages are one page type each; this puts
+	// both under one page as two tabs, so the footer Store entry and the
+	// roadmap are one place. Both halves stay the library components.
+	// @spec openspec/changes/features-roadmap-page/specs/features-roadmap/spec.md#requirement-the-uitbreidingen-tab-lists-the-extensions-from-the-store-req-frm-002
+	FeaturesRoadmapTabs,
 }

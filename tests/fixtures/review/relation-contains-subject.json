@@ -1,0 +1,87 @@
+{
+    "null": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "string": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "empty list": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "uuid list": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "other uuids": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "object by id": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "object by uuid": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "id wins over uuid": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "numeric id": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "null id": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "padded": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "case": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "numbers": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "nested deeper": {
+        "s-1": false,
+        "5": false,
+        "": false
+    },
+    "mixed": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "keyed": {
+        "s-1": true,
+        "5": false,
+        "": false
+    },
+    "empty entries": {
+        "s-1": false,
+        "5": false,
+        "": true
+    }
+}

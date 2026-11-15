@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: EUPL-1.2
+// Copyright (C) 2026 Conduction B.V.
+
+/**
+ * Display names of contact persons, for the owner column of the usage list.
+ *
+ * A contact person in OpenRegister carries only a `contactsUid`; its name is
+ * in Nextcloud Contacts. `GET /api/contact-names` gives the names the
+ * signed-in user can read in their own address books. The cells of one page
+ * ask in the same tick, so they are batched into one request, and a name is
+ * asked for once per page load.
+ *
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+
+/** The endpoint's own limit (`ContactNamesController::MAX_IDS`). */
+export const MAX_IDS_PER_REQUEST = 100
+
+/** uuid -> Promise<{name: string|null, failed: boolean}>. */
+const cache = new Map()
+
+/** uuid -> { resolve } for the ids of the batch being collected. */
+let pending = new Map()
+
+/**
+ * The contact person uuid a cell value refers to.
+ *
+ * @param {string|object|null} value A uuid, or a related object with `id` or `uuid`.
+ * @return {string} The uuid, or ''.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+export function contactPersonId(value) {
+	if (typeof value === 'string') {
+		return value.trim()
+	}
+	if (value && typeof value === 'object') {
+		return String(value.id ?? value.uuid ?? '').trim()
+	}
+	return ''
+}
+
+/**
+ * Ask the endpoint for the names of the collected ids, in chunks it accepts.
+ *
+ * A chunk whose request fails answers "no name" for now and is forgotten,
+ * so the next cell that asks for one of its ids asks the endpoint again.
+ *
+ * @return {Promise<void>}
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+async function flush() {
+	const batch = pending
+	pending = new Map()
+	const ids = [...batch.keys()]
+	for (let start = 0; start < ids.length; start += MAX_IDS_PER_REQUEST) {
+		const chunk = ids.slice(start, start + MAX_IDS_PER_REQUEST)
+		let names = {}
+		let failed = false
+		try {
+			const { data } = await axios.get(
+				generateUrl('/apps/stackiq/api/contact-names'),
+				{ params: { ids: chunk } },
+			)
+			names = data?.names ?? {}
+		} catch {
+			names = {}
+			failed = true
+		}
+		chunk.forEach((id) => {
+			const name = typeof names[id] === 'string' ? names[id] : ''
+			if (failed) {
+				cache.delete(id)
+			}
+			batch.get(id).resolve({ name: name !== '' ? name : null, failed })
+		})
+	}
+}
+
+/**
+ * What the endpoint made of a contact person: its name, and whether the
+ * request failed (rate limit, network, server error) as opposed to answering
+ * without a name.
+ *
+ * @param {string} id The contact person uuid.
+ * @return {Promise<{name: string|null, failed: boolean}>} The name, or why there is none.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
+ */
+export function contactNameResult(id) {
+	const key = String(id ?? '').toLowerCase()
+	if (key === '') {
+		return Promise.resolve({ name: null, failed: false })
+	}
+	if (!cache.has(key)) {
+		cache.set(
+			key,
+			new Promise((resolve) => {
+				if (pending.size === 0) {
+					Promise.resolve().then(flush)
+				}
+				pending.set(key, { resolve })
+			}),
+		)
+	}
+	return cache.get(key)
+}
+
+/**
+ * The display name of a contact person, or null when the signed-in user
+ * cannot read one (or the request failed; see contactNameResult).
+ *
+ * @param {string} id The contact person uuid.
+ * @return {Promise<string|null>} The name.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+export async function contactName(id) {
+	return (await contactNameResult(id)).name
+}
+
+/**
+ * Forget every name read so far (tests).
+ *
+ * @return {void}
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+export function clearContactNames() {
+	cache.clear()
+	pending = new Map()
+}
