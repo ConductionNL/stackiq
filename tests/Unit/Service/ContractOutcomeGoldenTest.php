@@ -37,6 +37,7 @@ use Psr\Log\AbstractLogger;
  * Golden cases for matching and projecting a concluded decision outcome.
  *
  * @covers \OCA\Stackiq\Service\ContractApprovalService
+ * @uses   \OCA\Stackiq\Service\SearchBounds
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  */
