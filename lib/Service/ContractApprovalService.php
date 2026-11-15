@@ -38,6 +38,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -743,10 +746,7 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 		try {
 			return $objectService->find(
 				id: $contractUuid,
-				_extend: [],
-				files: false,
-				register: $registerId,
-				schema: $schemaId,
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -778,10 +778,10 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $contract->getRegister(),
-			schema: $contract->getSchema(),
-			uuid: $contract->getUuid()
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $contract->getRegister(), schema: $contract->getSchema()),
+				uuid: $contract->getUuid()
+			)
 		);
 
 	}//end persistContract()

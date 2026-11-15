@@ -95,7 +95,63 @@ class Application extends App implements IBootstrap {
 
 		// The middleware registrations live with the Middleware component.
 		(new MiddlewareRegistrar())->register(context: $context);
+
+		$this->registerObservabilityControllers(context: $context);
 	}//end register()
+
+	/**
+	 * Point the health and metrics controllers at the OpenRegister AppHost generics.
+	 *
+	 * Stackiq had no health or metrics endpoint: `/api/settings/status` reports
+	 * whether the settings are configured, and a probe that read it as health
+	 * was told "up" while OpenRegister was down. The generics answer from the
+	 * manifest's `observability` block (adopt-apphost task 1.1).
+	 *
+	 * Only these two are registered rather than adopting the whole AppHost with
+	 * `Bootstrap::register()`: that call also replaces this app's own
+	 * SettingsService, ActionAuthService, repair step, admin panel and section
+	 * with generics, which the change says to keep (task 2.6) until their
+	 * responses are proven identical on a running instance (tasks 0.x and 3.2).
+	 *
+	 * The factories name OpenRegister classes by string, so nothing is
+	 * autoloaded until a request reaches the route; with OpenRegister disabled
+	 * only these two routes fail.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/adopt-apphost/tasks.md#2-wiring-deletions-real-healthmetrics-routes
+	 */
+	private function registerObservabilityControllers(IRegistrationContext $context): void {
+		$appId = self::APP_ID;
+
+		$context->registerService(
+			'OCA\\Stackiq\\Controller\\HealthController',
+			static function (ContainerInterface $container) use ($appId) {
+				$class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericHealthController';
+				return new $class(
+					appName: $appId,
+					request: $container->get('OCP\\IRequest'),
+					manifestLoader: $container->get('OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader'),
+					executor: $container->get('OCA\\OpenRegister\\AppHost\\Observability\\HealthCheckExecutor')
+				);
+			}
+		);
+
+		$context->registerService(
+			'OCA\\Stackiq\\Controller\\MetricsController',
+			static function (ContainerInterface $container) use ($appId) {
+				$class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericMetricsController';
+				return new $class(
+					appName: $appId,
+					request: $container->get('OCP\\IRequest'),
+					manifestLoader: $container->get('OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader'),
+					engine: $container->get('OCA\\OpenRegister\\AppHost\\Observability\\MetricsEngine')
+				);
+			}
+		);
+	}//end registerObservabilityControllers()
 
 	/**
 	 * Wire all domain-level services, the hand-built jobs and controllers, and the widget.

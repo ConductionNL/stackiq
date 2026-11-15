@@ -37,6 +37,7 @@ use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Cases for the merge blockers and the field re-pointing.
@@ -161,7 +162,11 @@ class MergeOrganisatieBlockersTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend=[], $register=null, $schema=null, ?string $uuid=null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->trace[] = ['saveObject', $uuid, $object];
 				return self::entity(data: $object, uuid: (string) $uuid);
 			}

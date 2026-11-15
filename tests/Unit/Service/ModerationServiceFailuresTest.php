@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Missing configuration, a missing ObjectService, failed queries, missing
@@ -187,12 +188,12 @@ class ModerationServiceFailuresTest extends TestCase {
 		$this->withObjectService();
 		$this->objectService->method('find')->willReturn($this->pendingEntry());
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				$this->callback(fn (array $data): bool => $data['status'] === 'rejected' && array_key_exists('id', $data) === false),
-				[],
-				3,
-				7
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(fn (array $data): bool => $data['status'] === 'rejected' && array_key_exists('id', $data) === false),
+				'extend' => [],
+				'register' => 3,
+				'schema' => 7,
+			]))
 			->willThrowException(new RuntimeException('locked'));
 		$this->logger->expects($this->once())->method('error')
 			->with('ModerationService: rejected failed', ['type' => 'software-review', 'uuid' => 'e1', 'error' => 'locked']);

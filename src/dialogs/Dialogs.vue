@@ -17,6 +17,8 @@
 		<MassUnlockObjects v-if="navigationStore.dialog === 'massUnlockObjects'" />
 		<MassValidateObjects
 			v-if="navigationStore.dialog === 'massValidateObjects'" />
+		<MoveToOrganisationDialog
+			v-if="navigationStore.dialog === 'moveToOrganisation'" />
 	</div>
 </template>
 
@@ -30,6 +32,7 @@ import MassLockObjects from '../modals/object/MassLockObjects.vue'
 import MassPublishObjects from '../modals/object/MassPublishObjects.vue'
 import MassUnlockObjects from '../modals/object/MassUnlockObjects.vue'
 import MassValidateObjects from '../modals/object/MassValidateObjects.vue'
+import MoveToOrganisationDialog from './MoveToOrganisationDialog.vue'
 import { navigationStore } from '../store/store.js'
 
 export default {
@@ -44,6 +47,7 @@ export default {
 		MassLockObjects,
 		MassUnlockObjects,
 		MassValidateObjects,
+		MoveToOrganisationDialog,
 	},
 
 	/**
