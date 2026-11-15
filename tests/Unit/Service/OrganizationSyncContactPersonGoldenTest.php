@@ -669,7 +669,7 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 			'contactSchema' => 'contact-schema',
 			'stats' => &$stats,
 		];
-		$method->invokeArgs($service, [$contactData, $run]);
+		$method->invokeArgs($service, [$contactData, $organizationUuid, 'reg-1', 'contact-schema', &$stats]);
 
 	}//end callContactPerson()
 
@@ -694,7 +694,7 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 			$owner['organizationUuidOverride'] = $args[3];
 		}
 
-		$method->invokeArgs($service, [$contact, $owner]);
+		$method->invokeArgs($service, array_values($owner) === [] ? [] : array_merge([$contact], array_values($owner)));
 
 	}//end callOwnerUpdate()
 
