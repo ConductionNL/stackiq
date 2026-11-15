@@ -8,6 +8,12 @@
  use offers it) or overlap. A thin renderer over the bounded,
  organisation-scoped `GET /api/reference-component-coverage`.
 
+ A picker chooses one imported GEMMA view (plate); the plate then draws that
+ view's reference components in the view's own groups, read through
+ `GET /api/views/{viewId}` with `include_gebruik`, and keeps the choice in
+ the URL as `?view=<id>`. Without a chosen view it groups the whole model.
+
+ @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 -->
 <template>
@@ -47,6 +53,25 @@
 			trackBy="uuid"
 			label="label"
 			@update:modelValue="loadCoverage" />
+
+		<NcSelect
+			v-model="selectedView"
+			class="gemma-plate__org"
+			:options="viewChoices"
+			:inputLabel="t('stackiq', 'GEMMA view')"
+			:placeholder="t('stackiq', 'The whole GEMMA model')"
+			:loading="viewStore.loading"
+			trackBy="id"
+			label="label"
+			data-testid="gemma-plate-view"
+			@update:modelValue="pickView" />
+
+		<NcNoteCard
+			v-if="viewsLoaded && !viewChoices.length"
+			type="info"
+			data-testid="gemma-plate-no-views">
+			{{ t('stackiq', 'Import the GEMMA model to pick a GEMMA view.') }}
+		</NcNoteCard>
 
 		<NcLoadingIcon v-if="loading" :size="44" />
 
@@ -215,11 +240,17 @@ import {
 } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
+import pinia from '../../pinia.js'
+import { useViewStore } from '../../store/modules/view.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import {
 	filterCoverage,
+	filterGroups,
 	groupCoverage,
+	viewGroups,
+	viewId,
+	viewOptions,
 } from '../../utils/referenceComponentCoverage.js'
 
 /**
@@ -253,7 +284,7 @@ export default {
 	 */
 	setup() {
 		useLiveCollections(objectStore, ['organization'])
-		return {}
+		return { viewStore: useViewStore(pinia) }
 	},
 
 	data() {
@@ -264,6 +295,8 @@ export default {
 			coverage: null,
 			filter: 'all',
 			selected: null,
+			selectedView: null,
+			viewsLoaded: false,
 		}
 	},
 
@@ -308,10 +341,44 @@ export default {
 		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		groups() {
+			if (this.shownView) {
+				return filterGroups(
+					viewGroups(
+						this.shownView,
+						this.coverage?.components || [],
+						t('stackiq', 'Other'),
+					),
+					this.filter,
+				)
+			}
 			return groupCoverage(
 				filterCoverage(this.coverage?.components || [], this.filter),
 				t('stackiq', 'Other'),
 			)
+		},
+
+		/**
+		 * The imported GEMMA views to pick from, each with its release.
+		 *
+		 * @return {Array<{id: string, label: string}>} Options.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		viewChoices() {
+			return viewOptions(this.viewStore.views)
+		},
+
+		/**
+		 * The fetched view the plate draws, once it is the chosen one.
+		 *
+		 * @return {object|null} The view.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		shownView() {
+			const active = this.viewStore.activeView
+			if (!this.selectedView || !active) {
+				return null
+			}
+			return viewId(active) === this.selectedView.id ? active : null
 		},
 
 		/**
@@ -348,8 +415,84 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the views to pick from and open the view the URL names.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+	 */
+	async created() {
+		this.viewStore.setIncludeGebruik(true)
+		await this.viewStore.fetchViews()
+		this.viewsLoaded = true
+		const wanted = this.routeView()
+		const option = this.viewChoices.find((choice) => choice.id === wanted)
+		if (option) {
+			this.selectedView = option
+			await this.viewStore.fetchView(option.id)
+		}
+	},
+
 	methods: {
 		t,
+
+		/**
+		 * The view id in the URL, or ''.
+		 *
+		 * @return {string} The id.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		routeView() {
+			const fromRoute = this.$route?.query?.view
+			if (typeof fromRoute === 'string') {
+				return fromRoute
+			}
+			return new URLSearchParams(window.location.search).get('view') || ''
+		},
+
+		/**
+		 * Draw the picked view and name it in the URL; no pick draws the whole model.
+		 *
+		 * @param {{id: string}|null} option The picked view.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		async pickView(option) {
+			this.selected = null
+			this.writeRouteView(option?.id || '')
+			if (option?.id) {
+				await this.viewStore.fetchView(option.id)
+			}
+		},
+
+		/**
+		 * Keep the chosen view in the URL.
+		 *
+		 * @param {string} id The view id, '' to drop it.
+		 * @return {void}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		writeRouteView(id) {
+			if (this.$router && this.$route) {
+				const query = { ...this.$route.query }
+				if (id) {
+					query.view = id
+				} else {
+					delete query.view
+				}
+				this.$router.replace({ query }).catch(() => {
+					// NavigationDuplicated: the same query, nothing to do.
+				})
+				return
+			}
+			const url = new URL(window.location.href)
+			if (id) {
+				url.searchParams.set('view', id)
+			} else {
+				url.searchParams.delete('view')
+			}
+			window.history.replaceState(window.history.state, '', url.toString())
+		},
 
 		/**
 		 * Load the coverage of the selected organisation.

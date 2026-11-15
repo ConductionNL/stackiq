@@ -11,6 +11,7 @@
         {
             "id": "",
             "name": "No id",
+            "identifier": "",
             "group": "",
             "documentation": "",
             "state": "gap",
@@ -21,6 +22,7 @@
         {
             "id": "fin",
             "name": "Financiële component",
+            "identifier": "",
             "group": "Back-office",
             "documentation": "",
             "state": "covered",
@@ -38,6 +40,7 @@
         {
             "id": "kb",
             "name": "Kennisbankcomponent",
+            "identifier": "",
             "group": "Front-office",
             "documentation": "",
             "state": "gap",
@@ -50,6 +53,7 @@
         {
             "id": "ab",
             "name": "Alpha",
+            "identifier": "",
             "group": "Mid-office",
             "documentation": "",
             "state": "covered",
@@ -67,6 +71,7 @@
         {
             "id": "doc",
             "name": "Documentbeheercomponent",
+            "identifier": "",
             "group": "Mid-office",
             "documentation": "",
             "state": "covered",
@@ -84,6 +89,7 @@
         {
             "id": "zrc",
             "name": "Zaakregistratiecomponent",
+            "identifier": "id-zrc",
             "group": "Mid-office",
             "documentation": "Zaken",
             "state": "overlap",

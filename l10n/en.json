@@ -1331,6 +1331,9 @@
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "GEMMA view": "GEMMA view",
+        "The whole GEMMA model": "The whole GEMMA model",
+        "Import the GEMMA model to pick a GEMMA view.": "Import the GEMMA model to pick a GEMMA view."
     }
 }

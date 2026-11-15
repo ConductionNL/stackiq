@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Set up the mail transport": "Set up the mail transport",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",
         "What one licence covers, as the contract with the supplier states it.": "What one licence covers, as the contract with the supplier states it.",
         "Licences bought": "Licences bought",
@@ -1336,7 +1336,10 @@ OC.L10N.register(
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "GEMMA view": "GEMMA view",
+        "The whole GEMMA model": "The whole GEMMA model",
+        "Import the GEMMA model to pick a GEMMA view.": "Import the GEMMA model to pick a GEMMA view."
     },
     "nplurals=2; plural=(n != 1);"
 )

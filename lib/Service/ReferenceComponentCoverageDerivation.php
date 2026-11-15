@@ -208,15 +208,19 @@ class ReferenceComponentCoverageDerivation {
 	}//end componentCoverage()
 
 	/**
-	 * What a component is: its name, group and documentation.
+	 * What a component is: its name, group, documentation and its GEMMA
+	 * element identifier, which a GEMMA view's nodes name it by.
 	 *
 	 * @param array<string, mixed> $component The reference component.
 	 *
-	 * @return array{name: string, group: string, documentation: string}
+	 * @return array{name: string, identifier: string, group: string, documentation: string}
+	 *
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 	 */
 	private static function componentFacts(array $component): array {
 		return [
 			'name' => (string)($component['name'] ?? ''),
+			'identifier' => (string)($component['identifier'] ?? ''),
 			'group' => (string)($component['grouping'] ?? ''),
 			'documentation' => (string)($component['documentation'] ?? ''),
 		];

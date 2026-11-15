@@ -9,8 +9,8 @@
   - GIVEN imported GEMMA views WHEN the plate loads THEN a picker lists them with the GEMMA release, and `useViewStore` fetches the chosen view with `include_gebruik`
   - GIVEN a chosen view WHEN it renders THEN reference components are grouped by the view's groups, keeping the gap, covered and overlap states
   - GIVEN `?view=<id>` in the URL WHEN the page opens THEN that view is chosen
-- [ ] Implement
-- [ ] Test (vitest `gemmaPlateViews.spec.js`)
+- [x] Implement
+- [x] Test (vitest `gemmaPlateViews.spec.js`)
 
 ### Task 2: Inhabitants on the organisation
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002

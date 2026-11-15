@@ -1399,6 +1399,9 @@
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "GEMMA view": "GEMMA-view",
+        "The whole GEMMA model": "Het hele GEMMA-model",
+        "Import the GEMMA model to pick a GEMMA view.": "Importeer het GEMMA-model om een GEMMA-view te kiezen."
     }
 }
