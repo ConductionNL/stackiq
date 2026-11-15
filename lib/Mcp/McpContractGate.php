@@ -37,6 +37,7 @@ use OCP\IUser;
 /**
  * Ownership check for contract tools.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
  * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
  */
 class McpContractGate {

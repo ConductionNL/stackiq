@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
@@ -122,6 +124,15 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 * The result lists of an OpenRegister saveObjects call, in the order they are aggregated.
 	 */
 	private const SAVE_BUCKETS = ['saved', 'updated', 'unchanged', 'invalid'];
+
+	/**
+	 * The sections whose objects carry an `origin`, so drawn objects stay apart from imported ones.
+	 *
+	 * @var string[]
+	 *
+	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+	 */
+	private const ORIGIN_SECTIONS = ['view', 'element', 'relationship'];
 
 	/**
 	 * The progress operation of the running import, or null when it is not tracked.
@@ -1412,12 +1423,9 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 
 				$saveResult = $objectService->saveObjects(
 					objects: $schemaObjects,
-					register: $registerId,
-					schema: $schemaValue,
+					options: new BulkSaveOptions(defaults: new BulkBatchDefaults(register: $registerId, schema: $schemaValue)),
 					_rbac: false,
-					_multitenancy: false,
-					validation: false,
-					events: false
+					_multitenancy: false
 				);
 
 				$countsBySchema[$schemaId] = $this->addSaveResult(outcome: $outcome, saveResult: $saveResult);
@@ -3778,7 +3786,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 * @return array The object
 	 */
 	private function importObject(array $head, ArchiMateImportScope $scope): array {
-		return [
+		$object = [
 			'@self' => $head + [
 				'owner' => $this->cachedConfig['userId'],
 				'organisation' => $this->getCurrentOrganisation(),
@@ -3788,6 +3796,13 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 			'section' => $scope->section(),
 			'model_identifier' => $scope->modelIdentifier(),
 		];
+
+		// A view, element or relation the import writes is GEMMA content; one drawn in the view editor says `drawn`.
+		if (in_array($scope->section(), self::ORIGIN_SECTIONS, true) === true) {
+			$object['origin'] = 'imported';
+		}
+
+		return $object;
 	}//end importObject()
 
 	/**

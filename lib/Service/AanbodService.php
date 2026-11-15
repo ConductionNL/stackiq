@@ -28,6 +28,10 @@ namespace OCA\Stackiq\Service;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -547,9 +551,13 @@ class AanbodService implements AanbodServiceInterface {
 		// $aanbodData already carries every unchanged field forward.
 		$updatedAanbod = $objectService->saveObject(
 			object: $aanbodData,
-			register: $existingAanbod->getRegister(),
-			schema: $existingAanbod->getSchema(),
-			uuid: $aanbodId,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $existingAanbod->getRegister(),
+						schema: $existingAanbod->getSchema()
+					),
+				uuid: $aanbodId
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -611,7 +619,7 @@ class AanbodService implements AanbodServiceInterface {
 		$objectService->setSchema(schema: $existingAanbod->getSchema());
 
 		$objectService->deleteObject(
-			uuid: $aanbodId,
+			new ObjectDeletion(uuid: $aanbodId),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -688,8 +696,7 @@ class AanbodService implements AanbodServiceInterface {
 			try {
 				$object = $objectService->find(
 					id: $aanbodId,
-					register: $registerId,
-					schema: $schemaId,
+					options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -819,8 +826,7 @@ class AanbodService implements AanbodServiceInterface {
 
 			$organisationObject = $objectService->find(
 				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId,
+				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId),
 				_rbac: false,
 				_multitenancy: false
 			);

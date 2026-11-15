@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * handleModuleComplianceUpdate(): reads the module's compliance objects, and saves
@@ -76,7 +77,11 @@ final class ModuleComplianceServiceUpdateFlowTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null) use ($saveFailure) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($saveFailure) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($saveFailure !== null) {
 					throw $saveFailure;
 				}

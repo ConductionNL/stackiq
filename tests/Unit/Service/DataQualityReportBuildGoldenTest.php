@@ -32,6 +32,7 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Pins the data quality report's query scope and output.
@@ -124,6 +125,7 @@ final class DataQualityReportBuildGoldenTest extends TestCase {
 			 * @return object
 			 */
 			public function find(...$args): object {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->trace[] = ['schemaMapper.find', $args];
 				$rules = $this->rules;
 				return new class ($rules) {

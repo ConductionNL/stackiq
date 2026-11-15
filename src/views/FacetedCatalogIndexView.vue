@@ -131,6 +131,7 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMode="quickFilterMode"
 					:quickFilterMultiple="quickFilterMultiple"
 					:sidebar="sidebar"
+					:bulkActions="bulkActions"
 					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
 					@search="onListSearch"
@@ -256,6 +257,15 @@ export default {
 
 		/** Table column definitions, forwarded to `CnIndexPage` (manifest `config.columns`). */
 		columns: {
+			type: Array,
+			default: () => [],
+		},
+
+		/**
+		 * Selection-strip actions, forwarded to `CnIndexPage` (manifest
+		 * `config.bulkActions`), e.g. Move to organisation.
+		 */
+		bulkActions: {
 			type: Array,
 			default: () => [],
 		},
