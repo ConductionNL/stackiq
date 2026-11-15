@@ -1645,10 +1645,10 @@
       ]
     },
     {
-      "bom-ref": "twig/twig-3.28.0.0",
+      "bom-ref": "twig/twig-3.30.0.0",
       "type": "library",
       "name": "twig",
-      "version": "v3.28.0",
+      "version": "v3.30.0",
       "group": "twig",
       "description": "Twig, the flexible, fast, and secure template language for PHP",
       "author": "Fabien Potencier, Twig Team, Armin Ronacher",
@@ -1659,17 +1659,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/twig/twig@v3.28.0",
+      "purl": "pkg:composer/twig/twig@v3.30.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/twigphp/Twig/zipball/597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
-          "comment": "dist reference: 597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
+          "comment": "dist reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "type": "vcs",
           "url": "https://github.com/twigphp/Twig.git",
-          "comment": "source reference: 597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "comment": "source reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "type": "website",
@@ -1683,18 +1683,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/twigphp/Twig/tree/v3.28.0",
+          "url": "https://github.com/twigphp/Twig/tree/v3.30.0",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "name": "cdx:composer:package:type",
@@ -32433,7 +32433,7 @@
       ]
     },
     {
-      "ref": "twig/twig-3.28.0.0",
+      "ref": "twig/twig-3.30.0.0",
       "dependsOn": [
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/polyfill-ctype-1.37.0.0",
@@ -32453,7 +32453,7 @@
         "symfony/mailjet-mailer-6.4.40.0",
         "symfony/postmark-mailer-6.4.41.0",
         "symfony/sendgrid-mailer-6.4.24.0",
-        "twig/twig-3.28.0.0"
+        "twig/twig-3.30.0.0"
       ]
     }
   ]
