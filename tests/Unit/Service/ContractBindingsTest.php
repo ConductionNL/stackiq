@@ -59,7 +59,7 @@ class ContractBindingsTest extends TestCase {
 	}//end aliases()
 
 	/**
-	 * Fifty-six contracts are bound, none of them twice.
+	 * Fifty-seven contracts are bound, none of them twice.
 	 *
 	 * @return void
 	 */
@@ -67,7 +67,7 @@ class ContractBindingsTest extends TestCase {
 		$aliases = $this->aliases();
 		$names   = array_column($aliases, 0);
 
-		$this->assertCount(56, $aliases);
+		$this->assertCount(57, $aliases);
 		$this->assertSame($names, array_values(array_unique($names)));
 
 	}//end testEveryContractIsBoundExactlyOnce()
