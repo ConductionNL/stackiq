@@ -171,6 +171,20 @@ class CmdbExportImportServiceTest extends TestCase {
 	private bool $contactsEnabled = true;
 
 	/**
+	 * The records the import handed to Contacts for new owner contacts, in order (not part of the golden).
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $ownerRecords = [];
+
+	/**
+	 * What writing an owner contact answers instead of a uid: '' (not created) or 'throw'; null for the address book.
+	 *
+	 * @var string|null
+	 */
+	private ?string $ownerSyncAnswer = null;
+
+	/**
 	 * The in-memory distributed cache behind the ProgressTracker.
 	 *
 	 * @var array<string, mixed>
@@ -295,6 +309,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->contacts = [];
 		$this->addressBooks = [];
 		$this->contactsEnabled = true;
+		$this->ownerRecords = [];
+		$this->ownerSyncAnswer = null;
 		$this->cache = [];
 		$this->cacheFailure = null;
 		$this->logLines = [];
@@ -956,6 +972,15 @@ class CmdbExportImportServiceTest extends TestCase {
 		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
 		$sync->method('syncToNamedAddressBook')->willReturnCallback(
 			function (string $objectType, array $record, string $addressBookUri, string $displayName, ?string $fixedUid = null): ?string {
+				$this->ownerRecords[] = $record;
+				if ($this->ownerSyncAnswer === 'throw') {
+					throw new \RuntimeException('address book unavailable');
+				}
+
+				if ($this->ownerSyncAnswer !== null) {
+					return $this->ownerSyncAnswer;
+				}
+
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
@@ -1638,6 +1663,54 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame([], $this->saves);
 	}//end testAModuleSchemaFromBefore038StopsTheImport()
+
+	/**
+	 * The admin-only update rule on externalKey is found as a group name or as a rule naming the group, in an
+	 * array or an object definition; anything else, and a missing rule, is reported. An undeclared property
+	 * is not reported here.
+	 *
+	 * @return void
+	 */
+	public function testMissingUpdateRulesReadEveryRuleShape(): void {
+		$missing = new \ReflectionMethod(CmdbExportImportService::class, 'missingUpdateRules');
+		$missing->setAccessible(true);
+		$rule = static fn (mixed $update): array => ['externalKey' => ['type' => 'string', 'authorization' => ['update' => $update]]];
+
+		$this->assertSame([], $missing->invoke(null, 'module', []));
+		$this->assertSame([], $missing->invoke(null, 'usage', ['externalKey' => []]));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule(['admin'])));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule([['group' => 'admin']])));
+		$this->assertSame([], $missing->invoke(null, 'module', ['externalKey' => (object)['authorization' => (object)['update' => [(object)['group' => 'admin']]]]]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', ['externalKey' => ['type' => 'string']]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule('admin')));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule([['group' => 'editors'], ['name' => 'admin'], 'Admin'])));
+	}//end testMissingUpdateRulesReadEveryRuleShape()
+
+	/**
+	 * A new owner contact gets the name parts, and the e-mail address and role when the row has them; an owner
+	 * named twice in one run is written to Contacts once.
+	 *
+	 * @return void
+	 */
+	public function testANewOwnerContactCarriesItsEmailAndRole(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$full = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => ' v.achternaam@example.org ', 'Applicatie Eigenaar (Functie)' => ' Afdelingshoofd '];
+		$rows = [
+			$this->row(appId: '1', cells: $full, row: 2),
+			$this->row(appId: '2', cells: $full, row: 3),
+			$this->row(appId: '3', cells: ['Applicatie Eigenaar (Persoon)' => 'Tweede, Iemand'], row: 4),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			[
+				['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'v.achternaam@example.org', 'role' => 'Afdelingshoofd'],
+				['voornaam' => 'Iemand', 'achternaam' => 'Tweede'],
+			],
+			$this->ownerRecords
+		);
+	}//end testANewOwnerContactCarriesItsEmailAndRole()
 
 	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
@@ -4303,4 +4376,35 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'], CmdbExportImportService::splitPersonName(name: 'Achternaam,  Voornaam '));
 		$this->assertSame(['voornaam' => '', 'achternaam' => 'Functioneel Beheer'], CmdbExportImportService::splitPersonName(name: 'Functioneel  Beheer'));
 	}//end testPersonNamesSplit()
+	/**
+	 * An owner whose contact cannot be created is skipped with a warning naming its column; a failure while
+	 * resolving one is logged and warned about, and the import goes on without the owner.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvableOwnerIsSkippedWithAWarning(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
+
+		$this->ownerSyncAnswer = '';
+		$unresolved = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved in Nextcloud Contacts'],
+			$unresolved['rows'][0]['warnings']
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+
+		$this->ownerSyncAnswer = 'throw';
+		$this->logLines = [];
+		$failed = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved'], $failed['rows'][0]['warnings']);
+		$this->assertContains(
+			'CmdbExportImportService: owner could not be resolved {"row":2,"column":"Applicatie Eigenaar (Persoon)","exception":"RuntimeException"}',
+			$this->logLines
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+	}//end testAnUnresolvableOwnerIsSkippedWithAWarning()
 }//end class

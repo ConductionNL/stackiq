@@ -88,3 +88,66 @@
 - **files**: `openspec/parity/capabilities.json`
 - [x] Implement
 - [x] Test (spec coverage measure v2, strict)
+
+### Task 14: Test the hosting model and the views API the matrix rows claim
+- **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-hosting-model/spec.md, openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/view-enrichment-api/spec.md
+- **files**: `tests/Unit/Controller/ViewControllerTest.php` (new)
+- **acceptance_criteria**:
+  - REQ-CLR-020 and REQ-CLR-021 each have a test that passes against the current code
+- [ ] Test
+
+### Task 15: A reviewer outside the supplier marks a compliance claim verified
+- **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md
+- **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy verifiedBy, verifiedAt), `src/utils/complianceMatrix.js` (verified needs verifiedBy, not evidence alone), `src/views/ComplianceMatrixView.vue`
+- **acceptance_criteria**:
+  - GIVEN a claim with evidence and no reviewer WHEN the matrix renders THEN the cell reads claimed
+- [ ] Implement
+- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+
+### Task 16: List the organisations waiting in draft on the dashboard widget
+- **spec_ref**: openspec/specs/fe-organizations/spec.md
+- **files**: `src/views/widgets/ConceptOrganisatiesWidget.vue` (filter on status `Draft`, accept writes `Active`)
+- **acceptance_criteria**:
+  - GIVEN an organisation with status Draft WHEN the dashboard opens THEN the widget lists it, and accepting it saves status Active
+- [ ] Implement
+- [ ] Test (Vitest on the widget)
+
+### Task 17: Re-point the remaining relations on an organisation merge
+- **spec_ref**: openspec/specs/organisation-merge/spec.md
+- **files**: `lib/Service/MergeOrganisatieService.php` (FIELD_RELATION_TYPES: usage provider, organisation memberships and participants, model organisations), the dry-run counts
+- **acceptance_criteria**:
+  - GIVEN a merge WHEN it completes THEN no usage, organisation membership or model still points at the merged-away organisation, and the preview counted each
+- [ ] Implement
+- [ ] Test (PHPUnit `tests/Unit/Service/MergeOrganisatieServiceTest.php`)
+
+### Task 18: Resolve the standard version picker on a compliance record, and offer it from the application page
+- **spec_ref**: openspec/specs/module-compliance-assessment/spec.md
+- **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy standard version relation register), `src/manifest.json` (ModuleDetail declare a standard)
+- **acceptance_criteria**:
+  - GIVEN an application page WHEN a user declares support for a standard version THEN the version resolves and the record shows on the compliance matrix
+- [ ] Implement
+- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+
+### Task 19: Usages made on stackiq's own forms carry the supplier
+- **spec_ref**: openspec/specs/application-page/spec.md
+- **files**: usage create and edit (set the hidden provider from the module's provider), a repair step for existing usages
+- **acceptance_criteria**:
+  - GIVEN a municipality adds a usage on the usage form WHEN the supplier opens its application page THEN the supplier sees that organisation in the usages list
+- [ ] Implement
+- [ ] Test (PHPUnit on the usage provider, Playwright `tests/e2e/workflows/usages.spec.ts`)
+
+### Task 20: Anonymous readers get only published applications
+- **spec_ref**: openspec/specs/open-data-publishing/spec.md
+- **files**: `lib/Settings/softwarecatalogus_register.json` (module public read rule: publication date at or before now, drop the registeredBy Supplier branch)
+- **acceptance_criteria**:
+  - GIVEN a supplier's module without a publication date WHEN an anonymous reader asks for it THEN it is not returned
+- [ ] Implement
+- [ ] Test (Newman open-data collection)
+
+### Task 21: Switch federation on in the exchange settings and show the registration status
+- **spec_ref**: openspec/specs/federated-catalog-sync/spec.md
+- **files**: `src/views/settings/sections/FederationSettings.vue`, `src/manifest.d/connections.json`
+- **acceptance_criteria**:
+  - GIVEN federation is off WHEN an admin switches it on in the exchange settings THEN the instance registers with the directory and the page shows the registration status
+- [ ] Implement
+- [ ] Test (Playwright `tests/e2e/workflows/federation-settings.spec.ts`)

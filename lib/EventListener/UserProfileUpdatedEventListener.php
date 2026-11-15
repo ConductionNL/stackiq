@@ -24,7 +24,7 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -157,7 +157,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * @return ProfileContactSync|null The sync, or null when the configuration is incomplete.
 	 */
 	private function startContactPersonSync(UserProfileUpdatedEvent $event, LoggerInterface $logger): ?ProfileContactSync {
-		$settingsService = $this->container->get(SettingsService::class);
+		$settingsService = $this->container->get(SettingsServiceInterface::class);
 
 		$sync = new ProfileContactSync();
 		$sync->voorzieningenConfig = $settingsService->getVoorzieningenConfig();

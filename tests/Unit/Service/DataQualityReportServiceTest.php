@@ -14,7 +14,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\DataQualityDerivation;
 use OCA\Stackiq\Service\DataQualityReportService;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -67,11 +67,11 @@ final class DataQualityReportServiceTest extends TestCase {
 		);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(CatalogueLocator::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => '1', 'gebruik_schema' => '20']);
 
 		$report = (new DataQualityReportService(
-			settingsService: $settings,
+			catalogue: $settings,
 			appManager: $appManager,
 			container: $container,
 			logger: new NullLogger(),

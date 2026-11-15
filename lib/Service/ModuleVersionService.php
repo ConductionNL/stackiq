@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -42,17 +44,17 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
  */
-class ModuleVersionService {
+class ModuleVersionService implements ModuleVersionServiceInterface {
 	/**
 	 * Constructor for ModuleVersionService
 	 *
 	 * @param ContainerInterface $container The DI container
-	 * @param SettingsService $settingsService The settings service
+	 * @param RegisterConfigReaderInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -212,7 +214,7 @@ class ModuleVersionService {
 	 */
 	private function existingVersionList(array $lookup): array {
 		$existingVersions = $lookup['objectService']->searchObjects(
-			query: $this->versionQuery(lookup: $lookup),
+			query: SearchBounds::bounded(query: $this->versionQuery(lookup: $lookup)),
 			_rbac: false,
 			_multitenancy: false
 		);

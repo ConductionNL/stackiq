@@ -45,6 +45,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -55,11 +56,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ModerationService {
-	/**
-	 * The moderated catalog object type (default / legacy — organisatie).
-	 */
-	public const MODERATED_TYPE = 'organization';
+class ModerationService implements ModerationServiceInterface {
 
 	/**
 	 * The review moderated catalog object type.

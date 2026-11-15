@@ -33,6 +33,9 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Tests for EolSyncJob::run() and FederationSyncJob::run().
+ *
+ * @covers \OCA\Stackiq\BackgroundJob\EolSyncJob
+ * @covers \OCA\Stackiq\BackgroundJob\FederationSyncJob
  */
 class SyncJobsRunTest extends TestCase {
 

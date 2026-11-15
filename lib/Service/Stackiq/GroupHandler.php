@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
@@ -512,7 +513,7 @@ class GroupHandler {
 	 */
 	private function resolveOrganisationData(string $organisationUuid): ?array {
 		$objectService = $this->getObjectService();
-		$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+		$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 		$registerId = $settingsService->getVoorzieningenRegisterId();
 		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 

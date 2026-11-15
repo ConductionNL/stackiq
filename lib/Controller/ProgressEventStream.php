@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,11 +41,11 @@ final class ProgressEventStream {
 	/**
 	 * Constructor.
 	 *
-	 * @param ProgressTracker $progressTracker The progress tracker service.
+	 * @param ProgressTrackerInterface $progressTracker The progress tracker service.
 	 * @param LoggerInterface $logger The logger instance.
 	 */
 	public function __construct(
-		private readonly ProgressTracker $progressTracker,
+		private readonly ProgressTrackerInterface $progressTracker,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

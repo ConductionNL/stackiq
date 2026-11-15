@@ -21,8 +21,7 @@ import { generateUrl } from '@nextcloud/router'
 /** GEMMA facet dimensions this client supports, in display order. */
 export const FACET_DIMENSIONS = [
 	// WIRE NAMES, and they must stay as a SET. FacetController and FacetService
-	// both declare ['referenceComponent', 'standard', 'applicationService',
-	// 'domain'] — these strings are the query parameters and the response keys of
+	// both read FacetService::DIMENSIONS — these strings are the query parameters and the response keys of
 	// this app's own facet endpoint. They were Dutch until the vocabulary pass
 	// moved all four together; an earlier tranche translated exactly ONE of
 	// them, so the frontend sent `standard[]` to a backend still reading
@@ -32,6 +31,10 @@ export const FACET_DIMENSIONS = [
 	'standard',
 	'applicationService',
 	'domain',
+	// insight-supplier-facet REQ-SFC-003: the fifth dimension, moved together
+	// with FacetService::DIMENSIONS and FacetController::parseFilters(). Its
+	// values are organisation ids; each bucket carries the name as `label`.
+	'supplier',
 ]
 
 /**

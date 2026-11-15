@@ -21,15 +21,23 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IConfig;
+use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -54,6 +62,10 @@ use Psr\Log\LoggerInterface;
  * own active organisation (user value core/organisation, the rule
  * PortfolioReportController::isAuthorisedForOrganisation() applies); another
  * organisation's uuid is refused before the export runs.
+ *
+ * insight-exports-and-custom-reports REQ-CER-003 then made the export follow
+ * the portfolio report's rule (OrganisationReportAccess): any member exports
+ * their own active organisation, `admin` and `ambtenaar` any organisation.
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
@@ -108,20 +120,45 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
+		$groupManager->method('getUserGroups')->willReturn(
+			array_map(
+				function (string $gid): IGroup {
+					$group = $this->createMock(IGroup::class);
+					$group->method('getGID')->willReturn($gid);
+					return $group;
+				},
+				$callerGroups
+			)
+		);
 		$groupManager->method('isInGroup')->willReturnCallback(
 			static function (string $userId, string $group) use ($uid, $callerGroups): bool {
 				return $userId === $uid && in_array($group, $callerGroups, true);
 			}
 		);
 
+		$roleGroups = new RoleGroupSettings(
+			config: $appConfig,
+			appManager: $this->createMock(IAppManager::class),
+			groupManager: $groupManager,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+
 		$settingsService = new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $appConfig,
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $appConfig,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $roleGroups,
 			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $groupManager,
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 
 		$user = $this->createMock(IUser::class);
@@ -141,9 +178,13 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 		);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($userConfig) {
+			static function (string $id) use ($userConfig, $groupManager) {
 				if ($id === IConfig::class) {
 					return $userConfig;
+				}
+
+				if ($id === OrganisationReportAccessInterface::class) {
+					return new OrganisationReportAccess(groupManager: $groupManager, config: $userConfig);
 				}
 
 				throw new \RuntimeException('Unexpected container lookup: ' . $id);
@@ -174,10 +215,14 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			$groupManager,
 			$userSession,
 			$settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$archiMateService,
+			$roleGroups,
 			$this->createMock(ProgressTracker::class),
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end makeController()
@@ -247,11 +292,16 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 	}//end testMemberWithoutAnActiveOrganisationIsRefused()
 
 	/**
-	 * A user outside every saved group is refused, even for their own organisation.
+	 * A member outside the saved groups exports their own organisation too:
+	 * insight-exports-and-custom-reports REQ-CER-003 replaces the saved-group
+	 * rule with the portfolio report's (admin, ambtenaar, or the caller's own
+	 * active organisation).
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 	 */
-	public function testUserOutsideTheSavedGroupsIsRefused(): void {
+	public function testAPlainMemberExportsTheirOwnOrganisation(): void {
 		$controller = $this->makeController(
 			uid: 'plain-user',
 			isAdmin: false,
@@ -260,11 +310,11 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			activeOrg: self::OWN_ORG
 		);
 
-		$response = $controller->exportOrgArchiMate(self::OWN_ORG);
-
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-		$this->assertSame(0, $this->exportCalls);
-	}//end testUserOutsideTheSavedGroupsIsRefused()
+		$this->assertSame(Http::STATUS_OK, $controller->exportOrgArchiMate(self::OWN_ORG)->getStatus());
+		$this->assertSame(1, $this->exportCalls);
+		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->exportOrgArchiMate(self::OTHER_ORG)->getStatus());
+		$this->assertSame(1, $this->exportCalls, 'Another organisation is still refused before the export runs.');
+	}//end testAPlainMemberExportsTheirOwnOrganisation()
 
 	/**
 	 * A member of a saved group cannot export the whole register.

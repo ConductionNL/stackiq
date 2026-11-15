@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
@@ -39,6 +40,7 @@ use Psr\Log\LoggerInterface;
  * Golden cases for syncing a profile update onto its contactpersoon.
  *
  * @covers \OCA\Stackiq\EventListener\UserProfileUpdatedEventListener
+ * @uses   \OCA\Stackiq\EventListener\ProfileContactSync
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
@@ -268,7 +270,7 @@ class UserProfileContactSyncGoldenTest extends TestCase {
 			['container.get', LoggerInterface::class],
 			['user.getUID'],
 			['log', 'info', '[UserProfileUpdatedEventListener] Syncing user profile changes to contactpersoon', ['userId' => 'alice', 'relevantChanges' => ['firstName', 'email']]],
-			['container.get', SettingsService::class],
+			['container.get', SettingsServiceInterface::class],
 			['getVoorzieningenConfig'],
 			['user.getUID'],
 			['searchObjects', ['@self' => ['register' => 7, 'schema' => 8], 'username' => 'alice', '_limit' => 5], false, true],

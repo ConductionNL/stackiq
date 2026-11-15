@@ -35,8 +35,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\Service\ContractApprovalService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -52,12 +52,12 @@ class BackfillContractApprovalState implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager $appManager The app manager.
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution).
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -109,6 +109,7 @@ class BackfillContractApprovalState implements IRepairStep {
 			return;
 		}
 
+		// System path (decision 409): a repair step, run by occ, that returns no contract field.
 		try {
 			$contracts = $objectService->setRegister($registerId)
 				->setSchema($schemaId)
@@ -131,7 +132,7 @@ class BackfillContractApprovalState implements IRepairStep {
 				continue;
 			}
 
-			$data['approvalState'] = ContractApprovalService::APPROVAL_NONE;
+			$data['approvalState'] = ContractApprovalServiceInterface::APPROVAL_NONE;
 			// Status is intentionally never touched — existing Actief
 			// contracts are grandfathered, no retroactive decision is raised.
 			try {

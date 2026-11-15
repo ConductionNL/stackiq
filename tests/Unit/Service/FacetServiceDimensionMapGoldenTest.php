@@ -24,7 +24,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -63,7 +63,7 @@ class FacetServiceDimensionMapGoldenTest extends TestCase {
 		$cacheFactory->method('createDistributed')->willReturn($cache);
 		$service = new FacetService(
 			$this->createMock(ContainerInterface::class),
-			$this->createMock(SettingsService::class),
+			$this->createMock(CatalogueLocator::class),
 			$archiMate,
 			new ViewQueryBuilder(),
 			$this->createMock(IUserSession::class),

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
-use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -134,7 +134,7 @@ class OrganisationLinkCommand extends Command {
 	private function linkOutcome(InputInterface $input, OutputInterface $output): string {
 		$organisatie  = (string) $input->getArgument('organisatie');
 		$organisation = (string) $input->getArgument('organisation');
-		$sync    = $this->container->get(OrganizationSyncService::class);
+		$sync    = $this->container->get(OrganizationSyncServiceInterface::class);
 		$outcome = $sync->checkOrganisationLink(organisatieUuid: $organisatie, entityUuid: $organisation);
 		if ($outcome === null && $this->confirmed(input: $input, output: $output) === false) {
 			$outcome = 'not-confirmed';

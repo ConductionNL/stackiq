@@ -265,21 +265,33 @@ final class MailTransportFactory {
 	private function createSesTransport(array $settings): TransportInterface {
 		$accessKey = ($settings['sesAccessKey'] ?? '');
 		$secretKey = ($settings['sesSecretKey'] ?? '');
-		$region = ($settings['sesRegion'] ?? 'us-east-1');
 
 		if (empty($accessKey) === true || empty($secretKey) === true) {
 			throw new InvalidArgumentException('Amazon SES access key and secret key are required');
 		}
 
-		return Transport::fromDsn(
-			sprintf(
-				'ses+api://%s:%s@default?region=%s',
-				rawurlencode($accessKey),
-				rawurlencode($secretKey),
-				rawurlencode($region)
-			)
-		);
+		return Transport::fromDsn(self::sesDsn(settings: $settings));
 	}//end createSesTransport()
+
+	/**
+	 * The SES API DSN: both keys and the region (us-east-1 by default), URL-encoded.
+	 *
+	 * @param array $settings Email settings, holding both SES keys.
+	 *
+	 * @return string The DSN.
+	 */
+	private static function sesDsn(array $settings): string {
+		$accessKey = ($settings['sesAccessKey'] ?? '');
+		$secretKey = ($settings['sesSecretKey'] ?? '');
+		$region = ($settings['sesRegion'] ?? 'us-east-1');
+
+		return sprintf(
+			'ses+api://%s:%s@default?region=%s',
+			rawurlencode($accessKey),
+			rawurlencode($secretKey),
+			rawurlencode($region)
+		);
+	}//end sesDsn()
 
 	/**
 	 * Creates a Mailjet transport.
