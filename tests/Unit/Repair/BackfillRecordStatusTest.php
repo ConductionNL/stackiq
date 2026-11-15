@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Tests\Unit\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Repair\BackfillRecordStatus;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -94,12 +95,12 @@ class BackfillRecordStatusTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schemaId = null, ?string $uuid = null) use ($saveFails): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options) use ($saveFails): ObjectEntityInterface {
 				if ($saveFails === true) {
 					throw new RuntimeException('locked');
 				}
 
-				$this->saved[] = [(int)$schemaId, (string)$uuid, $object];
+				$this->saved[] = [(int)$options->target->schema, (string)$options->uuid, $object];
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);

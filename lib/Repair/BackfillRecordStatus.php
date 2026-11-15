@@ -30,6 +30,9 @@ namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -201,13 +204,13 @@ class BackfillRecordStatus implements IRepairStep {
 			try {
 				$objects->saveObject(
 					object: $data,
-					extend: [],
-					register: $ids['register'],
-					schema: $ids['schema'],
-					uuid: $row->getUuid(),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $ids['register'], schema: $ids['schema']),
+						uuid: $row->getUuid(),
+						policy: new SavePolicy(silent: true)
+					),
 					_rbac: false,
-					_multitenancy: false,
-					silent: true
+					_multitenancy: false
 				);
 				$result['written']++;
 			} catch (Throwable) {

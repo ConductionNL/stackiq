@@ -31,6 +31,7 @@ namespace OCA\Stackiq\Tests\Unit\EventListener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\EventListener\CatalogueMergeRelinker;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\EventDispatcher\Event;
@@ -125,8 +126,8 @@ class CatalogueMergeRelinkerTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null): ObjectEntityInterface {
-				$this->saved[] = [(int)$schema, (string)$uuid, $object];
+			function (array $object, ObjectSaveOptions $options): ObjectEntityInterface {
+				$this->saved[] = [(int)$options->target->schema, (string)$options->uuid, $object];
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);

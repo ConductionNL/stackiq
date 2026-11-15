@@ -29,6 +29,9 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Stackiq\Service\CatalogueReferenceMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -188,10 +191,10 @@ class CatalogueMergeRelinker implements IEventListener {
 
 			$objects->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $entity->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $entity->getUuid()
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -347,10 +350,13 @@ class CatalogueMergeRelinker implements IEventListener {
 		$data['mergedInto'] = $survivorUuid;
 		$objects->saveObject(
 			object: $data,
-			extend: [],
-			register: $this->settings->getRegisterIdForObjectType(objectType: $schema),
-			schema: $this->settings->getSchemaIdForObjectType(objectType: $schema),
-			uuid: $loserUuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+					register: $this->settings->getRegisterIdForObjectType(objectType: $schema),
+					schema: $this->settings->getSchemaIdForObjectType(objectType: $schema)
+				),
+				uuid: $loserUuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -366,7 +372,12 @@ class CatalogueMergeRelinker implements IEventListener {
 	 */
 	private function findQuietly(ObjectServiceInterface $objects, string $uuid): ?ObjectEntityInterface {
 		try {
-			return $objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+			return $objects->find(
+				id: $uuid,
+				options: new ObjectFindOptions(render: false, audit: false),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			$this->logger->debug('CatalogueMergeRelinker: object ' . $uuid . ' not found: ' . $e->getMessage());
 			return null;
