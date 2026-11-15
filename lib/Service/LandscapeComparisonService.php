@@ -62,6 +62,13 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	private const CHANGE_ORDER = ['added' => 0, 'removed' => 1, 'replaced' => 2, 'unchanged' => 3];
 
 	/**
+	 * Module names by id for the comparison being built, set at the start of compare().
+	 *
+	 * @var array<string,string>
+	 */
+	private array $names = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ReferenceComponentCoverageService    $reads      Reads the usages, modules and reference components, bounded.
@@ -118,16 +125,16 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 		$usages = $this->withIds(usages: $page['usages']);
 		$now    = $this->landscapes->derive(usages: $usages, date: $today);
 		$future = $this->landscapes->derive(usages: $usages, date: $target, changes: $changes);
-		$names  = $this->moduleNames(landscapes: [$now, $future]);
+		$this->names = $this->moduleNames(landscapes: [$now, $future]);
 
 		return [
 			'organisation' => $organisationUuid,
 			'today' => $today->format('Y-m-d'),
 			'date' => $target->format('Y-m-d'),
 			'scenario' => $scenario,
-			'landscapes' => ['today' => $this->column(landscape: $now, names: $names), 'future' => $this->column(landscape: $future, names: $names)],
-			'applications' => $this->applicationDifferences(now: $now, future: $future, usages: $usages, names: $names),
-			'coverage' => $this->coverageDifferences(now: $now, future: $future, names: $names),
+			'landscapes' => ['today' => $this->column(landscape: $now), 'future' => $this->column(landscape: $future)],
+			'applications' => $this->applicationDifferences(landscapes: ['today' => $now, 'future' => $future], usages: $usages),
+			'coverage' => $this->coverageDifferences(now: $now, future: $future),
 			'notDated' => $future['notDated'],
 		] + $page['counts'];
 	}//end compare()
@@ -259,16 +266,15 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * One landscape as a column: each application with its module name, by name.
 	 *
 	 * @param array<string,mixed>  $landscape The derived landscape.
-	 * @param array<string,string> $names     Module names by id.
 	 *
 	 * @return array<int,array{usage: string|null, module: string, moduleName: string}>
 	 */
-	private function column(array $landscape, array $names): array {
+	private function column(array $landscape): array {
 		$column = array_map(
-			static fn (array $entry): array => [
+			fn (array $entry): array => [
 				'usage' => $entry['usage'],
 				'module' => $entry['module'],
-				'moduleName' => ($names[$entry['module']] ?? $entry['module']),
+				'moduleName' => ($this->names[$entry['module']] ?? $entry['module']),
 			],
 			$landscape['entries']
 		);
@@ -280,31 +286,31 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	/**
 	 * The application differences between today's landscape and the future one.
 	 *
-	 * @param array<string,mixed>            $now    Today's landscape.
-	 * @param array<string,mixed>            $future The future landscape.
-	 * @param array<int,array<string,mixed>> $usages The organisation's usages.
-	 * @param array<string,string>           $names  Module names by id.
+	 * @param array{today: array<string,mixed>, future: array<string,mixed>} $landscapes Today's landscape and the future one.
+	 * @param array<int,array<string,mixed>>                                   $usages     The organisation's usages.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function applicationDifferences(array $now, array $future, array $usages, array $names): array {
-		$today   = $this->byUsage(entries: $now['entries']);
+	private function applicationDifferences(array $landscapes, array $usages): array {
+		$future  = $landscapes['future'];
+		$today   = $this->byUsage(entries: $landscapes['today']['entries']);
 		$later   = $this->byUsage(entries: $future['entries']);
 		$removed = $this->byUsage(entries: $future['removed']);
 		$rows    = [];
 		foreach ($future['entries'] as $entry) {
 			if ($entry['usage'] === null) {
-				$rows[] = $this->row(change: 'added', module: $entry['module'], sources: $entry['sources'], date: $entry['date'], names: $names);
+				$rows[] = $this->row(change: 'added', entry: ['module' => $entry['module'], 'sources' => $entry['sources'], 'date' => $entry['date']]);
 			}
 		}
 
 		foreach (array_keys($today + $later) as $usageId) {
 			$rows[] = $this->usageRow(
-				before: ($today[$usageId] ?? null),
-				after: ($later[$usageId] ?? null),
-				removal: ($removed[$usageId] ?? null),
-				usage: $this->usageById(usages: $usages, usageId: (string)$usageId),
-				names: $names
+				sides: [
+					'before' => ($today[$usageId] ?? null),
+					'after' => ($later[$usageId] ?? null),
+					'removal' => ($removed[$usageId] ?? null),
+				],
+				usage: $this->usageById(usages: $usages, usageId: (string)$usageId)
 			);
 		}
 
@@ -327,39 +333,36 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	/**
 	 * The difference for one usage between today and the date.
 	 *
-	 * @param array<string,mixed>|null $before  Its entry today.
-	 * @param array<string,mixed>|null $after   Its entry on the date.
-	 * @param array<string,mixed>|null $removal Why it left the landscape by the date, when it did.
-	 * @param array<string,mixed>      $usage   The usage.
-	 * @param array<string,string>     $names   Module names by id.
+	 * Sides: `before` is its entry today, `after` its entry on the date, and
+	 * `removal` why it left the landscape by the date, when it did.
+	 *
+	 * @param array<string,array<string,mixed>|null> $sides The before, after and removal entries.
+	 * @param array<string,mixed> $usage The usage.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function usageRow(?array $before, ?array $after, ?array $removal, array $usage, array $names): array {
+	private function usageRow(array $sides, array $usage): array {
+		[$before, $after, $removal] = [$sides['before'], $sides['after'], $sides['removal']];
 		if ($before === null) {
 			$date = $this->dateOf(value: ($usage['startDateInProduction'] ?? null));
-			return $this->row(change: 'added', module: $after['module'], sources: ['plan'], date: $date, names: $names, usage: $after['usage']);
+			return $this->row(change: 'added', entry: ['module' => $after['module'], 'sources' => ['plan'], 'date' => $date, 'usage' => $after['usage']]);
 		}
 
 		if ($after === null) {
 			$sources = ($removal['sources'] ?? ['plan']);
 			$date    = ($removal['date'] ?? $this->dateOf(value: ($usage['startDateOutPhased'] ?? null)));
-			return $this->row(change: 'removed', module: $before['module'], sources: $sources, date: $date, names: $names, usage: $before['usage']);
+			return $this->row(change: 'removed', entry: ['module' => $before['module'], 'sources' => $sources, 'date' => $date, 'usage' => $before['usage']]);
 		}
 
 		if ($after['module'] !== $before['module']) {
 			$row = $this->row(
 				change: 'replaced',
-				module: $before['module'],
-				sources: $after['sources'],
-				date: $after['date'],
-				names: $names,
-				usage: $before['usage']
+				entry: ['module' => $before['module'], 'sources' => $after['sources'], 'date' => $after['date'], 'usage' => $before['usage']]
 			);
-			return $row + ['replacedBy' => ($names[$after['module']] ?? $after['module']), 'replacedById' => $after['module']];
+			return $row + ['replacedBy' => ($this->names[$after['module']] ?? $after['module']), 'replacedById' => $after['module']];
 		}
 
-		return $this->row(change: 'unchanged', module: $before['module'], sources: [], date: null, names: $names, usage: $before['usage']);
+		return $this->row(change: 'unchanged', entry: ['module' => $before['module'], 'sources' => [], 'date' => null, 'usage' => $before['usage']]);
 	}//end usageRow()
 
 	/**
@@ -369,17 +372,17 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * otherwise; `sources` names every source, so a scenario change that won
 	 * over a plan replacement names both.
 	 *
-	 * @param string               $change  added, removed, replaced or unchanged.
-	 * @param string               $module  The module id.
-	 * @param array<int,string>    $sources The sources of the entry.
-	 * @param string|null          $date    The date of the difference.
-	 * @param array<string,string> $names   Module names by id.
-	 * @param string|null          $usage   The usage id, null for a scenario addition.
+	 * Entry: `module` id, its `sources`, the `date` of the difference, and
+	 * the `usage` id (absent or null for a scenario addition).
+	 *
+	 * @param string              $change added, removed, replaced or unchanged.
+	 * @param array<string,mixed> $entry  The module, sources, date and usage.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function row(string $change, string $module, array $sources, ?string $date, array $names, ?string $usage=null): array {
-		$sources = array_values(array_diff($sources, ['today']));
+	private function row(string $change, array $entry): array {
+		$module  = $entry['module'];
+		$sources = array_values(array_diff($entry['sources'], ['today']));
 		$source  = null;
 		if ($sources !== []) {
 			$source = 'plan';
@@ -389,33 +392,32 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 		}
 
 		return [
-			'usage' => $usage,
+			'usage' => ($entry['usage'] ?? null),
 			'module' => $module,
-			'moduleName' => ($names[$module] ?? $module),
+			'moduleName' => ($this->names[$module] ?? $module),
 			'change' => $change,
 			'source' => $source,
 			'sources' => $sources,
-			'date' => $date,
+			'date' => $entry['date'],
 		];
 	}//end row()
 
 	/**
 	 * The reference components whose coverage state differs between the two landscapes.
 	 *
-	 * @param array<string,mixed>  $now    Today's landscape.
-	 * @param array<string,mixed>  $future The future landscape.
-	 * @param array<string,string> $names  Module names by id.
+	 * @param array<string,mixed> $now    Today's landscape.
+	 * @param array<string,mixed> $future The future landscape.
 	 *
 	 * @return array<int,array{componentId: string, component: string, group: string, today: string, future: string, change: string}>
 	 */
-	private function coverageDifferences(array $now, array $future, array $names): array {
+	private function coverageDifferences(array $now, array $future): array {
 		$components = $this->reads->readReferenceComponents();
 		if ($components === []) {
 			return [];
 		}
 
-		$before = $this->states(landscape: $now, components: $components, names: $names);
-		$after  = $this->states(landscape: $future, components: $components, names: $names);
+		$before = $this->states(landscape: $now, components: $components);
+		$after  = $this->states(landscape: $future, components: $components);
 		$rows   = [];
 		foreach ($after as $id => $row) {
 			$was = ($before[$id]['state'] ?? 'gap');
@@ -441,11 +443,10 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 *
 	 * @param array<string,mixed>            $landscape  The derived landscape.
 	 * @param array<int,array<string,mixed>> $components The reference components.
-	 * @param array<string,string>           $names      Module names by id.
 	 *
 	 * @return array<string,array<string,mixed>>
 	 */
-	private function states(array $landscape, array $components, array $names): array {
+	private function states(array $landscape, array $components): array {
 		$usages = [];
 		foreach ($landscape['entries'] as $index => $entry) {
 			$usages[] = [
@@ -456,7 +457,7 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 			];
 		}
 
-		$rows = $this->coverage->derive(components: $components, usages: $usages, moduleNames: $names, moduleComponents: [])['components'];
+		$rows = $this->coverage->derive(components: $components, usages: $usages, moduleNames: $this->names, moduleComponents: [])['components'];
 
 		return array_column($rows, null, 'id');
 	}//end states()
