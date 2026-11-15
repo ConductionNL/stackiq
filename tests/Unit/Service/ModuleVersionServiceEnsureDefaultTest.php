@@ -35,6 +35,7 @@ use RuntimeException;
  * @package  OCA\Stackiq\Tests\Unit\Service
  *
  * @covers \OCA\Stackiq\Service\ModuleVersionService
+ * @uses   \OCA\Stackiq\Service\SearchBounds
  */
 class ModuleVersionServiceEnsureDefaultTest extends TestCase {
 
