@@ -29,8 +29,9 @@
   - GIVEN the contract stub WHEN a docx or pptx is requested THEN the gateway sends the content fields of design D3 and returns the Files path and file id
   - GIVEN the contract does not resolve WHEN the route is called THEN it answers 503 with the reason and the gateway is not called
   - GIVEN the source tree WHEN it is scanned THEN only the gateway references filinq
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewDocumentGatewayTest`, `ViewControllerDocumentTest`, hydra gate no-phantom-cross-app-rpc)
+- [x] Implement
+- [x] Test (PHPUnit `ViewDocumentGatewayTest`, `ViewControllerDocumentTest`, hydra gate no-phantom-cross-app-rpc)
+  - filinq now publishes its document contract: the typed command event `OCA\Filinq\Event\DocumentGenerationRequestedEvent` (render a template over data and file the result), dispatched in-process. `ViewDocumentGateway` resolves it by class name only: `isAvailable()` is true when that class exists and is an event. `requestDocument()` sends an inline, escaped template over the D3 content as `docx` or `pptx`, with `storeFile` set and the caller as owner, and returns the Files path, file id and name. A refusal or an unhandled event raises. `ViewDocumentContent` builds the content: name, description, viewpoint, a legend of element types, the date, a link to `/views/{id}` and the SVG from `ViewImageService`. `POST /api/views/{viewId}/document` (`NoAdminRequired`, CSRF kept) answers 503 "Word and PowerPoint need the document app filinq." before the view is read when the contract does not resolve. It also answers 400 for another format, 404 for a view the caller may not read, 502 when filinq refuses, and otherwise 201. Documented in `openapi.json`. PHPUnit: `ViewDocumentGatewayTest` (8, against a stub of the contract in `tests/Stubs/Filinq/`, including a scan that only the gateway references filinq and nothing calls its routes), `ViewDocumentContentTest` (3), `ViewControllerDocumentTest` (7). Hydra gate 27 no-phantom-cross-app-rpc passes.
 
 ### Task 4: Export menu and initial state
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
