@@ -5,7 +5,8 @@
 	"relocations": {
 		"Komplianties": "ReportsCompliance",
 		"ComplianceMatrix": "ReportsCompliance",
-		"Ask": "ReportsCompliance"
+		"Ask": "ReportsCompliance",
+		"AssistantActions": "ReportsCompliance"
 	},
 	"removals": [],
 	"settingsSection": []

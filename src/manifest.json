@@ -183,6 +183,13 @@
 			}
 		},
 		{
+			"id": "AssistantActions",
+			"label": "Assistant actions",
+			"icon": "RobotOutline",
+			"route": "AssistantActions",
+			"order": 88
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
@@ -962,6 +969,14 @@
 			"title": "Ask the catalogue",
 			"component": "AskView",
 			"_note": "insight-assistant-answers-and-action-trail D2 (REQ-ASK-001/002): one question, hermiq's reply, the cited entries linked and the searched entries folded away. Posts to POST /api/ask, which searches OpenRegister as the caller first. The menu entry shows only when hermiq is installed (visibleIf.appInstalled); without it the endpoint answers 503 and the page says the assistant is not available."
+		},
+		{
+			"id": "AssistantActions",
+			"route": "/assistant-actions",
+			"type": "custom",
+			"title": "Assistant actions",
+			"component": "AssistantActionsView",
+			"_note": "insight-assistant-answers-and-action-trail D3 (REQ-ASK-003): every OpenRegister audit record with an action starting mcp. and a tool id starting stackiq., read from GET /apps/openregister/api/audit-trails in cursor mode with actionPrefix and toolPrefix, filtered on tool, user and period. Stackiq keeps no copy; OpenRegister decides who may read the trail (administrators), anyone else sees a notice."
 		},
 		{
 			"id": "ComplianceMatrix",

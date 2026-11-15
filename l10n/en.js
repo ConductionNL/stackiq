@@ -1358,7 +1358,21 @@ OC.L10N.register(
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
         "The view could not be loaded.": "The view could not be loaded.",
-        "This view holds no elements.": "This view holds no elements."
+        "This view holds no elements.": "This view holds no elements.",
+        "Assistant actions": "Assistant actions",
+        "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.": "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.",
+        "Tool": "Tool",
+        "From": "From",
+        "To": "To",
+        "Apply filters": "Apply filters",
+        "No assistant actions match these filters.": "No assistant actions match these filters.",
+        "When": "When",
+        "Record": "Record",
+        "Succeeded": "Succeeded",
+        "Failed: {error}": "Failed: {error}",
+        "Load more": "Load more",
+        "Only administrators can review assistant actions.": "Only administrators can review assistant actions.",
+        "The assistant actions could not be loaded.": "The assistant actions could not be loaded."
     },
     "nplurals=2; plural=(n != 1);"
 )

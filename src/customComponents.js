@@ -33,6 +33,7 @@ import VulnerabilityExposurePanel from './components/vulnerabilities/Vulnerabili
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import AskView from './views/AskView.vue'
+import AssistantActionsView from './views/AssistantActionsView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
@@ -166,6 +167,13 @@ export default {
 	// caller, with the cited entries linked. A conversation, not a list, form
 	// or detail: no built-in page type expresses it.
 	AskView,
+
+	// Assistant actions (insight-assistant-answers-and-action-trail D3): the
+	// assistant tool calls on catalogue records, read from OpenRegister's
+	// cursor-paged audit trail filtered server side on `mcp.` / `stackiq.`.
+	// The audit list is not an OpenRegister object collection, so no index
+	// page type can read it.
+	AssistantActionsView,
 
 	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
 	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every
