@@ -5922,6 +5922,50 @@
                 }
             }
         },
+        "/views/{viewId}/image.svg": {
+            "get": {
+                "operationId": "view-get-view-image",
+                "summary": "The view drawn as a standalone SVG file.",
+                "description": "The view drawn as a standalone SVG file, read with OpenRegister's RBAC on: a view the caller may not read answers 404, the same as one that does not exist.",
+                "tags": [
+                    "view"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The SVG file, named after the view.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "image/svg+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "viewId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The viewId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/views/{viewId}": {
             "get": {
                 "operationId": "view-get-view",
