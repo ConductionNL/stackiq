@@ -34,6 +34,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Both operations bypass RBAC and multitenancy in OpenRegister, so the only
@@ -71,7 +74,11 @@ final class AangebodenGebruikTransferDeleteTest extends TestCase {
 	private function service(?string $activeOrg, array $config=['register' => '1', 'gebruik_schema' => '10', 'koppeling_schema' => '11']): AangebodenGebruikService {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if (isset($this->objects[$schema . '/' . $id]) === false) {
 					throw new \Exception('not found');
 				}
@@ -147,7 +154,11 @@ final class AangebodenGebruikTransferDeleteTest extends TestCase {
 		$service = $this->service('org-a');
 		$saved = null;
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend=[], string|int|null $register=null, string|int|null $schema=null, ?string $uuid=null, bool $_rbac=true, bool $_multitenancy=true) use (&$saved): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved = compact('object', 'register', 'schema', 'uuid', '_rbac', '_multitenancy');
 				$entity = $this->createMock(ObjectEntityInterface::class);
 				$entity->method('getObject')->willReturn($object);
@@ -178,7 +189,9 @@ final class AangebodenGebruikTransferDeleteTest extends TestCase {
 		$this->object('20', 'org-b', ['type' => 'Unknown']);
 		$service = $this->service('org-b');
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($this->callback(fn (array $object): bool => $object['registeredBy'] === 'Supplier' && $object['@self']['organisation'] === 'org-b'))
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(fn (array $object): bool => $object['registeredBy'] === 'Supplier' && $object['@self']['organisation'] === 'org-b'),
+			]))
 			->willReturn($this->createMock(ObjectEntityInterface::class));
 
 		$this->assertTrue($service->setGebruikSelfToActiveOrg('k-1')['success']);
@@ -244,7 +257,11 @@ final class AangebodenGebruikTransferDeleteTest extends TestCase {
 		$this->objectService->expects($this->once())->method('setRegister')->with('1')->willReturnSelf();
 		$this->objectService->expects($this->once())->method('setSchema')->with('10')->willReturnSelf();
 		$this->objectService->expects($this->once())->method('deleteObject')
-			->with(uuid: 'g-1', _rbac: false, _multitenancy: false)
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'g-1',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn(true);
 
 		$result = $service->deleteGebruikAsAfnemer('g-1');

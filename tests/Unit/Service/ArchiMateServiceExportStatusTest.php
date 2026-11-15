@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for the ArchiMate facade: export orchestration, status counts and
@@ -196,7 +197,15 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 		$organisation = $this->createMock(ObjectEntity::class);
 		$organisation->method('jsonSerialize')->willReturn(['name' => 'Gemeente Test']);
 		$this->objectService->expects($this->once())->method('find')
-			->with('org-uuid', [], false, 5, 6, false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'org-uuid',
+				'_extend' => [],
+				'files' => false,
+				'register' => 5,
+				'schema' => 6,
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($organisation);
 
 		$queries = [];
@@ -252,7 +261,13 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 		$this->settings->method('getVoorzieningenConfig')->willReturn([]);
 		$this->settings->method('getVoorzieningenRegisterId')->willReturn(15);
 		$this->objectService->expects($this->once())->method('find')
-			->with('ghost', [], false, 15, 35)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'ghost',
+				'_extend' => [],
+				'files' => false,
+				'register' => 15,
+				'schema' => 35,
+			]))
 			->willThrowException(new RuntimeException('not found'));
 		$this->exportService->expects($this->never())->method('exportOrganizationArchiMateXml');
 

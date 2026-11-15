@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Itsm;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Throwable;
@@ -192,10 +193,7 @@ class ItsmFlowGateway {
 		try {
 			$found = $this->service(class: self::OBJECTS)->find(
 				id: $id,
-				_extend: [],
-				files: false,
-				register: $register,
-				schema: $schema,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);

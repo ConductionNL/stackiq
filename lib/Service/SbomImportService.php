@@ -40,6 +40,11 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
@@ -163,8 +168,10 @@ class SbomImportService implements SbomImportServiceInterface {
 	private function findModuleVersion(array $coordinates, string $moduleVersieUuid): ?object {
 		return $coordinates['objectService']->find(
 			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
+			options: new ObjectFindOptions(
+				register: $coordinates['registerId'],
+				schema: $coordinates['moduleVersieSchemaId']
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -293,8 +300,7 @@ class SbomImportService implements SbomImportServiceInterface {
 
 		$module = $objectService->find(
 			id: $moduleUuid,
-			register: (int)$registerId,
-			schema: (int)$moduleSchemaId,
+			options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$moduleSchemaId),
 			_rbac: true,
 			_multitenancy: true
 		);
@@ -410,8 +416,7 @@ class SbomImportService implements SbomImportServiceInterface {
 
 			$objectService->saveObjects(
 				objects: $payload,
-				register: $target['register'],
-				schema: $target['schema'],
+				options: new BulkSaveOptions(defaults: new BulkBatchDefaults(register: $target['register'], schema: $target['schema'])),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -457,9 +462,10 @@ class SbomImportService implements SbomImportServiceInterface {
 
 		$objectService->saveObject(
 			object: $data,
-			register: $target['register'],
-			schema: $target['schema'],
-			uuid: $moduleVersion->getUuid(),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+				uuid: $moduleVersion->getUuid()
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
