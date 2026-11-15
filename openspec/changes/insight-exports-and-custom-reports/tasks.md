@@ -75,6 +75,7 @@
   - GIVEN the overlay WHEN `portfolio-reporting` is read THEN its status reflects what shipped
 - [ ] Implement
 - [ ] Test (docs build and a manual read of the screenshots against the running app)
+  > Written: `docs/features/catalogue-exports-and-reports.md` (linked from the features index) and `portfolio-reporting` set to `beta` in the overlay. Left: the screenshots of the faceted Export menu, the organisation action and the Custom reports page, which need a running instance; this task stays open until they are in.
 
 ## Verification
 
