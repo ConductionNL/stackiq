@@ -96,6 +96,13 @@ class AttestationAnswerService {
 	}//end __construct()
 
 	/**
+	 * OpenRegister's ObjectService, once resolved.
+	 *
+	 * @var ObjectServiceInterface|null
+	 */
+	private ?ObjectServiceInterface $resolvedObjectService = null;
+
+	/**
 	 * Confirm a request: the entry's lastConfirmedAt is now and the request reads confirmed.
 	 *
 	 * @param string $requestId The request id.
@@ -110,29 +117,24 @@ class AttestationAnswerService {
 	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function confirm(string $requestId, string $uid): array {
-		$objectService = $this->objectService();
-		$request       = $this->findRequest(objectService: $objectService, requestId: $requestId);
+		$this->objectService();
+		$request = $this->findRequest(requestId: $requestId);
 
 		if ($uid === '' || (string) ($request['assigneeUserId'] ?? '') !== $uid) {
 			throw new DomainException('Only the owner this request was sent to can answer it');
 		}
 
-		if (in_array((string) ($request['status'] ?? ''), self::OPEN, true) === false) {
+		if (self::isOpen(request: $request) === false) {
 			throw new UnexpectedValueException('This request was already answered');
 		}
 
 		$now = $this->now();
-		$this->confirmEntry(
-			objectService: $objectService,
-			entrySchema: (string) ($request['entrySchema'] ?? ''),
-			entryId: (string) ($request['entryId'] ?? ''),
-			now: $now
-		);
+		$this->confirmEntry(request: $request, now: $now);
 
 		$request['status']      = 'confirmed';
 		$request['respondedAt'] = $now;
-		$saved = $this->save(objectService: $objectService, type: 'attestationRequest', object: $request, uuid: $requestId);
-		$this->recount(objectService: $objectService, roundId: (string) ($request['round'] ?? ''));
+		$saved = $this->save(type: 'attestationRequest', object: $request, uuid: $requestId);
+		$this->recount(roundId: (string) ($request['round'] ?? ''));
 
 		return $saved;
 	}//end confirm()
@@ -156,38 +158,21 @@ class AttestationAnswerService {
 			return 0;
 		}
 
-		$objectService = $this->objectService();
-		$now           = $this->now();
-		$rounds        = [];
-		$marked        = 0;
-		foreach ($this->requests(objectService: $objectService, filters: ['entryId' => $entryId, 'assigneeUserId' => $uid]) as $id => $request) {
-			if ((string) ($request['entrySchema'] ?? '') !== $entrySchema
-				|| in_array((string) ($request['status'] ?? ''), self::OPEN, true) === false
-			) {
-				continue;
-			}
-
-			$request['status']      = 'corrected';
-			$request['respondedAt'] = $now;
-			$this->save(objectService: $objectService, type: 'attestationRequest', object: $request, uuid: $id);
-			$rounds[(string) ($request['round'] ?? '')] = true;
-			$marked++;
-		}
-
+		$this->objectService();
+		$now = $this->now();
+		$ref = ['entrySchema' => $entrySchema, 'entryId' => $entryId, 'assigneeUserId' => $uid];
+		[$marked, $rounds] = $this->correctOpenRequests(ref: $ref, now: $now);
 		if ($marked === 0) {
 			return 0;
 		}
 
 		try {
-			$this->stampEntry(objectService: $objectService, entrySchema: $entrySchema, entryId: $entryId, now: $now);
+			$this->stampEntry(ref: $ref, now: $now);
 		} catch (Throwable $e) {
 			$this->logger->warning('[AttestationAnswerService] could not set lastConfirmedAt on ' . $entrySchema . ' ' . $entryId . ': ' . $e->getMessage());
 		}
 
-		foreach (array_keys($rounds) as $roundId) {
-			$this->recount(objectService: $objectService, roundId: (string) $roundId);
-		}
-
+		$this->recountAll(rounds: $rounds);
 		return $marked;
 	}//end markCorrected()
 
@@ -199,26 +184,23 @@ class AttestationAnswerService {
 	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function markOverdue(): int {
-		$objectService = $this->objectService();
-		$today         = $this->time->now()->format('Y-m-d');
-		$rounds        = [];
-		$moved         = 0;
-		foreach ($this->requests(objectService: $objectService, filters: ['status' => 'pending']) as $id => $request) {
+		$this->objectService();
+		$today  = $this->time->now()->format('Y-m-d');
+		$rounds = [];
+		$moved  = 0;
+		foreach ($this->requests(filters: ['status' => 'pending']) as $id => $request) {
 			$deadline = substr((string) ($request['deadline'] ?? ''), 0, 10);
 			if ((string) ($request['status'] ?? '') !== 'pending' || $deadline === '' || $deadline >= $today) {
 				continue;
 			}
 
 			$request['status'] = 'overdue';
-			$this->save(objectService: $objectService, type: 'attestationRequest', object: $request, uuid: $id);
+			$this->save(type: 'attestationRequest', object: $request, uuid: $id);
 			$rounds[(string) ($request['round'] ?? '')] = true;
 			$moved++;
 		}
 
-		foreach (array_keys($rounds) as $roundId) {
-			$this->recount(objectService: $objectService, roundId: (string) $roundId);
-		}
-
+		$this->recountAll(rounds: $rounds);
 		return $moved;
 	}//end markOverdue()
 
@@ -247,109 +229,166 @@ class AttestationAnswerService {
 	}//end changedByHand()
 
 	/**
-	 * Set the entry's lastConfirmedAt under the caller's own rights.
+	 * Whether a request still waits for an answer.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $entrySchema   The entry type.
-	 * @param string                 $entryId       The entry id.
-	 * @param string                 $now           The time to write.
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return bool
+	 */
+	private static function isOpen(array $request): bool {
+		return in_array((string) ($request['status'] ?? ''), self::OPEN, true);
+	}//end isOpen()
+
+	/**
+	 * Mark the assignee's open requests for one entry corrected.
+	 *
+	 * @param array{entrySchema: string, entryId: string, assigneeUserId: string} $ref The entry and the assignee.
+	 * @param string                                                             $now The answer time.
+	 *
+	 * @return array{0: int, 1: array<string, bool>} How many were marked, and the rounds they belong to.
+	 */
+	private function correctOpenRequests(array $ref, string $now): array {
+		$rounds = [];
+		$marked = 0;
+		foreach ($this->requests(filters: ['entryId' => $ref['entryId'], 'assigneeUserId' => $ref['assigneeUserId']]) as $id => $request) {
+			if ((string) ($request['entrySchema'] ?? '') !== $ref['entrySchema'] || self::isOpen(request: $request) === false) {
+				continue;
+			}
+
+			$request['status']      = 'corrected';
+			$request['respondedAt'] = $now;
+			$this->save(type: 'attestationRequest', object: $request, uuid: $id);
+			$rounds[(string) ($request['round'] ?? '')] = true;
+			$marked++;
+		}
+
+		return [$marked, $rounds];
+	}//end correctOpenRequests()
+
+	/**
+	 * Set the entry's lastConfirmedAt as the assignee (RBAC applies).
+	 *
+	 * @param array<string, mixed> $request The request, naming the entry by entrySchema and entryId.
+	 * @param string               $now     The confirmation time.
 	 *
 	 * @return void
 	 *
-	 * @throws OutOfBoundsException When the entry does not exist or the caller may not read it.
+	 * @throws OutOfBoundsException When the entry is not known or not found.
 	 */
-	private function confirmEntry(ObjectServiceInterface $objectService, string $entrySchema, string $entryId, string $now): void {
+	private function confirmEntry(array $request, string $now): void {
+		$entrySchema = (string) ($request['entrySchema'] ?? '');
+		$entryId     = (string) ($request['entryId'] ?? '');
 		if (array_key_exists($entrySchema, AttestationService::SCOPES) === false || $entryId === '') {
 			throw new OutOfBoundsException('The entry of this request is not known');
 		}
 
 		[$register, $schema] = $this->location(type: $entrySchema);
-		$entry = $this->findOrNull(objectService: $objectService, id: $entryId, register: $register, schema: $schema, rbac: true);
+		$entry = $this->findOrNull(location: [$register, $schema, true], id: $entryId);
 		if ($entry === null) {
 			throw new OutOfBoundsException('The entry of this request was not found');
 		}
 
 		$data = (array) $entry->getObject();
 		$data['lastConfirmedAt'] = $now;
-		$objectService->saveObject(object: $data, register: $register, schema: $schema, uuid: $entryId, _rbac: true, _multitenancy: true);
+		$this->objectService()->saveObject(object: $data, register: $register, schema: $schema, uuid: $entryId, _rbac: true, _multitenancy: true);
 	}//end confirmEntry()
 
 	/**
-	 * Set the entry's lastConfirmedAt from the listener, without RBAC: the user just saved it.
+	 * Set the entry's lastConfirmedAt without RBAC (after the assignee's own save).
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $entrySchema   The entry type.
-	 * @param string                 $entryId       The entry id.
-	 * @param string                 $now           The time to write.
+	 * @param array{entrySchema: string, entryId: string} $ref The entry.
+	 * @param string                                       $now The answer time.
 	 *
 	 * @return void
 	 */
-	private function stampEntry(ObjectServiceInterface $objectService, string $entrySchema, string $entryId, string $now): void {
-		[$register, $schema] = $this->location(type: $entrySchema);
-		$entry = $this->findOrNull(objectService: $objectService, id: $entryId, register: $register, schema: $schema, rbac: false);
+	private function stampEntry(array $ref, string $now): void {
+		[$register, $schema] = $this->location(type: $ref['entrySchema']);
+		$entry = $this->findOrNull(location: [$register, $schema, false], id: $ref['entryId']);
 		if ($entry === null) {
 			return;
 		}
 
 		$data = (array) $entry->getObject();
 		$data['lastConfirmedAt'] = $now;
-		$objectService->saveObject(object: $data, register: $register, schema: $schema, uuid: $entryId, _rbac: false, _multitenancy: false);
+		$this->objectService()->saveObject(object: $data, register: $register, schema: $schema, uuid: $ref['entryId'], _rbac: false, _multitenancy: false);
 	}//end stampEntry()
 
 	/**
-	 * Write the round's answeredCount from its requests.
+	 * Recount each round named in the set.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $roundId       The round id.
+	 * @param array<string, bool> $rounds Round ids as keys.
 	 *
 	 * @return void
 	 */
-	private function recount(ObjectServiceInterface $objectService, string $roundId): void {
+	private function recountAll(array $rounds): void {
+		foreach (array_keys($rounds) as $roundId) {
+			$this->recount(roundId: (string) $roundId);
+		}
+	}//end recountAll()
+
+	/**
+	 * Recount a round's answered requests; a failure is logged, never thrown.
+	 *
+	 * @param string $roundId The round id.
+	 *
+	 * @return void
+	 */
+	private function recount(string $roundId): void {
 		if ($roundId === '') {
 			return;
 		}
 
 		try {
-			[$register, $schema] = $this->location(type: 'attestationRound');
-			$round = $this->findOrNull(objectService: $objectService, id: $roundId, register: $register, schema: $schema, rbac: false);
+			$round = $this->findOrNull(location: [...$this->location(type: 'attestationRound'), false], id: $roundId);
 			if ($round === null) {
 				return;
 			}
 
-			$answered = 0;
-			foreach ($this->requests(objectService: $objectService, filters: ['round' => $roundId]) as $request) {
-				if (in_array((string) ($request['status'] ?? ''), self::ANSWERED, true) === true) {
-					$answered++;
-				}
-			}
-
-			$data = (array) $round->getObject();
+			$answered = $this->answeredIn(roundId: $roundId);
+			$data     = (array) $round->getObject();
 			if (($data['answeredCount'] ?? null) === $answered) {
 				return;
 			}
 
 			$data['answeredCount'] = $answered;
-			$this->save(objectService: $objectService, type: 'attestationRound', object: $data, uuid: $roundId);
+			$this->save(type: 'attestationRound', object: $data, uuid: $roundId);
 		} catch (Throwable $e) {
 			$this->logger->warning('[AttestationAnswerService] could not recount round ' . $roundId . ': ' . $e->getMessage());
 		}//end try
 	}//end recount()
 
 	/**
-	 * Load a request, without RBAC (the caller checks the assignee).
+	 * How many of a round's requests are answered.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $requestId     The request id.
+	 * @param string $roundId The round id.
 	 *
-	 * @return array<string, mixed> The request.
+	 * @return int
+	 */
+	private function answeredIn(string $roundId): int {
+		$answered = 0;
+		foreach ($this->requests(filters: ['round' => $roundId]) as $request) {
+			if (in_array((string) ($request['status'] ?? ''), self::ANSWERED, true) === true) {
+				$answered++;
+			}
+		}
+
+		return $answered;
+	}//end answeredIn()
+
+	/**
+	 * A request by id.
+	 *
+	 * @param string $requestId The request id.
+	 *
+	 * @return array<string, mixed>
 	 *
 	 * @throws OutOfBoundsException When it does not exist.
 	 */
-	private function findRequest(ObjectServiceInterface $objectService, string $requestId): array {
-		[$register, $schema] = $this->location(type: 'attestationRequest');
-		$request = null;
+	private function findRequest(string $requestId): array {
+		$location = [...$this->location(type: 'attestationRequest'), false];
+		$request  = null;
 		if ($requestId !== '') {
-			$request = $this->findOrNull(objectService: $objectService, id: $requestId, register: $register, schema: $schema, rbac: false);
+			$request = $this->findOrNull(location: $location, id: $requestId);
 		}
 
 		if ($request === null) {
@@ -362,14 +401,13 @@ class AttestationAnswerService {
 	/**
 	 * Requests matching the filters, by id, without RBAC.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param array<string, string>  $filters       Field filters.
+	 * @param array<string, mixed> $filters The filters.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
-	private function requests(ObjectServiceInterface $objectService, array $filters): array {
+	private function requests(array $filters): array {
 		[$register, $schema] = $this->location(type: 'attestationRequest');
-		$found = $objectService->searchObjects(
+		$found = $this->objectService()->searchObjects(
 			query: array_merge(['register' => $register, 'schema' => $schema, '_limit' => self::REQUEST_LIMIT], $filters),
 			_rbac: false,
 			_multitenancy: false
@@ -392,49 +430,50 @@ class AttestationAnswerService {
 	}//end requests()
 
 	/**
-	 * One object, or null when it is missing or unreadable.
+	 * One object, or null when it does not exist or cannot be read.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $id            The object id.
-	 * @param int                    $register      The register id.
-	 * @param int                    $schema        The schema id.
-	 * @param bool                   $rbac          Whether the caller's rights apply.
+	 * @param array{0: int, 1: int, 2: bool} $location The register id, the schema id and whether RBAC and multitenancy apply.
+	 * @param string                         $id       The object id.
 	 *
 	 * @return ObjectEntityInterface|null
 	 */
-	private function findOrNull(ObjectServiceInterface $objectService, string $id, int $register, int $schema, bool $rbac): ?ObjectEntityInterface {
+	private function findOrNull(array $location, string $id): ?ObjectEntityInterface {
+		[$register, $schema, $rbac] = $location;
 		try {
-			return $objectService->find(id: $id, register: $register, schema: $schema, _rbac: $rbac, _multitenancy: $rbac);
+			return $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: $rbac, _multitenancy: $rbac);
 		} catch (Throwable $e) {
 			return null;
 		}
 	}//end findOrNull()
 
 	/**
-	 * Save one object without RBAC and return it as data.
+	 * Save one object without RBAC and return it with its id.
 	 *
-	 * @param ObjectServiceInterface $objectService The ObjectService.
-	 * @param string                 $type          The object type.
-	 * @param array<string, mixed>   $object        The data.
-	 * @param string                 $uuid          The id to update.
+	 * @param string               $type   The object type.
+	 * @param array<string, mixed> $object The object.
+	 * @param string               $uuid   Its id.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function save(ObjectServiceInterface $objectService, string $type, array $object, string $uuid): array {
+	private function save(string $type, array $object, string $uuid): array {
 		[$register, $schema] = $this->location(type: $type);
-		$saved = $objectService->saveObject(object: $object, register: $register, schema: $schema, uuid: $uuid, _rbac: false, _multitenancy: false);
+		$saved = $this->objectService()->saveObject(object: $object, register: $register, schema: $schema, uuid: $uuid, _rbac: false, _multitenancy: false);
 
 		return ['id' => $uuid] + (array) $saved->getObject();
 	}//end save()
 
 	/**
-	 * OpenRegister's ObjectService.
+	 * OpenRegister's ObjectService, resolved once.
 	 *
 	 * @return ObjectServiceInterface
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 */
 	private function objectService(): ObjectServiceInterface {
+		if ($this->resolvedObjectService !== null) {
+			return $this->resolvedObjectService;
+		}
+
 		try {
 			$service = $this->container->get(ObjectServiceInterface::class);
 		} catch (Throwable $e) {
@@ -445,6 +484,7 @@ class AttestationAnswerService {
 			throw new RuntimeException('OpenRegister is not available');
 		}
 
+		$this->resolvedObjectService = $service;
 		return $service;
 	}//end objectService()
 

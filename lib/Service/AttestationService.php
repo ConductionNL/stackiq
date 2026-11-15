@@ -73,6 +73,13 @@ class AttestationService {
 	}//end __construct()
 
 	/**
+	 * OpenRegister's ObjectService, once resolved.
+	 *
+	 * @var ObjectServiceInterface|null
+	 */
+	private ?ObjectServiceInterface $resolvedObjectService = null;
+
+	/**
 	 * Start a round and create its requests.
 	 *
 	 * @param string $scopeSchema    `usage` or `module`.
@@ -89,44 +96,6 @@ class AttestationService {
 	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 	 */
 	public function start(string $scopeSchema, string $organisationId, string $deadline, string $name, string $startedBy): array {
-		self::assertValid(scopeSchema: $scopeSchema, organisationId: $organisationId, deadline: $deadline);
-
-		$objectService = $this->objectService();
-		$entries       = $this->entries(objectService: $objectService, scopeSchema: $scopeSchema, organisationId: $organisationId);
-		$owners        = self::ownerContactIds(entries: $entries, fields: self::SCOPES[$scopeSchema]['owners']);
-		$contactIds    = array_values(array_unique(array_merge([], ...array_values($owners))));
-		$userIds       = $this->owners->contactUserIds(objectService: $objectService, contactIds: $contactIds);
-
-		$pairs      = [];
-		$unassigned = [];
-		foreach ($entries as $entryId => $entry) {
-			$assignees = [];
-			foreach ($owners[$entryId] as $contactId) {
-				$uid = ($userIds[$contactId] ?? null);
-				if ($uid !== null && isset($assignees[$uid]) === false) {
-					$assignees[$uid] = $contactId;
-				}
-			}
-
-			if ($assignees === []) {
-				$unassigned[] = ['entryId' => $entryId, 'entryName' => self::entryName(entry: $entry, entryId: $entryId)];
-				continue;
-			}
-
-			foreach ($assignees as $uid => $contactId) {
-				$pairs[] = [
-					'entryId'   => $entryId,
-					'entryName' => self::entryName(entry: $entry, entryId: $entryId),
-					'uid'       => (string) $uid,
-					'contact'   => $contactId,
-				];
-			}
-		}
-
-		if ($name === '') {
-			$name = $deadline;
-		}
-
 		$round = [
 			'name'              => $name,
 			'deadline'          => $deadline,
@@ -134,54 +103,140 @@ class AttestationService {
 			'scopeOrganisation' => $organisationId,
 			'startedBy'         => $startedBy,
 			'status'            => 'open',
-			'requestCount'      => count($pairs),
+			'requestCount'      => 0,
 			'answeredCount'     => 0,
-			'unassigned'        => $unassigned,
+			'unassigned'        => [],
 		];
-		$round['id'] = $this->save(objectService: $objectService, type: 'attestationRound', object: $round);
+
+		return $this->open(round: $round);
+	}//end start()
+
+	/**
+	 * Validate a new round, then save it and one request per entry and owner user.
+	 *
+	 * @param array<string, mixed> $round The round as started, before its counts are known.
+	 *
+	 * @return array{round: array<string, mixed>, requestCount: int, unassigned: array<int, array{entryId: string, entryName: string}>}
+	 *
+	 * @throws InvalidArgumentException When the scope, organisation or deadline is not valid.
+	 * @throws RuntimeException         When OpenRegister or the schemas are not available.
+	 *
+	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 */
+	private function open(array $round): array {
+		self::assertValid(round: $round);
+		$this->objectService();
+
+		[$pairs, $unassigned] = $this->assign(round: $round);
+		if ($round['name'] === '') {
+			$round['name'] = $round['deadline'];
+		}
+
+		$round['requestCount'] = count($pairs);
+		$round['unassigned']   = $unassigned;
+		$round['id']           = $this->save(type: 'attestationRound', object: $round);
 
 		foreach ($pairs as $pair) {
-			$this->save(
-				objectService: $objectService,
-				type: 'attestationRequest',
-				object: [
-					'round'             => $round['id'],
-					'scopeOrganisation' => $organisationId,
-					'entrySchema'       => $scopeSchema,
-					'entryId'           => $pair['entryId'],
-					'entryName'         => $pair['entryName'],
-					'assigneeUserId'    => $pair['uid'],
-					'assigneeContact'   => $pair['contact'],
-					'deadline'          => $deadline,
-					'status'            => 'pending',
-				]
-			);
+			$this->save(type: 'attestationRequest', object: self::requestRecord(round: $round, pair: $pair));
 		}
 
 		return ['round' => $round, 'requestCount' => count($pairs), 'unassigned' => $unassigned];
-	}//end start()
+	}//end open()
+
+	/**
+	 * Pair every entry of the round's scope with its owner users.
+	 *
+	 * @param array<string, mixed> $round The round.
+	 *
+	 * @return array{0: array<int, array<string, string>>, 1: array<int, array{entryId: string, entryName: string}>}
+	 *     The pairs (entryId, entryName, uid, contact), and the entries without an owner user.
+	 */
+	private function assign(array $round): array {
+		$scopeSchema = (string) $round['scopeSchema'];
+		$entries     = $this->entries(scopeSchema: $scopeSchema, organisationId: (string) $round['scopeOrganisation']);
+		$owners      = self::ownerContactIds(entries: $entries, fields: self::SCOPES[$scopeSchema]['owners']);
+		$contactIds  = array_values(array_unique(array_merge([], ...array_values($owners))));
+		$userIds     = $this->owners->contactUserIds(objectService: $this->objectService(), contactIds: $contactIds);
+
+		$pairs      = [];
+		$unassigned = [];
+		foreach ($entries as $entryId => $entry) {
+			$entryName = self::entryName(entry: $entry, entryId: (string) $entryId);
+			$assignees = self::assignees(contactIds: $owners[$entryId], userIds: $userIds);
+			if ($assignees === []) {
+				$unassigned[] = ['entryId' => $entryId, 'entryName' => $entryName];
+				continue;
+			}
+
+			foreach ($assignees as $uid => $contactId) {
+				$pairs[] = ['entryId' => $entryId, 'entryName' => $entryName, 'uid' => (string) $uid, 'contact' => $contactId];
+			}
+		}
+
+		return [$pairs, $unassigned];
+	}//end assign()
+
+	/**
+	 * The users an entry's owner contacts resolve to, each with the first contact that named them.
+	 *
+	 * @param array<int, string>    $contactIds The entry's owner contact ids.
+	 * @param array<string, string> $userIds    User id per contact id.
+	 *
+	 * @return array<string, string> Contact id per user id.
+	 */
+	private static function assignees(array $contactIds, array $userIds): array {
+		$assignees = [];
+		foreach ($contactIds as $contactId) {
+			$uid = ($userIds[$contactId] ?? null);
+			if ($uid !== null && isset($assignees[$uid]) === false) {
+				$assignees[$uid] = $contactId;
+			}
+		}
+
+		return $assignees;
+	}//end assignees()
+
+	/**
+	 * The request object for one entry and owner user of a saved round.
+	 *
+	 * @param array<string, mixed>  $round The saved round, with its id.
+	 * @param array<string, string> $pair  The entry and owner user.
+	 *
+	 * @return array<string, mixed> The request.
+	 */
+	private static function requestRecord(array $round, array $pair): array {
+		return [
+			'round'             => $round['id'],
+			'scopeOrganisation' => $round['scopeOrganisation'],
+			'entrySchema'       => $round['scopeSchema'],
+			'entryId'           => $pair['entryId'],
+			'entryName'         => $pair['entryName'],
+			'assigneeUserId'    => $pair['uid'],
+			'assigneeContact'   => $pair['contact'],
+			'deadline'          => $round['deadline'],
+			'status'            => 'pending',
+		];
+	}//end requestRecord()
 
 	/**
 	 * Refuse a scope, organisation or deadline the round cannot use.
 	 *
-	 * @param string $scopeSchema    The entry type.
-	 * @param string $organisationId The organisation.
-	 * @param string $deadline       The deadline.
+	 * @param array<string, mixed> $round The round, with its scopeSchema, scopeOrganisation and deadline.
 	 *
 	 * @return void
 	 *
 	 * @throws InvalidArgumentException Naming what is not valid.
 	 */
-	private static function assertValid(string $scopeSchema, string $organisationId, string $deadline): void {
-		if (array_key_exists($scopeSchema, self::SCOPES) === false) {
+	private static function assertValid(array $round): void {
+		if (array_key_exists($round['scopeSchema'], self::SCOPES) === false) {
 			throw new InvalidArgumentException('scopeSchema must be usage or module');
 		}
 
-		if ($organisationId === '') {
+		if ($round['scopeOrganisation'] === '') {
 			throw new InvalidArgumentException('organisation is required');
 		}
 
-		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $deadline, $parts) !== 1
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $round['deadline'], $parts) !== 1
 			|| checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1]) === false
 		) {
 			throw new InvalidArgumentException('deadline must be a date as YYYY-MM-DD');
@@ -189,13 +244,17 @@ class AttestationService {
 	}//end assertValid()
 
 	/**
-	 * OpenRegister's ObjectService.
+	 * OpenRegister's ObjectService, resolved once.
 	 *
 	 * @return ObjectServiceInterface
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 */
 	private function objectService(): ObjectServiceInterface {
+		if ($this->resolvedObjectService !== null) {
+			return $this->resolvedObjectService;
+		}
+
 		try {
 			$service = $this->container->get(ObjectServiceInterface::class);
 		} catch (Throwable $e) {
@@ -207,25 +266,25 @@ class AttestationService {
 			throw new RuntimeException('OpenRegister is not available');
 		}
 
+		$this->resolvedObjectService = $service;
 		return $service;
 	}//end objectService()
 
 	/**
 	 * The organisation's entries of the scope, by id.
 	 *
-	 * @param ObjectServiceInterface $objectService  OpenRegister's object service.
-	 * @param string                 $scopeSchema    The entry type.
-	 * @param string                 $organisationId The organisation.
+	 * @param string $scopeSchema    The entry type.
+	 * @param string $organisationId The organisation.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 *
 	 * @throws RuntimeException When the entry type is not configured.
 	 */
-	private function entries(ObjectServiceInterface $objectService, string $scopeSchema, string $organisationId): array {
+	private function entries(string $scopeSchema, string $organisationId): array {
 		[$register, $schema] = $this->location(type: $scopeSchema);
 		$query = ['register' => $register, 'schema' => $schema, '_limit' => self::ENTRY_LIMIT];
 		$query[self::SCOPES[$scopeSchema]['organisation']] = $organisationId;
-		$found = $objectService->searchObjects(
+		$found = $this->objectService()->searchObjects(
 			query: $query,
 			_rbac: false,
 			_multitenancy: false
@@ -283,28 +342,38 @@ class AttestationService {
 			}
 		}
 
+		return (self::moduleName(entry: $entry) ?? $entryId);
+	}//end entryName()
+
+	/**
+	 * The name of the product an entry points to, when it carries one.
+	 *
+	 * @param array<string, mixed> $entry The entry.
+	 *
+	 * @return string|null
+	 */
+	private static function moduleName(array $entry): ?string {
 		$module = ($entry['module'] ?? null);
 		if (is_array($module) === true && is_string($module['name'] ?? null) === true && $module['name'] !== '') {
 			return $module['name'];
 		}
 
-		return $entryId;
-	}//end entryName()
+		return null;
+	}//end moduleName()
 
 	/**
 	 * Save one object without RBAC and return its id.
 	 *
-	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param string                 $type          The object type.
-	 * @param array<string, mixed>   $object        The object.
+	 * @param string               $type   The object type.
+	 * @param array<string, mixed> $object The object.
 	 *
 	 * @return string The saved object's id.
 	 *
 	 * @throws RuntimeException When the type is not configured.
 	 */
-	private function save(ObjectServiceInterface $objectService, string $type, array $object): string {
+	private function save(string $type, array $object): string {
 		[$register, $schema] = $this->location(type: $type);
-		$saved = $objectService->saveObject(object: $object, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+		$saved = $this->objectService()->saveObject(object: $object, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
 
 		return self::savedId(saved: $saved);
 	}//end save()
