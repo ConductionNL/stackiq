@@ -62,8 +62,9 @@
   linked to a given node and excludes unrelated products; `available_products_count`
   reflects the matched count, not the total `$productsData` count.
       Done: `ViewServiceTest::testGetNodeProductsMatchesLinkedProductAndExcludesOthers`, `::testGetNodeProductsReturnsEmptyWhenNoProductLinkedToNode`.
-- [ ] 4.3 Controller-level test: `GET /api/views/{viewId}?include_products=true`
+- [x] 4.3 Controller-level test: `GET /api/views/{viewId}?include_products=true`
   returns non-empty `products` arrays on nodes that have linked products.
+      Done: `ViewControllerProductsEnrichmentTest` runs the real controller over the real `ViewService` (OpenRegister doubled): linked products land on their nodes, other organisations' products are left out, no search without the flag, empty lists when the dienst schema is unconfigured.
 - [ ] 4.4 Playwright (or existing e2e suite) coverage for the new/wired
   Product filter toggle round-trip, per ADR — gate-19 e2e traceability for the
   MODIFIED scenario below.
