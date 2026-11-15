@@ -52,7 +52,8 @@ import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
-import { navigationStore as attestationNavigationStore } from './store/store.js'
+import { createMoveHandlers } from './services/moveToOrganisation.js'
+import { navigationStore } from './store/store.js'
 
 export default {
 	// Header-action handler: the Integrations page's Add integration
@@ -74,7 +75,7 @@ export default {
 	// refetches the list.
 	...createAttestationHandlers({
 		setDialog: (name, properties) =>
-			attestationNavigationStore.setDialog(name, properties),
+			navigationStore.setDialog(name, properties),
 		post: (url) => axios.post(url),
 		generateUrl,
 		assign: (url) => window.location.assign(url),
@@ -82,6 +83,14 @@ export default {
 		notifyError: (message) =>
 			showError(message || t('stackiq', 'The request could not be confirmed')),
 	}),
+
+	// Bulk-action handlers: Move to organisation on the Applications,
+	// Services, Applications in use, Connections and Contracts lists
+	// (landscape-move-between-organisations D3). FUNCTIONS, because the
+	// action opens the app's own MoveToOrganisationDialog with the selection,
+	// which a bulk action's `open-modal` does not reach (CnPageRenderer has
+	// no listener for the index page's `open-modal` event).
+	...createMoveHandlers((name, properties) => navigationStore.setDialog(name, properties)),
 
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
