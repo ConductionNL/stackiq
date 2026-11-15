@@ -52,6 +52,34 @@ export function createMoveHandlers(setDialog) {
 }
 
 /**
+ * The registry key of the launcher a detail page's header action opens.
+ * The launcher reads the record from the route and opens the dialog.
+ */
+export const MOVE_LAUNCHER = 'MoveToOrganisationLauncher'
+
+/**
+ * Open the dialog for the one record a detail page shows.
+ *
+ * A detail page's header action cannot reach a named app handler, and an
+ * `open-modal` action's props are passed as written, so the record id comes
+ * from the route instead of an `@objectId` token. Without a schema or an id
+ * nothing opens.
+ *
+ * @param {(name: string, properties: object) => void} setDialog The navigation store's `setDialog(name, properties)`.
+ * @param {string} schema The schema of the record.
+ * @param {string|number|undefined} id The record's id, from the route.
+ * @return {boolean} Whether the dialog was opened.
+ * @spec openspec/changes/landscape-move-between-organisations
+ */
+export function openMoveForRecord(setDialog, schema, id) {
+	if (!schema || id === undefined || id === null || String(id) === '') {
+		return false
+	}
+	setDialog(MOVE_DIALOG, { schema, ids: [String(id)] })
+	return true
+}
+
+/**
  * The body of a plan or execute request.
  *
  * @param {string} schema The schema of the chosen entries.

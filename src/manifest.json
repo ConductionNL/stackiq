@@ -505,6 +505,16 @@
 			"type": "detail",
 			"title": "Application",
 			"config": {
+				"headerActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"type": "open-modal",
+						"target": "MoveToOrganisationLauncher",
+						"props": { "schema": "module" }
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
 				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
@@ -590,6 +600,16 @@
 			"type": "detail",
 			"title": "Contract",
 			"config": {
+				"headerActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"type": "open-modal",
+						"target": "MoveToOrganisationLauncher",
+						"props": { "schema": "catalogContract" }
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogContract",
 				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The catalogContract schema declares the calendar linkedType next to decidesk-decisions (adopt-integration-leaves): the object sidebar gets a calendar leaf tab, and LifecycleCalendarListener keeps one linked \"Contract ends\" event on the end date. It still declares NO email linkedType, and the comms hard-rule stands: NO Emails/Meetings widgets on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record); the calendar lives in the sidebar tab only. Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",

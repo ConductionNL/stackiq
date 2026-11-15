@@ -31,6 +31,10 @@ else is refused before anything is read, and the dialog says so.
 4. Pick the target organisation and choose **Preview**.
 5. Check the preview, then choose **Move**.
 
+To move one entry, open its page (an application, contract, connection or
+application in use) and choose **Move to organisation** in the page's
+**Actions** menu. The same dialog opens with that entry selected.
+
 ## The preview
 
 The preview runs the move without saving anything and lists:
