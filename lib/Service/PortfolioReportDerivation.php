@@ -401,4 +401,104 @@ class PortfolioReportDerivation {
 
 		return 'no';
 	}//end mismatchLabel()
+
+	/**
+	 * Mark the rows whose application shares a reference component with another
+	 * application in use (architecture-reference-component-coverage D4).
+	 *
+	 * A row counts when its usage status is not one of
+	 * {@see ReferenceComponentCoverageDerivation::NOT_COUNTING}; two rows of the same
+	 * module are one application. Each row gains `referenceComponents` (the names
+	 * of the components its usage names) and `overlapsWith`: per shared component,
+	 * the other applications that cover it.
+	 *
+	 * @param array<int,array<string,mixed>> $rows           The report rows, each with `moduleId` and `moduleName`.
+	 * @param array<int,array<string,mixed>> $usages         The usages the rows were built from, in the same order.
+	 * @param array<string,string>           $componentNames Component names by id.
+	 *
+	 * @return array<int,array<string,mixed>> The rows with `referenceComponents` and `overlapsWith`.
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	public function withOverlap(array $rows, array $usages, array $componentNames): array {
+		$componentIds = [];
+		$counting = [];
+		$applications = [];
+		foreach ($rows as $index => $row) {
+			$usage = ($usages[$index] ?? []);
+			$componentIds[$index] = $this->componentIdsOf(usage: $usage);
+			$counting[$index] = in_array((string)($usage['status'] ?? ''), ReferenceComponentCoverageDerivation::NOT_COUNTING, true) === false;
+			if ($counting[$index] === false) {
+				continue;
+			}
+
+			foreach ($componentIds[$index] as $componentId) {
+				$applications[$componentId][(string)$row['moduleId']] = (string)$row['moduleName'];
+			}
+		}
+
+		foreach ($rows as $index => $row) {
+			$rows[$index]['referenceComponents'] = array_map(
+				static fn (string $id): string => ($componentNames[$id] ?? $id),
+				$componentIds[$index]
+			);
+			$rows[$index]['overlapsWith'] = [];
+			if ($counting[$index] === false) {
+				continue;
+			}
+
+			foreach ($componentIds[$index] as $componentId) {
+				$others = ($applications[$componentId] ?? []);
+				unset($others[(string)$row['moduleId']]);
+				if ($others === []) {
+					continue;
+				}
+
+				$rows[$index]['overlapsWith'][] = [
+					'componentId' => $componentId,
+					'component' => ($componentNames[$componentId] ?? $componentId),
+					'modules' => array_values($others),
+				];
+			}
+		}//end foreach
+
+		return $rows;
+	}//end withOverlap()
+
+	/**
+	 * The `overlapsWith` CSV cell: `component: module | module`, one component
+	 * after another separated by `; `, empty without overlap.
+	 *
+	 * @param array<string,mixed> $row The report row.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	public function overlapLabel(array $row): string {
+		$parts = [];
+		foreach (($row['overlapsWith'] ?? []) as $overlap) {
+			$parts[] = $overlap['component'] . ': ' . implode(' | ', $overlap['modules']);
+		}
+
+		return implode('; ', $parts);
+	}//end overlapLabel()
+
+	/**
+	 * The distinct reference component ids a usage names.
+	 *
+	 * @param array<string,mixed> $usage The usage.
+	 *
+	 * @return array<int,string>
+	 */
+	public function componentIdsOf(array $usage): array {
+		$values = ($usage['usedForReferenceComponents'] ?? []);
+		if (is_array($values) === false) {
+			return [];
+		}
+
+		$ids = array_map(fn (mixed $value): string => $this->resolveRelationId(value: $value), $values);
+
+		return array_values(array_unique(array_filter($ids, static fn (string $id): bool => $id !== '')));
+	}//end componentIdsOf()
 }//end class
