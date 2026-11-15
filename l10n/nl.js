@@ -1,12 +1,8 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Set up the mail transport": "Mailtransport instellen",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",
@@ -1458,6 +1454,8 @@ OC.L10N.register(
         "Gap": "Gat",
         "Licence": "Licentie",
         "Software catalogue": "Softwarecatalogus",
+        "%n application in use shares a reference component with another one.": "%n applicatie in gebruik deelt een referentiecomponent met een andere.",
+        "%n applications in use share a reference component with another one.": "%n applicaties in gebruik delen een referentiecomponent met een andere.",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
         "+{count} more": "+{count} meer",
@@ -1523,7 +1521,15 @@ OC.L10N.register(
         "Version {number}": "Versie {number}",
         "Version {number} is saved.": "Versie {number} is opgeslagen.",
         "Version {number}: {label}": "Versie {number}: {label}",
-        "Version label": "Versielabel"
+        "Version label": "Versielabel",
+        "Applications ({count}): {names}": "Applicaties ({count}): {names}",
+        "Coverage on a GEMMA view": "Dekking op een GEMMA-view",
+        "Empty view": "Lege view",
+        "GEMMA view": "GEMMA-view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Kies een GEMMA-view om de dekking erop te zien.",
+        "Select a view": "Selecteer een view",
+        "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
+        "This view holds no elements.": "Deze view bevat geen elementen."
     },
     "nplurals=2; plural=(n != 1);"
 )
