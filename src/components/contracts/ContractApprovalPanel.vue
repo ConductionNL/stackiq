@@ -87,6 +87,16 @@ import Autorenew from 'vue-material-design-icons/Autorenew.vue'
 import Check from 'vue-material-design-icons/Check.vue'
 
 /**
+ * Unwrap an OpenRegister object reply to the object itself.
+ *
+ * @param {object} data The reply body.
+ * @return {object} The body itself when it carries `@self`, else its `object`, else the body.
+ */
+function unwrapObject(data) {
+	return data && data['@self'] !== undefined ? data : data.object || data
+}
+
+/**
  * @class ContractApprovalPanel
  * @module Components/Contracts
  * @copyright 2026 Conduction B.V.
@@ -256,6 +266,15 @@ export default {
 			if (!this.objectId) {
 				return
 			}
+			this.applyContract(await this.fetchContract())
+		},
+
+		/**
+		 * Fetch the contract object from OpenRegister.
+		 *
+		 * @return {Promise<object>} The contract, unwrapped from its envelope.
+		 */
+		async fetchContract() {
 			const url = generateUrl(
 				'/apps/openregister/api/objects/{register}/{schema}/{id}',
 				{
@@ -265,8 +284,16 @@ export default {
 				},
 			)
 			const { data } = await axios.get(url)
-			const obj =
-				data && data['@self'] !== undefined ? data : data.object || data
+			return unwrapObject(data)
+		},
+
+		/**
+		 * Copy the contract's status, approval state and decision.
+		 *
+		 * @param {object} obj The contract object.
+		 * @return {void}
+		 */
+		applyContract(obj) {
 			this.status = obj.status || ''
 			this.approvalState = obj.approvalState || 'none'
 			this.decisionId = obj.approvalDecisionId || ''
@@ -285,29 +312,62 @@ export default {
 			this.error = ''
 			const path = isRenewal ? 'renewal' : 'submit'
 			try {
-				const url = generateUrl(
-					'/apps/stackiq/api/contracts/{id}/approval/{path}',
-					{ id: String(this.objectId), path },
-				)
-				const { data } = await axios.post(url)
-				this.approvalState = data.approvalState || 'pending'
-				this.decisionId = data.decisionId || this.decisionId
-				showSuccess(
-					t('stackiq', 'Contract submitted to decidesk for a decision.'),
-				)
+				this.applySubmission(await this.postApproval(path))
 			} catch (e) {
-				// Fail-closed: the contract stays In onderhandeling.
-				const msg =
-					e?.response?.data?.message
-					|| t(
-						'stackiq',
-						'Submitting the contract failed; it remains in negotiation.',
-					)
-				this.error = msg
-				showError(msg)
+				this.failSubmission(e)
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * Post the approval or renewal submission for the contract.
+		 *
+		 * @param {string} path The submission path: submit or renewal.
+		 * @return {Promise<object>} The response body.
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		async postApproval(path) {
+			const url = generateUrl(
+				'/apps/stackiq/api/contracts/{id}/approval/{path}',
+				{ id: String(this.objectId), path },
+			)
+			const { data } = await axios.post(url)
+			return data
+		},
+
+		/**
+		 * Keep the submitted approval state and decision and report it.
+		 *
+		 * @param {object} data The response body.
+		 * @return {void}
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		applySubmission(data) {
+			this.approvalState = data.approvalState || 'pending'
+			this.decisionId = data.decisionId || this.decisionId
+			showSuccess(
+				t('stackiq', 'Contract submitted to decidesk for a decision.'),
+			)
+		},
+
+		/**
+		 * Show a failed submission. Fail-closed: the contract stays In
+		 * onderhandeling.
+		 *
+		 * @param {Error} e The error.
+		 * @return {void}
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		failSubmission(e) {
+			const msg =
+				e?.response?.data?.message
+				|| t(
+					'stackiq',
+					'Submitting the contract failed; it remains in negotiation.',
+				)
+			this.error = msg
+			showError(msg)
 		},
 	},
 }

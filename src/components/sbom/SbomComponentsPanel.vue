@@ -170,8 +170,18 @@ import {
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import { objectStore } from '../../store/store.js'
-import { resolveUuid } from '../../utils/lifecyclePhase.js'
+import {
+	activeObjectOf,
+	collectionResults,
+	findByUuid,
+} from '../../utils/activeRecord.js'
+import { recordUuid, resolveUuid } from '../../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../../utils/objectTypeCollection.js'
 import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
+import {
+	distinctLicenseCount,
+	moduleVersionComponents,
+} from './sbomComponents.js'
 
 /**
  * @class SbomComponentsPanel
@@ -269,27 +279,13 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */
 		moduleVersion() {
-			const active =
-				typeof objectStore.getActiveObject === 'function'
-					? objectStore.getActiveObject('moduleVersion')
-					: null
-			if (
-				active
-				&& resolveUuid(
-					active.uuid ?? active.id ?? active['@self']?.id ?? active,
-				) === String(this.objectId)
-			) {
+			const active = activeObjectOf(objectStore, 'moduleVersion')
+			const wanted = String(this.objectId)
+			if (active && recordUuid(active) === wanted) {
 				return active
 			}
-			return (
-				(objectStore.getCollection('moduleVersion')?.results || []).find(
-					(v) =>
-						resolveUuid(v.uuid ?? v.id ?? v['@self']?.id ?? v)
-						=== String(this.objectId),
-				)
-				|| active
-				|| null
-			)
+			const results = collectionResults(objectStore, 'moduleVersion')
+			return findByUuid(results, wanted) || active || null
 		},
 
 		/**
@@ -324,18 +320,7 @@ export default {
 		 */
 		components() {
 			const all = objectStore.getCollection('sbomComponent')?.results || []
-			return all
-				.filter(
-					(c) =>
-						resolveUuid((c.object || c).moduleVersion)
-						=== String(this.objectId),
-				)
-				.slice()
-				.sort((a, b) =>
-					String((a.object || a).name || '').localeCompare(
-						String((b.object || b).name || ''),
-					),
-				)
+			return moduleVersionComponents(all, String(this.objectId))
 		},
 
 		/**
@@ -409,18 +394,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		distinctLicenseCount() {
-			const set = new Set()
-			for (const component of this.components) {
-				const licenses = (component.object || component).licenses
-				if (Array.isArray(licenses)) {
-					for (const license of licenses) {
-						if (typeof license === 'string' && license !== '') {
-							set.add(license)
-						}
-					}
-				}
-			}
-			return set.size
+			return distinctLicenseCount(this.components)
 		},
 
 		/**
@@ -503,23 +477,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**
@@ -569,58 +527,113 @@ export default {
 				return
 			}
 
-			this.uploading = true
-			this.uploadError = null
-			this.uploadSuccessMessage = null
-
+			this.startUpload()
 			try {
-				const formData = new FormData()
-				formData.append('sbomFile', this.selectedFile)
-				formData.append('format', this.format)
-
-				const url = generateUrl(
-					'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom',
-					{
-						moduleVersieUuid: String(this.objectId),
-					},
-				)
-
-				// Multipart upload: no Content-Type header — the browser sets
-				// the correct boundary (mirrors ArchiMate import's upload path).
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
-					body: formData,
-				})
-				const result = await response.json()
-
-				if (!response.ok || result.success === false) {
-					throw new Error(
-						result.message || t('stackiq', 'SBOM import failed'),
-					)
-				}
-
-				this.uploadSuccessMessage = t(
-					'stackiq',
-					'Imported {count} components.',
-					{ count: result.componentCount ?? 0 },
-				)
-				this.selectedFile = null
-				if (this.$refs.fileInput) {
-					this.$refs.fileInput.value = ''
-				}
-
+				this.applyImport(await this.uploadSbom())
 				// Re-fetch so the replaced set (and provenance) render immediately.
-				await Promise.all([
-					objectStore.fetchCollection('sbomComponent', { _limit: 1000 }),
-					objectStore.fetchCollection('moduleVersion', { _limit: 1000 }),
-				])
+				await this.refetchImported()
 			} catch (error) {
 				this.uploadError =
 					error.message || t('stackiq', 'SBOM import failed')
 			} finally {
 				this.uploading = false
 			}
+		},
+
+		/**
+		 * Mark the upload as running and clear the previous outcome.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+		 */
+		startUpload() {
+			this.uploading = true
+			this.uploadError = null
+			this.uploadSuccessMessage = null
+		},
+
+		/**
+		 * Post the selected file and format to the module version's SBOM
+		 * endpoint, and throw the server's message (or the default) unless the
+		 * import succeeded.
+		 *
+		 * @return {Promise<object>} The import result.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		async uploadSbom() {
+			const body = this.sbomFormData()
+			// Multipart upload: no Content-Type header — the browser sets
+			// the correct boundary (mirrors ArchiMate import's upload path).
+			const response = await fetch(this.sbomUploadUrl(), {
+				method: 'POST',
+				headers: { requesttoken: OC.requestToken, 'X-Requested-With': 'XMLHttpRequest' },
+				body,
+			})
+			const result = await response.json()
+			if (!response.ok || result.success === false) {
+				throw new Error(result.message || t('stackiq', 'SBOM import failed'))
+			}
+			return result
+		},
+
+		/**
+		 * The multipart body of an upload: the selected file and its format.
+		 *
+		 * @return {FormData} The body.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+		 */
+		sbomFormData() {
+			const formData = new FormData()
+			formData.append('sbomFile', this.selectedFile)
+			formData.append('format', this.format)
+			return formData
+		},
+
+		/**
+		 * The SBOM endpoint of this module version.
+		 *
+		 * @return {string} The URL.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		sbomUploadUrl() {
+			return generateUrl(
+				'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom',
+				{
+					moduleVersieUuid: String(this.objectId),
+				},
+			)
+		},
+
+		/**
+		 * Report the imported component count and clear the selected file.
+		 *
+		 * @param {object} result The import result.
+		 * @return {void}
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		applyImport(result) {
+			this.uploadSuccessMessage = t(
+				'stackiq',
+				'Imported {count} components.',
+				{ count: result.componentCount ?? 0 },
+			)
+			this.selectedFile = null
+			if (this.$refs.fileInput) {
+				this.$refs.fileInput.value = ''
+			}
+		},
+
+		/**
+		 * Re-fetch the components and module versions after an import.
+		 *
+		 * @return {Promise<void>} Resolves once both are fetched.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		async refetchImported() {
+			await Promise.all([
+				objectStore.fetchCollection('sbomComponent', { _limit: 1000 }),
+				objectStore.fetchCollection('moduleVersion', { _limit: 1000 }),
+			])
 		},
 	},
 }

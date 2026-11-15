@@ -150,7 +150,7 @@
     "slug": "license-and-seat-tracking",
     "title": "License and seat tracking",
     "summary": "Track license models and seats next to your contracts.",
-    "status": "soon",
+    "status": "stable",
     "docsUrl": "openspec/specs/license-and-seat-tracking/spec.md",
     "title_nl": "Licentie- en seatregistratie",
     "summary_nl": "Houd licentiemodellen en seats bij naast je contracten."

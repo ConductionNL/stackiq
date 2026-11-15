@@ -29,6 +29,8 @@ A `current_<type>` entry points at the running operation of a type, so the page 
 
 Rejected: a database table of runs. A run in progress is transient state that nobody needs after an hour, and the last result is one small record (D3).
 
+Without a cache that every server and the CLI share (no memcache: Nextcloud's `NullCache` keeps nothing; APCu alone: each node and the CLI keep their own), `ProgressStore` keeps the snapshot and the cancel flag in lazy app config entries (`op_progress_<sha1>`, `op_cancel_<sha1>`) with an expiry instead, read from the database rather than from the request's config cache. The cost is deliberate: each such read reloads the whole app config, lazy values of every app included (a normal request loads only the non-lazy rows), once a second for an open progress stream and about twice a second for a running import (the write after its cancel read reloads it again); a running operation writes at most once a second per phase. A dedicated table is the alternative if that cost ever shows up.
+
 Rejected: the SSE stream (`streamProgress()`, `:1360`) for the page. Polling `GET /api/sync/status` every three seconds while a run is going works behind every proxy and needs no long-lived PHP worker; the stream stays for its current callers.
 
 ### D2. The job honours the switch

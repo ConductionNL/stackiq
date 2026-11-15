@@ -40,6 +40,7 @@ use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Test class for MergeOrganisatieService.
@@ -757,13 +758,11 @@ class MergeOrganisatieServiceTest extends TestCase {
 		// the capture just records the wrong coordinates, and every assertion
 		// that looks a save up by (schema, uuid) reports "no such save".
 		$objectService->method('saveObject')->willReturnCallback(
-			function (
-				array|ObjectEntity $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				$uuid = null,
-			) {
+			function (array|ObjectEntity $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$data = ($object instanceof ObjectEntity) === true ? $object->getObject() : $object;
 				$this->savedCalls[] = [
 					'object' => $data,
@@ -938,7 +937,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function jsonSerialize() {
+			public function jsonSerialize(): array {
 				return $this->getObject();
 			}//end jsonSerialize()
 		};

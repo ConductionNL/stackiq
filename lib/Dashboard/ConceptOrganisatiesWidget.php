@@ -10,11 +10,14 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Dashboard;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\Dashboard\IWidget;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -37,15 +40,20 @@ class ConceptOrganisatiesWidget implements IWidget {
 	 * Returns the unique widget identifier.
 	 *
 	 * @return string The widget ID
+	 *
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-externally-owned-identifiers-stay-frozen
 	 */
 	public function getId(): string {
-		// FROZEN across the stackiq -> stackiq rename. The Dashboard app
+		// FROZEN across the softwarecatalog -> stackiq rename. The Dashboard app
 		// stores each user's chosen widgets BY WIDGET ID, in its own `dashboard`
-		// appid namespace in `oc_preferences` — data this app's repair steps
-		// cannot reach. Renaming this id therefore does not error: the widget
-		// simply stops matching the stored selection and silently vanishes from
-		// every dashboard that had it.
-		return 'stackiq_concept_organisaties_widget';
+		// appid namespace in `oc_preferences`. Renaming this id therefore does
+		// not error: the widget simply stops matching the stored selection and
+		// silently vanishes from every dashboard that had it. Stable 0.1.148 to
+		// 0.2.0 shipped the renamed id anyway, so the repair step
+		// `RepointDashboardWidgetId` rewrites that id back to this one in every
+		// user's `dashboard`/`layout` row — the Dashboard rows are ordinary user
+		// preferences, which `IConfig` reaches like this app's own.
+		return 'softwarecatalog_concept_organisaties_widget';
 	}//end getId()
 
 	/**
@@ -94,7 +102,7 @@ class ConceptOrganisatiesWidget implements IWidget {
 	 * @spec openspec/specs/concept-organizations-widget/spec.md
 	 */
 	public function load(): void {
-		$appId = Application::APP_ID;
+		$appId = AppIdentity::APP_ID;
 		// Shared chunks emitted by webpack splitChunks + runtimeChunk (see webpack.config.js).
 		// Order: runtime → vendor → nc-vue → widget.
 		Util::addScript(application: $appId, file: $appId . '-runtime');

@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\ArchiMate;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,14 +41,14 @@ class ArchiMateContext {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param SettingsService $settingsService The Stackiq settings service.
+	 * @param RegisterConfigReaderInterface $settingsService The Stackiq settings service.
 	 * @param LoggerInterface $logger The application logger.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-4
 	 */
 	public function __construct(
 		public readonly ObjectServiceInterface $objectService,
-		public readonly SettingsService $settingsService,
+		public readonly RegisterConfigReaderInterface $settingsService,
 		public readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

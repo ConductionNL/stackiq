@@ -13,7 +13,7 @@ A functional administrator or a Nextcloud admin sees whether the organisation an
 
 ### Requirement: REQ-SSP-001 Progress of a long operation SHALL be readable from any request, and only by users allowed to read it
 
-`ProgressTracker` SHALL keep progress in Nextcloud's distributed cache, so a background job can write it and another request can read it. `GET /api/progress/{operationId}` SHALL answer the operation's owner and Nextcloud admins, and for an `organisation_sync` operation also members of the functional administrator group. Anyone else SHALL get 404, the same answer as for an unknown id.
+`ProgressTracker` SHALL keep progress in Nextcloud's distributed cache, so a background job can write it and another request can read it. When that cache is not shared by every server and the CLI (no memcache, or APCu alone), it SHALL keep progress and the cancel request in the app config instead. `GET /api/progress/{operationId}` SHALL answer the operation's owner and Nextcloud admins, and for an `organisation_sync` operation also members of the functional administrator group. Anyone else SHALL get 404, the same answer as for an unknown id.
 
 #### Scenario: A running sync started by cron is readable
 @e2e exclude Needs a cron run in the middle of a request; tests/Unit/Service/ProgressTrackerTest.php asserts a second tracker instance on the same cache reads the first one's progress, and tests/Unit/Controller/SettingsControllerProgressTest.php asserts the read rule.
@@ -21,6 +21,13 @@ A functional administrator or a Nextcloud admin sees whether the organisation an
 - **GIVEN** the scheduled sync running from cron with operation type `organisation_sync`
 - **WHEN** a functional administrator's page calls `GET /api/progress/{operationId}` for it
 - **THEN** stackiq SHALL answer 200 with the phase, the processed and total items and the percentage
+
+#### Scenario: Progress and cancel work without a shared cache
+@e2e exclude Depends on the instance's memcache configuration; tests/Unit/Service/ProgressTrackerTest.php asserts that without a memcache, and with APCu alone, a second request reads the progress and the running request sees the cancel.
+
+- **GIVEN** an instance with no memcache configured
+- **WHEN** an admin starts a CMDB import and the page calls `GET /api/progress/{operationId}`, then cancels it
+- **THEN** stackiq SHALL answer 200 with the progress, and the import SHALL stop as cancelled
 
 #### Scenario: Another user cannot read an operation by guessing its id
 @e2e exclude An authorisation rule; tests/Unit/Controller/SettingsControllerProgressTest.php asserts 404 for a user who is not the owner, not an admin and not allowed by the sync policy.

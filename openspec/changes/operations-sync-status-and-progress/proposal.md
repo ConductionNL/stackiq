@@ -33,7 +33,7 @@ Read at development 49e65cb4.
 
 ## What this change builds
 
-- `ProgressTracker` stores progress in Nextcloud's distributed cache instead of the session, so a background job can write it and a page in another request can read it, with the sync phases added.
+- `ProgressTracker` stores progress in Nextcloud's distributed cache instead of the session (in the app config when no cache is shared by every server and the CLI), so a background job can write it and a page in another request can read it, with the sync phases added.
 - The scheduled and the manual organisation sync report progress per batch and keep a last run record: start, end, trigger, counts and number of errors.
 - The job honours the enable switch.
 - A Synchronisation page at `/organisaties/synchronisation`, a child of the Organisations menu entry, for Nextcloud admins and functional administrators: the schedule (interval, on or off), the last run, and a progress bar while a run is going.

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<CnAdminSettingsShell
 		appId="stackiq"
@@ -85,6 +89,9 @@
 		<!-- ArchiMate Import/Export Section -->
 		<ArchiMateImportExport />
 
+		<!-- CMDB (TOPdesk export) Import Section -->
+		<CmdbImport />
+
 		<!-- Email Configuration Section -->
 		<EmailConfiguration />
 
@@ -116,6 +123,9 @@
 		<!-- End-of-life Feed Sync Section -->
 		<EolSyncSettings />
 
+		<!-- Service desk exchange (sharing-itsm-exchange) -->
+		<ItsmExchange />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</CnAdminSettingsShell>
@@ -123,7 +133,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcTextField } from '@nextcloud/vue'
@@ -131,16 +141,24 @@ import { defineComponent } from 'vue'
 import Web from 'vue-material-design-icons/Web.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
+import CmdbImport from './sections/CmdbImport.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
 import EolSyncSettings from './sections/EolSyncSettings.vue'
 import FederationSettings from './sections/FederationSettings.vue'
+import ItsmExchange from './sections/ItsmExchange.vue'
 import ModerationQueue from './sections/ModerationQueue.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
 import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
 import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import { settingsStore } from '../../store/store.js'
+import {
+	FORCE_UPDATE_TEXTS,
+	reportActionResult,
+	reportAutoConfigResult,
+	RESET_AUTO_CONFIG_TEXTS,
+} from './autoConfigFeedback.js'
 
 /**
  * Stackiq Settings component
@@ -160,11 +178,13 @@ export default defineComponent({
 		UserGroupsConfiguration,
 		OrganizationSynchronization,
 		ArchiMateImportExport,
+		CmdbImport,
 		EmailConfiguration,
 		CronjobConfiguration,
 		ModerationQueue,
 		FederationSettings,
 		EolSyncSettings,
+		ItsmExchange,
 		AlwaysVisibleSection,
 		Web,
 	},
@@ -326,11 +346,7 @@ export default defineComponent({
 			this.autoConfiguring = true
 			try {
 				const result = await this.store.consolidatedAutoConfigure()
-				if (result && result.success) {
-					showSuccess('Auto configuration completed successfully')
-				} else if (result && result.message) {
-					showError('Auto configuration failed: ' + result.message)
-				}
+				reportAutoConfigResult(result)
 				await this.store.loadVersionInfo()
 			} catch (error) {
 				console.error('Failed to perform auto-configuration:', error)
@@ -351,13 +367,7 @@ export default defineComponent({
 			try {
 				const result = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
-				if (result && result.success) {
-					showSuccess(
-						result.message || 'Force update completed successfully',
-					)
-				} else if (result) {
-					showError(result.message || 'Force update failed')
-				}
+				reportActionResult(result, FORCE_UPDATE_TEXTS)
 			} finally {
 				this.autoConfiguring = false
 			}
@@ -374,11 +384,7 @@ export default defineComponent({
 			try {
 				const result = await this.store.resetAutoConfig()
 				await this.store.loadVersionInfo()
-				if (result && result.success) {
-					showSuccess(result.message || 'Auto-config reset successfully')
-				} else if (result) {
-					showError(result.message || 'Failed to reset auto-config')
-				}
+				reportActionResult(result, RESET_AUTO_CONFIG_TEXTS)
 			} finally {
 				this.autoConfiguring = false
 			}

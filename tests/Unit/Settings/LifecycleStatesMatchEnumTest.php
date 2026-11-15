@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-catalogue-pages/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-004-the-connection-schema-offers-transitions-and-a-picker-that-match-its-data
+ * @spec openspec/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-004-the-connection-schema-offers-transitions-and-a-picker-that-match-its-data
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,8 +32,8 @@ use PHPUnit\Framework\TestCase;
  * Dutch state names. A transition whose `from` names a value no row can hold
  * is never offered, and an `initial` outside the enum writes an invalid
  * value. Nothing raises an error, so the only instrument is this walk: every
- * lifecycle in both shipped register files, every state it names, against
- * the enum of the field it drives.
+ * lifecycle in the shipped register, every state it names, against the enum
+ * of the field it drives. The demo register carries objects only, no schemas.
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
@@ -47,7 +47,6 @@ class LifecycleStatesMatchEnumTest extends TestCase {
 	public static function registerFiles(): array {
 		return [
 			'softwarecatalogus_register.json' => ['softwarecatalogus_register.json'],
-			'stackiq_mock_register.json' => ['stackiq_mock_register.json'],
 		];
 	}//end registerFiles()
 

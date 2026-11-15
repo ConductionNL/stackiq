@@ -7,7 +7,7 @@
  * second login, another user's page or the request after a cron run. Each
  * test therefore builds one tracker per request, the way Nextcloud does:
  * every request gets its own session and user, and all requests share the
- * distributed cache.
+ * distributed cache, or, without a shared cache, the app config table.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Service
@@ -19,6 +19,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,8 +29,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\Stackiq\Service\ProgressTracker;
+use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -61,6 +66,34 @@ class ProgressTrackerTest extends TestCase {
 	private ?int $lastTtl = null;
 
 	/**
+	 * The app config table every request shares, as a plain array.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private array $appConfigRows = [];
+
+	/**
+	 * The number of app config writes.
+	 *
+	 * @var int
+	 */
+	private int $appConfigWrites = 0;
+
+	/**
+	 * The number of times a request dropped its app config cache.
+	 *
+	 * @var int
+	 */
+	private int $appConfigCacheClears = 0;
+
+	/**
+	 * Whether a tracker asked the factory for the distributed cache.
+	 *
+	 * @var bool
+	 */
+	private bool $distributedCacheUsed = false;
+
+	/**
 	 * Build the tracker one request would get.
 	 *
 	 * The constructor's parameters are resolved by type, like the DI container
@@ -68,10 +101,11 @@ class ProgressTrackerTest extends TestCase {
 	 * distributed cache factory all requests share.
 	 *
 	 * @param string|null $uid The signed-in user of this request, or null for cron.
+	 * @param string|null $distributedCache The `memcache.distributed` class, or null when no memcache is configured.
 	 *
 	 * @return ProgressTracker The tracker of this request.
 	 */
-	private function trackerForRequest(?string $uid): ProgressTracker {
+	private function trackerForRequest(?string $uid, ?string $distributedCache = '\\OC\\Memcache\\Redis'): ProgressTracker {
 		$sessionStore = [];
 		$session = $this->createMock(ISession::class);
 		$session->method('get')->willReturnCallback(
@@ -113,13 +147,26 @@ class ProgressTrackerTest extends TestCase {
 		);
 
 		$cacheFactory = $this->createMock(ICacheFactory::class);
-		$cacheFactory->method('createDistributed')->willReturn($cache);
+		$cacheFactory->method('isAvailable')->willReturn($distributedCache !== null);
+		$cacheFactory->method('createDistributed')->willReturnCallback(
+			function () use ($cache): ICache {
+				$this->distributedCacheUsed = true;
+				return $cache;
+			}
+		);
+
+		$config = $this->createMock(IConfig::class);
+		$config->method('getSystemValueString')->willReturnCallback(
+			static fn (string $key, string $default = ''): string => ($key === 'memcache.distributed' ? ($distributedCache ?? '') : $default)
+		);
 
 		$available = [
 			ISession::class => $session,
 			IUserSession::class => $userSession,
 			ICacheFactory::class => $cacheFactory,
 			LoggerInterface::class => $this->createMock(LoggerInterface::class),
+			IConfig::class => $config,
+			IAppConfig::class => $this->appConfigForRequest(),
 		];
 
 		$args = [];
@@ -132,6 +179,63 @@ class ProgressTrackerTest extends TestCase {
 
 		return new ProgressTracker(...$args);
 	}//end trackerForRequest()
+
+	/**
+	 * The app config of one request: its own cache in front of the shared table.
+	 *
+	 * A value another request wrote is seen only after this request dropped its cache.
+	 *
+	 * @return IAppConfig The app config double.
+	 */
+	private function appConfigForRequest(): IAppConfig {
+		$cached = null;
+		$load = function () use (&$cached): array {
+			if ($cached === null) {
+				$cached = $this->appConfigRows;
+			}
+
+			return $cached;
+		};
+
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('clearCache')->willReturnCallback(
+			function () use (&$cached): void {
+				$cached = null;
+				$this->appConfigCacheClears++;
+			}
+		);
+		$appConfig->method('getValueArray')->willReturnCallback(
+			static fn (string $app, string $key, array $default = []): array => ($load()[$app . '/' . $key] ?? $default)
+		);
+		$appConfig->method('setValueArray')->willReturnCallback(
+			function (string $app, string $key, array $value) use (&$cached): bool {
+				$this->appConfigRows[$app . '/' . $key] = $value;
+				$cached = $this->appConfigRows;
+				$this->appConfigWrites++;
+				return true;
+			}
+		);
+		$appConfig->method('deleteKey')->willReturnCallback(
+			function (string $app, string $key) use (&$cached): void {
+				unset($this->appConfigRows[$app . '/' . $key]);
+				$cached = $this->appConfigRows;
+			}
+		);
+		$appConfig->method('searchKeys')->willReturnCallback(
+			static function (string $app, string $prefix = '') use ($load): array {
+				$keys = [];
+				foreach (array_keys($load()) as $row) {
+					if (str_starts_with($row, $app . '/' . $prefix) === true) {
+						$keys[] = substr($row, strlen($app) + 1);
+					}
+				}
+
+				return $keys;
+			}
+		);
+
+		return $appConfig;
+	}//end appConfigForRequest()
 
 	/**
 	 * Progress written in one request is readable from another request, for
@@ -227,5 +331,163 @@ class ProgressTrackerTest extends TestCase {
 	public function testAnUnknownOperationIsNull(): void {
 		$this->assertNull($this->trackerForRequest('admin')->getProgress('org_merge_unknown'));
 	}//end testAnUnknownOperationIsNull()
+
+	/**
+	 * Without any memcache, progress and cancel go through the app config and
+	 * still reach another request.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAMemcacheProgressAndCancelReachAnotherRequest(): void {
+		$writer = $this->trackerForRequest('admin', null);
+		$operationId = $writer->startOperation(operationType: 'cmdb_import', options: ['total_items' => 3], operationId: 'cmdb-' . str_repeat('a', 64));
+		$writer->setPhase('processing_elements');
+
+		$reader = $this->trackerForRequest('admin', null);
+		$progress = $reader->getProgress($operationId);
+
+		$this->assertFalse($this->distributedCacheUsed, 'a cache that keeps nothing is not used');
+		$this->assertNotNull($progress, 'a second request must read the running operation');
+		$this->assertSame('processing_elements', $progress['phase']);
+
+		$reader->setCancelRequested($operationId);
+		$this->assertTrue($writer->isCancelRequested($operationId), 'the running request sees a cancel another request asked for');
+
+		foreach (array_keys($this->appConfigRows) as $row) {
+			$this->assertLessThanOrEqual(64, strlen(substr($row, strlen('stackiq/'))), 'an app config key holds at most 64 characters');
+		}
+	}//end testWithoutAMemcacheProgressAndCancelReachAnotherRequest()
+
+	/**
+	 * APCu is kept per server and per process, so it does not carry progress either.
+	 *
+	 * @return void
+	 */
+	public function testApcuAloneIsNotTrustedAsASharedCache(): void {
+		$writer = $this->trackerForRequest('admin', '\\OC\\Memcache\\APCu');
+		$operationId = $writer->startOperation(operationType: 'archimate_import');
+
+		$this->assertFalse($this->distributedCacheUsed);
+		$this->assertSame([], $this->sharedCache);
+		$this->assertNotNull($this->trackerForRequest('admin', '\\OC\\Memcache\\APCu')->getProgress($operationId));
+	}//end testApcuAloneIsNotTrustedAsASharedCache()
+
+	/**
+	 * A reader drops its own config cache before it reads, so a snapshot
+	 * written after the reader's first read is still seen.
+	 *
+	 * @return void
+	 */
+	public function testAReaderSeesALaterWriteInTheAppConfig(): void {
+		$writer = $this->trackerForRequest('admin', null);
+		$operationId = $writer->startOperation(operationType: 'archimate_import');
+
+		$reader = $this->trackerForRequest('admin', null);
+		$this->assertSame('running', $reader->getProgress($operationId)['status']);
+
+		$writer->completeOperation();
+
+		$this->assertSame('completed', $reader->getProgress($operationId)['status']);
+		$this->assertGreaterThan(0, $this->appConfigCacheClears);
+	}//end testAReaderSeesALaterWriteInTheAppConfig()
+
+	/**
+	 * A running operation writes the app config at most once a second in one
+	 * phase, and its final state is always written.
+	 *
+	 * @return void
+	 */
+	public function testAppConfigWritesOfARunningOperationAreSpacedOut(): void {
+		$tracker = $this->trackerForRequest('admin', null);
+		$operationId = $tracker->startOperation(operationType: 'archimate_import', options: ['total_items' => 500]);
+		$writesAfterStart = $this->appConfigWrites;
+		for ($i = 0; $i < 500; $i++) {
+			$tracker->incrementProgress();
+		}
+
+		$this->assertLessThanOrEqual($writesAfterStart + 2, $this->appConfigWrites, '500 rows are not 500 writes');
+
+		$tracker->completeOperation();
+
+		$progress = $this->trackerForRequest('admin', null)->getProgress($operationId);
+		$this->assertSame('completed', $progress['status']);
+		$this->assertSame(500, $progress['processed_items']);
+	}//end testAppConfigWritesOfARunningOperationAreSpacedOut()
+
+	/**
+	 * App config entries whose time is up are removed when the next operation starts.
+	 *
+	 * @return void
+	 */
+	public function testExpiredAppConfigEntriesAreRemovedWhenAnOperationStarts(): void {
+		$this->appConfigRows['stackiq/op_progress_old'] = ['expires' => time() - 1, 'value' => ['status' => 'running']];
+		$this->appConfigRows['stackiq/op_cancel_old']   = ['expires' => time() - 1, 'value' => true];
+		$this->appConfigRows['stackiq/other_setting']   = ['kept' => true];
+
+		$this->trackerForRequest('admin', null)->startOperation(operationType: 'archimate_import');
+
+		$this->assertArrayNotHasKey('stackiq/op_progress_old', $this->appConfigRows);
+		$this->assertArrayNotHasKey('stackiq/op_cancel_old', $this->appConfigRows);
+		$this->assertArrayHasKey('stackiq/other_setting', $this->appConfigRows);
+	}//end testExpiredAppConfigEntriesAreRemovedWhenAnOperationStarts()
+
+	/**
+	 * The running operation of a type is found from another request without
+	 * its id, and is gone once the operation completes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function testTheCurrentOperationOfATypeIsFoundAndClearedOnCompletion(): void {
+		$writer = $this->trackerForRequest(null);
+		$this->assertNull($writer->getCurrentOperation('organisation_sync'));
+
+		$operationId = $writer->startOperation(operationType: 'organisation_sync');
+		$writer->setPhase('processing_contacts');
+
+		$current = $this->trackerForRequest('admin')->getCurrentOperation('organisation_sync');
+		$this->assertNotNull($current);
+		$this->assertSame($operationId, $current['operation_id']);
+		$this->assertSame('processing_contacts', $current['phase']);
+		$this->assertSame('Processing contact persons', $current['phase_description']);
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('sbom-import'));
+
+		$writer->completeOperation();
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('organisation_sync'));
+	}//end testTheCurrentOperationOfATypeIsFoundAndClearedOnCompletion()
+
+	/**
+	 * A failed or cancelled operation is not current; a newer run of the type
+	 * is not cleared by an older one ending.
+	 *
+	 * @return void
+	 */
+	public function testAnEndedOperationIsNotCurrentAndAnOlderOneDoesNotClearANewer(): void {
+		$failed = $this->trackerForRequest(null);
+		$failed->startOperation(operationType: 'organisation_sync');
+		$failed->failOperation('database gone');
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('organisation_sync'));
+
+		$older = $this->trackerForRequest(null);
+		$older->startOperation(operationType: 'organisation_sync', operationId: 'organisation_sync_old');
+		$newer = $this->trackerForRequest(null);
+		$newer->startOperation(operationType: 'organisation_sync', operationId: 'organisation_sync_new');
+		$older->cancelOperation();
+
+		$this->assertSame('organisation_sync_new', $this->trackerForRequest('admin')->getCurrentOperation('organisation_sync')['operation_id']);
+	}//end testAnEndedOperationIsNotCurrentAndAnOlderOneDoesNotClearANewer()
+
+	/**
+	 * Without a memcache the current operation is found through the app config too.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAMemcacheTheCurrentOperationIsFound(): void {
+		$writer      = $this->trackerForRequest(null, null);
+		$operationId = $writer->startOperation(operationType: 'organisation_sync');
+
+		$this->assertSame($operationId, $this->trackerForRequest('admin', null)->getCurrentOperation('organisation_sync')['operation_id']);
+	}//end testWithoutAMemcacheTheCurrentOperationIsFound()
 
 }//end class

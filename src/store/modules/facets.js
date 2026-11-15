@@ -35,7 +35,7 @@ import {
  * `standaardVersies`, … — see design.md). Letting the bare dimension name
  * leak into `$route.query` would make CnIndexPage attempt an incorrect
  * direct-field filter (near-guaranteed zero results) IN ADDITION to this
- * feature's own `{ id: matchedObjectIds }` narrowing. The `_gf_` prefix
+ * feature's own `{ _ids: matchedObjectIds }` narrowing. The `_gf_` prefix
  * keeps GEMMA facet state in the URL (deep-linkable, per spec) while staying
  * invisible to that generic passthrough (`_`-prefixed keys are reserved/
  * skipped there).
@@ -90,6 +90,54 @@ function emptyFacetResponse() {
 	})
 	empty._meta = { totalMatched: 0, processingTimeMs: 0, cached: false }
 	return empty
+}
+
+/**
+ * Whether a value is a non-null object.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean} True for objects and arrays.
+ */
+function isObject(value) {
+	return Boolean(value) && typeof value === 'object'
+}
+
+/**
+ * The stored query of a saved view, or an empty one when it has none.
+ *
+ * @param {unknown} view The saved view.
+ * @return {object} The view's query.
+ */
+function savedViewQuery(view) {
+	return isObject(view) && isObject(view.query) ? view.query : {}
+}
+
+/**
+ * The filter map of a saved view's query, or an empty one when malformed.
+ *
+ * @param {object} query The view's query.
+ * @return {object} The filters keyed by dimension.
+ */
+function savedViewFilters(query) {
+	const filters = query.filters
+	return isObject(filters) && !Array.isArray(filters) ? filters : {}
+}
+
+/**
+ * Keep only the known facet dimensions that carry at least one value.
+ *
+ * @param {object} filters The filters keyed by dimension.
+ * @return {object} The normalised filters.
+ */
+function nonEmptyDimensions(filters) {
+	const normalized = {}
+	FACET_DIMENSIONS.forEach((dimension) => {
+		const values = filters[dimension]
+		if (Array.isArray(values) && values.length > 0) {
+			normalized[dimension] = values
+		}
+	})
+	return normalized
 }
 
 /**
@@ -158,7 +206,7 @@ export const useFacetStore = defineStore('facets', {
 		/**
 		 * The RBAC/filter/search-scoped object id set the last-fetched facet
 		 * response describes (`_meta.matchedObjectIds`) — used to narrow the
-		 * schema's own object-list query via `{ id: [...] }` (see
+		 * schema's own object-list query via `{ _ids: [...] }` (see
 		 * `FacetService::computeFacetsForRequest()`'s docblock for why an
 		 * id-based filter is used instead of re-deriving one from the facet
 		 * selection: `domain`/`applicationService` are not module/catalogService
@@ -448,27 +496,8 @@ export const useFacetStore = defineStore('facets', {
 				this[schema] = emptySchemaState()
 			}
 
-			const query =
-				view
-				&& typeof view === 'object'
-				&& view.query
-				&& typeof view.query === 'object'
-					? view.query
-					: {}
-			const filters =
-				query.filters
-				&& typeof query.filters === 'object'
-				&& !Array.isArray(query.filters)
-					? query.filters
-					: {}
-
-			const normalizedFilters = {}
-			FACET_DIMENSIONS.forEach((dimension) => {
-				const values = filters[dimension]
-				if (Array.isArray(values) && values.length > 0) {
-					normalizedFilters[dimension] = values
-				}
-			})
+			const query = savedViewQuery(view)
+			const normalizedFilters = nonEmptyDimensions(savedViewFilters(query))
 
 			this[schema].activeFilters = normalizedFilters
 			this[schema].search =

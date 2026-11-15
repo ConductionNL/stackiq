@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://conductio.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,7 +42,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+foreach (['ObjectEntityInterface'] as $contract) {
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {
@@ -57,6 +60,11 @@ spl_autoload_register(function (string $class): void {
 		// OpenRegister stubs — Db entities and Services used by tests.
 		'OCA\\OpenRegister\\Db\\' => __DIR__ . '/Stubs/Db/',
 		'OCA\\OpenRegister\\Service\\' => __DIR__ . '/Stubs/Service/',
+		// A copy of OpenRegister's ObjectCreatedEvent, so listener tests construct the real shape.
+		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
+		// OpenRegister's MCP provider interface (mcp-full-action-surface).
+		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
+		'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\' => __DIR__ . '/Stubs/Kernel/Contracts/Value/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -74,6 +82,23 @@ spl_autoload_register(function (string $class): void {
 	}//end foreach
 });
 
+// OpenRegister's migration-pack validator has no stub here (CmdbImportProfile
+// reads MigrationPack\PackDefinitionValidator by name): load that namespace from
+// a sibling OpenRegister checkout when there is one, the apps-extra layout of
+// the dev environment. Only that namespace, so every other OpenRegister class
+// still comes from the stubs.
+spl_autoload_register(function (string $class): void {
+	$prefix = 'OCA\\OpenRegister\\Service\\MigrationPack\\';
+	if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+		return;
+	}
+
+	$file = __DIR__ . '/../../openregister/lib/Service/MigrationPack/' . str_replace(search: '\\', replace: '/', subject: substr($class, strlen($prefix))) . '.php';
+	if (file_exists($file) === true) {
+		require_once $file;
+	}
+});
+
 // Integriq's connection-registry events (adopt-connection-registry).
 // ConnectionReportService sends them by string class name behind class_exists
 // (ADR-041), so stackiq stays installable without integriq. The stubs mirror
@@ -88,3 +113,14 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// Doctrine and Symfony classes only the server ships; see bootstrap-stubs.php.
+require_once __DIR__ . '/bootstrap-stubs.php';
+
+// OpenRegister main's ObjectServiceInterface (hydra-gates still ships the release's) and the test helpers for its option objects.
+if (interface_exists('\\OCA\\OpenRegister\\Contract\\ObjectServiceInterface') === false) {
+	require_once __DIR__ . '/Stubs/Contract/ObjectServiceInterface.php';
+}
+
+require_once __DIR__ . '/Support/ReleaseObjectSignatures.php';
+require_once __DIR__ . '/Support/LegacyObjectArgs.php';

@@ -1,0 +1,124 @@
+{
+	"no object id": {
+		"calls": [],
+		"loading": false,
+		"sourceName": "",
+		"status": "",
+		"mergedInto": ""
+	},
+	"zero object id": {
+		"calls": [],
+		"loading": false,
+		"sourceName": "",
+		"status": "",
+		"mergedInto": ""
+	},
+	"self envelope": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "Gemeente A",
+		"status": "merged",
+		"mergedInto": "org-b"
+	},
+	"self envelope with object": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "outer",
+		"status": "",
+		"mergedInto": ""
+	},
+	"object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "Gemeente A",
+		"status": "merged",
+		"mergedInto": "org-b"
+	},
+	"plain reply": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "Plain",
+		"status": "",
+		"mergedInto": ""
+	},
+	"empty object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "Fallback",
+		"status": "",
+		"mergedInto": ""
+	},
+	"no name": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "[Unknown organisation]",
+		"status": "active",
+		"mergedInto": ""
+	},
+	"null reply": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "[Unknown organisation]",
+		"status": "",
+		"mergedInto": ""
+	},
+	"request fails": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "[Unknown organisation]",
+		"status": "",
+		"mergedInto": ""
+	},
+	"numeric id": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"org\",\"id\":\"42\"}"
+			]
+		],
+		"loading": false,
+		"sourceName": "Gemeente A",
+		"status": "merged",
+		"mergedInto": "org-b"
+	}
+}

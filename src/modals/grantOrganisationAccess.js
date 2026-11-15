@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Pure helpers for GrantOrganisationAccessModal.vue — extracted so the
  * grant/revoke payload logic is unit-testable without mounting the
  * component (matches the project's established "pure-logic unit tests"

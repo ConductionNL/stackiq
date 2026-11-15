@@ -74,6 +74,13 @@ The `Views` page at `/views` SHALL be a `CnIndexPage` over the `view` schema wit
 - **WHEN** a municipal information manager selects the tag zaakgericht in the Views sidebar
 - **THEN** the list SHALL show only the view tagged zaakgericht
 
+#### Scenario: A municipal information manager finds views by status
+@e2e tests/e2e/workflows/architecture-views.spec.ts
+
+- **GIVEN** a published view and a draft view
+- **WHEN** a municipal information manager selects the status published in the Views sidebar
+- **THEN** the list SHALL show only the published view
+
 #### Scenario: Mine shows only the signed-in user's views
 @e2e tests/e2e/workflows/architecture-views.spec.ts
 
