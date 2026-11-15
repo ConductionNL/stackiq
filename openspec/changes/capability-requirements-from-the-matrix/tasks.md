@@ -8,6 +8,7 @@
 - **acceptance_criteria**:
   - GIVEN the Applications page WHEN a supplier chooses Add THEN a wizard opens on its first step
 - [ ] Implement
+  > 15 Nov, started: `src/dialogs/EntryWizardDialog.vue` is a generic wizard over the shared `CnWizardDialog` (details, related records, summary; a step with a required field left empty stays open and names it; a failed save keeps the summary open with the error), driven by `src/utils/entryWizard.js`. The Connections page (`src/manifest.d/connections.json`, page `Koppelingen`) opens it from Add through `actionsComponent: ConnectionWizardAction` with `showAdd: false`, so the page keeps its declarative columns and filters, and the saved connection's page opens. Tests: `tests/vitest/entryWizard.spec.js` (11). Left: the `module` kind for Applications (details, then reference components from schema `element`) and the `catalogService` kind for Services (details including its required provider and type, then the applications it runs on), each wired the same way on the Modules and Diensten pages (`FacetedCatalogIndexView`, which has no Add yet).
 - [ ] Test (Playwright `tests/e2e/workflows/entry-wizard.spec.ts`)
 
 ### Task 2: Contact conversion reads the email from the linked contact

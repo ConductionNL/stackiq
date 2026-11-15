@@ -15,9 +15,11 @@
 			"route": "/koppelingen",
 			"type": "index",
 			"title": "Connections",
+			"actionsComponent": "ConnectionWizardAction",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
+				"showAdd": false,
 				"description": "Every connection between applications, and from an application to a national provision.",
 				"columns": [
 					"name",
