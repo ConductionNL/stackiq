@@ -411,6 +411,7 @@
 			"route": "/organisaties/:id",
 			"type": "detail",
 			"title": "Organisation",
+			"actionsComponent": "OrganisationExportAction",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "organization",

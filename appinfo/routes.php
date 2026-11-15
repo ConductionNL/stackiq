@@ -102,6 +102,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
         ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
+        // Whether the caller may export that organisation: the detail page's action asks before it shows (insight-exports-and-custom-reports).
+        ['name' => 'settings#orgExportAccess', 'url' => '/api/archimate/export/organization/{organizationUuid}/access', 'verb' => 'GET'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
 
         // ArchiMate status management routes (status reading is via main settings endpoint)

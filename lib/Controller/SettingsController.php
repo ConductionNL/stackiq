@@ -1825,6 +1825,32 @@ class SettingsController extends Controller {
 	}//end exportOrgArchiMate()
 
 	/**
+	 * Whether the caller may export one organisation as ArchiMate.
+	 *
+	 * The detail page's Export as ArchiMate action asks this before it shows
+	 * itself, so the action and the export answer from the same rule. No
+	 * export work runs here.
+	 *
+	 * @param string $organizationUuid The organisation UUID.
+	 *
+	 * @return JSONResponse `{mayExport: bool}`, or 401 without a session.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 */
+	public function orgExportAccess(string $organizationUuid): JSONResponse {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$refusal = $this->verifyOrgScope(currentUser: $currentUser, organizationUuid: $organizationUuid);
+
+		return new JSONResponse(['mayExport' => $refusal === null]);
+	}//end orgExportAccess()
+
+	/**
 	 * Refuse the full ArchiMate export to anyone but a Nextcloud admin.
 	 *
 	 * @param \OCP\IUser $currentUser The authenticated caller.

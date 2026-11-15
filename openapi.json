@@ -751,6 +751,55 @@
                 ]
             }
         },
+        "/archimate/export/organization/{organizationUuid}/access": {
+            "get": {
+                "operationId": "settings-org-export-access",
+                "summary": "Whether the caller may export one organisation as ArchiMate",
+                "description": "Whether the caller may export one organisation as ArchiMate. The organisation detail page's Export as ArchiMate action asks this before it shows itself; no export work runs here.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{mayExport: bool}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "mayExport": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "mayExport"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "organizationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organizationUuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/archimate/import": {
             "post": {
                 "operationId": "settings-import-archi-mate",

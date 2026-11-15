@@ -1337,6 +1337,7 @@
         "Export": "Export",
         "Export as CSV": "Export as CSV",
         "Export as Excel": "Export as Excel",
+        "Export as ArchiMate": "Export as ArchiMate",
         "Applications ({count}): {names}": "Applications ({count}): {names}",
         "Coverage on a GEMMA view": "Coverage on a GEMMA view",
         "Empty view": "Empty view",

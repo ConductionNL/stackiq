@@ -85,6 +85,7 @@ final class SettingsControllerOrgExportTest extends TestCase {
 	 * @param bool                                      $ncAdmin      Whether Nextcloud reports the caller as admin.
 	 * @param OrganisationReportAccessInterface|null|false $access    The rule to inject; false to build the real one.
 	 * @param ContainerInterface|null                   $container    The container.
+	 * @param bool                                      $signedIn     Whether a user is signed in.
 	 *
 	 * @return SettingsController
 	 */
@@ -94,11 +95,17 @@ final class SettingsControllerOrgExportTest extends TestCase {
 		bool $ncAdmin = false,
 		OrganisationReportAccessInterface|null|false $access = false,
 		?ContainerInterface $container = null,
+		bool $signedIn = true,
 	): SettingsController {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('anna');
 		$userSession = $this->createMock(IUserSession::class);
-		$userSession->method('getUser')->willReturn($user);
+		$sessionUser = null;
+		if ($signedIn === true) {
+			$sessionUser = $user;
+		}
+
+		$userSession->method('getUser')->willReturn($sessionUser);
 
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn($ncAdmin);
@@ -259,4 +266,40 @@ final class SettingsControllerOrgExportTest extends TestCase {
 		$this->assertSame(403, $full->getStatus());
 		$this->assertSame(['message' => 'Admin or organisation-admin privileges required'], $full->getData());
 	}//end testAnEmptyOrganisationAndTheFullExport()
+
+	/**
+	 * The access probe answers from the export's own rule, and never runs an export.
+	 *
+	 * @return void
+	 */
+	public function testTheAccessProbeAnswersFromTheSameRule(): void {
+		$this->archiMate->expects($this->never())->method('exportOrgArchiMate');
+
+		$member = $this->controller(groups: ['medewerkers'], organisation: 'org-a');
+		$this->assertSame(expected: ['mayExport' => true], actual: $member->orgExportAccess(organizationUuid: 'org-a')->getData());
+		$this->assertSame(expected: ['mayExport' => false], actual: $member->orgExportAccess(organizationUuid: 'org-b')->getData());
+		$this->assertSame(expected: ['mayExport' => false], actual: $member->orgExportAccess(organizationUuid: '')->getData());
+		$this->assertSame(expected: 200, actual: $member->orgExportAccess(organizationUuid: 'org-b')->getStatus());
+
+		$ambtenaar = $this->controller(groups: ['ambtenaar'], organisation: '');
+		$this->assertSame(expected: ['mayExport' => true], actual: $ambtenaar->orgExportAccess(organizationUuid: 'org-b')->getData());
+		$ncAdmin = $this->controller(groups: [], organisation: '', ncAdmin: true);
+		$this->assertSame(expected: ['mayExport' => true], actual: $ncAdmin->orgExportAccess(organizationUuid: 'org-b')->getData());
+	}//end testTheAccessProbeAnswersFromTheSameRule()
+
+	/**
+	 * Without a session the probe answers 401, and without the rule it says no.
+	 *
+	 * @return void
+	 */
+	public function testTheAccessProbeRefusesWithoutASessionOrARule(): void {
+		$broken = $this->createMock(originalClassName: ContainerInterface::class);
+		$broken->method('get')->willThrowException(new RuntimeException('not registered'));
+		$noRule = $this->controller(groups: [], organisation: 'org-a', access: null, container: $broken);
+		$this->assertSame(expected: ['mayExport' => false], actual: $noRule->orgExportAccess(organizationUuid: 'org-a')->getData());
+
+		$response = $this->controller(groups: ['ambtenaar'], organisation: 'org-a', signedIn: false)->orgExportAccess(organizationUuid: 'org-a');
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['message' => 'Not authenticated'], actual: $response->getData());
+	}//end testTheAccessProbeRefusesWithoutASessionOrARule()
 }//end class

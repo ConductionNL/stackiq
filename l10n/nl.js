@@ -1410,6 +1410,7 @@ OC.L10N.register(
         "Export": "Exporteren",
         "Export as CSV": "Exporteren als CSV",
         "Export as Excel": "Exporteren als Excel",
+        "Export as ArchiMate": "Exporteren als ArchiMate",
         "Applications ({count}): {names}": "Applicaties ({count}): {names}",
         "Coverage on a GEMMA view": "Dekking op een GEMMA-view",
         "Empty view": "Lege view",

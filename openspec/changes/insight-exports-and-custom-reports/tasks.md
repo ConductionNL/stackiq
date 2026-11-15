@@ -19,8 +19,9 @@
 - **acceptance_criteria**:
   - GIVEN a user whose active organisation is the page's organisation WHEN `/organisaties/:id` opens THEN the action shows and downloads an ArchiMate XML file
   - GIVEN a user of another organisation who is not admin or `ambtenaar` WHEN the page opens THEN the action is not shown
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+  > Built: `OrganisationExportAction` in OrganisatieDetail's actions slot. It asks `GET /api/archimate/export/organization/{uuid}/access`, which answers `{mayExport}` from the export's own `verifyOrgScope()` rule without exporting, so the action and the 403 cannot drift; any other answer hides it. PHPUnit `SettingsControllerOrgExportTest` (the probe), vitest `organisationExportAction.spec.js`. The Playwright half needs a live instance.
 
 ### Task 3: Add the faceted catalogue export endpoint
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave

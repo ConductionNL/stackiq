@@ -24,6 +24,7 @@ import ApplicationContractsPanel from './components/contracts/ApplicationContrac
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
+import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -134,6 +135,11 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// OrganisatieDetail's actions slot: Export as ArchiMate for the organisation
+	// on the page, shown when the server says the caller may export it
+	// (insight-exports-and-custom-reports, REQ-CER-003).
+	OrganisationExportAction,
 
 	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
 	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),
