@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * createUserAccount() for a new account of an organisation's contact: the
@@ -245,6 +246,7 @@ class ContactPersonHandlerCreationMailTest extends TestCase {
 		$lookups = [];
 		$this->objects->method('find')->willReturnCallback(
 			function (...$args) use (&$lookups): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$lookups[] = $args;
 				return $this->stored(self::ORGANISATION);
 			}

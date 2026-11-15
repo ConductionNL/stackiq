@@ -1033,6 +1033,132 @@
       }
     },
     "schemas": {
+      "view-version": {
+        "slug": "view-version",
+        "title": "View version",
+        "version": "0.0.1",
+        "type": "object",
+        "description": "A named snapshot of a drawn view's nodes and connections, saved with Save version and read by Compare versions (architecture-views-editor).",
+        "required": [
+          "view",
+          "versionNumber",
+          "nodes",
+          "connections"
+        ],
+        "properties": {
+          "view": {
+            "type": "string",
+            "format": "uuid",
+            "title": "View",
+            "description": "The uuid of the view this snapshot belongs to.",
+            "facetable": true,
+            "visible": true,
+            "example": "5f0c2d1e-7a3b-4c8d-9e0f-1a2b3c4d5e6f"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Version number",
+            "description": "The snapshot's number, one higher than the view's previous snapshot.",
+            "visible": true,
+            "example": 1
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What the owner called this version.",
+            "visible": true,
+            "example": "Eerste opzet"
+          },
+          "savedBy": {
+            "type": "string",
+            "title": "Saved by",
+            "description": "The user who saved the version.",
+            "visible": true,
+            "example": "admin"
+          },
+          "savedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Saved at",
+            "description": "When the version was saved.",
+            "visible": true,
+            "example": "2026-11-14T10:00:00+01:00"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "title": "Nodes",
+            "description": "A copy of the view's xml.viewNodes at the time of saving.",
+            "visible": false
+          },
+          "connections": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "title": "Connections",
+            "description": "A copy of the view's xml.viewRelationships at the time of saving.",
+            "visible": false
+          }
+        },
+        "authorization": {
+          "read": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "create": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "update": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "delete": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ]
+        },
+        "configuration": {
+          "objectNameField": "label",
+          "objectDescriptionField": "label"
+        }
+      },
       "sector": {
         "uri": null,
         "slug": "sector",

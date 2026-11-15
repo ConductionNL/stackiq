@@ -30,6 +30,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
@@ -111,7 +114,12 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 			return null;
 		}
 
-		$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+		$window = $objectService->find(
+			id: $uuid,
+			options: new ObjectFindOptions(register: $register, schema: $schema),
+			_rbac: false,
+			_multitenancy: false
+		);
 		if ($window === null) {
 			return null;
 		}
@@ -240,10 +248,10 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $window->getRegister(),
-			schema: $window->getSchema(),
-			uuid: $window->getUuid(),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $window->getRegister(), schema: $window->getSchema()),
+				uuid: $window->getUuid()
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

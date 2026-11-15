@@ -23,6 +23,7 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
@@ -31,10 +32,13 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
+import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
@@ -45,6 +49,8 @@ import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { createMoveHandlers } from './services/moveToOrganisation.js'
+import { navigationStore } from './store/store.js'
 
 export default {
 	// Header-action handler: the Integrations page's Add integration
@@ -60,10 +66,24 @@ export default {
 		assign: (url) => window.location.assign(url),
 	}),
 
+	// Bulk-action handlers: Move to organisation on the Applications,
+	// Services, Applications in use, Connections and Contracts lists
+	// (landscape-move-between-organisations D3). FUNCTIONS, because the
+	// action opens the app's own MoveToOrganisationDialog with the selection,
+	// which a bulk action's `open-modal` does not reach (CnPageRenderer has
+	// no listener for the index page's `open-modal` event).
+	...createMoveHandlers((name, properties) => navigationStore.setDialog(name, properties)),
+
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
 	OrganisatieCard,
+
+	// A declared sidebar tab for one integration leaf (adopt-integration-leaves
+	// 3.1). A detail page that lists its own sidebar tabs turns off the object
+	// sidebar's registry mode, so the leaves the schema declares in
+	// `linkedTypes` would not show; this widget renders the leaf's own tab.
+	IntegrationLeafTab,
 
 	// The steps of a business process as a read-only flow on CnGraphCanvas, and
 	// the applications that support a step with the hidden ones counted
@@ -71,6 +91,14 @@ export default {
 	// widget expresses.
 	ProcessStepFlow,
 	ProcessStepUsages,
+
+	// The architecture view editor and the version compare
+	// (architecture-views-editor D4, D6): an authoring canvas that places
+	// elements, draws connections backed by relation objects and takes the
+	// object lock, and two marked read-only canvases side by side. Neither is
+	// a page type or widget the library has.
+	ArchitectureViewEditor,
+	ViewVersionCompare,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
@@ -228,4 +256,10 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
+	// The library's roadmap and store pages are one page type each; this puts
+	// both under one page as two tabs, so the footer Store entry and the
+	// roadmap are one place. Both halves stay the library components.
+	// @spec openspec/changes/features-roadmap-page/specs/features-roadmap/spec.md#requirement-the-uitbreidingen-tab-lists-the-extensions-from-the-store-req-frm-002
+	FeaturesRoadmapTabs,
 }

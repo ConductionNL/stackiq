@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -226,7 +227,8 @@ class ViewService implements ViewServiceInterface {
 	private function viewResponse(string $viewId, array $options): array {
 		// Get specific view from OpenRegister.
 		$view = $this->getViewFromRegister(viewId: $viewId);
-		if ($view === null) {
+		// A drawn view answers as a missing one, so a uuid does not reveal that it exists.
+		if ($view === null || ViewOrigin::isImported(object: $view) === false) {
 			return [
 				'success' => false,
 				'error' => "View with ID '$viewId' not found",
@@ -313,7 +315,10 @@ class ViewService implements ViewServiceInterface {
 		// Query for all view objects. Bounded — an unset `_limit` means
 		// Doctrine's setMaxResults(null), i.e. no LIMIT clause at all
 		// (full-table scan). 500 is a safe ceiling for the view index load.
-		$views = $this->serialiseViews(viewEntities: $objectService->searchObjects(['@self' => $target, '_limit' => 500]));
+		// Drawn views stay with the organisation that drew them (the `view` read rule is
+		// public across organisations), so the list keeps only GEMMA's.
+		$read = $objectService->searchObjects(['@self' => $target, '_limit' => 500]);
+		$views = ViewOrigin::importedOnly(objects: $this->serialiseViews(viewEntities: $read));
 
 		// Cache the result.
 		$this->viewsCache->set(key: $cacheKey, value: $views, ttl: self::CACHE_TTL);
@@ -474,8 +479,7 @@ class ViewService implements ViewServiceInterface {
 			// no way around the list's scope.
 			$view = $objectService->find(
 				id: $viewId,
-				register: $registerId,
-				schema: $viewSchemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $viewSchemaId)
 			);
 
 			// Serialise the entity to an array. No `is_array()` / `method_exists()`

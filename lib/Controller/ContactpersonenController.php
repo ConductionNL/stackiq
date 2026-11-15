@@ -23,6 +23,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
@@ -430,8 +434,7 @@ class ContactpersonenController extends Controller {
 			// Find the contactpersoon object — bind to current tenant.
 			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: true,
 				_multitenancy: true
 			);
@@ -579,11 +582,11 @@ class ContactpersonenController extends Controller {
 			// written exactly as before.
 			$this->objectService->saveObject(
 				object: $contactData,
-				register: $registerId,
-				schema: $schemaId,
-				uuid: $contactPersonObject->getUuid(),
-				silent: true,
-				_validation: false
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+					uuid: $contactPersonObject->getUuid(),
+					policy: new SavePolicy(silent: true, validation: false)
+				)
 			);
 
 			$this->logger->info(
@@ -1258,8 +1261,7 @@ class ContactpersonenController extends Controller {
 		try {
 			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson'
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson')
 			);
 
 			if ($contactObject === null) {

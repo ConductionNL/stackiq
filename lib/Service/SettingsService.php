@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\EmailSettings;
@@ -4342,14 +4344,12 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 					// BULK OPERATION: Create entire batch in single operation.
 					$bulkResult = $objectService->saveObjects(
 						objects: $batch,
-						register: $voorzieningenConfig['register'],
-						schema: $voorzieningenConfig['organisatie_schema'],
+						options: new BulkSaveOptions(defaults: new BulkBatchDefaults(
+								register: $voorzieningenConfig['register'],
+								schema: $voorzieningenConfig['organisatie_schema']
+							)),
 						_rbac: false,
-						_multitenancy: false,
-						validation: false,
-						// Skip validation for performance.
-						events: false
-						// Skip events for performance.
+						_multitenancy: false
 					);
 
 					$batchTime = microtime(true) - $batchStartTime;
