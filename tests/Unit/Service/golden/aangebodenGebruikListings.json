@@ -1,0 +1,816 @@
+{
+    "getGebruiksWhereAfnemer openregister not installed": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: OpenRegister app is not installed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting gebruiks objects where active org is afnemer",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get afnemer gebruiks",
+                {
+                    "error": "OpenRegister app is not installed"
+                }
+            ]
+        ]
+    },
+    "getGebruiksWhereAfnemer configuration missing": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting gebruiks objects where active org is afnemer",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get voorzieningen configuration - no fallback provided",
+                {
+                    "registerId": "null",
+                    "gebruik_schema": "null",
+                    "voorzieningenConfig": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get afnemer gebruiks",
+                {
+                    "error": "Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+                }
+            ]
+        ]
+    },
+    "getGebruiksWhereAfnemer search throws": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: search failed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting gebruiks objects where active org is afnemer",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing search query",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "consumer": "org-acting",
+                        "_limit": 1000,
+                        "_offset": 0
+                    },
+                    "schema_id": "schema-gebruik",
+                    "current_org": "org-acting",
+                    "fetch_limit": 1000,
+                    "requested_limit": 5,
+                    "requested_offset": 0
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "consumer": "org-acting",
+                    "_limit": 1000,
+                    "_offset": 0
+                },
+                false,
+                false,
+                false,
+                null
+            ],
+            [
+                "log.error",
+                "Failed to get afnemer gebruiks",
+                {
+                    "error": "search failed"
+                }
+            ]
+        ]
+    },
+    "getGebruiksWhereAfnemer search answers": {
+        "result": {
+            "results": [
+                {
+                    "id": "offered",
+                    "@self": {
+                        "organisation": "org-other"
+                    }
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1,
+            "limit": 5,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting gebruiks objects where active org is afnemer",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing search query",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "consumer": "org-acting",
+                        "_limit": 1000,
+                        "_offset": 0
+                    },
+                    "schema_id": "schema-gebruik",
+                    "current_org": "org-acting",
+                    "fetch_limit": 1000,
+                    "requested_limit": 5,
+                    "requested_offset": 0
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "consumer": "org-acting",
+                    "_limit": 1000,
+                    "_offset": 0
+                },
+                false,
+                false,
+                false,
+                null
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Search completed before filtering",
+                {
+                    "total": 2,
+                    "results_count": 2,
+                    "organisation": "org-acting"
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Filtering completed",
+                {
+                    "original_count": 2,
+                    "filtered_count": 1,
+                    "removed_count": 1
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Pagination applied",
+                {
+                    "total_filtered": 1,
+                    "requested_limit": 5,
+                    "requested_offset": 0,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "returned_count": 1
+                }
+            ]
+        ]
+    },
+    "getAllGebruiksForAmbtenaar openregister not installed": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: OpenRegister app is not installed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks objects for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get all gebruiks for ambtenaar",
+                {
+                    "error": "OpenRegister app is not installed"
+                }
+            ]
+        ]
+    },
+    "getAllGebruiksForAmbtenaar configuration missing": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks objects for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get voorzieningen configuration - no fallback provided",
+                {
+                    "registerId": "null",
+                    "gebruik_schema": "null",
+                    "voorzieningenConfig": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get all gebruiks for ambtenaar",
+                {
+                    "error": "Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+                }
+            ]
+        ]
+    },
+    "getAllGebruiksForAmbtenaar search throws": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve gebruiks: search failed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks objects for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing ambtenaar search query",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "_limit": 5,
+                        "_source": "database"
+                    },
+                    "schema_id": "schema-gebruik"
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "_limit": 5,
+                    "_source": "database"
+                },
+                false,
+                false,
+                false,
+                null
+            ],
+            [
+                "log.error",
+                "Failed to get all gebruiks for ambtenaar",
+                {
+                    "error": "search failed"
+                }
+            ]
+        ]
+    },
+    "getAllGebruiksForAmbtenaar search answers": {
+        "result": {
+            "results": [
+                {
+                    "id": "own",
+                    "@self": {
+                        "organisation": "org-acting"
+                    }
+                },
+                {
+                    "id": "offered",
+                    "@self": {
+                        "organisation": "org-other"
+                    }
+                }
+            ],
+            "total": 2,
+            "page": 1
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks objects for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing ambtenaar search query",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "_limit": 5,
+                        "_source": "database"
+                    },
+                    "schema_id": "schema-gebruik"
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "_limit": 5,
+                    "_source": "database"
+                },
+                false,
+                false,
+                false,
+                null
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Ambtenaar search completed",
+                {
+                    "total": 2,
+                    "results_count": 2
+                }
+            ]
+        ]
+    },
+    "getSingleGebruikForAmbtenaar openregister not installed": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve usage: OpenRegister app is not installed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "suite_id": "suite-1",
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get gebruiks by uses relationship",
+                {
+                    "uses_uuid": "suite-1",
+                    "error": "OpenRegister app is not installed"
+                }
+            ]
+        ]
+    },
+    "getSingleGebruikForAmbtenaar configuration missing": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve usage: Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "suite_id": "suite-1",
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get voorzieningen configuration - no fallback provided",
+                {
+                    "registerId": "null",
+                    "gebruik_schema": "null",
+                    "voorzieningenConfig": []
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get gebruiks by uses relationship",
+                {
+                    "uses_uuid": "suite-1",
+                    "error": "Voorzieningen configuration not found. Please configure the schemas in the admin panel."
+                }
+            ]
+        ]
+    },
+    "getSingleGebruikForAmbtenaar search throws": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve usage: search failed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "suite_id": "suite-1",
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing uses-based query for ambtenaar",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "_limit": 5,
+                        "_source": "database"
+                    },
+                    "schema_id": "schema-gebruik",
+                    "uses_uuid": "suite-1"
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "_limit": 5,
+                    "_source": "database"
+                },
+                false,
+                false,
+                false,
+                "suite-1"
+            ],
+            [
+                "log.error",
+                "Failed to get gebruiks by uses relationship",
+                {
+                    "uses_uuid": "suite-1",
+                    "error": "search failed"
+                }
+            ]
+        ]
+    },
+    "getSingleGebruikForAmbtenaar search answers": {
+        "result": {
+            "results": [
+                {
+                    "id": "own",
+                    "@self": {
+                        "organisation": "org-acting"
+                    }
+                },
+                {
+                    "id": "offered",
+                    "@self": {
+                        "organisation": "org-other"
+                    }
+                }
+            ],
+            "total": 2,
+            "page": 1
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "suite_id": "suite-1",
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Retrieved voorzieningen configuration for voorzieningen",
+                {
+                    "config": {
+                        "register": "reg-1",
+                        "gebruik_schema": "schema-gebruik"
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Executing uses-based query for ambtenaar",
+                {
+                    "query": {
+                        "@self": {
+                            "register": "reg-1",
+                            "schema": "schema-gebruik"
+                        },
+                        "_limit": 5,
+                        "_source": "database"
+                    },
+                    "schema_id": "schema-gebruik",
+                    "uses_uuid": "suite-1"
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "_limit": 5,
+                    "_source": "database"
+                },
+                false,
+                false,
+                false,
+                "suite-1"
+            ],
+            [
+                "log.debug",
+                "AangebodenGebruikService: Uses-based query completed",
+                {
+                    "total": 2,
+                    "results_count": 2,
+                    "uses_uuid": "suite-1"
+                }
+            ]
+        ]
+    },
+    "getSingleGebruikForAmbtenaar empty suite id": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Suite ID is required"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting all gebruiks for suite ID for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "suite_id": "",
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ]
+        ]
+    }
+}

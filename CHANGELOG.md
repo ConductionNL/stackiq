@@ -1,6 +1,47 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- MCP action surface (mcp-full-action-surface), for hermiq agents: 28 derived
+  read tools (search and get on 14 catalogue schemas), create and update on
+  `vulnerability`, and 27 curated tools in the `stackiq` provider. The curated
+  tools cover the caller's profile, offers and usages, portfolio report,
+  moderation, reviews, SBOM import and status, architecture views,
+  organisation merge (with a preview), publication and the end-of-life sync.
+  Every tool runs the guard its REST route runs; organisation membership
+  grant and revoke are not tools yet.
+- Integration leaves (adopt-integration-leaves): contact persons and
+  organisations link their Nextcloud contact (`contacts`), contracts and module
+  versions get a `calendar` tab, software reviews a `deck` tab, modules and
+  services `bookmarks`. A contract keeps its `decidesk-decisions` leaf.
+- Lifecycle dates on the calendar: saving a contract keeps one linked
+  "Contract ends: {contractNumber}" event on its end date, and saving a module
+  version one "End of support: {module} {version}" event on its end-of-support
+  date (including dates the EOL sync stamps again). A changed date moves the
+  event, a cleared date removes it, and an unavailable calendar only logs a
+  warning.
+- CMDB import: a Nextcloud admin imports a TOPdesk CMDB export (xlsx) for one
+  municipality from the admin settings. Every application row of the two CMDB
+  sheets becomes or updates a module, its vendor, a usage for the municipality
+  and a contact person for its owner; a repeat import matches on APPID, so it
+  updates instead of duplicating. See `docs/features/cmdb-import.md`.
+- CMDB import: on an OpenRegister with the migration-pack editor
+  (OpenRegister 2.1.41 or later), the import runs the mapping packs kept in
+  OpenRegister's migration pack store, where an administrator edits them.
+  The `SeedCmdbImportPacks` repair step stores them on install and upgrade;
+  a pack nobody edited follows newer releases, an edited one is kept.
+  Viewing the mapping writes nothing. An older OpenRegister keeps the packs
+  that ship with stackiq.
+- CMDB import, repeat imports: applications that left the CMDB sheets are
+  archived when the sheet "Gearchiveerde Applicaties" lists them and moved to
+  OpenRegister's trash when no sheet does; one that returns is unarchived or
+  restored, never duplicated. The new option `missingRecords` (`archive`, the
+  default, or `keep`) is a choice in the CMDB import section, and the report
+  counts archived, unarchived, deleted and restored applications. The module
+  (0.3.9) and usage (1.5.7) schemas opt into OpenRegister's archive state, and
+  the Applications and Applications in use pages get an "Archived" quick
+  filter. (cmdb-import-archive-reconciliation)
+
 ### Changed
 - EOL feed: the register and schema slugs the feature reads from are corrected.
   `EOL_DEFAULT_REGISTER` still said `openconnector`, a register renamed to

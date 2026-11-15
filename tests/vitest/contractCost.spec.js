@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the annualised-cost contract utility.
  *
  * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md

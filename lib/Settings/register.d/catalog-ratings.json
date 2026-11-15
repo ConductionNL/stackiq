@@ -46,7 +46,8 @@
               "group": "public",
               "match": {
                 "status": "approved"
-              }
+              },
+              "crossOrganisation": true
             },
             "aanbod-beheerder",
             "ambtenaar",

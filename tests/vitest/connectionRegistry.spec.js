@@ -26,6 +26,7 @@ import { BUILT_IN_FORMATTERS } from '@conduction/nextcloud-vue/src/utils/builtIn
 import * as fs from 'fs'
 import * as path from 'path'
 import { describe, expect, it } from 'vitest'
+import appFormatters from '../../src/formatters.js'
 import {
 	createConnectionHandlers,
 	INTEGRIQ_CONNECTIONS_PATH,
@@ -40,7 +41,8 @@ const menu = fragment.menu.find((m) => m.id === 'IntegrationsMenu')
 /**
  * The formatter registry CnAppRoot provides, built the way CnAppRoot builds it:
  * the library's built-ins under whatever the app passes in its `formatters`
- * prop. A same-named local formatter wins, which is why stackiq passes none.
+ * prop. A same-named local formatter wins, which is why stackiq's own names
+ * (src/formatters.js) never equal a built-in's.
  *
  * @param {object} appFormatters What the app hands CnAppRoot. Empty by default.
  * @return {object} The merged registry, keyed by formatter name.
@@ -156,13 +158,19 @@ describe('the Integrations page declaration', () => {
 	// so a local formatter under either name silently replaces the built-in and
 	// nothing logs. stackiq passes no formatters at all, and this states what
 	// that buys: the built-in is what the Status column resolves.
-	it('passes CnAppRoot no formatters, so nothing shadows the built-ins', () => {
+	it('passes CnAppRoot no formatter that shadows a built-in', () => {
 		const shadow = shellFormatterRegistry({
 			connectionStatus: () => 'a local copy answered',
 		})
 
 		expect(shadow.connectionStatus('disabled')).toBe('a local copy answered')
-		expect(read('src', 'App.vue')).not.toContain(':formatters=')
+		const shadowed = Object.keys(appFormatters).filter(
+			(name) => name in BUILT_IN_FORMATTERS,
+		)
+		expect(shadowed).toEqual([])
+		expect(shellFormatterRegistry(appFormatters).connectionStatus).toBe(
+			BUILT_IN_FORMATTERS.connectionStatus,
+		)
 	})
 
 	it('names an icon src/icons.js registers', () => {

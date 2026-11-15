@@ -1,0 +1,3611 @@
+{
+    "nothing installed or configured": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 0,
+                            "totalOrganizationObjects": 0,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 0,
+                            "totalModelObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 0,
+                "totalOrganizationObjects": 0,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 0,
+                "totalModelObjects": 0
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "OpenRegister service is not available.",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "OpenRegister service is not available.",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "OpenRegister service is not available.",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "openregister without config": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 3,
+                            "totalOrganizationObjects": 1,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 2,
+                            "totalModelObjects": 1
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 3,
+                "totalOrganizationObjects": 1,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 2,
+                "totalModelObjects": 1
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ]
+        ]
+    },
+    "configured voorzieningen": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 7,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "5",
+                            "organisatie_schema": "7",
+                            "contactpersoon_schema": "8",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 7,
+                            "totalContactpersoonObjects": 7,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": true
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 3,
+                            "totalOrganizationObjects": 1,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 2,
+                            "totalModelObjects": 1
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "5",
+                        "organisatie_schema": "7",
+                        "contactpersoon_schema": "8",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 7,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": true
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": {
+                    "status": "done"
+                },
+                "export": [],
+                "totalElementObjects": 3,
+                "totalOrganizationObjects": 1,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 2,
+                "totalModelObjects": 1
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ]
+        ]
+    },
+    "legacy scalar keys": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "3",
+                            "organisatie_schema": "4",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 7,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": true
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 0,
+                            "totalOrganizationObjects": 0,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 0,
+                            "totalModelObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "3",
+                        "organisatie_schema": "4",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": true
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [
+                    1
+                ],
+                "totalElementObjects": 0,
+                "totalOrganizationObjects": 0,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 0,
+                "totalModelObjects": 0
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_register"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_organisatie_schema"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_contactpersoon_schema"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_register"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_organisatie_schema"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_contactpersoon_schema"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_register"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_organisatie_schema"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_contactpersoon_schema"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_register"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_organisatie_schema"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_contactpersoon_schema"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_register"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_organisatie_schema"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_contactpersoon_schema"
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "archimate down",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "container fails": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 0,
+                            "totalOrganizationObjects": 0,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 0,
+                            "totalModelObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 0,
+                "totalOrganizationObjects": 0,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 0,
+                "totalModelObjects": 0
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "container down",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "register without schema": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "5",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 3,
+                            "totalOrganizationObjects": 1,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 2,
+                            "totalModelObjects": 1
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "5",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 3,
+                "totalOrganizationObjects": 1,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 2,
+                "totalModelObjects": 1
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ]
+        ]
+    },
+    "amef config without archimate": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": {
+                            "register_id": "9",
+                            "elements_schema": "10"
+                        },
+                        "object_counts": {
+                            "totalElementObjects": 0,
+                            "totalOrganizationObjects": 0,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 0,
+                            "totalModelObjects": 0
+                        },
+                        "configured": true
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": {
+                        "register_id": "9",
+                        "elements_schema": "10"
+                    },
+                    "object_counts": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "configured": true
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 0,
+                "totalOrganizationObjects": 0,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 0,
+                "totalModelObjects": 0
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "amef register only": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": {
+                            "register": "",
+                            "organisatie_schema": "",
+                            "contactpersoon_schema": "",
+                            "suite_schema": "",
+                            "dienst_schema": "",
+                            "kwetsbaarheid_schema": "",
+                            "gebruik_schema": "",
+                            "contract_schema": "",
+                            "koppeling_schema": "",
+                            "beoordeeling_schema": "",
+                            "module_schema": "",
+                            "compliancy_schema": "",
+                            "moduleVersie_schema": "",
+                            "sector_schema": "",
+                            "sbomComponent_schema": "",
+                            "maintenanceWindow_schema": ""
+                        },
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0,
+                            "totalVoorzieningObjects": 0,
+                            "totalVoorzieningAanbodObjects": 0,
+                            "totalVoorzieningVersieObjects": 0,
+                            "totalKwetsbaarheidObjects": 0,
+                            "totalContractObjects": 0,
+                            "totalStandaardObjects": 0,
+                            "totalReviewObjects": 0,
+                            "totalKoppelingObjects": 0,
+                            "totalBeoordeelingObjects": 0,
+                            "totalVoorzieningModuleObjects": 0,
+                            "totalVerklaringObjects": 0,
+                            "totalKoppelingGebruikObjects": 0,
+                            "totalCompliancyObjects": 0,
+                            "totalModuleGebruikObjects": 0,
+                            "totalModuleVersieObjects": 0,
+                            "totalSectorObjects": 0,
+                            "totalGebruikObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "amef": {
+                        "config": {
+                            "register_id": "9"
+                        },
+                        "object_counts": {
+                            "totalElementObjects": 0,
+                            "totalOrganizationObjects": 0,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 0,
+                            "totalModelObjects": 0
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": {
+                        "register": "",
+                        "organisatie_schema": "",
+                        "contactpersoon_schema": "",
+                        "suite_schema": "",
+                        "dienst_schema": "",
+                        "kwetsbaarheid_schema": "",
+                        "gebruik_schema": "",
+                        "contract_schema": "",
+                        "koppeling_schema": "",
+                        "beoordeeling_schema": "",
+                        "module_schema": "",
+                        "compliancy_schema": "",
+                        "moduleVersie_schema": "",
+                        "sector_schema": "",
+                        "sbomComponent_schema": "",
+                        "maintenanceWindow_schema": ""
+                    },
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "configured": false
+                },
+                "amef": {
+                    "config": {
+                        "register_id": "9"
+                    },
+                    "object_counts": {
+                        "totalElementObjects": 0,
+                        "totalOrganizationObjects": 0,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 0,
+                        "totalModelObjects": 0
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 0,
+                "totalOrganizationObjects": 0,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 0,
+                "totalModelObjects": 0
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved Voorzieningen object counts",
+                {
+                    "totalOrganisatieObjects": 0,
+                    "totalContactpersoonObjects": 0,
+                    "totalVoorzieningObjects": 0,
+                    "totalVoorzieningAanbodObjects": 0,
+                    "totalVoorzieningVersieObjects": 0,
+                    "totalKwetsbaarheidObjects": 0,
+                    "totalContractObjects": 0,
+                    "totalStandaardObjects": 0,
+                    "totalReviewObjects": 0,
+                    "totalKoppelingObjects": 0,
+                    "totalBeoordeelingObjects": 0,
+                    "totalVoorzieningModuleObjects": 0,
+                    "totalVerklaringObjects": 0,
+                    "totalKoppelingGebruikObjects": 0,
+                    "totalCompliancyObjects": 0,
+                    "totalModuleGebruikObjects": 0,
+                    "totalModuleVersieObjects": 0,
+                    "totalSectorObjects": 0,
+                    "totalGebruikObjects": 0
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF config from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "amef_config"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get AMEF object counts",
+                {
+                    "error": "no archimate",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "config read fails": {
+        "out": {
+            "getObjectsCounts": {
+                "success": true,
+                "counts": {
+                    "voorzieningen": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0,
+                        "totalVoorzieningObjects": 0,
+                        "totalVoorzieningAanbodObjects": 0,
+                        "totalVoorzieningVersieObjects": 0,
+                        "totalKwetsbaarheidObjects": 0,
+                        "totalContractObjects": 0,
+                        "totalStandaardObjects": 0,
+                        "totalReviewObjects": 0,
+                        "totalKoppelingObjects": 0,
+                        "totalBeoordeelingObjects": 0,
+                        "totalVoorzieningModuleObjects": 0,
+                        "totalVerklaringObjects": 0,
+                        "totalKoppelingGebruikObjects": 0,
+                        "totalCompliancyObjects": 0,
+                        "totalModuleGebruikObjects": 0,
+                        "totalModuleVersieObjects": 0,
+                        "totalSectorObjects": 0,
+                        "totalGebruikObjects": 0
+                    },
+                    "amef": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectsStatistics": {
+                "success": true,
+                "statistics": {
+                    "voorzieningen": {
+                        "config": [],
+                        "object_counts": {
+                            "totalOrganisatieObjects": 0,
+                            "totalContactpersoonObjects": 0
+                        },
+                        "configured": false,
+                        "error": "config down"
+                    },
+                    "amef": {
+                        "config": [],
+                        "object_counts": {
+                            "totalElementObjects": 3,
+                            "totalOrganizationObjects": 1,
+                            "totalViewObjects": 0,
+                            "totalRelationshipsObjects": 2,
+                            "totalModelObjects": 1
+                        },
+                        "configured": false
+                    },
+                    "timestamp": "(time)"
+                }
+            },
+            "getObjectCountsStatistics": {
+                "voorzieningen": {
+                    "config": [],
+                    "object_counts": {
+                        "totalOrganisatieObjects": 0,
+                        "totalContactpersoonObjects": 0
+                    },
+                    "configured": false,
+                    "error": "config down"
+                },
+                "amef": {
+                    "config": [],
+                    "object_counts": {
+                        "totalElementObjects": 3,
+                        "totalOrganizationObjects": 1,
+                        "totalViewObjects": 0,
+                        "totalRelationshipsObjects": 2,
+                        "totalModelObjects": 1
+                    },
+                    "configured": false
+                },
+                "timestamp": "(time)"
+            },
+            "getArchiMateStatus": {
+                "import": [],
+                "export": [],
+                "totalElementObjects": 3,
+                "totalOrganizationObjects": 1,
+                "totalViewObjects": 0,
+                "totalRelationshipsObjects": 2,
+                "totalModelObjects": 1
+            }
+        },
+        "trace": [
+            [
+                "call",
+                "getObjectsCounts"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get Voorzieningen object counts",
+                {
+                    "error": "config down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.error",
+                "Failed to get Voorzieningen statistics",
+                {
+                    "error": "config down"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getObjectCountsStatistics"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "voorzieningen_config"
+            ],
+            [
+                "log.error",
+                "Failed to get Voorzieningen statistics",
+                {
+                    "error": "config down"
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ],
+            [
+                "call",
+                "getArchiMateStatus"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to get ArchiMate status from ArchiMateService",
+                {
+                    "error": "status down",
+                    "trace": "(trace)"
+                }
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_import_status"
+            ],
+            [
+                "config.get",
+                "stackiq",
+                "archimate_export_status"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\ArchiMateService"
+            ],
+            [
+                "archimate.getElementObjects"
+            ],
+            [
+                "archimate.getOrganizationObjects"
+            ],
+            [
+                "archimate.getViewObjects"
+            ],
+            [
+                "archimate.getRelationshipObjects"
+            ],
+            [
+                "archimate.getModelObjects"
+            ],
+            [
+                "log.debug",
+                "SettingsService: Retrieved AMEF object counts",
+                {
+                    "elementObjects": 3,
+                    "organizationObjects": 1,
+                    "viewObjects": 0,
+                    "relationshipObjects": 2,
+                    "modelObjects": 1
+                }
+            ]
+        ]
+    }
+}

@@ -10,6 +10,8 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 |---------|-------------|
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
+| [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
@@ -17,8 +19,10 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
+| [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap |
 
 ## Software Registration
 
@@ -154,6 +158,16 @@ The ArchiMate integration maps GEMMA Softwarecatalogus objects to ArchiMate appl
 | Organisatie | BusinessActor |
 
 **Key services:** `lib/Service/ArchiMateService.php`, `lib/Service/ArchiMateImportService.php`, `lib/Service/ArchiMateExportService.php`
+
+## CMDB Import
+
+Import a TOPdesk CMDB export (`.xlsx`) for one municipality from the **CMDB import** section of the admin settings. Every application row of the two CMDB sheets ("Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB") becomes or updates a module, its vendor as a Supplier organisation, a usage that links it to the municipality and records whether maintenance is arranged, and a contact person for its owner (identity in Nextcloud Contacts, never public). A repeat import matches on APPID per municipality, so it updates instead of duplicating. By default it archives the applications that moved to the sheet "Gearchiveerde Applicaties" and moves those on no sheet any more to OpenRegister's trash, and brings either back when it returns; the admin can choose to keep them instead. The Applications and Applications in use pages list the archive under the quick filter "Archived". The column mapping is declarative JSON executed by OpenRegister's mapping engine.
+
+See [CMDB import](cmdb-import.md) for the steps, the expected file structure, the error codes and how to adjust the mapping.
+
+**Key services:** `lib/Service/CmdbExportImportService.php`, `lib/Service/Cmdb/`
+**Controller:** `lib/Controller/CmdbImportController.php`
+**Endpoint:** `POST /apps/stackiq/api/cmdb-import`
 
 ## Open Data Publishing
 

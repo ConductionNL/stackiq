@@ -97,7 +97,7 @@ class ConnectionsDeclarationTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const KEYS = ['email', 'federation', 'eol-feed'];
+	private const KEYS = ['email', 'federation', 'eol-feed', 'itsm'];
 
 	/**
 	 * The repository root.
@@ -182,7 +182,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		$this->assertSame(expected: self::KEYS, actual: $keys);
 		$this->assertSame(
 			expected: self::KEYS,
-			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL]
+			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL, ConnectionReportService::KEY_ITSM]
 		);
 	}//end testTheKeysAreUniqueAndTheReportedOnes()
 
@@ -298,8 +298,10 @@ class ConnectionsDeclarationTest extends TestCase {
 
 		$emailService = (string) file_get_contents($this->root() . '/lib/Service/SymfonyEmailService.php');
 		$this->assertStringContainsString(needle: "'null' => 'Null (No Emails)'", haystack: $emailService);
-		$this->assertMatchesRegularExpression(pattern: "/case 'null':\s+return Transport::fromDsn\('null:\/\/null'\);/", string: $emailService);
-		$this->assertMatchesRegularExpression(pattern: '/default:.*?return \$this->createSmtpTransport/s', string: $emailService);
+		$transportFactory = (string) file_get_contents($this->root() . '/lib/Service/MailTransportFactory.php');
+		$this->assertMatchesRegularExpression(pattern: "/'null' => 'null:\/\/null',/", string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/default => \$this->createFallbackSmtpTransport/', string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/function createFallbackSmtpTransport.*?return \$this->createSmtpTransport/s', string: $transportFactory);
 	}//end testOnlyTheNullTransportReadsSimulated()
 
 	/**
@@ -326,6 +328,31 @@ class ConnectionsDeclarationTest extends TestCase {
 	}//end testFederationAndTheFeedAreReportedOnly()
 
 	/**
+	 * The service desk exchange is reported only, and its switch is the setting the set-up writes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
+	public function testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp(): void {
+		$itsm = $this->connectionsByKey()['itsm'];
+
+		$this->assertTrue(condition: $itsm['reportedOnly']);
+		$this->assertSame(expected: ['configKey' => 'itsm_exchange_enabled'], actual: $itsm['switch']);
+		$this->assertSame(expected: '/settings/admin/stackiq#section-itsm', actual: $itsm['settingsUrl']);
+		$this->assertArrayNotHasKey(key: 'sourceTemplate', array: $itsm, message: 'the admin picks the desk, so no single template fits');
+		$this->assertSame(expected: ConnectionReportService::KEY_ITSM, actual: $itsm['key']);
+
+		$service = (string) file_get_contents($this->root() . '/lib/Service/ItsmExchangeService.php');
+		$this->assertStringContainsString(needle: "ENABLED_KEY = 'itsm_exchange_enabled'", haystack: $service);
+		$this->assertStringContainsString(needle: 'setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true)', haystack: $service);
+		$this->assertStringContainsString(needle: 'connectionReports?->itsmSetUp(', haystack: $service);
+
+		$section = (string) file_get_contents($this->root() . '/src/views/settings/sections/ItsmExchange.vue');
+		$this->assertStringContainsString(needle: 'id="section-itsm"', haystack: $section);
+	}//end testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp()
+
+	/**
 	 * Federation and the end-of-life sync are switched off through the settings stackiq reads.
 	 *
 	 * Neither switch lists `offValues`, so integriq reads it as off when the
@@ -346,9 +373,9 @@ class ConnectionsDeclarationTest extends TestCase {
 		}
 
 		$federation = (string) file_get_contents($this->root() . '/lib/Service/Federation/FederationConfig.php');
-		$this->assertStringContainsString(needle: "getValueBool(Application::APP_ID, 'federation_enabled', false)", haystack: $federation);
+		$this->assertStringContainsString(needle: "getValueBool(AppIdentity::APP_ID, 'federation_enabled', false)", haystack: $federation);
 
-		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
 		$this->assertStringContainsString(needle: "EOL_SYNC_CONFIG_KEY = 'eol_sync_config'", haystack: $settings);
 		$this->assertStringContainsString(needle: "'enabled' => (\$decoded['enabled'] ?? false) === true", haystack: $settings);
 	}//end testFederationAndTheSyncDeclareTheirSwitches()
@@ -365,7 +392,7 @@ class ConnectionsDeclarationTest extends TestCase {
 	public function testTheFeedOffersTheEndoflifeDateSource(): void {
 		$this->assertSame(expected: 'endoflife-date', actual: $this->connectionsByKey()['eol-feed']['sourceTemplate']);
 
-		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
 		$this->assertStringContainsString(needle: "EOL_DEFAULT_REGISTER = 'integriq'", haystack: $settings);
 	}//end testTheFeedOffersTheEndoflifeDateSource()
 
