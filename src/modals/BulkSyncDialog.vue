@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<NcModal v-if="open" @close="closeBulkSyncDialog">
 		<div class="bulk-sync-dialog">
@@ -322,6 +326,7 @@ export default defineComponent({
 				{
 					method: 'POST',
 					headers: {
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 						'X-Requested-With': 'XMLHttpRequest',
 					},

@@ -1,0 +1,2784 @@
+{
+    "{\"noComplianceSchema\":true}": {
+        "result": null,
+        "error": [
+            "RuntimeException",
+            "Compliance schema not configured"
+        ],
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Bulk sync failed",
+                {
+                    "exception": "Compliance schema not configured"
+                }
+            ]
+        ]
+    },
+    "{\"noRegister\":true}": {
+        "result": null,
+        "error": [
+            "RuntimeException",
+            "Voorzieningen register not configured"
+        ],
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Bulk sync failed",
+                {
+                    "exception": "Voorzieningen register not configured"
+                }
+            ]
+        ]
+    },
+    "{\"noModuleSchema\":true}": {
+        "result": null,
+        "error": [
+            "RuntimeException",
+            "Module schema not configured"
+        ],
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Bulk sync failed",
+                {
+                    "exception": "Module schema not configured"
+                }
+            ]
+        ]
+    },
+    "{\"noObjectService\":true}": {
+        "result": null,
+        "error": [
+            "RuntimeException",
+            "ObjectService not available"
+        ],
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Failed to get ObjectService",
+                {
+                    "exception": "object service down"
+                }
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Bulk sync failed",
+                {
+                    "exception": "ObjectService not available"
+                }
+            ]
+        ]
+    },
+    "{\"searchThrows\":true}": {
+        "result": null,
+        "error": [
+            "RuntimeException",
+            "search down"
+        ],
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 7,
+                        "register": 3
+                    },
+                    "_limit": 1000
+                }
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Bulk sync failed",
+                {
+                    "exception": "search down"
+                }
+            ]
+        ]
+    },
+    "{\"compliance\":[]}": {
+        "result": {
+            "totalProcessed": 0,
+            "complianceMissingModule": 0,
+            "complianceMissingStandaardversie": 0,
+            "modulesFound": 0,
+            "modulesNotFound": 0,
+            "modulesWithNoStandards": 0,
+            "modulesAlreadyUpToDate": 0,
+            "modulesUpdated": 0,
+            "standardsAdded": 0,
+            "errors": [],
+            "samples": {
+                "complianceWithStandaardversie": [],
+                "complianceWithoutStandaardversie": [],
+                "modulesUpdated": [],
+                "modulesSkipped": []
+            },
+            "modules": []
+        },
+        "error": null,
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 7,
+                        "register": 3
+                    },
+                    "_limit": 1000
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Found compliance objects for bulk sync",
+                {
+                    "count": 0
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Completed bulk sync of module standards",
+                {
+                    "results": {
+                        "totalProcessed": 0,
+                        "complianceMissingModule": 0,
+                        "complianceMissingStandaardversie": 0,
+                        "modulesFound": 0,
+                        "modulesNotFound": 0,
+                        "modulesWithNoStandards": 0,
+                        "modulesAlreadyUpToDate": 0,
+                        "modulesUpdated": 0,
+                        "standardsAdded": 0,
+                        "errors": [],
+                        "samples": {
+                            "complianceWithStandaardversie": [],
+                            "complianceWithoutStandaardversie": [],
+                            "modulesUpdated": [],
+                            "modulesSkipped": []
+                        },
+                        "modules": []
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"compliance\":\"mixed\"}": {
+        "result": {
+            "totalProcessed": 9,
+            "complianceMissingModule": 1,
+            "complianceMissingStandaardversie": 1,
+            "modulesFound": 6,
+            "modulesNotFound": 1,
+            "modulesWithNoStandards": 1,
+            "modulesAlreadyUpToDate": 1,
+            "modulesUpdated": 2,
+            "standardsAdded": 3,
+            "errors": [
+                "Compliance object has no module reference: 4",
+                "Invalid module reference in compliance object: 5",
+                "Module not found for UUID: mod-missing",
+                "Failed to process module mod-throws: find down"
+            ],
+            "samples": {
+                "complianceWithStandaardversie": [
+                    {
+                        "id": 1,
+                        "uuid": "c-1",
+                        "module": "mod-update",
+                        "standardVersion": "sv-1"
+                    },
+                    {
+                        "id": 2,
+                        "uuid": "c-2",
+                        "module": {
+                            "uuid": "mod-update"
+                        },
+                        "standardVersion": {
+                            "uuid": "sv-2"
+                        }
+                    },
+                    {
+                        "id": 3,
+                        "uuid": "c-3",
+                        "module": {
+                            "uuid": "mod-current"
+                        },
+                        "standardVersion": "sv-3"
+                    },
+                    {
+                        "id": 4,
+                        "uuid": "c-4",
+                        "module": null,
+                        "standardVersion": "sv-4"
+                    }
+                ],
+                "complianceWithoutStandaardversie": [
+                    {
+                        "id": 5,
+                        "uuid": "unknown",
+                        "module": 42
+                    }
+                ],
+                "modulesUpdated": [
+                    {
+                        "uuid": "mod-update",
+                        "name": "Module mod-update",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-1",
+                            "sv-2"
+                        ],
+                        "complianceCount": 2
+                    },
+                    {
+                        "uuid": "mod-scalar",
+                        "name": "Module mod-scalar",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-9"
+                        ],
+                        "complianceCount": 1
+                    }
+                ],
+                "modulesSkipped": [
+                    {
+                        "uuid": "mod-current",
+                        "name": "Module mod-current",
+                        "reason": "Already up-to-date",
+                        "currentStandaarden": [
+                            "sv-3"
+                        ],
+                        "extractedStandaarden": [
+                            "sv-3"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-empty",
+                        "name": "Module mod-empty",
+                        "reason": "No standaardversie found in 1 compliance object(s)",
+                        "complianceCount": 1
+                    }
+                ]
+            },
+            "modules": [
+                {
+                    "uuid": "mod-update",
+                    "name": "Module mod-update",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 2,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-1",
+                        "sv-2"
+                    ],
+                    "standardsCount": 2
+                },
+                {
+                    "uuid": "mod-current",
+                    "name": "Module mod-current",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-3"
+                    ],
+                    "newStandaarden": [
+                        "sv-3"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty",
+                    "name": "Module mod-empty",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-missing",
+                    "name": "Not Found",
+                    "status": "error",
+                    "reason": "Module not found in database",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-scalar",
+                    "name": "Module mod-scalar",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-9"
+                    ],
+                    "standardsCount": 1
+                }
+            ]
+        },
+        "error": null,
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 7,
+                        "register": 3
+                    },
+                    "_limit": 1000
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Found compliance objects for bulk sync",
+                {
+                    "count": 9
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 1,
+                    "standardVersion": "sv-1"
+                }
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found array standaardversie",
+                {
+                    "complianceId": 2,
+                    "standardVersion": "sv-2"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 2,
+                    "tracking": {
+                        "withStandaardversie": 2,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 1,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 2,
+                    "standaardversieUuids": [
+                        "sv-1",
+                        "sv-2"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update",
+                    "name": "Module mod-update",
+                    "standardVersions": [
+                        "sv-1",
+                        "sv-2"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 725,
+                    "moduleUuid": "mod-update",
+                    "standards": [
+                        "sv-1",
+                        "sv-2"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-update",
+                    "moduleName": "Module mod-update",
+                    "standards": [
+                        "sv-1",
+                        "sv-2"
+                    ],
+                    "count": 2
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 3,
+                    "standardVersion": "sv-3"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-3"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 6,
+                    "complianceUuid": "c-6"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-missing",
+                [],
+                false
+            ],
+            [
+                "objects.find",
+                "mod-throws",
+                [],
+                false
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Error processing module in bulk sync",
+                {
+                    "moduleUuid": "mod-throws",
+                    "exception": "find down"
+                }
+            ],
+            [
+                "objects.find",
+                "mod-scalar",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 9,
+                    "standardVersion": "sv-9"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-scalar",
+                    "name": "Module mod-scalar",
+                    "standardVersions": [
+                        "sv-9"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-scalar"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 880,
+                    "moduleUuid": "mod-scalar",
+                    "standards": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-scalar",
+                    "moduleName": "Module mod-scalar",
+                    "standards": [
+                        "sv-9"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Completed bulk sync of module standards",
+                {
+                    "results": {
+                        "totalProcessed": 9,
+                        "complianceMissingModule": 1,
+                        "complianceMissingStandaardversie": 1,
+                        "modulesFound": 6,
+                        "modulesNotFound": 1,
+                        "modulesWithNoStandards": 1,
+                        "modulesAlreadyUpToDate": 1,
+                        "modulesUpdated": 2,
+                        "standardsAdded": 3,
+                        "errors": [
+                            "Compliance object has no module reference: 4",
+                            "Invalid module reference in compliance object: 5",
+                            "Module not found for UUID: mod-missing",
+                            "Failed to process module mod-throws: find down"
+                        ],
+                        "samples": {
+                            "complianceWithStandaardversie": [
+                                {
+                                    "id": 1,
+                                    "uuid": "c-1",
+                                    "module": "mod-update",
+                                    "standardVersion": "sv-1"
+                                },
+                                {
+                                    "id": 2,
+                                    "uuid": "c-2",
+                                    "module": {
+                                        "uuid": "mod-update"
+                                    },
+                                    "standardVersion": {
+                                        "uuid": "sv-2"
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "uuid": "c-3",
+                                    "module": {
+                                        "uuid": "mod-current"
+                                    },
+                                    "standardVersion": "sv-3"
+                                },
+                                {
+                                    "id": 4,
+                                    "uuid": "c-4",
+                                    "module": null,
+                                    "standardVersion": "sv-4"
+                                }
+                            ],
+                            "complianceWithoutStandaardversie": [
+                                {
+                                    "id": 5,
+                                    "uuid": "unknown",
+                                    "module": 42
+                                }
+                            ],
+                            "modulesUpdated": [
+                                {
+                                    "uuid": "mod-update",
+                                    "name": "Module mod-update",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-1",
+                                        "sv-2"
+                                    ],
+                                    "complianceCount": 2
+                                },
+                                {
+                                    "uuid": "mod-scalar",
+                                    "name": "Module mod-scalar",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-9"
+                                    ],
+                                    "complianceCount": 1
+                                }
+                            ],
+                            "modulesSkipped": [
+                                {
+                                    "uuid": "mod-current",
+                                    "name": "Module mod-current",
+                                    "reason": "Already up-to-date",
+                                    "currentStandaarden": [
+                                        "sv-3"
+                                    ],
+                                    "extractedStandaarden": [
+                                        "sv-3"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-empty",
+                                    "name": "Module mod-empty",
+                                    "reason": "No standaardversie found in 1 compliance object(s)",
+                                    "complianceCount": 1
+                                }
+                            ]
+                        },
+                        "modules": [
+                            {
+                                "uuid": "mod-update",
+                                "name": "Module mod-update",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 2,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-1",
+                                    "sv-2"
+                                ],
+                                "standardsCount": 2
+                            },
+                            {
+                                "uuid": "mod-current",
+                                "name": "Module mod-current",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-3"
+                                ],
+                                "newStandaarden": [
+                                    "sv-3"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty",
+                                "name": "Module mod-empty",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-missing",
+                                "name": "Not Found",
+                                "status": "error",
+                                "reason": "Module not found in database",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-scalar",
+                                "name": "Module mod-scalar",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-9"
+                                ],
+                                "standardsCount": 1
+                            }
+                        ]
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"compliance\":\"many\"}": {
+        "result": {
+            "totalProcessed": 14,
+            "complianceMissingModule": 0,
+            "complianceMissingStandaardversie": 5,
+            "modulesFound": 14,
+            "modulesNotFound": 0,
+            "modulesWithNoStandards": 5,
+            "modulesAlreadyUpToDate": 5,
+            "modulesUpdated": 4,
+            "standardsAdded": 4,
+            "errors": [],
+            "samples": {
+                "complianceWithStandaardversie": [
+                    {
+                        "id": 2,
+                        "uuid": "c-2",
+                        "module": "mod-current-2",
+                        "standardVersion": "sv-2"
+                    },
+                    {
+                        "id": 3,
+                        "uuid": "c-3",
+                        "module": "mod-update-3",
+                        "standardVersion": "sv-3"
+                    },
+                    {
+                        "id": 5,
+                        "uuid": "c-5",
+                        "module": "mod-current-5",
+                        "standardVersion": "sv-5"
+                    }
+                ],
+                "complianceWithoutStandaardversie": [
+                    {
+                        "id": 1,
+                        "uuid": "c-1",
+                        "module": "mod-empty-1"
+                    },
+                    {
+                        "id": 4,
+                        "uuid": "c-4",
+                        "module": "mod-empty-4"
+                    }
+                ],
+                "modulesUpdated": [
+                    {
+                        "uuid": "mod-update-3",
+                        "name": "Module mod-update-3",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-3"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-update-6",
+                        "name": "Module mod-update-6",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-6"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-update-9",
+                        "name": "Module mod-update-9",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-9"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-update-12",
+                        "name": "Module mod-update-12",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-12"
+                        ],
+                        "complianceCount": 1
+                    }
+                ],
+                "modulesSkipped": [
+                    {
+                        "uuid": "mod-empty-1",
+                        "name": "Module mod-empty-1",
+                        "reason": "No standaardversie found in 1 compliance object(s)",
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-current-2",
+                        "name": "Titled mod-current-2",
+                        "reason": "Already up-to-date",
+                        "currentStandaarden": [
+                            "sv-2"
+                        ],
+                        "extractedStandaarden": [
+                            "sv-2"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-empty-4",
+                        "name": "Module mod-empty-4",
+                        "reason": "No standaardversie found in 1 compliance object(s)",
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-current-5",
+                        "name": "Titled mod-current-5",
+                        "reason": "Already up-to-date",
+                        "currentStandaarden": [
+                            "sv-5"
+                        ],
+                        "extractedStandaarden": [
+                            "sv-5"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-empty-7",
+                        "name": "Module mod-empty-7",
+                        "reason": "No standaardversie found in 1 compliance object(s)",
+                        "complianceCount": 1
+                    }
+                ]
+            },
+            "modules": [
+                {
+                    "uuid": "mod-empty-1",
+                    "name": "Module mod-empty-1",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-current-2",
+                    "name": "Titled mod-current-2",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-2"
+                    ],
+                    "newStandaarden": [
+                        "sv-2"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-update-3",
+                    "name": "Module mod-update-3",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-3"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty-4",
+                    "name": "Module mod-empty-4",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-current-5",
+                    "name": "Titled mod-current-5",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-5"
+                    ],
+                    "newStandaarden": [
+                        "sv-5"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-update-6",
+                    "name": "Module mod-update-6",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-6"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty-7",
+                    "name": "Module mod-empty-7",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-current-8",
+                    "name": "Titled mod-current-8",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-8"
+                    ],
+                    "newStandaarden": [
+                        "sv-8"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-update-9",
+                    "name": "Module mod-update-9",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-9"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty-10",
+                    "name": "Module mod-empty-10",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-current-11",
+                    "name": "Titled mod-current-11",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-11"
+                    ],
+                    "newStandaarden": [
+                        "sv-11"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-update-12",
+                    "name": "Module mod-update-12",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-12"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty-13",
+                    "name": "Module mod-empty-13",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-current-14",
+                    "name": "Titled mod-current-14",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-14"
+                    ],
+                    "newStandaarden": [
+                        "sv-14"
+                    ],
+                    "standardsCount": 1
+                }
+            ]
+        },
+        "error": null,
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 7,
+                        "register": 3
+                    },
+                    "_limit": 1000
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Found compliance objects for bulk sync",
+                {
+                    "count": 14
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty-1",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 1,
+                    "complianceUuid": "c-1"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current-2",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 2,
+                    "standardVersion": "sv-2"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-2"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update-3",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 3,
+                    "standardVersion": "sv-3"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-3"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update-3",
+                    "name": "Module mod-update-3",
+                    "standardVersions": [
+                        "sv-3"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update-3"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 702,
+                    "moduleUuid": "mod-update-3",
+                    "standards": [
+                        "sv-3"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-update-3",
+                    "moduleName": "Module mod-update-3",
+                    "standards": [
+                        "sv-3"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty-4",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 4,
+                    "complianceUuid": "c-4"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current-5",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 5,
+                    "standardVersion": "sv-5"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-5"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update-6",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 6,
+                    "standardVersion": "sv-6"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-6"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update-6",
+                    "name": "Module mod-update-6",
+                    "standardVersions": [
+                        "sv-6"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update-6"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 449,
+                    "moduleUuid": "mod-update-6",
+                    "standards": [
+                        "sv-6"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-update-6",
+                    "moduleName": "Module mod-update-6",
+                    "standards": [
+                        "sv-6"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty-7",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 7,
+                    "complianceUuid": "c-7"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current-8",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 8,
+                    "standardVersion": "sv-8"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-8"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update-9",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 9,
+                    "standardVersion": "sv-9"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update-9",
+                    "name": "Module mod-update-9",
+                    "standardVersions": [
+                        "sv-9"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update-9"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 648,
+                    "moduleUuid": "mod-update-9",
+                    "standards": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-update-9",
+                    "moduleName": "Module mod-update-9",
+                    "standards": [
+                        "sv-9"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty-10",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 10,
+                    "complianceUuid": "c-10"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current-11",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 11,
+                    "standardVersion": "sv-11"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-11"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update-12",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 12,
+                    "standardVersion": "sv-12"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-12"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update-12",
+                    "name": "Module mod-update-12",
+                    "standardVersions": [
+                        "sv-12"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update-12"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 229,
+                    "moduleUuid": "mod-update-12",
+                    "standards": [
+                        "sv-12"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-update-12",
+                    "moduleName": "Module mod-update-12",
+                    "standards": [
+                        "sv-12"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty-13",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 13,
+                    "complianceUuid": "c-13"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current-14",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 14,
+                    "standardVersion": "sv-14"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-14"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Completed bulk sync of module standards",
+                {
+                    "results": {
+                        "totalProcessed": 14,
+                        "complianceMissingModule": 0,
+                        "complianceMissingStandaardversie": 5,
+                        "modulesFound": 14,
+                        "modulesNotFound": 0,
+                        "modulesWithNoStandards": 5,
+                        "modulesAlreadyUpToDate": 5,
+                        "modulesUpdated": 4,
+                        "standardsAdded": 4,
+                        "errors": [],
+                        "samples": {
+                            "complianceWithStandaardversie": [
+                                {
+                                    "id": 2,
+                                    "uuid": "c-2",
+                                    "module": "mod-current-2",
+                                    "standardVersion": "sv-2"
+                                },
+                                {
+                                    "id": 3,
+                                    "uuid": "c-3",
+                                    "module": "mod-update-3",
+                                    "standardVersion": "sv-3"
+                                },
+                                {
+                                    "id": 5,
+                                    "uuid": "c-5",
+                                    "module": "mod-current-5",
+                                    "standardVersion": "sv-5"
+                                }
+                            ],
+                            "complianceWithoutStandaardversie": [
+                                {
+                                    "id": 1,
+                                    "uuid": "c-1",
+                                    "module": "mod-empty-1"
+                                },
+                                {
+                                    "id": 4,
+                                    "uuid": "c-4",
+                                    "module": "mod-empty-4"
+                                }
+                            ],
+                            "modulesUpdated": [
+                                {
+                                    "uuid": "mod-update-3",
+                                    "name": "Module mod-update-3",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-3"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-update-6",
+                                    "name": "Module mod-update-6",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-6"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-update-9",
+                                    "name": "Module mod-update-9",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-9"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-update-12",
+                                    "name": "Module mod-update-12",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-12"
+                                    ],
+                                    "complianceCount": 1
+                                }
+                            ],
+                            "modulesSkipped": [
+                                {
+                                    "uuid": "mod-empty-1",
+                                    "name": "Module mod-empty-1",
+                                    "reason": "No standaardversie found in 1 compliance object(s)",
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-current-2",
+                                    "name": "Titled mod-current-2",
+                                    "reason": "Already up-to-date",
+                                    "currentStandaarden": [
+                                        "sv-2"
+                                    ],
+                                    "extractedStandaarden": [
+                                        "sv-2"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-empty-4",
+                                    "name": "Module mod-empty-4",
+                                    "reason": "No standaardversie found in 1 compliance object(s)",
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-current-5",
+                                    "name": "Titled mod-current-5",
+                                    "reason": "Already up-to-date",
+                                    "currentStandaarden": [
+                                        "sv-5"
+                                    ],
+                                    "extractedStandaarden": [
+                                        "sv-5"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-empty-7",
+                                    "name": "Module mod-empty-7",
+                                    "reason": "No standaardversie found in 1 compliance object(s)",
+                                    "complianceCount": 1
+                                }
+                            ]
+                        },
+                        "modules": [
+                            {
+                                "uuid": "mod-empty-1",
+                                "name": "Module mod-empty-1",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-current-2",
+                                "name": "Titled mod-current-2",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-2"
+                                ],
+                                "newStandaarden": [
+                                    "sv-2"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-update-3",
+                                "name": "Module mod-update-3",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-3"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty-4",
+                                "name": "Module mod-empty-4",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-current-5",
+                                "name": "Titled mod-current-5",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-5"
+                                ],
+                                "newStandaarden": [
+                                    "sv-5"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-update-6",
+                                "name": "Module mod-update-6",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-6"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty-7",
+                                "name": "Module mod-empty-7",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-current-8",
+                                "name": "Titled mod-current-8",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-8"
+                                ],
+                                "newStandaarden": [
+                                    "sv-8"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-update-9",
+                                "name": "Module mod-update-9",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-9"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty-10",
+                                "name": "Module mod-empty-10",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-current-11",
+                                "name": "Titled mod-current-11",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-11"
+                                ],
+                                "newStandaarden": [
+                                    "sv-11"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-update-12",
+                                "name": "Module mod-update-12",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-12"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty-13",
+                                "name": "Module mod-empty-13",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-current-14",
+                                "name": "Titled mod-current-14",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-14"
+                                ],
+                                "newStandaarden": [
+                                    "sv-14"
+                                ],
+                                "standardsCount": 1
+                            }
+                        ]
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"compliance\":\"mixed\",\"saveThrows\":\"mod-update\"}": {
+        "result": {
+            "totalProcessed": 9,
+            "complianceMissingModule": 1,
+            "complianceMissingStandaardversie": 1,
+            "modulesFound": 6,
+            "modulesNotFound": 1,
+            "modulesWithNoStandards": 1,
+            "modulesAlreadyUpToDate": 1,
+            "modulesUpdated": 1,
+            "standardsAdded": 1,
+            "errors": [
+                "Compliance object has no module reference: 4",
+                "Invalid module reference in compliance object: 5",
+                "Failed to process module mod-update: save down",
+                "Module not found for UUID: mod-missing",
+                "Failed to process module mod-throws: find down"
+            ],
+            "samples": {
+                "complianceWithStandaardversie": [
+                    {
+                        "id": 1,
+                        "uuid": "c-1",
+                        "module": "mod-update",
+                        "standardVersion": "sv-1"
+                    },
+                    {
+                        "id": 2,
+                        "uuid": "c-2",
+                        "module": {
+                            "uuid": "mod-update"
+                        },
+                        "standardVersion": {
+                            "uuid": "sv-2"
+                        }
+                    },
+                    {
+                        "id": 3,
+                        "uuid": "c-3",
+                        "module": {
+                            "uuid": "mod-current"
+                        },
+                        "standardVersion": "sv-3"
+                    },
+                    {
+                        "id": 4,
+                        "uuid": "c-4",
+                        "module": null,
+                        "standardVersion": "sv-4"
+                    }
+                ],
+                "complianceWithoutStandaardversie": [
+                    {
+                        "id": 5,
+                        "uuid": "unknown",
+                        "module": 42
+                    }
+                ],
+                "modulesUpdated": [
+                    {
+                        "uuid": "mod-scalar",
+                        "name": "Module mod-scalar",
+                        "oldStandaarden": [],
+                        "newStandaarden": [
+                            "sv-9"
+                        ],
+                        "complianceCount": 1
+                    }
+                ],
+                "modulesSkipped": [
+                    {
+                        "uuid": "mod-current",
+                        "name": "Module mod-current",
+                        "reason": "Already up-to-date",
+                        "currentStandaarden": [
+                            "sv-3"
+                        ],
+                        "extractedStandaarden": [
+                            "sv-3"
+                        ],
+                        "complianceCount": 1
+                    },
+                    {
+                        "uuid": "mod-empty",
+                        "name": "Module mod-empty",
+                        "reason": "No standaardversie found in 1 compliance object(s)",
+                        "complianceCount": 1
+                    }
+                ]
+            },
+            "modules": [
+                {
+                    "uuid": "mod-current",
+                    "name": "Module mod-current",
+                    "status": "up-to-date",
+                    "reason": "Already up-to-date",
+                    "complianceCount": 1,
+                    "currentStandaarden": [
+                        "sv-3"
+                    ],
+                    "newStandaarden": [
+                        "sv-3"
+                    ],
+                    "standardsCount": 1
+                },
+                {
+                    "uuid": "mod-empty",
+                    "name": "Module mod-empty",
+                    "status": "skipped",
+                    "reason": "No standaardversie found",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-missing",
+                    "name": "Not Found",
+                    "status": "error",
+                    "reason": "Module not found in database",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [],
+                    "standardsCount": 0
+                },
+                {
+                    "uuid": "mod-scalar",
+                    "name": "Module mod-scalar",
+                    "status": "updated",
+                    "reason": "Standards updated",
+                    "complianceCount": 1,
+                    "currentStandaarden": [],
+                    "newStandaarden": [
+                        "sv-9"
+                    ],
+                    "standardsCount": 1
+                }
+            ]
+        },
+        "error": null,
+        "calls": [
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Starting bulk sync of module standards",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "compliancy"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "module"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 7,
+                        "register": 3
+                    },
+                    "_limit": 1000
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Found compliance objects for bulk sync",
+                {
+                    "count": 9
+                }
+            ],
+            [
+                "objects.find",
+                "mod-update",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 1,
+                    "standardVersion": "sv-1"
+                }
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found array standaardversie",
+                {
+                    "complianceId": 2,
+                    "standardVersion": "sv-2"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 2,
+                    "tracking": {
+                        "withStandaardversie": 2,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 1,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 2,
+                    "standaardversieUuids": [
+                        "sv-1",
+                        "sv-2"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-update",
+                    "name": "Module mod-update",
+                    "standardVersions": [
+                        "sv-1",
+                        "sv-2"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-update"
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Failed to update module standaarden",
+                {
+                    "moduleId": 725,
+                    "standaardversieUuids": [
+                        "sv-1",
+                        "sv-2"
+                    ],
+                    "exception": "save down"
+                }
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Error processing module in bulk sync",
+                {
+                    "moduleUuid": "mod-update",
+                    "exception": "save down"
+                }
+            ],
+            [
+                "objects.find",
+                "mod-current",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 3,
+                    "standardVersion": "sv-3"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-3"
+                    ]
+                }
+            ],
+            [
+                "objects.find",
+                "mod-empty",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Compliance object missing standaardversie",
+                {
+                    "complianceId": 6,
+                    "complianceUuid": "c-6"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 0,
+                        "withoutStandaardversie": 1,
+                        "stringType": 0,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 0,
+                    "standaardversieUuids": []
+                }
+            ],
+            [
+                "objects.find",
+                "mod-missing",
+                [],
+                false
+            ],
+            [
+                "objects.find",
+                "mod-throws",
+                [],
+                false
+            ],
+            [
+                "log",
+                "error",
+                "ModuleComplianceService: Error processing module in bulk sync",
+                {
+                    "moduleUuid": "mod-throws",
+                    "exception": "find down"
+                }
+            ],
+            [
+                "objects.find",
+                "mod-scalar",
+                [],
+                false
+            ],
+            [
+                "log",
+                "debug",
+                "ModuleComplianceService: Found string standaardversie",
+                {
+                    "complianceId": 9,
+                    "standardVersion": "sv-9"
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Extracted standaardversie UUIDs",
+                {
+                    "complianceCount": 1,
+                    "tracking": {
+                        "withStandaardversie": 1,
+                        "withoutStandaardversie": 0,
+                        "stringType": 1,
+                        "arrayType": 0,
+                        "objectType": 0,
+                        "invalidType": 0
+                    },
+                    "uniqueStandaardversieUuids": 1,
+                    "standaardversieUuids": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "uuid": "mod-scalar",
+                    "name": "Module mod-scalar",
+                    "standardVersions": [
+                        "sv-9"
+                    ]
+                },
+                [],
+                "3",
+                "9",
+                "mod-scalar"
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module standaarden",
+                {
+                    "moduleId": 880,
+                    "moduleUuid": "mod-scalar",
+                    "standards": [
+                        "sv-9"
+                    ]
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Updated module in bulk sync",
+                {
+                    "moduleUuid": "mod-scalar",
+                    "moduleName": "Module mod-scalar",
+                    "standards": [
+                        "sv-9"
+                    ],
+                    "count": 1
+                }
+            ],
+            [
+                "log",
+                "info",
+                "ModuleComplianceService: Completed bulk sync of module standards",
+                {
+                    "results": {
+                        "totalProcessed": 9,
+                        "complianceMissingModule": 1,
+                        "complianceMissingStandaardversie": 1,
+                        "modulesFound": 6,
+                        "modulesNotFound": 1,
+                        "modulesWithNoStandards": 1,
+                        "modulesAlreadyUpToDate": 1,
+                        "modulesUpdated": 1,
+                        "standardsAdded": 1,
+                        "errors": [
+                            "Compliance object has no module reference: 4",
+                            "Invalid module reference in compliance object: 5",
+                            "Failed to process module mod-update: save down",
+                            "Module not found for UUID: mod-missing",
+                            "Failed to process module mod-throws: find down"
+                        ],
+                        "samples": {
+                            "complianceWithStandaardversie": [
+                                {
+                                    "id": 1,
+                                    "uuid": "c-1",
+                                    "module": "mod-update",
+                                    "standardVersion": "sv-1"
+                                },
+                                {
+                                    "id": 2,
+                                    "uuid": "c-2",
+                                    "module": {
+                                        "uuid": "mod-update"
+                                    },
+                                    "standardVersion": {
+                                        "uuid": "sv-2"
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "uuid": "c-3",
+                                    "module": {
+                                        "uuid": "mod-current"
+                                    },
+                                    "standardVersion": "sv-3"
+                                },
+                                {
+                                    "id": 4,
+                                    "uuid": "c-4",
+                                    "module": null,
+                                    "standardVersion": "sv-4"
+                                }
+                            ],
+                            "complianceWithoutStandaardversie": [
+                                {
+                                    "id": 5,
+                                    "uuid": "unknown",
+                                    "module": 42
+                                }
+                            ],
+                            "modulesUpdated": [
+                                {
+                                    "uuid": "mod-scalar",
+                                    "name": "Module mod-scalar",
+                                    "oldStandaarden": [],
+                                    "newStandaarden": [
+                                        "sv-9"
+                                    ],
+                                    "complianceCount": 1
+                                }
+                            ],
+                            "modulesSkipped": [
+                                {
+                                    "uuid": "mod-current",
+                                    "name": "Module mod-current",
+                                    "reason": "Already up-to-date",
+                                    "currentStandaarden": [
+                                        "sv-3"
+                                    ],
+                                    "extractedStandaarden": [
+                                        "sv-3"
+                                    ],
+                                    "complianceCount": 1
+                                },
+                                {
+                                    "uuid": "mod-empty",
+                                    "name": "Module mod-empty",
+                                    "reason": "No standaardversie found in 1 compliance object(s)",
+                                    "complianceCount": 1
+                                }
+                            ]
+                        },
+                        "modules": [
+                            {
+                                "uuid": "mod-current",
+                                "name": "Module mod-current",
+                                "status": "up-to-date",
+                                "reason": "Already up-to-date",
+                                "complianceCount": 1,
+                                "currentStandaarden": [
+                                    "sv-3"
+                                ],
+                                "newStandaarden": [
+                                    "sv-3"
+                                ],
+                                "standardsCount": 1
+                            },
+                            {
+                                "uuid": "mod-empty",
+                                "name": "Module mod-empty",
+                                "status": "skipped",
+                                "reason": "No standaardversie found",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-missing",
+                                "name": "Not Found",
+                                "status": "error",
+                                "reason": "Module not found in database",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [],
+                                "standardsCount": 0
+                            },
+                            {
+                                "uuid": "mod-scalar",
+                                "name": "Module mod-scalar",
+                                "status": "updated",
+                                "reason": "Standards updated",
+                                "complianceCount": 1,
+                                "currentStandaarden": [],
+                                "newStandaarden": [
+                                    "sv-9"
+                                ],
+                                "standardsCount": 1
+                            }
+                        ]
+                    }
+                }
+            ]
+        ]
+    }
+}

@@ -1,7 +1,7 @@
 # portfolio-rationalization-time Specification
 
 ## Purpose
-TBD - created by archiving change portfolio-rationalization-time. Update Purpose after archive.
+An organisation sees its application portfolio in the four Gartner TIME quadrants (Tolerate, Invest, Migrate, Eliminate), with end-of-life exposure, hosting model and cost per quadrant, and exports the rows behind it as CSV. The classification is recorded per usage; the report is a bounded, organisation-scoped server aggregate (`GET /api/portfolio-report`, `lib/Service/PortfolioReportService.php`) opened from the Reports page. Matrix rows `stackiq:ctr-saas-spend` and `stackiq:ins-reports-page`.
 ## Requirements
 ### Requirement: TIME classification fields are recorded on the gebruik schema
 
@@ -165,3 +165,12 @@ the export SHALL NOT be a separate unbounded or unscoped data path.
 - **WHEN** that user requests the CSV export for organisation B
 - **THEN** the request is denied and no CSV is returned
 
+### Requirement: The portfolio report is opened from the Reports page
+
+The Reports page (`/reports`, page `Reports` of type `reports` in `src/manifest.json`) SHALL list the portfolio report as a card labelled "Portfolio rationalization" with the description "Overlapping and ageing software across the portfolio.", and the card SHALL open the `PortfolioReport` page at `/portfolio-report`. The Reports page SHALL be reached from the Reports entry in the app navigation's settings section. Catalogue index pages SHALL NOT be listed as report cards.
+
+#### Scenario: A user opens the portfolio report from the Reports page
+- **WHEN** a user opens Reports from the app navigation
+- **THEN** the page shows the card "Portfolio rationalization"
+- **AND** choosing the card opens `/portfolio-report`
+- @e2e exclude the card list is the library's CnReportsPage, tested in nextcloud-vue; the report page itself is covered by tests/e2e/spec-coverage/page-surfaces.spec.ts

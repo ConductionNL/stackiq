@@ -36,10 +36,12 @@ use PHPUnit\Framework\TestCase;
  *
  * The rules mirror integriq's `lib/Settings/connections.schema.json` on
  * `development` field for field, including the hydra#673 amendments
- * (`adapter.jsonPath`, `adapter.simulatedValues`, `reportedOnly`). That schema
- * is not a dependency of this repo, so the rules are restated here. The file
- * was also validated against the schema itself, fetched from integriq
- * `development` with `gh api`, when this test was written.
+ * (`adapter.jsonPath`, `adapter.simulatedValues`, `reportedOnly`) and the
+ * hydra#677 ones (`switch`, `disabledMessage`). That schema is not a
+ * dependency of this repo, so the rules are restated here. The file was also
+ * validated against the schema itself, fetched from integriq `development`
+ * with `gh api` (last changed in 64b437fc2df24827985ce6e919fe5e47c5205617,
+ * integriq#2024), when each amendment was adopted.
  *
  * @coversNothing
  */
@@ -61,6 +63,8 @@ class ConnectionsDeclarationTest extends TestCase {
 		'reportedOnly'        => 'boolean',
 		'available'           => 'boolean',
 		'unavailableMessage'  => 'string',
+		'switch'              => 'array',
+		'disabledMessage'     => 'string',
 		'unconfiguredMessage' => 'string',
 		'sourceTemplate'      => 'string',
 	];
@@ -78,11 +82,22 @@ class ConnectionsDeclarationTest extends TestCase {
 	];
 
 	/**
+	 * The fields the schema allows inside `switch`, with their JSON type.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SWITCH_FIELD_TYPES = [
+		'configKey' => 'string',
+		'jsonPath'  => 'string',
+		'offValues' => 'array',
+	];
+
+	/**
 	 * The three connections, in page order.
 	 *
 	 * @var array<int, string>
 	 */
-	private const KEYS = ['email', 'federation', 'eol-feed'];
+	private const KEYS = ['email', 'federation', 'eol-feed', 'itsm'];
 
 	/**
 	 * The repository root.
@@ -140,7 +155,11 @@ class ConnectionsDeclarationTest extends TestCase {
 	 */
 	public function testTheFileNamesThisApp(): void {
 		$declaration = $this->declaration();
-		$infoXml     = simplexml_load_file($this->root() . '/appinfo/info.xml');
+		// Read the bytes, not the path. Nextcloud's lib/base.php installs an external
+		// entity loader that returns null, and libxml routes the primary document
+		// through it too, so simplexml_load_file() returns false for a valid file in CI.
+		$infoRaw     = (string) file_get_contents($this->root() . '/appinfo/info.xml');
+		$infoXml     = simplexml_load_string($infoRaw);
 
 		$this->assertNotFalse(condition: $infoXml);
 		$this->assertSame(expected: (string) $infoXml->id, actual: $declaration['app']);
@@ -163,7 +182,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		$this->assertSame(expected: self::KEYS, actual: $keys);
 		$this->assertSame(
 			expected: self::KEYS,
-			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL]
+			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL, ConnectionReportService::KEY_ITSM]
 		);
 	}//end testTheKeysAreUniqueAndTheReportedOnes()
 
@@ -184,6 +203,11 @@ class ConnectionsDeclarationTest extends TestCase {
 			);
 			foreach ($connection as $field => $value) {
 				$this->assertSame(expected: self::FIELD_TYPES[$field], actual: $this->jsonType(value: $value), message: $key . '.' . $field);
+			}
+
+			foreach (($connection['switch'] ?? []) as $field => $value) {
+				$this->assertArrayHasKey(key: $field, array: self::SWITCH_FIELD_TYPES, message: $key . '.switch.' . $field . ' is not a schema field');
+				$this->assertSame(expected: self::SWITCH_FIELD_TYPES[$field], actual: $this->jsonType(value: $value), message: $key . '.switch.' . $field);
 			}
 
 			foreach (($connection['adapter'] ?? []) as $field => $value) {
@@ -274,15 +298,18 @@ class ConnectionsDeclarationTest extends TestCase {
 
 		$emailService = (string) file_get_contents($this->root() . '/lib/Service/SymfonyEmailService.php');
 		$this->assertStringContainsString(needle: "'null' => 'Null (No Emails)'", haystack: $emailService);
-		$this->assertMatchesRegularExpression(pattern: "/case 'null':\s+return Transport::fromDsn\('null:\/\/null'\);/", string: $emailService);
-		$this->assertMatchesRegularExpression(pattern: '/default:.*?return \$this->createSmtpTransport/s', string: $emailService);
+		$transportFactory = (string) file_get_contents($this->root() . '/lib/Service/MailTransportFactory.php');
+		$this->assertMatchesRegularExpression(pattern: "/'null' => 'null:\/\/null',/", string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/default => \$this->createFallbackSmtpTransport/', string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/function createFallbackSmtpTransport.*?return \$this->createSmtpTransport/s', string: $transportFactory);
 	}//end testOnlyTheNullTransportReadsSimulated()
 
 	/**
 	 * Federation and the end-of-life feed are reported only, and neither guesses from settings.
 	 *
-	 * `federation_enabled` is a boolean key, which integriq's reader counts as
-	 * filled whatever it holds, and `eol_sync_config` is filled after any save.
+	 * A filled `federation_enabled` or `eol_sync_config` says the feature may
+	 * run, not that a peer or the feed answered, so neither is required config.
+	 * Each carries its on/off setting as a `switch` instead.
 	 *
 	 * @return void
 	 */
@@ -301,6 +328,59 @@ class ConnectionsDeclarationTest extends TestCase {
 	}//end testFederationAndTheFeedAreReportedOnly()
 
 	/**
+	 * The service desk exchange is reported only, and its switch is the setting the set-up writes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
+	public function testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp(): void {
+		$itsm = $this->connectionsByKey()['itsm'];
+
+		$this->assertTrue(condition: $itsm['reportedOnly']);
+		$this->assertSame(expected: ['configKey' => 'itsm_exchange_enabled'], actual: $itsm['switch']);
+		$this->assertSame(expected: '/settings/admin/stackiq#section-itsm', actual: $itsm['settingsUrl']);
+		$this->assertArrayNotHasKey(key: 'sourceTemplate', array: $itsm, message: 'the admin picks the desk, so no single template fits');
+		$this->assertSame(expected: ConnectionReportService::KEY_ITSM, actual: $itsm['key']);
+
+		$service = (string) file_get_contents($this->root() . '/lib/Service/ItsmExchangeService.php');
+		$this->assertStringContainsString(needle: "ENABLED_KEY = 'itsm_exchange_enabled'", haystack: $service);
+		$this->assertStringContainsString(needle: 'setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true)', haystack: $service);
+		$this->assertStringContainsString(needle: 'connectionReports?->itsmSetUp(', haystack: $service);
+
+		$section = (string) file_get_contents($this->root() . '/src/views/settings/sections/ItsmExchange.vue');
+		$this->assertStringContainsString(needle: 'id="section-itsm"', haystack: $section);
+	}//end testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp()
+
+	/**
+	 * Federation and the end-of-life sync are switched off through the settings stackiq reads.
+	 *
+	 * Neither switch lists `offValues`, so integriq reads it as off when the
+	 * value is empty: unset, `false`, `0`, or a missing `enabled` inside the
+	 * blob (hydra connection-registry D2, D4 rule 2b, D12 items 6 and 7). Both
+	 * defaults in the code are off, so an unset key reading off is the truth.
+	 *
+	 * @return void
+	 */
+	public function testFederationAndTheSyncDeclareTheirSwitches(): void {
+		$byKey = $this->connectionsByKey();
+
+		$this->assertSame(expected: ['configKey' => 'federation_enabled'], actual: $byKey['federation']['switch']);
+		$this->assertSame(expected: ['configKey' => 'eol_sync_config', 'jsonPath' => 'enabled'], actual: $byKey['eol-feed']['switch']);
+		$this->assertArrayNotHasKey(key: 'switch', array: $byKey['email']);
+		foreach (['federation', 'eol-feed'] as $key) {
+			$this->assertStringContainsString(needle: 'switched off', haystack: $byKey[$key]['disabledMessage'], message: $key);
+		}
+
+		$federation = (string) file_get_contents($this->root() . '/lib/Service/Federation/FederationConfig.php');
+		$this->assertStringContainsString(needle: "getValueBool(AppIdentity::APP_ID, 'federation_enabled', false)", haystack: $federation);
+
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
+		$this->assertStringContainsString(needle: "EOL_SYNC_CONFIG_KEY = 'eol_sync_config'", haystack: $settings);
+		$this->assertStringContainsString(needle: "'enabled' => (\$decoded['enabled'] ?? false) === true", haystack: $settings);
+	}//end testFederationAndTheSyncDeclareTheirSwitches()
+
+	/**
 	 * The end-of-life feed offers integriq's endoflife.date source.
 	 *
 	 * The slug is the one integriq seeds in
@@ -312,7 +392,7 @@ class ConnectionsDeclarationTest extends TestCase {
 	public function testTheFeedOffersTheEndoflifeDateSource(): void {
 		$this->assertSame(expected: 'endoflife-date', actual: $this->connectionsByKey()['eol-feed']['sourceTemplate']);
 
-		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
 		$this->assertStringContainsString(needle: "EOL_DEFAULT_REGISTER = 'integriq'", haystack: $settings);
 	}//end testTheFeedOffersTheEndoflifeDateSource()
 

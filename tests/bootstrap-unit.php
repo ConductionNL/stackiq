@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://conductio.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -57,6 +60,10 @@ spl_autoload_register(function (string $class): void {
 		// OpenRegister stubs — Db entities and Services used by tests.
 		'OCA\\OpenRegister\\Db\\' => __DIR__ . '/Stubs/Db/',
 		'OCA\\OpenRegister\\Service\\' => __DIR__ . '/Stubs/Service/',
+		// A copy of OpenRegister's ObjectCreatedEvent, so listener tests construct the real shape.
+		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
+		// OpenRegister's MCP provider interface (mcp-full-action-surface).
+		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -74,6 +81,23 @@ spl_autoload_register(function (string $class): void {
 	}//end foreach
 });
 
+// OpenRegister's migration-pack validator has no stub here (CmdbImportProfile
+// reads MigrationPack\PackDefinitionValidator by name): load that namespace from
+// a sibling OpenRegister checkout when there is one, the apps-extra layout of
+// the dev environment. Only that namespace, so every other OpenRegister class
+// still comes from the stubs.
+spl_autoload_register(function (string $class): void {
+	$prefix = 'OCA\\OpenRegister\\Service\\MigrationPack\\';
+	if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+		return;
+	}
+
+	$file = __DIR__ . '/../../openregister/lib/Service/MigrationPack/' . str_replace(search: '\\', replace: '/', subject: substr($class, strlen($prefix))) . '.php';
+	if (file_exists($file) === true) {
+		require_once $file;
+	}
+});
+
 // Integriq's connection-registry events (adopt-connection-registry).
 // ConnectionReportService sends them by string class name behind class_exists
 // (ADR-041), so stackiq stays installable without integriq. The stubs mirror
@@ -88,3 +112,6 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// Doctrine and Symfony classes only the server ships; see bootstrap-stubs.php.
+require_once __DIR__ . '/bootstrap-stubs.php';

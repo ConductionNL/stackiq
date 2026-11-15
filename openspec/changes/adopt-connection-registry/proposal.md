@@ -18,14 +18,14 @@ Hydra change `connection-registry` (hydra#667, amended in hydra#673 and hydra#67
 
 - New `lib/Settings/connections.json` with three connections: `email`, `federation` and `eol-feed`.
 - `email` names `email_transport_type` as its adapter key, and only `null` reads Simulated. An empty value is not simulated: stackiq falls back to SMTP.
-- `federation` and `eol-feed` are `reportedOnly`. Only stackiq can see OpenCatalogi, `federation_enabled` (a boolean key) and the sync outcome.
+- `federation` and `eol-feed` are `reportedOnly`. Only stackiq can see OpenCatalogi, the peers and the sync outcome. Each declares its on/off setting as a `switch` (hydra#677): `federation_enabled`, and `enabled` inside `eol_sync_config`, so a switched-off feature reads Switched off.
 - `eol-feed` offers integriq's `endoflife-date` source as its template.
 - The three settings sections get stable ids: `section-email`, `section-federation` and `section-eol-sync`.
 - An email settings save, a peer add or remove, and an EOL sync settings save send `ConnectionRefreshRequestedEvent` for that connection, then report what stackiq can see.
 - A federation pull and an EOL sync run report their outcome. Both run on a schedule or on the admin's button, never on a page request.
 - An Integrations page under the settings gear, over integriq's `app_connection` schema, preset to `app=stackiq`, admin only, and only shown when integriq is installed.
 - Add integration opens `/apps/integriq/connections?app=stackiq&link=1`.
-- Local `connectionStatus` and `connectionSettingsLabel` formatters with all six statuses, and the strings in English and Dutch.
+- The `connectionStatus` and `connectionSettingsLabel` formatters come from `@conduction/nextcloud-vue` 3.2.0, which labels all seven statuses. The page strings are in English and Dutch.
 
 ## Depends on
 

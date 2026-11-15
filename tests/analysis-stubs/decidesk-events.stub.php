@@ -3,6 +3,9 @@
 /**
  * Static-analysis stubs for the decidesk decision-event contract.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * ANALYSIS-ONLY — referenced from phpstan.neon `scanFiles` and psalm.xml
  * `<stubs>`, and NEVER loaded at runtime or during PHPUnit.
  *
@@ -32,9 +35,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

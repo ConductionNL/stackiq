@@ -36,6 +36,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * test below pins one refusal.
  *
  * @covers \OCA\Stackiq\Command\ReferencesAuditCommand
+ * @uses   \OCA\Stackiq\Command\ObjectPages
  */
 class ReferencesAuditCommandTest extends TestCase {
 	/**
@@ -233,6 +234,38 @@ class ReferencesAuditCommandTest extends TestCase {
 
 		self::assertStringContainsString('dangling', $tester->getDisplay());
 		self::assertSame(1, $tester->getStatusCode(), 'a dangling cross-app link is a defect, not a note');
+	}
+
+	/**
+	 * Owners without an identity key are not indexed: a reference to one dangles and no row matches it;
+	 * owners sharing a trimmed key are one ambiguous match.
+	 *
+	 * @return void
+	 */
+	public function testOwnersWithoutAnIdentityKeyAreNotIndexed(): void {
+		$tester = $this->tester(
+			[
+				['id' => 's1', 'contractNumber' => 'K1', 'contract' => 'o-blank'],
+				['id' => 's2', 'contractNumber' => '', 'contract' => ''],
+				['id' => 's3', 'contractNumber' => 'K2', 'contract' => ''],
+				['id' => 's4', 'contractNumber' => 'K3', 'contract' => 'o3'],
+			],
+			[
+				['id' => 'o-blank', 'contractNumber' => '  '],
+				['id' => 'o-null', 'contractNumber' => null],
+				['id' => 'o2a', 'contractNumber' => 'K2'],
+				['id' => 'o2b', 'contractNumber' => ' K2 '],
+				['id' => 'o3', 'contractNumber' => 'K3'],
+			]
+		);
+
+		$tester->execute([]);
+
+		self::assertSame(1, $tester->getStatusCode());
+		self::assertStringContainsString('  dangling  s1 -> o-blank', $tester->getDisplay());
+		self::assertStringContainsString('  ambiguous s3 contractNumber=K2 matches 2 owners', $tester->getDisplay());
+		self::assertStringContainsString('1 set, 1 dangling, 0 backfillable, 1 ambiguous, 1 unmatched, 0 written', $tester->getDisplay());
+		self::assertSame([], $this->writes);
 	}
 
 	/**

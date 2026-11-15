@@ -1,0 +1,117 @@
+{
+	"no object id": {
+		"calls": [],
+		"escaped": null,
+		"status": "",
+		"approvalState": "none",
+		"decisionId": ""
+	},
+	"self envelope": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "active",
+		"approvalState": "pending",
+		"decisionId": "d-1"
+	},
+	"self envelope with object": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "outer",
+		"approvalState": "none",
+		"decisionId": ""
+	},
+	"object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "active",
+		"approvalState": "pending",
+		"decisionId": "d-1"
+	},
+	"plain reply": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "draft",
+		"approvalState": "none",
+		"decisionId": ""
+	},
+	"empty object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "",
+		"approvalState": "approved",
+		"decisionId": ""
+	},
+	"nothing set": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": null,
+		"status": "",
+		"approvalState": "none",
+		"decisionId": ""
+	},
+	"numeric id": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"42\"}"
+			]
+		],
+		"escaped": null,
+		"status": "active",
+		"approvalState": "pending",
+		"decisionId": "d-1"
+	},
+	"null reply": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": "TypeError",
+		"status": "",
+		"approvalState": "none",
+		"decisionId": ""
+	},
+	"request fails": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/{register}/{schema}/{id} {\"register\":\"reg\",\"schema\":\"contract\",\"id\":\"uuid-1\"}"
+			]
+		],
+		"escaped": "Error",
+		"status": "",
+		"approvalState": "none",
+		"decisionId": ""
+	}
+}

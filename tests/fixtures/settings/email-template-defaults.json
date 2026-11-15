@@ -1,0 +1,41 @@
+{
+    "organization_registration": {
+        "template": "\n<h1>Welkom bij de Software Catalogus!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n<p>Met de Software Catalogus kunt u:</p>\n<ul>\n    <li>Uw software overzichtelijk beheren</li>\n    <li>Software delen met andere organisaties</li>\n    <li>Ontdekken welke software andere organisaties gebruiken</li>\n</ul>\n<p>Uw organisatie heeft de status \"{{ organization.beoordeling }}\" en kan nu gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+        "variables": {
+            "organization.name": "Organization name",
+            "organization.beoordeling": "Organization status (e.g., Actief)",
+            "organization.type": "Organization type (e.g., Leverancier)",
+            "organization.website": "Organization website"
+        }
+    },
+    "organization_activation": {
+        "template": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+        "variables": {
+            "organization.name": "Organization name",
+            "organization.beoordeling": "Organization status (e.g., Actief)",
+            "organization.type": "Organization type",
+            "organization.website": "Organization website"
+        }
+    },
+    "user_creation": {
+        "template": "\n<h1>Welkom {{ user.name }}!</h1>\n<p>Beste {{ user.name }},</p>\n<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>\n<p>Uw accountgegevens:</p>\n<ul>\n    <li>E-mailadres: {{ user.email }}</li>\n    <li>Gebruikersnaam: {{ user.username }}</li>\n    <li>Organisatie: {{ user.organization.name if user.organization }}</li>\n</ul>\n<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+        "variables": {
+            "user.name": "User display name",
+            "user.email": "User email address",
+            "user.username": "Username",
+            "user.organization.name": "Organization name (if applicable)"
+        }
+    },
+    "password_reset": {
+        "template": "",
+        "variables": []
+    },
+    "": {
+        "template": "",
+        "variables": []
+    },
+    "unknown": {
+        "template": "",
+        "variables": []
+    }
+}

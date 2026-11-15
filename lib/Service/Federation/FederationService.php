@@ -27,8 +27,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCA\Stackiq\Service\ConnectionReportService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ObjectDataBag;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * repeated per delegated operation and SHOULD be collapsed behind a single resolver helper;
  * noting that as a deliberate follow-up rather than claiming 84 is a healthy number.
  */
-class FederationService {
+class FederationService implements FederationServiceInterface {
 	/**
 	 * The OpenCatalogi app id (the hard runtime dependency for federation).
 	 */
@@ -62,7 +64,7 @@ class FederationService {
 	 * @param IAppManager $appManager Detects OpenCatalogi availability.
 	 * @param FederationConfig $config The federation configuration.
 	 * @param FederationMerger $merger The merge/staleness reconciler.
-	 * @param SettingsService|null $settingsService Resolves the mirror register/schema (lazy/optional).
+	 * @param ObjectTypeLocatorInterface|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
 	 *
@@ -73,7 +75,7 @@ class FederationService {
 		private readonly IAppManager $appManager,
 		private readonly FederationConfig $config,
 		private readonly FederationMerger $merger,
-		private readonly ?SettingsService $settingsService,
+		private readonly ?ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
@@ -373,13 +375,12 @@ class FederationService {
 		}
 
 		$localMirrors = $this->loadPeerMirrors(peerUrl: $peerUrl, target: $target);
-		$plan = $this->merger->plan(
-			$peerUrl,
-			(string)($fetch['organisation'] ?? $peerUrl),
-			$fetch['entries'],
-			$localMirrors,
-			$this->now()
-		);
+		$peer = [
+			'url' => $peerUrl,
+			'organisation' => (string)($fetch['organisation'] ?? $peerUrl),
+			'syncedAt' => $this->now(),
+		];
+		$plan = $this->merger->plan(peer: $peer, peerEntries: $fetch['entries'], localMirrors: $localMirrors);
 
 		$created = $this->applyMirrors(
 			objectService: $objectService,
@@ -518,7 +519,7 @@ class FederationService {
 
 		$mirrors = [];
 		foreach ($items as $object) {
-			$data = $this->toDataBag(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if ($this->isPeerSourced(objectData: $data) === true
 				&& (string)($data['_source']['instance'] ?? '') === $peerUrl
 			) {
@@ -632,34 +633,6 @@ class FederationService {
 
 		return ['register' => (int)$register, 'schema' => (int)$schema];
 	}//end resolveMirrorTarget()
-
-	/**
-	 * Normalise an ObjectService result item to a data bag (with its OR id).
-	 *
-	 * @param mixed $object The result item (ObjectEntity or array).
-	 *
-	 * @return array<string,mixed> The data bag.
-	 */
-	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toDataBag()
 
 	/**
 	 * Get the OpenRegister ObjectService from the DI container.

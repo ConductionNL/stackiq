@@ -1,0 +1,50 @@
+{
+  "components": {
+    "schemas": {
+      "catalogContract": {
+        "version": "0.1.3",
+        "properties": {
+          "licenceMetric": {
+            "type": "string",
+            "enum": [
+              "Per named user",
+              "Per concurrent user",
+              "Per device",
+              "Per inhabitant",
+              "Per organisation",
+              "Other"
+            ],
+            "x-enum-labels": {
+              "Per named user": "Per named user",
+              "Per concurrent user": "Per concurrent user",
+              "Per device": "Per device",
+              "Per inhabitant": "Per inhabitant",
+              "Per organisation": "Per organisation",
+              "Other": "Other"
+            },
+            "title": "Licence metric",
+            "description": "What one licence covers, as the contract with the supplier states it.",
+            "facetable": true,
+            "order": 14
+          },
+          "licencesBought": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences bought",
+            "description": "The number of licences this contract buys.",
+            "facetable": false,
+            "order": 15
+          },
+          "licencesInUse": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences in use",
+            "description": "The number of licences in use today, as the application owner counted them.",
+            "facetable": false,
+            "order": 16
+          }
+        }
+      }
+    }
+  }
+}

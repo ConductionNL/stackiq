@@ -10,6 +10,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Settings;
@@ -118,9 +121,12 @@ class StackiqAdmin implements IDelegatedSettings {
 	 * App config keys an authorized (delegated) admin may manage.
 	 *
 	 * Returned as a map of appId => list of allowed config keys. Stackiq
-	 * exposes no delegatable sub-keys, so this is intentionally empty; the
-	 * `#[AuthorizedAdminSetting]` attribute still scopes the endpoints to full
-	 * admins (fail-closed). Required by IDelegatedSettings — its absence is a
+	 * exposes no delegatable sub-keys, so this is intentionally empty. This
+	 * list does not decide who reaches an endpoint: a route with
+	 * `#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]` admits the
+	 * groups an admin delegated these settings to, and a route without an auth
+	 * attribute (the CMDB import) stays for full Nextcloud admins only.
+	 * Required by IDelegatedSettings — its absence is a
 	 * fatal class-loading error that blanks every Nextcloud settings page.
 	 *
 	 * @return array<string, string[]> Map of appId to allowed config keys.

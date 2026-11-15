@@ -29,7 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
  */
-class ConnectionReportService {
+class ConnectionReportService implements ConnectionReportServiceInterface {
 
 	/**
 	 * Integriq's report event (ADR-041). Named by string so stackiq stays
@@ -84,6 +85,33 @@ class ConnectionReportService {
 	public const KEY_EOL = 'eol-feed';
 
 	/**
+	 * The service desk exchange connection key in lib/Settings/connections.json.
+	 *
+	 * @var string
+	 */
+	public const KEY_ITSM = 'itsm';
+
+	/**
+	 * The pull reason FederationService records for switched-off federation, which is never reported.
+	 *
+	 * The `federation` switch in lib/Settings/connections.json reads
+	 * `federation_enabled`, so integriq shows `disabled` without a report
+	 * (hydra connection-registry D4 rule 2b).
+	 *
+	 * @var string
+	 */
+	public const PULL_REASON_SWITCHED_OFF = 'federation disabled';
+
+	/**
+	 * The EOL sync degrade reason for a switched-off sync, which is never reported.
+	 *
+	 * The `eol-feed` switch reads `enabled` inside `eol_sync_config` itself.
+	 *
+	 * @var string
+	 */
+	public const EOL_REASON_SWITCHED_OFF = 'disabled';
+
+	/**
 	 * The longest failure reason a message carries.
 	 *
 	 * @var int
@@ -93,15 +121,13 @@ class ConnectionReportService {
 	/**
 	 * What each EOL sync degrade reason means for the row, as status and message.
 	 *
-	 * The reasons are the ones EolSyncService::degrade() records.
+	 * The reasons are the ones EolSyncService::degrade() records, apart from
+	 * `disabled`: the `eol-feed` switch in lib/Settings/connections.json reads
+	 * a switched-off sync itself, so that reason reports nothing.
 	 *
 	 * @var array<string, array{0: string, 1: string}>
 	 */
 	public const EOL_REASONS = [
-		'disabled' => [
-			'unconfigured',
-			'End-of-life sync is switched off. Switch it on in the End-of-life feed sync section.',
-		],
 		'openregister-not-installed' => [
 			'unavailable',
 			'The end-of-life sync needs OpenRegister, and it is not installed.',
@@ -152,8 +178,24 @@ class ConnectionReportService {
 			return false;
 		}
 
+		$described = $this->readEmailDescription();
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
+
+		return $this->report(key: self::KEY_EMAIL, status: $status, message: $message);
+	}//end emailSettingsSaved()
+
+	/**
+	 * What the saved email settings say, or null (logged) when they cannot be read.
+	 *
+	 * @return array{0: string, 1: string}|null The status and the message, or null.
+	 */
+	private function readEmailDescription(): ?array {
 		try {
-			[$status, $message] = $this->describeEmail(
+			return $this->describeEmail(
 				configStatus: $this->emailService->isEmailSystemConfigured(),
 				transportLabels: $this->emailService->getAvailableTransports()
 			);
@@ -162,11 +204,9 @@ class ConnectionReportService {
 				'Stackiq: could not read the email settings for a connection report',
 				['key' => self::KEY_EMAIL, 'exception' => $e->getMessage()]
 			);
-			return false;
+			return null;
 		}
-
-		return $this->report(key: self::KEY_EMAIL, status: $status, message: $message);
-	}//end emailSettingsSaved()
+	}//end readEmailDescription()
 
 	/**
 	 * What the email configuration status says about the connection.
@@ -203,6 +243,9 @@ class ConnectionReportService {
 	 *
 	 * A ready federation gets no report: only a pull can tell whether the peers
 	 * answer, so the row reads the declared "Not checked yet" until then.
+	 * Switched-off federation gets none either: the `federation` switch in
+	 * lib/Settings/connections.json reads `federation_enabled` itself, and
+	 * integriq shows `disabled`.
 	 *
 	 * @param array<string, mixed> $status The result of FederationService::getStatus().
 	 *
@@ -215,17 +258,33 @@ class ConnectionReportService {
 			return false;
 		}
 
-		$blocked = $this->federationBlocker(
-			available: ($status['available'] ?? false) === true,
-			enabled: ($status['enabled'] ?? false) === true,
-			peerCount: count((array) ($status['peers'] ?? []))
-		);
+		$blocked = $this->blockingFederationState(status: $status);
 		if ($blocked === null) {
 			return false;
 		}
 
 		return $this->report(key: self::KEY_FEDERATION, status: $blocked[0], message: $blocked[1]);
 	}//end federationPeersChanged()
+
+	/**
+	 * The state that blocks federation after a peer change, or null when there
+	 * is nothing to report (switched off while available, or ready).
+	 *
+	 * @param array<string, mixed> $status The result of FederationService::getStatus().
+	 *
+	 * @return array{0: string, 1: string}|null Status and message.
+	 */
+	private function blockingFederationState(array $status): ?array {
+		$available = ($status['available'] ?? false) === true;
+		if ($available === true && ($status['enabled'] ?? false) !== true) {
+			return null;
+		}
+
+		return $this->federationBlocker(
+			available: $available,
+			peerCount: count((array) ($status['peers'] ?? []))
+		);
+	}//end blockingFederationState()
 
 	/**
 	 * After a federation pull: report what the peers answered.
@@ -237,7 +296,12 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function federationPulled(array $pull): bool {
-		[$status, $message] = $this->describePull(pull: $pull);
+		$described = $this->describePull(pull: $pull);
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
 
 		return $this->report(key: self::KEY_FEDERATION, status: $status, message: $message);
 	}//end federationPulled()
@@ -247,70 +311,119 @@ class ConnectionReportService {
 	 *
 	 * @param array<string, mixed> $pull The result of FederationService::pullAllPeers().
 	 *
-	 * @return array{0: string, 1: string} The status and the message.
+	 * @return array{0: string, 1: string}|null The status and the message, or null when federation is switched off.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function describePull(array $pull): array {
-		$reason = (string) ($pull['reason'] ?? '');
+	public function describePull(array $pull): ?array {
 		if (($pull['ok'] ?? false) !== true) {
-			$blocked = $this->federationBlocker(
-				available: $reason !== 'OpenCatalogi unavailable',
-				enabled: $reason !== 'federation disabled',
-				peerCount: 1
-			);
-
-			return ($blocked ?? ['error', 'The last federation pull failed: ' . $this->shorten(text: $reason)]);
+			return $this->describeFailedPull(reason: (string) ($pull['reason'] ?? ''));
 		}
 
-		$peers = array_values((array) ($pull['peers'] ?? []));
+		return $this->describePeerAnswers(peers: array_values((array) ($pull['peers'] ?? [])));
+	}//end describePull()
+
+	/**
+	 * What a pull that did not run says: nothing when federation is off, else why it was blocked or failed.
+	 *
+	 * @param string $reason The pull's reason.
+	 *
+	 * @return array{0: string, 1: string}|null The status and the message, or null when federation is switched off.
+	 */
+	private function describeFailedPull(string $reason): ?array {
+		if ($reason === self::PULL_REASON_SWITCHED_OFF) {
+			return null;
+		}
+
+		$blocked = $this->federationBlocker(
+			available: $reason !== 'OpenCatalogi unavailable',
+			peerCount: 1
+		);
+
+		return ($blocked ?? ['error', 'The last federation pull failed: ' . $this->shorten(text: $reason)]);
+	}//end describeFailedPull()
+
+	/**
+	 * What the peers of a pull that ran answered.
+	 *
+	 * @param array<int, mixed> $peers The per-peer results.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function describePeerAnswers(array $peers): array {
 		if ($peers === []) {
 			return ['unconfigured', 'Federation is on, and no peer catalog is added yet.'];
 		}
 
-		$failed = array_values(
+		$failed = $this->failedPeers(peers: $peers);
+		if ($failed === []) {
+			return $this->allPeersAnswered(peerCount: count($peers));
+		}
+
+		return $this->somePeersFailed(failed: $failed, peerCount: count($peers));
+	}//end describePeerAnswers()
+
+	/**
+	 * The peer results that are arrays and did not answer.
+	 *
+	 * @param array<int, mixed> $peers The per-peer results.
+	 *
+	 * @return array<int, array<string, mixed>> The failed peers, reindexed.
+	 */
+	private function failedPeers(array $peers): array {
+		return array_values(
 			array_filter($peers, static fn (mixed $peer): bool => is_array($peer) === true && ($peer['ok'] ?? false) !== true)
 		);
-		if ($failed === [] && count($peers) === 1) {
+	}//end failedPeers()
+
+	/**
+	 * The message for a pull every peer answered.
+	 *
+	 * @param int $peerCount The number of peers.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function allPeersAnswered(int $peerCount): array {
+		if ($peerCount === 1) {
 			return ['configured', 'The peer catalog answered the last pull.'];
 		}
 
-		if ($failed === []) {
-			return ['configured', 'All ' . count($peers) . ' peer catalogs answered the last pull.'];
-		}
+		return ['configured', 'All ' . $peerCount . ' peer catalogs answered the last pull.'];
+	}//end allPeersAnswered()
 
+	/**
+	 * The message for a pull where at least one peer did not answer, naming the first.
+	 *
+	 * @param array<int, array<string, mixed>> $failed    The failed peers.
+	 * @param int                              $peerCount The number of peers.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function somePeersFailed(array $failed, int $peerCount): array {
 		$first = $this->peerHost(url: (string) ($failed[0]['peer'] ?? ''))
 			. ' did not: ' . $this->shorten(text: (string) ($failed[0]['reason'] ?? ''));
-		if (count($failed) === count($peers)) {
+		if (count($failed) === $peerCount) {
 			return ['error', 'No peer catalog answered the last pull. ' . $first];
 		}
 
-		$answered = (count($peers) - count($failed));
+		$answered = ($peerCount - count($failed));
 
-		return ['limited', $answered . ' of ' . count($peers) . ' peer catalogs answered the last pull. ' . $first];
-	}//end describePull()
+		return ['limited', $answered . ' of ' . $peerCount . ' peer catalogs answered the last pull. ' . $first];
+	}//end somePeersFailed()
 
 	/**
-	 * After an EOL sync settings save: refresh, then report a switched-off sync.
+	 * After an EOL sync settings save: refresh, and send no report.
 	 *
-	 * @param array<string, mixed> $config The configuration as saved.
+	 * The save may have switched the sync on or off, and the `eol-feed` switch
+	 * in lib/Settings/connections.json reads `enabled` inside
+	 * `eol_sync_config` itself. A run reports what the sync met.
 	 *
-	 * @return bool True when a report was sent.
+	 * @return bool True when the refresh was sent.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function eolSyncConfigSaved(array $config): bool {
-		if ($this->refresh(key: self::KEY_EOL) === false) {
-			return false;
-		}
-
-		if (($config['enabled'] ?? false) === true) {
-			return false;
-		}
-
-		[$status, $message] = self::EOL_REASONS['disabled'];
-
-		return $this->report(key: self::KEY_EOL, status: $status, message: $message);
+	public function eolSyncConfigSaved(): bool {
+		return $this->refresh(key: self::KEY_EOL);
 	}//end eolSyncConfigSaved()
 
 	/**
@@ -323,7 +436,12 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function eolSyncRan(array $runStatus): bool {
-		[$status, $message] = $this->describeEolRun(runStatus: $runStatus);
+		$described = $this->describeEolRun(runStatus: $runStatus);
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
 
 		return $this->report(key: self::KEY_EOL, status: $status, message: $message);
 	}//end eolSyncRan()
@@ -333,11 +451,11 @@ class ConnectionReportService {
 	 *
 	 * @param array<string, mixed> $runStatus The status EolSyncService::run() recorded.
 	 *
-	 * @return array{0: string, 1: string} The status and the message.
+	 * @return array{0: string, 1: string}|null The status and the message, or null when the sync is switched off.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function describeEolRun(array $runStatus): array {
+	public function describeEolRun(array $runStatus): ?array {
 		if (($runStatus['available'] ?? false) === true) {
 			return [
 				'configured',
@@ -347,9 +465,31 @@ class ConnectionReportService {
 		}
 
 		$reason = (string) ($runStatus['reason'] ?? '');
+		if ($reason === self::EOL_REASON_SWITCHED_OFF) {
+			return null;
+		}
 
 		return (self::EOL_REASONS[$reason] ?? ['error', 'The last end-of-life sync stopped: ' . $this->shorten(text: $reason)]);
 	}//end describeEolRun()
+
+	/**
+	 * After the service desk exchange was set up: report what the set-up met.
+	 *
+	 * @param bool   $created Whether every flow was created.
+	 * @param string $message What the set-up found.
+	 *
+	 * @return bool True when a report was sent.
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
+	public function itsmSetUp(bool $created, string $message): bool {
+		$status = 'error';
+		if ($created === true) {
+			$status = 'configured';
+		}
+
+		return $this->report(key: self::KEY_ITSM, status: $status, message: $this->shorten(text: $message));
+	}//end itsmSetUp()
 
 	/**
 	 * Ask integriq to resolve one connection again.
@@ -368,7 +508,7 @@ class ConnectionReportService {
 
 		return $this->send(
 			key: $key,
-			build: static fn (): object => new $eventClass(app: Application::APP_ID, key: $key)
+			build: static fn (): object => new $eventClass(app: AppIdentity::APP_ID, key: $key)
 		);
 	}//end refresh()
 
@@ -391,7 +531,7 @@ class ConnectionReportService {
 
 		return $this->send(
 			key: $key,
-			build: static fn (): object => new $eventClass(app: Application::APP_ID, key: $key, status: $status, message: $message)
+			build: static fn (): object => new $eventClass(app: AppIdentity::APP_ID, key: $key, status: $status, message: $message)
 		);
 	}//end report()
 
@@ -416,22 +556,17 @@ class ConnectionReportService {
 	/**
 	 * The state that keeps federation from pulling at all, or null when none does.
 	 *
+	 * Switched-off federation is not a blocker here: the callers leave it to the
+	 * row's switch, which integriq reads itself.
+	 *
 	 * @param bool $available Whether OpenCatalogi is installed.
-	 * @param bool $enabled   Whether federation_enabled is on.
 	 * @param int  $peerCount How many peers are configured.
 	 *
 	 * @return array{0: string, 1: string}|null The status and the message, or null.
 	 */
-	private function federationBlocker(bool $available, bool $enabled, int $peerCount): ?array {
+	private function federationBlocker(bool $available, int $peerCount): ?array {
 		if ($available === false) {
 			return ['unavailable', 'Federation needs the OpenCatalogi app, and it is not installed.'];
-		}
-
-		if ($enabled === false) {
-			return [
-				'unconfigured',
-				'Federation is switched off. Run occ config:app:set stackiq federation_enabled --value=true --type=boolean.',
-			];
 		}
 
 		if ($peerCount === 0) {
@@ -483,13 +618,7 @@ class ConnectionReportService {
 	 */
 	private function send(string $key, callable $build): bool {
 		try {
-			$event = $build();
-			if (($event instanceof Event) === false) {
-				return false;
-			}
-
-			$this->eventDispatcher->dispatchTyped($event);
-			return true;
+			return $this->dispatchBuilt(build: $build);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Stackiq: could not send a connection event to integriq',
@@ -498,4 +627,21 @@ class ConnectionReportService {
 			return false;
 		}
 	}//end send()
+
+	/**
+	 * Build the event and dispatch it when it is one.
+	 *
+	 * @param callable(): object $build Builds the event.
+	 *
+	 * @return bool True when an event was dispatched.
+	 */
+	private function dispatchBuilt(callable $build): bool {
+		$event = $build();
+		if (($event instanceof Event) === false) {
+			return false;
+		}
+
+		$this->eventDispatcher->dispatchTyped($event);
+		return true;
+	}//end dispatchBuilt()
 }//end class

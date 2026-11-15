@@ -37,7 +37,7 @@ composer install --dev
 
 This installs:
 - PHPUnit 10.5+ for test execution
-- Guzzle HTTP Client 7.8+ for API requests
+- Guzzle HTTP Client 8.2+ for API requests
 
 ## Running Tests
 

@@ -1,0 +1,610 @@
+{
+    "{\"normalised\":{\"elements\":[[],[],[]],\"relationships\":[[]],\"views\":[],\"property_definitions\":[[],[]]}}": {
+        "statistics": {
+            "elements": {
+                "created": 3,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "organizations": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 1,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "views": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "property_definitions": {
+                "created": 2,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 6,
+                "total_objects_updated": 0,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 0,
+                "total_errors": 0
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 6,
+                        "total_objects_updated": 0,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 0,
+                        "total_errors": 0
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 3,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "organizations": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 1,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "property_definitions": {
+                            "created": 2,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"normalised\":[]}": {
+        "statistics": {
+            "elements": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "organizations": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "views": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "property_definitions": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 0,
+                "total_objects_updated": 0,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 0,
+                "total_errors": 0
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 0,
+                        "total_objects_updated": 0,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 0,
+                        "total_errors": 0
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "organizations": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"save\":\"mixed\",\"config\":null}": {
+        "statistics": {
+            "elements": {
+                "created": 3,
+                "updated": 1,
+                "unchanged": 2,
+                "errors": [
+                    "Missing name",
+                    "Unknown validation error"
+                ]
+            },
+            "organizations": {
+                "created": 1,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 0,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "views": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "property_definitions": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 4,
+                "total_objects_updated": 3,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 4,
+                "total_errors": 4
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 3,
+                    "updated_count": 3,
+                    "unchanged_count": 4,
+                    "invalid_count": 5,
+                    "keys_present": [
+                        "saved",
+                        "updated",
+                        "unchanged",
+                        "invalid"
+                    ]
+                }
+            ],
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 4,
+                        "total_objects_updated": 3,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 4,
+                        "total_errors": 4
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 3,
+                            "updated": 1,
+                            "unchanged": 2,
+                            "errors": 2
+                        },
+                        "organizations": {
+                            "created": 1,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 1
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 1
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"save\":\"mixed\",\"config\":{\"schemaIds\":{\"view\":\"4\",\"relationship\":5,\"other\":6,\"model\":7}}}": {
+        "statistics": {
+            "elements": {
+                "created": 2,
+                "updated": 1,
+                "unchanged": 2,
+                "errors": [
+                    "Missing name",
+                    "Unknown validation error"
+                ]
+            },
+            "organizations": {
+                "created": 1,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 0,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "views": {
+                "created": 1,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "property_definitions": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 4,
+                "total_objects_updated": 3,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 4,
+                "total_errors": 4
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 3,
+                    "updated_count": 3,
+                    "unchanged_count": 4,
+                    "invalid_count": 5,
+                    "keys_present": [
+                        "saved",
+                        "updated",
+                        "unchanged",
+                        "invalid"
+                    ]
+                }
+            ],
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 4,
+                        "total_objects_updated": 3,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 4,
+                        "total_errors": 4
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 2,
+                            "updated": 1,
+                            "unchanged": 2,
+                            "errors": 2
+                        },
+                        "organizations": {
+                            "created": 1,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 1
+                        },
+                        "views": {
+                            "created": 1,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 1
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"save\":\"mixed\",\"config\":{\"registerId\":1}}": {
+        "statistics": {
+            "elements": {
+                "created": 3,
+                "updated": 1,
+                "unchanged": 2,
+                "errors": [
+                    "Missing name",
+                    "Unknown validation error"
+                ]
+            },
+            "organizations": {
+                "created": 1,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 0,
+                "updated": 1,
+                "unchanged": 0,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "views": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": [
+                    "Unknown validation error"
+                ]
+            },
+            "property_definitions": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 1,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 4,
+                "total_objects_updated": 3,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 4,
+                "total_errors": 4
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 3,
+                    "updated_count": 3,
+                    "unchanged_count": 4,
+                    "invalid_count": 5,
+                    "keys_present": [
+                        "saved",
+                        "updated",
+                        "unchanged",
+                        "invalid"
+                    ]
+                }
+            ],
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 4,
+                        "total_objects_updated": 3,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 4,
+                        "total_errors": 4
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 3,
+                            "updated": 1,
+                            "unchanged": 2,
+                            "errors": 2
+                        },
+                        "organizations": {
+                            "created": 1,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 1,
+                            "unchanged": 0,
+                            "errors": 1
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 1
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 1,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "{\"save\":\"empty\",\"config\":null}": {
+        "statistics": {
+            "elements": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "organizations": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "relationships": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "views": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "property_definitions": {
+                "created": 0,
+                "updated": 0,
+                "unchanged": 0,
+                "errors": []
+            },
+            "omschrijving": {
+                "total_objects_created": 0,
+                "total_objects_updated": 0,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 0,
+                "total_errors": 0
+            }
+        },
+        "log": [
+            [
+                "info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 0,
+                    "updated_count": 0,
+                    "unchanged_count": 0,
+                    "invalid_count": 0,
+                    "keys_present": []
+                }
+            ],
+            [
+                "info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 0,
+                        "total_objects_updated": 0,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 0,
+                        "total_errors": 0
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "organizations": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        }
+                    }
+                }
+            ]
+        ]
+    }
+}

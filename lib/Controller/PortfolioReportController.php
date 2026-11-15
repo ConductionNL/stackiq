@@ -26,16 +26,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\PortfolioReportService;
+use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IConfig;
-use OCP\IGroup;
-use OCP\IGroupManager;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Controller for the portfolio rationalization report endpoint.
@@ -48,18 +44,14 @@ class PortfolioReportController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request object.
-	 * @param IUserSession $userSession The user session service.
-	 * @param IGroupManager $groupManager The group manager service.
-	 * @param IConfig $config The configuration service.
-	 * @param PortfolioReportService $reportService The report aggregation service.
+	 * @param PortfolioReportServiceInterface $reportService The report aggregation service.
+	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
-		private readonly IConfig $config,
-		private readonly PortfolioReportService $reportService,
+		private readonly PortfolioReportServiceInterface $reportService,
+		private readonly OrganisationReportRequest $reportRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -84,20 +76,12 @@ class PortfolioReportController extends Controller {
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-csv-export-of-the-portfolio-report
 	 */
 	public function index() {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		$organisation = (string)$this->request->getParam('organisation', '');
-		if ($organisation === '') {
-			return new JSONResponse(['message' => 'organisation is required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($this->isAuthorisedForOrganisation(user: $user, organisationUuid: $organisation) === false) {
-			// Fail closed: denied BEFORE any report query is built.
-			return new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
-		}
+		$organisation = $this->reportRequest->organisation();
 
 		$format = (string)$this->request->getParam('format', 'json');
 
@@ -112,55 +96,4 @@ class PortfolioReportController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end index()
-
-	/**
-	 * Whether the caller is authorised to see `$organisationUuid`'s
-	 * portfolio report.
-	 *
-	 * Reuses the same role/organisation resolution mechanism as
-	 * `GebruikController::resolveUserRoles()` / `applyAanbodScopeToOptions()`
-	 * (per design.md: this change plugs into the current
-	 * tenant/organisation-scoping mechanism rather than inventing a new
-	 * matrix). `admin`/`ambtenaar` may request any organisation's report
-	 * (existing unrestricted-read bypass); every other authenticated user
-	 * may request only their own active organisation's report — a report
-	 * is a synthesis of another organisation's gebruik/contract data, which
-	 * `vendor-visibility-rbac` REQ-002/REQ-003 do not grant beyond the
-	 * caller's own organisation or offered-products relationship.
-	 *
-	 * @param \OCP\IUser $user The authenticated caller.
-	 * @param string $organisationUuid The requested organisation uuid.
-	 *
-	 * @return bool True when the caller may see this organisation's report.
-	 *
-	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
-	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-and-csv-export-are-scoped-to-the-requesters-authorised-organisations
-	 */
-	private function isAuthorisedForOrganisation(\OCP\IUser $user, string $organisationUuid): bool {
-		$groups = $this->groupManager->getUserGroups(user: $user);
-		$groupNames = array_map(
-			static function (IGroup $group) {
-				return $group->getGID();
-			},
-			$groups
-		);
-
-		$isAdmin = in_array('admin', $groupNames, true);
-		$isAmbtenaar = in_array('ambtenaar', $groupNames, true);
-		if ($isAdmin === true || $isAmbtenaar === true) {
-			return true;
-		}
-
-		$orgUuid = (string)$this->config->getUserValue(
-			userId: $user->getUID(),
-			appName: 'core',
-			key: 'organisation'
-		);
-
-		if ($orgUuid === '') {
-			return false;
-		}
-
-		return $orgUuid === $organisationUuid;
-	}//end isAuthorisedForOrganisation()
 }//end class

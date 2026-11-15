@@ -121,6 +121,14 @@
 					:height="260" />
 			</section>
 
+			<!-- Business value against technical fit, cost as point size (lifecycle-application-value-assessment) -->
+			<section class="pr-section" data-testid="pr-value-section">
+				<h3 class="pr-sectionTitle">
+					{{ t('stackiq', 'Business value against technical fit') }}
+				</h3>
+				<ValueFitPlot :rows="report.rows || []" />
+			</section>
+
 			<!-- Per-quadrant omschrijving: EOL exposure, cloud-transition share, cost overlay -->
 			<section class="pr-section" data-testid="pr-summary">
 				<h3 class="pr-sectionTitle">
@@ -171,11 +179,52 @@
 				</table>
 			</section>
 
+			<!-- Applications that fulfil the same reference component (REQ-RCC-004) -->
+			<section
+				v-if="overlaps.length"
+				class="pr-section"
+				data-testid="pr-overlap">
+				<h3 class="pr-sectionTitle">
+					{{ t('stackiq', 'Overlap') }}
+				</h3>
+				<p class="pr-hint">
+					{{ overlapHint }}
+				</p>
+				<table class="pr-table">
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('stackiq', 'Reference component') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Applications') }}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="group in overlaps"
+							:key="group.componentId"
+							data-testid="pr-overlap-row">
+							<td>{{ group.component }}</td>
+							<td>{{ group.applications.join(', ') }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
 			<!-- Gebruik-level rows, grouped by quadrant (Unclassified visible, not hidden) -->
 			<section class="pr-section" data-testid="pr-rows">
 				<h3 class="pr-sectionTitle">
 					{{ t('stackiq', 'Applications in use') }}
 				</h3>
+				<NcCheckboxRadioSwitch
+					v-model="onlyMismatch"
+					type="switch"
+					class="pr-mismatchFilter"
+					data-testid="pr-mismatch-filter">
+					{{ t('stackiq', 'Recorded class differs from scores') }}
+				</NcCheckboxRadioSwitch>
 				<div v-for="group in groupedRows" :key="group.key" class="pr-group">
 					<h4 class="pr-groupTitle">
 						<span
@@ -193,6 +242,12 @@
 							<tr>
 								<th scope="col">
 									{{ t('stackiq', 'Application') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Suggested by scores') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Value / fit / risk') }}
 								</th>
 								<th scope="col">
 									{{ t('stackiq', 'Rationale') }}
@@ -219,7 +274,29 @@
 								v-for="row in group.rows"
 								:key="row.uuid"
 								data-testid="pr-row">
-								<td>{{ row.moduleName }}</td>
+								<td>
+									{{ row.moduleName }}
+									<span
+										v-if="row.overlapsWith && row.overlapsWith.length"
+										class="pr-overlapMark"
+										data-testid="pr-row-overlap"
+										:title="overlapTitle(row)">
+										{{ t('stackiq', 'Overlap') }}
+									</span>
+								</td>
+								<td data-testid="pr-row-suggested">
+									<span
+										v-if="row.suggestedTimeClassification"
+										:class="{ 'pr-mismatch': row.timeMismatch }">
+										{{
+											quadrantLabel(
+												row.suggestedTimeClassification,
+											)
+										}}
+									</span>
+									<span v-else>—</span>
+								</td>
+								<td>{{ scoresLabel(row) }}</td>
 								<td>{{ row.timeRationale || '—' }}</td>
 								<td>{{ row.timeReviewDate || '—' }}</td>
 								<td>{{ row.lifecyclePhase }}</td>
@@ -258,10 +335,11 @@
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
@@ -270,6 +348,7 @@ import {
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ValueFitPlot from '../../components/portfolio/ValueFitPlot.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
@@ -278,9 +357,11 @@ import {
 	cloudTransitionLabel,
 	formatCurrency,
 	groupRowsByQuadrant,
+	overlapGroups,
 	QUADRANT_ORDER,
 	quadrantColor,
 } from '../../utils/portfolioReport.js'
+import { mismatchRows } from '../../utils/valueAssessment.js'
 
 /**
  * @class PortfolioReport
@@ -300,11 +381,13 @@ export default {
 	name: 'PortfolioReport',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		NcEmptyContent,
 		NcNoteCard,
 		CnChartWidget,
+		ValueFitPlot,
 		Refresh,
 		Download,
 		ChartBoxOutline,
@@ -330,6 +413,7 @@ export default {
 			error: null,
 			selectedOrg: null,
 			report: null,
+			onlyMismatch: false,
 		}
 	},
 
@@ -354,6 +438,31 @@ export default {
 							|| resolveUuid(org.uuid ?? org.id ?? ''),
 					}
 				},
+			)
+		},
+
+		/**
+		 * The overlapping reference components, each with its applications.
+		 *
+		 * @return {Array<object>} Overlap groups, empty without overlap.
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlaps() {
+			return overlapGroups(this.report?.rows)
+		},
+
+		/**
+		 * How many applications in use overlap, as a sentence.
+		 *
+		 * @return {string} The hint.
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlapHint() {
+			return n(
+				'stackiq',
+				'%n application in use shares a reference component with another one.',
+				'%n applications in use share a reference component with another one.',
+				this.report?.overlap || 0,
 			)
 		},
 
@@ -434,12 +543,14 @@ export default {
 		 *
 		 * @return {Array<{key: string, rows: Array}>} Grouped rows.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		groupedRows() {
 			if (!this.report) {
 				return []
 			}
-			return groupRowsByQuadrant(this.report.rows || [])
+			const rows = this.report.rows || []
+			return groupRowsByQuadrant(this.onlyMismatch ? mismatchRows(rows) : rows)
 		},
 	},
 
@@ -448,6 +559,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The components a row overlaps on, with the other applications, for its mark's tooltip.
+		 *
+		 * @param {object} row The report row.
+		 * @return {string} e.g. "Zaaksysteem: Zaken Twee".
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 */
+		overlapTitle(row) {
+			return (row.overlapsWith || [])
+				.map((overlap) => `${overlap.component}: ${(overlap.modules || []).join(', ')}`)
+				.join('; ')
+		},
+
 		t,
 
 		/**
@@ -595,6 +719,25 @@ export default {
 			return map[key] || key
 		},
 
+		/**
+		 * The three scores of a row as "value / fit / risk", a dash for a missing one.
+		 *
+		 * @param {object} row A report row.
+		 * @return {string} The label.
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 */
+		scoresLabel(row) {
+			const scores = [row.businessValue, row.technicalFit, row.riskScore]
+			if (scores.every((score) => score === null || score === undefined)) {
+				return '—'
+			}
+			return scores
+				.map((score) =>
+					score === null || score === undefined ? '-' : score,
+				)
+				.join(' / ')
+		},
+
 		// Exposed to the template as methods — thin re-exports of the pure
 		// `portfolioReport.js` utils (vitest-covered), since Vue 2 Options
 		// API templates cannot call a bare imported function directly.
@@ -710,6 +853,30 @@ export default {
 
 .pr-eol--ok {
 	color: var(--color-text-maxcontrast);
+}
+
+.pr-mismatchFilter {
+	margin-bottom: 12px;
+}
+
+.pr-overlapMark {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 0 6px;
+	border: 1px solid var(--color-warning);
+	border-radius: var(--border-radius-pill, 12px);
+	color: var(--color-warning-text);
+	font-size: 12px;
+}
+
+.pr-hint {
+	margin: 0 0 8px;
+	color: var(--color-text-maxcontrast);
+}
+
+.pr-mismatch {
+	font-weight: bold;
+	color: var(--color-warning-text);
 }
 
 .pr-loading {

@@ -3,6 +3,9 @@
 /**
  * Repair step that carries `oc_preferences` rows across the app-id rename.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Nextcloud namespaces `oc_preferences` BY APP ID exactly as it does
  * `oc_appconfig`, so every per-user preference this app stored under
  * `stackiq` became unreachable when the id moved to `stackiq`. The
@@ -29,10 +32,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use Closure;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IConfig;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -52,7 +52,7 @@ use Throwable;
 /**
  * Copies per-user preferences from the legacy `stackiq` app id to `stackiq`.
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
  */
 class MigrateUserPreferences implements IRepairStep {
 	/**
@@ -93,7 +93,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return string The repair step name.
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	public function getName(): string {
 		return 'Migrate user preferences from the stackiq app id to stackiq';
@@ -111,7 +111,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	public function run(IOutput $output): void {
 		$this->copied = 0;
@@ -141,7 +141,7 @@ class MigrateUserPreferences implements IRepairStep {
 			$this->logger->error(
 				'Stackiq: failed to migrate user preferences from the legacy app id: ' . $e->getMessage(),
 				[
-					'app' => Application::APP_ID,
+					'app' => AppIdentity::APP_ID,
 					'exception' => $e,
 				]
 			);
@@ -156,7 +156,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	protected function migrateUser(IUser $user): void {
 		$userId = $user->getUID();
@@ -169,27 +169,52 @@ class MigrateUserPreferences implements IRepairStep {
 			return;
 		}
 
-		$touched = false;
-
-		foreach ($keys as $key) {
-			$legacy = $this->config->getUserValue($userId, self::LEGACY_APP_ID, $key, '');
-			if ($legacy === '') {
-				continue;
-			}
-
-			// Never clobber a value the new namespace already holds.
-			$current = $this->config->getUserValue($userId, Application::APP_ID, $key, '');
-			if ($current !== '') {
-				continue;
-			}
-
-			$this->config->setUserValue($userId, Application::APP_ID, $key, $legacy);
-			$this->copied++;
-			$touched = true;
-		}
-
-		if ($touched === true) {
+		if ($this->copyPreferences(userId: $userId, keys: $keys) === true) {
 			$this->users++;
 		}
 	}//end migrateUser()
+
+	/**
+	 * Copy the user's legacy preferences under these keys into the new namespace.
+	 *
+	 * @param string             $userId The user.
+	 * @param array<int, string> $keys   The keys the user holds under the legacy app id.
+	 *
+	 * @return bool True when at least one value was copied.
+	 */
+	private function copyPreferences(string $userId, array $keys): bool {
+		$touched = false;
+		foreach ($keys as $key) {
+			if ($this->copyPreference(userId: $userId, key: $key) === true) {
+				$touched = true;
+			}
+		}
+
+		return $touched;
+	}//end copyPreferences()
+
+	/**
+	 * Copy one legacy preference, unless it is empty or the new namespace already holds the key.
+	 *
+	 * @param string $userId The user.
+	 * @param string $key    The preference key.
+	 *
+	 * @return bool True when the value was copied.
+	 */
+	private function copyPreference(string $userId, string $key): bool {
+		$legacy = $this->config->getUserValue($userId, self::LEGACY_APP_ID, $key, '');
+		if ($legacy === '') {
+			return false;
+		}
+
+		// Never clobber a value the new namespace already holds.
+		$current = $this->config->getUserValue($userId, AppIdentity::APP_ID, $key, '');
+		if ($current !== '') {
+			return false;
+		}
+
+		$this->config->setUserValue($userId, AppIdentity::APP_ID, $key, $legacy);
+		$this->copied++;
+		return true;
+	}//end copyPreference()
 }//end class

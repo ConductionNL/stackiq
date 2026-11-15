@@ -107,4 +107,29 @@ class Organisation {
 		return $this->active;
 	}//end isActive()
 
+	/**
+	 * @var array<int, string>
+	 */
+	private array $users = [];
+
+	/**
+	 * @param array<int, string> $users The member user ids.
+	 *
+	 * @return void
+	 */
+	public function setUsers(array $users): void {
+		$this->users = $users;
+	}//end setUsers()
+
+	/**
+	 * Same check as OpenRegister's Organisation::hasUser().
+	 *
+	 * @param string $userId The user id.
+	 *
+	 * @return bool
+	 */
+	public function hasUser(string $userId): bool {
+		return in_array($userId, $this->users);
+	}//end hasUser()
+
 }//end class

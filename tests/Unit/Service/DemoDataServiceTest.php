@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 namespace Unit\Service;
 
 use OCA\Stackiq\Service\DemoDataService;
@@ -191,5 +196,146 @@ class DemoDataServiceTest extends TestCase {
 		// masked by — a pending real configuration update.
 		$this->assertSame('stackiq.demo', $importer->seen['appId']);
 		$this->assertTrue($importer->seen['force']);
+	}
+
+	public function testEachObjectIsPointedAtTheSchemaOfItsOwnRegister(): void {
+		file_put_contents(
+			$this->descriptor(),
+			json_encode([
+				'components' => [
+					'objects' => [
+						['@self' => ['register' => 'stackiq', 'schema' => 'organization', 'slug' => 'org-1']],
+						['@self' => ['register' => 'stackiq', 'schema' => 'notInTheRegister', 'slug' => 'x-1']],
+						['@self' => ['register' => 'missing', 'schema' => 'organization', 'slug' => 'org-2']],
+					],
+				],
+			])
+		);
+
+		$importer = new class {
+			public array $data = [];
+
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				$this->data = $data;
+				return [];
+			}
+		};
+		// 🔴 TWO SCHEMAS SHARE THE SLUG `organization` ON A REAL INSTANCE: OpenCatalogi's
+		// (id 3) and stackiq's (id 9). Only the one the register lists is the target.
+		$schema = static fn (int $id, string $slug): object => new class ($id, $slug) {
+			public function __construct(private int $id, private string $slug) {
+			}
+
+			public function getId(): int {
+				return $this->id;
+			}
+
+			public function getSlug(): string {
+				return $this->slug;
+			}
+		};
+		$registers = new class {
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				if ($id !== 'stackiq') {
+					throw new \RuntimeException('not found');
+				}
+
+				return new class {
+					public function getSchemas(): array {
+						return [5, 9];
+					}
+				};
+			}
+		};
+		$schemas = new class ($schema) {
+			public function __construct(private \Closure $schema) {
+			}
+
+			public function findMultiple(array $ids, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->lastIds = $ids;
+				return [($this->schema)(5, 'module'), ($this->schema)(9, 'organization')];
+			}
+
+			public array $lastIds = [];
+		};
+		$this->container->method('get')->willReturnCallback(
+			static fn (string $id): object => match ($id) {
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
+				default => $importer,
+			}
+		);
+
+		$this->service()->install();
+
+		$selves = array_column($importer->data['components']['objects'], '@self');
+		$this->assertSame('9', $selves[0]['schema'], 'resolved within the register it names');
+		$this->assertSame('notInTheRegister', $selves[1]['schema'], 'a slug the register does not list is left to the importer');
+		$this->assertSame('organization', $selves[2]['schema'], 'a register that cannot be read is left to the importer');
+		$this->assertSame([5, 9], $schemas->lastIds);
+	}
+	public function testAnObjectWithoutARegisterOrSchemaIsLeftAndEachRegisterIsReadOnce(): void {
+		file_put_contents(
+			$this->descriptor(),
+			json_encode([
+				'components' => [
+					'objects' => [
+						['@self' => ['register' => 'stackiq', 'schema' => 'module', 'slug' => 'm-1']],
+						['@self' => ['register' => 'stackiq', 'schema' => '', 'slug' => 'm-2']],
+						['@self' => ['register' => '', 'schema' => 'module', 'slug' => 'm-3']],
+						['@self' => ['register' => 'stackiq', 'schema' => 'module', 'slug' => 'm-4']],
+						['naam' => 'no self'],
+					],
+				],
+			])
+		);
+
+		$importer = new class {
+			public array $data = [];
+
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				$this->data = $data;
+				return [];
+			}
+		};
+		$registers = new class {
+			public int $finds = 0;
+
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				$this->finds++;
+				return new class {
+					public function getSchemas(): array {
+						return [5];
+					}
+				};
+			}
+		};
+		$schemas = new class {
+			public function findMultiple(array $ids, bool $_rbac = true, bool $_multitenancy = true): array {
+				return [new class {
+					public function getId(): int {
+						return 5;
+					}
+
+					public function getSlug(): string {
+						return 'module';
+					}
+				}];
+			}
+		};
+		$this->container->method('get')->willReturnCallback(
+			static fn (string $id): object => match ($id) {
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
+				default => $importer,
+			}
+		);
+
+		$this->service()->install();
+
+		$objects = $importer->data['components']['objects'];
+		$this->assertSame(['5', '', 'module', '5'], array_map(static fn (array $object): string => $object['@self']['schema'], array_slice($objects, 0, 4)));
+		$this->assertSame(['naam' => 'no self'], $objects[4]);
+		$this->assertSame(1, $registers->finds, 'a register is read once');
 	}
 }

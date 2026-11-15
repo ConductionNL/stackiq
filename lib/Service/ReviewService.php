@@ -33,6 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ReviewServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -43,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ReviewService {
+class ReviewService implements ReviewServiceInterface {
 	/**
 	 * The catalog object type reviews live on.
 	 */
@@ -105,13 +107,13 @@ class ReviewService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param IUserSession $userSession The Nextcloud user session.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -341,13 +343,7 @@ class ReviewService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::REVIEW_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::REVIEW_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: self::REVIEW_TYPE);
 	}//end resolveTarget()
 
 	/**
@@ -369,33 +365,7 @@ class ReviewService {
 	 * @return string|null The uuid, or null.
 	 */
 	private function entityUuid(mixed $entity): ?string {
-		if (is_object($entity) === true
-			&& (property_exists($entity, 'uuid') === true || method_exists($entity, 'getUuid') === true)
-		) {
-			try {
-				$uuid = $entity->getUuid();
-			} catch (\Throwable $e) {
-				$this->logger->warning('ReviewService: could not read uuid from saved entity', ['exception' => $e->getMessage()]);
-				return null;
-			}
-
-			if (is_string($uuid) === true && $uuid !== '') {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		if (is_array($entity) === true) {
-			$uuid = $entity['id'] ?? $entity['uuid'] ?? null;
-			if (is_string($uuid) === true) {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		return null;
+		return (new SavedEntityUuid(logger: $this->logger, owner: 'ReviewService'))->read(entity: $entity);
 	}//end entityUuid()
 
 	/**

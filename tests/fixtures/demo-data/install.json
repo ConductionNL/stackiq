@@ -1,0 +1,120 @@
+{
+    "full dataset": {
+        "result": {
+            "objects": 2,
+            "registers": 1,
+            "schemas": 2
+        },
+        "calls": [
+            [
+                "importFromApp",
+                "stackiq.demo",
+                {
+                    "components": {
+                        "registers": {
+                            "voorzieningen": {
+                                "slug": "voorzieningen",
+                                "schemas": [
+                                    "module"
+                                ]
+                            }
+                        },
+                        "schemas": {
+                            "module": {
+                                "slug": "module",
+                                "title": "Module"
+                            }
+                        },
+                        "objects": [
+                            {
+                                "@self": {
+                                    "register": "voorzieningen",
+                                    "schema": "module"
+                                },
+                                "naam": "A"
+                            },
+                            {
+                                "naam": "B"
+                            }
+                        ]
+                    }
+                },
+                "1.2.3",
+                true
+            ],
+            [
+                "info",
+                "[DemoDataService] imported demo data: 2 object(s), 1 register(s), 2 schema(s).",
+                {
+                    "app": "stackiq"
+                }
+            ]
+        ]
+    },
+    "no objects block": {
+        "result": {
+            "objects": 0,
+            "registers": 1,
+            "schemas": 2
+        },
+        "calls": [
+            [
+                "importFromApp",
+                "stackiq.demo",
+                {
+                    "components": {
+                        "schemas": []
+                    }
+                },
+                "1.2.3",
+                true
+            ],
+            [
+                "info",
+                "[DemoDataService] imported demo data: 0 object(s), 1 register(s), 2 schema(s).",
+                {
+                    "app": "stackiq"
+                }
+            ]
+        ]
+    },
+    "objects not a list": {
+        "result": {
+            "objects": 0,
+            "registers": 1,
+            "schemas": 2
+        },
+        "calls": [
+            [
+                "importFromApp",
+                "stackiq.demo",
+                {
+                    "components": {
+                        "objects": "x"
+                    }
+                },
+                "1.2.3",
+                true
+            ],
+            [
+                "info",
+                "[DemoDataService] imported demo data: 0 object(s), 1 register(s), 2 schema(s).",
+                {
+                    "app": "stackiq"
+                }
+            ]
+        ]
+    },
+    "no descriptor": {
+        "result": "RuntimeException: No demo dataset ships with this app (/lib/Settings/stackiq_mock_register.json not found).",
+        "calls": []
+    },
+    "invalid json": {
+        "result": "RuntimeException: The demo dataset is not valid JSON: <app>/lib/Settings/stackiq_mock_register.json",
+        "calls": []
+    },
+    "no openregister": {
+        "result": "RuntimeException: Demo data needs OpenRegister, which is not installed.",
+        "calls": []
+    }
+}

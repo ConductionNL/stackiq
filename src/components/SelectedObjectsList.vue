@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * @file SelectedObjectsList.vue * @module Components * @author Your Name *
 @copyright 2024 Your Organization * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
@@ -258,10 +262,12 @@ export default {
 	left: 0;
 }
 
-/* WCAG 2.3.3 — the item hover transition and the list leave animation are
-   decorative; a reduced-motion user gets the end state directly. */
+/* WCAG 2.3.3: the item hover transition and the list move, enter and leave
+   animations are decorative; a reduced-motion user gets the end state directly. */
 @media (prefers-reduced-motion: reduce) {
 	.selected-object-item,
+	.list-move,
+	.list-enter-active,
 	.list-leave-active {
 		transition: none;
 	}
