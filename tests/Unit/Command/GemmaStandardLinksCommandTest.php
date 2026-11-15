@@ -26,6 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The back-fill writes only missing links, reports, and is idempotent.
@@ -303,13 +304,14 @@ class GemmaStandardLinksCommandTest extends TestCase {
 			 * @return array<string, mixed> The patch, echoed.
 			 */
 			public function patchObject(
-				string $objectId,
-				array $data,
-				?string $register = null,
-				?string $schema = null,
+				ObjectPatch $patch,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$register = $patch->target->register;
+				$schema = $patch->target->schema;
 				if ($this->test->failWrites === true) {
 					throw new RuntimeException('write refused');
 				}

@@ -17,6 +17,8 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Objects by schema (10 usage, 20 connection), searched by exact property match.
@@ -76,8 +78,8 @@ final class ConnectionSuggestionStore {
 		$mock = (new \ReflectionMethod($test, 'createMock'));
 		$service = $mock->invoke($test, ObjectServiceInterface::class);
 		$service->method('find')->willReturnCallback(
-			fn (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null): ?ObjectEntityInterface
-				=> (isset($this->objects[(string)$id]) && $this->objects[(string)$id]['schema'] === $schema) ? self::entity((string)$id, $this->objects[(string)$id]['data']) : null
+			fn (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface
+				=> (isset($this->objects[(string)$id]) && $this->objects[(string)$id]['schema'] === ($options?->schema)) ? self::entity((string)$id, $this->objects[(string)$id]['data']) : null
 		);
 		$service->method('searchObjectsPaginated')->willReturnCallback(
 			function (array $query = []): array {
@@ -102,7 +104,11 @@ final class ConnectionSuggestionStore {
 			}
 		);
 		$service->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['schema' => (int)$schema, 'uuid' => $uuid, 'data' => $object];
 				$uuid ??= 'created-' . count($this->saves);
 				$this->put($uuid, (int)$schema, $object);

@@ -36,6 +36,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Characterisation tests for the portfolio report rows and CSV export.
@@ -147,6 +148,7 @@ class PortfolioReportRowsTest extends TestCase {
 		);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) use ($entities) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->foundIds[] = $args[0];
 				if (isset($entities[$args[0]]) === false) {
 					throw new RuntimeException('not found');

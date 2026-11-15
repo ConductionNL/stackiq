@@ -28,6 +28,8 @@ use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Moving keeps the uuid and re-points only ownership; the dry run names what stays.
@@ -192,13 +194,21 @@ class OwnershipTransferServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null) use ($schemaSlugs): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null) use ($schemaSlugs): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$row = $this->store[$schemaSlugs[$schema] ?? ''][(string) $id] ?? null;
 				return $row === null ? null : $this->entity(organisation: $row[0], data: $row[1]);
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->assertSame(7, $register);
 				$this->saves[] = [(int) $schema, (string) $uuid, $object];
 				return $this->entity(organisation: 'x', data: $object);

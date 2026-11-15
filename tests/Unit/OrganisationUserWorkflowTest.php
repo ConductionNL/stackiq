@@ -41,6 +41,7 @@ use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Contactpersonen#convertToUser from the signed-in caller to the saved contact person.
@@ -156,7 +157,15 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$user    = $this->user(uid: 'jan');
 
 		$this->objects->expects($this->once())->method('find')
-			->with(self::CONTACT, [], false, 'stackiq', 'contactPerson', true, true)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => self::CONTACT,
+				'_extend' => [],
+				'files' => false,
+				'register' => 'stackiq',
+				'schema' => 'contactPerson',
+				'_rbac' => true,
+				'_multitenancy' => true,
+			]))
 			->willReturn($contact);
 		$this->handler->method('validateEmailForUsername')->with('jan@example.org')->willReturn(null);
 		$this->handler->expects($this->once())->method('createUserAccount')->with($contact)->willReturn($user);
@@ -166,6 +175,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved, $contact) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$saved = $args;
 				return $contact;
 			}
