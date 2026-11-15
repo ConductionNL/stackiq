@@ -37,7 +37,7 @@
 - **acceptance_criteria**:
   - GIVEN the Layers control WHEN "What comparable organisations use" is switched on THEN the table shows per component the own applications and the peer applications with counts, under a heading naming the band
   - GIVEN a selected component WHEN the side panel renders THEN it lists the peer applications with counts
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `peerUsageTable.spec.js`, Playwright `gemma-plate-peers.spec.ts`)
 
 ### Task 5: Definitions in the reference component facet

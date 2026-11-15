@@ -1407,7 +1407,20 @@ OC.L10N.register(
         "+{count} more": "+{count} meer",
         "GEMMA view": "GEMMA-view",
         "The whole GEMMA model": "Het hele GEMMA-model",
-        "Import the GEMMA model to pick a GEMMA view.": "Importeer het GEMMA-model om een GEMMA-view te kiezen."
+        "Import the GEMMA model to pick a GEMMA view.": "Importeer het GEMMA-model om een GEMMA-view te kiezen.",
+        "{min} to {max} inhabitants": "{min} tot {max} inwoners",
+        "{name} ({count})": "{name} ({count})",
+        "{name} (fewer than {min})": "{name} (minder dan {min})",
+        "above {min} inhabitants": "meer dan {min} inwoners",
+        "Comparable organisations use": "Vergelijkbare organisaties gebruiken",
+        "Comparable organisations: {count}": "Vergelijkbare organisaties: {count}",
+        "Layers": "Lagen",
+        "Own applications": "Eigen applicaties",
+        "under {max} inhabitants": "minder dan {max} inwoners",
+        "What comparable organisations use": "Wat vergelijkbare organisaties gebruiken",
+        "What comparable organisations use could not be loaded.": "Wat vergelijkbare organisaties gebruiken kon niet worden geladen.",
+        "What comparable organisations use: {type}": "Wat vergelijkbare organisaties gebruiken: {type}",
+        "What comparable organisations use: {type}, {band}": "Wat vergelijkbare organisaties gebruiken: {type}, {band}"
     },
     "nplurals=2; plural=(n != 1);"
 )
