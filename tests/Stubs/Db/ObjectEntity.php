@@ -3,6 +3,9 @@
 /**
  * Test stub for OCA\OpenRegister\Db\ObjectEntity.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The real ObjectEntity is an NC AppFramework Entity whose getters are
  * `__call` magic methods, so PHPUnit cannot configure them on a mock. This
  * stub declares the getters/setters the unit tests stub explicitly. Resolved
@@ -49,8 +52,6 @@
  * `tests/bootstrap.php` and `tests/bootstrap-unit.php`. The semantics that
  * matter are reproduced exactly: `get*`/`set*` resolve through
  * `property_exists()`, anything else raises `BadFunctionCallException`.
- *
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
  * @package  OCA\Stackiq\Tests\Stubs\Db

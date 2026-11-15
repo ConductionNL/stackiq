@@ -295,60 +295,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "archimate:BusinessActor",
-                    "object_id": "test-element-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 2,
-                    "elements_with_gemma_type": 2,
-                    "gemma_type_variations": {
-                        "archimate:BusinessActor": 1,
-                        "archimate:BusinessRole": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -429,6 +382,7 @@
                             "identifier": "test-element-1",
                             "section": "element",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-element-1",
@@ -469,6 +423,7 @@
                             "identifier": "test-element-2",
                             "section": "element",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-element-2",
@@ -519,6 +474,7 @@
                             "identifier": "test-rel-1",
                             "section": "relationship",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-rel-1",
@@ -589,6 +545,7 @@
                             "identifier": "test-view-1",
                             "section": "view",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-view-1",
@@ -630,13 +587,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -984,48 +952,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -1307,13 +1240,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -1686,6 +1630,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -1742,6 +1687,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1805,6 +1751,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1875,6 +1822,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1936,6 +1884,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -2103,6 +2052,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -2153,63 +2103,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -2337,6 +2237,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -2445,6 +2346,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -2489,6 +2391,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -2516,6 +2419,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -2560,6 +2464,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -2642,6 +2547,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -2696,6 +2602,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -2992,6 +2899,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -3525,6 +3433,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -3566,13 +3475,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -4092,48 +4012,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -5365,13 +5250,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -5776,6 +5672,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -5832,6 +5729,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -5895,6 +5793,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -5965,6 +5864,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -6026,6 +5926,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -6193,6 +6094,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -6248,63 +6150,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -6460,6 +6312,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -6568,6 +6421,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -6612,6 +6466,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -6639,6 +6494,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -6683,6 +6539,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -6778,6 +6635,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -6832,6 +6690,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -7167,6 +7026,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -7700,6 +7560,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -7749,13 +7610,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "progress.setPhase",
@@ -8035,6 +7907,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8091,6 +7964,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8154,6 +8028,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8224,6 +8099,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8285,6 +8161,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8452,6 +8329,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8507,63 +8385,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -8714,13 +8542,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -9021,6 +8860,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -9077,6 +8917,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -9140,6 +8981,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -9210,6 +9052,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -9271,6 +9114,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -9438,6 +9282,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -9488,63 +9333,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -9672,6 +9467,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -9780,6 +9576,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -9824,6 +9621,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -9851,6 +9649,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -9895,6 +9694,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -9977,6 +9777,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -10031,6 +9832,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -10326,6 +10128,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -10859,6 +10662,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -10900,13 +10704,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -11217,6 +11032,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11278,6 +11094,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11351,6 +11168,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11426,6 +11244,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11492,6 +11311,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11699,6 +11519,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11754,63 +11575,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -11938,6 +11709,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -12046,6 +11818,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -12090,6 +11863,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -12117,6 +11891,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -12161,6 +11936,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -12243,6 +12019,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -12297,6 +12074,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -12593,6 +12371,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -13126,6 +12905,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -13167,13 +12947,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -13693,48 +13484,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -14966,13 +14722,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -15271,6 +15038,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -15327,6 +15095,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15390,6 +15159,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15460,6 +15230,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15521,6 +15292,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -16496,61 +16268,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Role",
-                    "object_id": "el-00"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 21,
-                    "elements_with_gemma_type": 21,
-                    "gemma_type_variations": {
-                        "Role": 7,
-                        "Actor": 13,
-                        "Second": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -16654,6 +16378,7 @@
                             "identifier": "el-00",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-00",
@@ -16681,6 +16406,7 @@
                             "identifier": "el-01",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-01",
@@ -16708,6 +16434,7 @@
                             "identifier": "el-02",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-02",
@@ -16735,6 +16462,7 @@
                             "identifier": "el-03",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-03",
@@ -16762,6 +16490,7 @@
                             "identifier": "el-04",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-04",
@@ -16789,6 +16518,7 @@
                             "identifier": "el-05",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-05",
@@ -16816,6 +16546,7 @@
                             "identifier": "el-06",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-06",
@@ -16843,6 +16574,7 @@
                             "identifier": "el-07",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-07",
@@ -16870,6 +16602,7 @@
                             "identifier": "el-08",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-08",
@@ -16897,6 +16630,7 @@
                             "identifier": "el-09",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-09",
@@ -16924,6 +16658,7 @@
                             "identifier": "el-10",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-10",
@@ -16951,6 +16686,7 @@
                             "identifier": "el-11",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-11",
@@ -16978,6 +16714,7 @@
                             "identifier": "el-12",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-12",
@@ -17005,6 +16742,7 @@
                             "identifier": "el-13",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-13",
@@ -17032,6 +16770,7 @@
                             "identifier": "el-14",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-14",
@@ -17059,6 +16798,7 @@
                             "identifier": "el-15",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-15",
@@ -17086,6 +16826,7 @@
                             "identifier": "el-16",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-16",
@@ -17113,6 +16854,7 @@
                             "identifier": "el-17",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-17",
@@ -17140,6 +16882,7 @@
                             "identifier": "el-18",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-18",
@@ -17167,6 +16910,7 @@
                             "identifier": "el-19",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-19",
@@ -17194,6 +16938,7 @@
                             "identifier": "dup",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "dup",
@@ -17244,6 +16989,7 @@
                             "identifier": "rel-00",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-00",
@@ -17273,6 +17019,7 @@
                             "identifier": "rel-01",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-01",
@@ -17302,6 +17049,7 @@
                             "identifier": "rel-02",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-02",
@@ -17331,6 +17079,7 @@
                             "identifier": "rel-03",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-03",
@@ -17360,6 +17109,7 @@
                             "identifier": "rel-04",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-04",
@@ -17389,6 +17139,7 @@
                             "identifier": "rel-05",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-05",
@@ -17418,6 +17169,7 @@
                             "identifier": "rel-06",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-06",
@@ -17447,6 +17199,7 @@
                             "identifier": "rel-07",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-07",
@@ -17476,6 +17229,7 @@
                             "identifier": "rel-08",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-08",
@@ -17505,6 +17259,7 @@
                             "identifier": "rel-09",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-09",
@@ -17534,6 +17289,7 @@
                             "identifier": "rel-10",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-10",
@@ -17563,6 +17319,7 @@
                             "identifier": "rel-11",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-11",
@@ -18023,6 +17780,7 @@
                             "identifier": "view-0",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-0",
@@ -18048,6 +17806,7 @@
                             "identifier": "view-1",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-1",
@@ -18073,6 +17832,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -18098,6 +17858,7 @@
                             "identifier": "view-3",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-3",
@@ -18123,6 +17884,7 @@
                             "identifier": "view-4",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-4",
@@ -18148,6 +17910,7 @@
                             "identifier": "view-5",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-5",
@@ -18173,6 +17936,7 @@
                             "identifier": "view-6",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-6",
@@ -18198,6 +17962,7 @@
                             "identifier": "view-7",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-7",
@@ -18223,6 +17988,7 @@
                             "identifier": "view-noname",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-noname",
@@ -18244,6 +18010,7 @@
                             "identifier": "",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "",
@@ -18283,13 +18050,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -19341,48 +19119,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -21115,13 +20858,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -21987,63 +21741,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Actor",
-                    "object_id": "el-07"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 20,
-                    "elements_with_gemma_type": 20,
-                    "gemma_type_variations": {
-                        "Actor": 5,
-                        "Changed": 6,
-                        "Role": 2,
-                        "Node": 6,
-                        "Second": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -22147,6 +21851,7 @@
                             "identifier": "el-07",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-07",
@@ -22174,6 +21879,7 @@
                             "identifier": "el-08",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-08",
@@ -22201,6 +21907,7 @@
                             "identifier": "el-09",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-09",
@@ -22228,6 +21935,7 @@
                             "identifier": "el-10",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-10",
@@ -22255,6 +21963,7 @@
                             "identifier": "el-11",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-11",
@@ -22282,6 +21991,7 @@
                             "identifier": "el-12",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-12",
@@ -22309,6 +22019,7 @@
                             "identifier": "el-13",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-13",
@@ -22336,6 +22047,7 @@
                             "identifier": "el-14",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-14",
@@ -22363,6 +22075,7 @@
                             "identifier": "el-15",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-15",
@@ -22390,6 +22103,7 @@
                             "identifier": "el-16",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-16",
@@ -22417,6 +22131,7 @@
                             "identifier": "el-17",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-17",
@@ -22444,6 +22159,7 @@
                             "identifier": "el-18",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-18",
@@ -22471,6 +22187,7 @@
                             "identifier": "el-19",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-19",
@@ -22498,6 +22215,7 @@
                             "identifier": "new-0",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-0",
@@ -22525,6 +22243,7 @@
                             "identifier": "new-1",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-1",
@@ -22552,6 +22271,7 @@
                             "identifier": "new-2",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-2",
@@ -22579,6 +22299,7 @@
                             "identifier": "new-3",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-3",
@@ -22606,6 +22327,7 @@
                             "identifier": "new-4",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-4",
@@ -22633,6 +22355,7 @@
                             "identifier": "new-5",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-5",
@@ -22660,6 +22383,7 @@
                             "identifier": "dup",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "dup",
@@ -22710,6 +22434,7 @@
                             "identifier": "rel-01",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-01",
@@ -22739,6 +22464,7 @@
                             "identifier": "rel-02",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-02",
@@ -22768,6 +22494,7 @@
                             "identifier": "rel-03",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-03",
@@ -22797,6 +22524,7 @@
                             "identifier": "rel-04",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-04",
@@ -22826,6 +22554,7 @@
                             "identifier": "rel-05",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-05",
@@ -22855,6 +22584,7 @@
                             "identifier": "rel-06",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-06",
@@ -22884,6 +22614,7 @@
                             "identifier": "rel-07",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-07",
@@ -22913,6 +22644,7 @@
                             "identifier": "rel-08",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-08",
@@ -22942,6 +22674,7 @@
                             "identifier": "rel-09",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-09",
@@ -22971,6 +22704,7 @@
                             "identifier": "rel-10",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-10",
@@ -23000,6 +22734,7 @@
                             "identifier": "rel-11",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-11",
@@ -23029,6 +22764,7 @@
                             "identifier": "rel-new",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-new",
@@ -23464,6 +23200,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -23489,6 +23226,7 @@
                             "identifier": "view-3",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-3",
@@ -23514,6 +23252,7 @@
                             "identifier": "view-4",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-4",
@@ -23539,6 +23278,7 @@
                             "identifier": "view-5",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-5",
@@ -23564,6 +23304,7 @@
                             "identifier": "view-6",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-6",
@@ -23589,6 +23330,7 @@
                             "identifier": "view-7",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-7",
@@ -23614,6 +23356,7 @@
                             "identifier": "view-noname",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-noname",
@@ -23649,13 +23392,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -24664,48 +24418,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -26331,13 +26050,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -26697,59 +26427,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Role",
-                    "object_id": "el-00"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 1,
-                    "elements_with_gemma_type": 1,
-                    "gemma_type_variations": {
-                        "Role": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -26833,6 +26517,7 @@
                             "identifier": "el-00",
                             "section": "element",
                             "model_identifier": "big",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-00",
@@ -26931,6 +26616,7 @@
                             "identifier": "view-0",
                             "section": "view",
                             "model_identifier": "big",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-0",
@@ -26970,13 +26656,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -27317,48 +27014,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -27576,13 +27238,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",

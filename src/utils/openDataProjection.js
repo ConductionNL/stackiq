@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * openDataProjection — sanitize a catalog entry for anonymous open-data reuse.
  *
  * The published (anonymous-visible) representation of a catalog entry MUST be a

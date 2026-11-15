@@ -23,10 +23,16 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -64,16 +70,16 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Settings service for configuration access.
 	 *
-	 * @var SettingsService
+	 * @var RegisterConfigReaderInterface
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Contact person handler for user operations.
 	 *
-	 * @var ContactPersonHandler
+	 * @var ContactPersonHandlerInterface
 	 */
-	private ContactPersonHandler $contactPersonHandler;
+	private ContactPersonHandlerInterface $contactPersonHandler;
 
 	/**
 	 * User manager for user operations.
@@ -113,18 +119,18 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Contactpersoon service for business logic.
 	 *
-	 * @var ContactpersoonService
+	 * @var ContactpersoonServiceInterface
 	 */
-	private ContactpersoonService $contactSvc;
+	private ContactpersoonServiceInterface $contactSvc;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param SettingsService $settingsService Settings service
-	 * @param ContactPersonHandler $contactPersonHandler Contact person handler
-	 * @param ContactpersoonService $contactSvc Contactpersoon service
+	 * @param RegisterConfigReaderInterface $settingsService Settings service
+	 * @param ContactPersonHandlerInterface $contactPersonHandler Contact person handler
+	 * @param ContactpersoonServiceInterface $contactSvc Contactpersoon service
 	 * @param IUserManager $userManager User manager
 	 * @param IGroupManager $groupManager Group manager
 	 * @param IUserSession $userSession User session
@@ -133,15 +139,17 @@ class ContactpersonenController extends Controller {
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
+	 * @param ContactPersonOrganisationGuardInterface $organisationGuard Decides whether the caller may add the contact to its organisation
+ * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		SettingsService $settingsService,
-		ContactPersonHandler $contactPersonHandler,
-		ContactpersoonService $contactSvc,
+		RegisterConfigReaderInterface $settingsService,
+		ContactPersonHandlerInterface $contactPersonHandler,
+		ContactpersoonServiceInterface $contactSvc,
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IUserSession $userSession,
@@ -149,6 +157,8 @@ class ContactpersonenController extends Controller {
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
+		private readonly ContactPersonOrganisationGuardInterface $organisationGuard,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -160,6 +170,26 @@ class ContactpersonenController extends Controller {
 		$this->secureRandom = $secureRandom;
 		$this->logger = $logger;
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Get contactpersonen for an organisation with user status.
@@ -389,6 +419,8 @@ class ContactpersonenController extends Controller {
 	 * method is still longer than it should be and SHOULD be decomposed further (task 5 of
 	 * `method-decomposition` already carved out the permission check); that is a deliberate
 	 * follow-up rather than something to smuggle into a quality-gate-only change.
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function convertToUser(string $contactPersonId): JSONResponse {
 		$authError = $this->validateConvertToUserPermission();
@@ -402,8 +434,7 @@ class ContactpersonenController extends Controller {
 			// Find the contactpersoon object — bind to current tenant.
 			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: true,
 				_multitenancy: true
 			);
@@ -444,8 +475,19 @@ class ContactpersonenController extends Controller {
 				);
 			}
 
-			// Validate email address before attempting user creation.
-			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+			if ($this->organisationGuard->allows(contactData: $contactData) === false) {
+				return new JSONResponse(
+					[
+						'success' => false,
+						'message' => 'Insufficient permissions',
+					],
+					Http::STATUS_FORBIDDEN
+				);
+			}
+
+			// Validate email address before attempting user creation. The
+			// linked Nextcloud contact holds it (contactsUid).
+			$email = $this->contactPersonEmailOf(contactData: $contactData);
 			$emailError = $this->contactPersonHandler->validateEmailForUsername($email);
 			if ($emailError !== null) {
 				return new JSONResponse(
@@ -540,11 +582,11 @@ class ContactpersonenController extends Controller {
 			// written exactly as before.
 			$this->objectService->saveObject(
 				object: $contactData,
-				register: $registerId,
-				schema: $schemaId,
-				uuid: $contactPersonObject->getUuid(),
-				silent: true,
-				_validation: false
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+					uuid: $contactPersonObject->getUuid(),
+					policy: new SavePolicy(silent: true, validation: false)
+				)
 			);
 
 			$this->logger->info(
@@ -595,10 +637,12 @@ class ContactpersonenController extends Controller {
 	}//end convertToUser()
 
 	/**
-	 * Authorises the convertToUser endpoint.
+	 * Authorises the account-manager endpoints: convertToUser, enableUser,
+	 * disableUser and getBulkUserInfo.
 	 *
-	 * Returns null when the current user is allowed to create user accounts, or
-	 * a 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
+	 * Returns null when the current user is an administrator or in an
+	 * organisation-admin group (gebruik-beheerder, aanbod-beheerder), or a
+	 * 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
 	 * part of task 5.1.
 	 *
 	 * @return JSONResponse|null
@@ -1217,8 +1261,7 @@ class ContactpersonenController extends Controller {
 		try {
 			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson'
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson')
 			);
 
 			if ($contactObject === null) {
@@ -1368,18 +1411,13 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function disableUser(string $contactPersonId): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-		if ($isAdmin === false && $isOrgAdmin === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -1428,18 +1466,13 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function enableUser(string $contactPersonId): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-		if ($isAdmin === false && $isOrgAdmin === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -1487,18 +1520,9 @@ class ContactpersonenController extends Controller {
 	 * @spec            openspec/specs/contactpersonen-api/spec.md
 	 */
 	public function getBulkUserInfo(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-
-		$canViewBulkInfo = ($isAdmin || $isOrgAdmin);
-		if ($canViewBulkInfo === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

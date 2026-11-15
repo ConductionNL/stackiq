@@ -15,13 +15,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -185,6 +188,43 @@ class ProgressStore {
 	}//end getProgress()
 
 	/**
+	 * Point an operation type at its running operation, or at none.
+	 *
+	 * @param string      $operationType The operation type, e.g. `organisation_sync`.
+	 * @param string|null $operationId   The running operation, or null when none runs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function setCurrent(string $operationType, ?string $operationId): void {
+		if ($operationId === null) {
+			$this->remove(key: 'current_' . $operationType);
+			return;
+		}
+
+		$this->set(key: 'current_' . $operationType, value: $operationId);
+	}//end setCurrent()
+
+	/**
+	 * The running operation of an operation type, or null when none runs.
+	 *
+	 * @param string $operationType The operation type.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function getCurrent(string $operationType): ?string {
+		$operationId = $this->get(key: 'current_' . $operationType);
+		if (is_string($operationId) === false || $operationId === '') {
+			return null;
+		}
+
+		return $operationId;
+	}//end getCurrent()
+
+	/**
 	 * Record a cancel request for an operation.
 	 *
 	 * @param string $operationId The operation.
@@ -309,6 +349,22 @@ class ProgressStore {
 			lazy: true
 		);
 	}//end set()
+
+	/**
+	 * Remove an entry.
+	 *
+	 * @param string $key The entry.
+	 *
+	 * @return void
+	 */
+	private function remove(string $key): void {
+		if ($this->cache !== null) {
+			$this->cache->remove(key: $key);
+			return;
+		}
+
+		$this->appConfig->deleteKey(AppIdentity::APP_ID, self::configKey(key: $key));
+	}//end remove()
 
 	/**
 	 * The app config key of an entry, hashed: an operation id may be longer than a key may be (64).

@@ -100,6 +100,16 @@ import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { formatCurrency, quadrantColor } from '../../utils/portfolioReport.js'
 import { valueFitPoints } from '../../utils/valueAssessment.js'
 
+/**
+ * The four quadrants, by column (fit: low, high) and row (value: high, low).
+ */
+const QUADRANT_CELLS = [
+	{ key: 'Migrate', column: 0, row: 0 },
+	{ key: 'Invest', column: 1, row: 0 },
+	{ key: 'Eliminate', column: 0, row: 1 },
+	{ key: 'Tolerate', column: 1, row: 1 },
+]
+
 export default {
 	name: 'ValueFitPlot',
 
@@ -151,42 +161,15 @@ export default {
 		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		quadrants() {
-			const left = this.scaleX(0.5)
-			const mid = this.scaleX(2.5)
-			const right = this.scaleX(5.5)
-			const top = this.scaleY(5.5)
-			const middle = this.scaleY(2.5)
-			const bottom = this.scaleY(0.5)
-			return [
-				{
-					key: 'Migrate',
-					x: left,
-					y: top,
-					width: mid - left,
-					height: middle - top,
-				},
-				{
-					key: 'Invest',
-					x: mid,
-					y: top,
-					width: right - mid,
-					height: middle - top,
-				},
-				{
-					key: 'Eliminate',
-					x: left,
-					y: middle,
-					width: mid - left,
-					height: bottom - middle,
-				},
-				{
-					key: 'Tolerate',
-					x: mid,
-					y: middle,
-					width: right - mid,
-					height: bottom - middle,
-				},
-			]
+			const xs = [this.scaleX(0.5), this.scaleX(2.5), this.scaleX(5.5)]
+			const ys = [this.scaleY(5.5), this.scaleY(2.5), this.scaleY(0.5)]
+			return QUADRANT_CELLS.map(({ key, column, row }) => ({
+				key,
+				x: xs[column],
+				y: ys[row],
+				width: xs[column + 1] - xs[column],
+				height: ys[row + 1] - ys[row],
+			}))
 		},
 
 		/**

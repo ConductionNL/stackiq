@@ -99,6 +99,16 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
 		$this->assertNotEmpty($fragments);
 
+		// A fragment may also add a schema of its own, provided it registers it
+		// in a register's schema list (ADR-037); an overlay of a misspelt slug
+		// is registered nowhere and still counts as an orphan.
+		foreach ($fragments as $fragment) {
+			$overlay = json_decode((string)file_get_contents($fragment), true);
+			foreach (($overlay['components']['registers'] ?? []) as $register) {
+				$declared = array_merge($declared, ($register['schemas'] ?? []));
+			}
+		}
+
 		$orphans = [];
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
@@ -140,8 +150,13 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			$read,
 			'a bare public read makes every pending and rejected review world-readable'
 		);
+		$this->assertNotContains(
+			['group' => 'public', 'crossOrganisation' => true],
+			$read,
+			'an unconditional public read makes every pending and rejected review world-readable'
+		);
 		$this->assertContains(
-			['group' => 'public', 'match' => ['status' => 'approved']],
+			['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
 			$read,
 			'anonymous readers must see approved reviews and only those'
 		);
@@ -165,9 +180,9 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$read = $base['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
 
 		$this->assertContains(
-			'public',
+			['group' => 'public', 'crossOrganisation' => true],
 			$read,
-			'the base is expected to carry the bare public read that the fragment removes; '
+			'the base is expected to carry the unconditional public read that the fragment removes; '
 			.'if the base has been gated directly, this test and the fragment are now redundant'
 		);
 

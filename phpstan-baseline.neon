@@ -446,31 +446,6 @@ parameters:
 			path: lib/Service/Stackiq/GroupHandler.php
 
 		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateContactpersonenForOrganization\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/StackiqService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateUsersForOrganization\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/StackiqService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:ensureContactPersonInOrganization\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/StackiqService.php
-
-		-
-			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$_organizationHandler is never read, only written\\.$#"
-			count: 1
-			path: lib/Service/StackiqService.php
-
-		-
-			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$appName is never read, only written\\.$#"
-			count: 1
-			path: lib/Service/StackiqService.php
-
-		-
 			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\SymfonyEmailService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/SymfonyEmailService.php

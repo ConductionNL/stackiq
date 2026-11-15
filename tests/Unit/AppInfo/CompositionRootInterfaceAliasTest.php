@@ -14,6 +14,9 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -34,12 +37,16 @@ use RecursiveIteratorIterator;
 class CompositionRootInterfaceAliasTest extends TestCase {
 
 	/**
-	 * The aliases registered in Application.php, as interface short name => target short name.
+	 * The aliases registered in the composition root, as interface short name => target short name.
 	 *
 	 * @return array<string, string>
 	 */
 	private function registeredAliases(): array {
-		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = '';
+		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php', 'lib/Service/ContractBindings.php'] as $file) {
+			$source .= (string) file_get_contents(dirname(__DIR__, 3) . '/' . $file);
+		}
+
 		preg_match_all(
 			'/registerServiceAlias\(\s*(\w+)::class,\s*(\w+)::class\s*\)/',
 			$source,
@@ -77,14 +84,14 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 	}//end importedAppInterfaces()
 
 	/**
-	 * The object type locator resolves to the settings service.
+	 * The object type locator resolves to the catalogue locator.
 	 *
 	 * @return void
 	 */
-	public function testObjectTypeLocatorIsBoundToTheSettingsService(): void {
-		self::assertSame('SettingsService', $this->registeredAliases()['ObjectTypeLocatorInterface'] ?? null);
-		self::assertContains(ObjectTypeLocatorInterface::class, class_implements(SettingsService::class));
-	}//end testObjectTypeLocatorIsBoundToTheSettingsService()
+	public function testObjectTypeLocatorIsBoundToTheCatalogueLocator(): void {
+		self::assertSame('CatalogueLocator', $this->registeredAliases()['ObjectTypeLocatorInterface'] ?? null);
+		self::assertContains(ObjectTypeLocatorInterface::class, class_implements(CatalogueLocator::class));
+	}//end testObjectTypeLocatorIsBoundToTheCatalogueLocator()
 
 	/**
 	 * Every imported app interface has a binding.
@@ -96,7 +103,7 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 		$imported = $this->importedAppInterfaces();
 		self::assertNotEmpty($imported);
 		foreach (array_keys($imported) as $name) {
-			self::assertArrayHasKey($name, $aliases, "$name is imported in lib/ but not bound in Application::register()");
+			self::assertArrayHasKey($name, $aliases, "$name is imported in lib/ but not bound in the composition root");
 		}
 	}//end testEveryImportedAppInterfaceIsBound()
 }//end class

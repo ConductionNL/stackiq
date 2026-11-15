@@ -16,13 +16,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\MaintenanceRecipientService;
+use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
@@ -51,13 +54,13 @@ class MaintenanceRecipientsJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory                $time       The time factory.
-	 * @param MaintenanceRecipientService $recipients The owner resolution.
+	 * @param MaintenanceRecipientServiceInterface $recipients The owner resolution.
 	 * @param IJobList                    $jobList    Queues the job again after a failure.
 	 * @param LoggerInterface             $logger     The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly MaintenanceRecipientService $recipients,
+		private readonly MaintenanceRecipientServiceInterface $recipients,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 	) {
@@ -82,6 +85,17 @@ class MaintenanceRecipientsJob extends QueuedJob {
 			return;
 		}
 
+		$this->recordOwners(argument: $argument);
+	}//end run()
+
+	/**
+	 * Record the owners of the window, queueing the job again after a failure.
+	 *
+	 * @param array<string, mixed> $argument `{uuid, register, schema, attempt?}` of the window.
+	 *
+	 * @return void
+	 */
+	private function recordOwners(array $argument): void {
 		try {
 			$this->recipients->recordRecipientsFor(
 				uuid: $argument['uuid'],
@@ -92,16 +106,28 @@ class MaintenanceRecipientsJob extends QueuedJob {
 			// The window was deleted before its owners were resolved: nothing to do.
 			return;
 		} catch (Throwable $e) {
-			$attempt = (int) ($argument['attempt'] ?? 1);
-			$context = ['uuid' => $argument['uuid'], 'attempt' => $attempt, 'error' => $e->getMessage()];
-			if ($attempt >= self::MAX_ATTEMPTS) {
-				$this->logger->critical('MaintenanceRecipientsJob: gave up recording the owners to notify; nothing was written', $context);
-				return;
-			}
-
-			$this->logger->error('MaintenanceRecipientsJob: could not record the owners to notify; tried again later', $context);
-			$argument['attempt'] = ($attempt + 1);
-			$this->jobList->scheduleAfter(self::class, $this->time->getTime() + self::RETRY_DELAY, $argument);
+			$this->retryAfterFailure(argument: $argument, exception: $e);
 		}
-	}//end run()
+	}//end recordOwners()
+
+	/**
+	 * Queue the resolution again after a failure, until MAX_ATTEMPTS tries were made.
+	 *
+	 * @param array<string, mixed> $argument  The job's argument.
+	 * @param Throwable            $exception Why the resolution failed.
+	 *
+	 * @return void
+	 */
+	private function retryAfterFailure(array $argument, Throwable $exception): void {
+		$attempt = (int) ($argument['attempt'] ?? 1);
+		$context = ['uuid' => $argument['uuid'], 'attempt' => $attempt, 'error' => $exception->getMessage()];
+		if ($attempt >= self::MAX_ATTEMPTS) {
+			$this->logger->critical('MaintenanceRecipientsJob: gave up recording the owners to notify; nothing was written', $context);
+			return;
+		}
+
+		$this->logger->error('MaintenanceRecipientsJob: could not record the owners to notify; tried again later', $context);
+		$argument['attempt'] = ($attempt + 1);
+		$this->jobList->scheduleAfter(self::class, $this->time->getTime() + self::RETRY_DELAY, $argument);
+	}//end retryAfterFailure()
 }//end class

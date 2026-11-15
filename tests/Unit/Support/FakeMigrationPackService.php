@@ -66,6 +66,13 @@ final class FakeMigrationPackService {
 	public ?Throwable $failure = null;
 
 	/**
+	 * A failure find() by id throws, while the other calls answer normally.
+	 *
+	 * @var Throwable|null
+	 */
+	public ?Throwable $findFailure = null;
+
+	/**
 	 * When set, called at the start of every create, as a concurrent request would act.
 	 *
 	 * @var \Closure|null
@@ -176,6 +183,10 @@ final class FakeMigrationPackService {
 	 */
 	public function find(int $id): object {
 		$this->failIfAsked();
+		if ($this->findFailure !== null) {
+			throw $this->findFailure;
+		}
+
 		if (isset($this->rows[$id]) === false) {
 			throw new DoesNotExistException('No migration pack ' . $id);
 		}

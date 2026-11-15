@@ -1,0 +1,576 @@
+{
+    "list, no user": {
+        "status": 401,
+        "data": {
+            "message": "Not authenticated"
+        },
+        "service": [],
+        "log": []
+    },
+    "list, success": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "views": [
+                1
+            ],
+            "count": 1,
+            "enrichments_applied": [
+                "p"
+            ]
+        },
+        "service": [
+            [
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting all views",
+                {
+                    "endpoint": "/api/views",
+                    "method": "GET",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: All views request completed",
+                {
+                    "success": true,
+                    "views_count": 1,
+                    "enrichments_applied": [
+                        "p"
+                    ]
+                }
+            ]
+        ]
+    },
+    "list, failed envelope": {
+        "status": 500,
+        "data": {
+            "success": false
+        },
+        "service": [
+            [
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting all views",
+                {
+                    "endpoint": "/api/views",
+                    "method": "GET",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: All views request completed",
+                {
+                    "success": false,
+                    "views_count": 0,
+                    "enrichments_applied": []
+                }
+            ]
+        ]
+    },
+    "list, throws": {
+        "status": 500,
+        "data": {
+            "success": false,
+            "error": "Internal server error: db",
+            "views": [],
+            "count": 0
+        },
+        "service": [
+            [
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting all views",
+                {
+                    "endpoint": "/api/views",
+                    "method": "GET",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get all views",
+                {
+                    "error": "db",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    },
+    "list, no params": {
+        "status": 200,
+        "data": {
+            "success": true
+        },
+        "service": [
+            [
+                []
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting all views",
+                {
+                    "endpoint": "/api/views",
+                    "method": "GET",
+                    "query_params": []
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": null,
+                        "include_modules": null,
+                        "include_gebruik": null,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": []
+                }
+            ],
+            [
+                "info",
+                "API: All views request completed",
+                {
+                    "success": true,
+                    "views_count": 0,
+                    "enrichments_applied": []
+                }
+            ]
+        ]
+    },
+    "list, deelnames on": {
+        "status": 200,
+        "data": {
+            "success": true
+        },
+        "service": [
+            [
+                {
+                    "include_products": true,
+                    "include_deelnames_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting all views",
+                {
+                    "endpoint": "/api/views",
+                    "method": "GET",
+                    "query_params": {
+                        "include_deelnames_gebruik": "on",
+                        "include_products": 2
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": 2,
+                        "include_modules": null,
+                        "include_gebruik": null,
+                        "include_deelnames_gebruik": "on"
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_deelnames_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: All views request completed",
+                {
+                    "success": true,
+                    "views_count": 0,
+                    "enrichments_applied": []
+                }
+            ]
+        ]
+    },
+    "view, no user": {
+        "status": 401,
+        "data": {
+            "message": "Not authenticated"
+        },
+        "service": [],
+        "log": []
+    },
+    "view, empty id": {
+        "status": 400,
+        "data": {
+            "success": false,
+            "error": "View ID is required",
+            "view": null
+        },
+        "service": [],
+        "log": [
+            [
+                "info",
+                "API: Getting specific view",
+                {
+                    "endpoint": "/api/views/",
+                    "method": "GET",
+                    "view_id": "",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ]
+        ]
+    },
+    "view, success": {
+        "status": 200,
+        "data": {
+            "success": true,
+            "view": {
+                "id": "v1"
+            }
+        },
+        "service": [
+            [
+                "v1",
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting specific view",
+                {
+                    "endpoint": "/api/views/v1",
+                    "method": "GET",
+                    "view_id": "v1",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Specific view request completed",
+                {
+                    "view_id": "v1",
+                    "success": true,
+                    "found": true,
+                    "enrichments_applied": []
+                }
+            ]
+        ]
+    },
+    "view, missing": {
+        "status": 404,
+        "data": {
+            "success": false,
+            "view": null,
+            "enrichments_applied": [
+                "m"
+            ]
+        },
+        "service": [
+            [
+                "v1",
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting specific view",
+                {
+                    "endpoint": "/api/views/v1",
+                    "method": "GET",
+                    "view_id": "v1",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Specific view request completed",
+                {
+                    "view_id": "v1",
+                    "success": false,
+                    "found": false,
+                    "enrichments_applied": [
+                        "m"
+                    ]
+                }
+            ]
+        ]
+    },
+    "view, failed": {
+        "status": 500,
+        "data": {
+            "success": false,
+            "view": {
+                "id": "v1"
+            }
+        },
+        "service": [
+            [
+                "v1",
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting specific view",
+                {
+                    "endpoint": "/api/views/v1",
+                    "method": "GET",
+                    "view_id": "v1",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Specific view request completed",
+                {
+                    "view_id": "v1",
+                    "success": false,
+                    "found": true,
+                    "enrichments_applied": []
+                }
+            ]
+        ]
+    },
+    "view, throws": {
+        "status": 500,
+        "data": {
+            "success": false,
+            "error": "Internal server error: db",
+            "view": null
+        },
+        "service": [
+            [
+                "v1",
+                {
+                    "include_products": true,
+                    "include_modules": false,
+                    "include_gebruik": true
+                }
+            ]
+        ],
+        "log": [
+            [
+                "info",
+                "API: Getting specific view",
+                {
+                    "endpoint": "/api/views/v1",
+                    "method": "GET",
+                    "view_id": "v1",
+                    "query_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "other": "x"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed enrichment options",
+                {
+                    "raw_params": {
+                        "include_products": "yes",
+                        "include_modules": "0",
+                        "include_gebruik": true,
+                        "include_deelnames_gebruik": null
+                    },
+                    "parsed_options": {
+                        "include_products": true,
+                        "include_modules": false,
+                        "include_gebruik": true
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get specific view",
+                {
+                    "view_id": "v1",
+                    "error": "db",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    }
+}

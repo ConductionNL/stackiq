@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the suite-wizard pure helpers (vitest mirror of the
  * co-located Jest suite at src/utils/suiteWizard.spec.js — this project runs
  * two test runners; new pure-JS logic gets a vitest spec per PHASE 3 of the

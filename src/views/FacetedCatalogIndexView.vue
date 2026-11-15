@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
 FacetedCatalogIndexView.vue
 
 GEMMA-dimension faceted index page for the `module` (Applications) and
@@ -117,6 +121,8 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMode="quickFilterMode"
 					:quickFilterMultiple="quickFilterMultiple"
 					:sidebar="sidebar"
+					:bulkActions="bulkActions"
+					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
 					@search="onListSearch"
 					@rowClick="openDetail"
@@ -153,6 +159,7 @@ const DIMENSION_LABELS = {
 	standard: () => t('stackiq', 'Standard'),
 	applicationService: () => t('stackiq', 'Application service'),
 	domain: () => t('stackiq', 'Domain'),
+	supplier: () => t('stackiq', 'Supplier'),
 }
 
 /**
@@ -240,6 +247,15 @@ export default {
 		},
 
 		/**
+		 * Selection-strip actions, forwarded to `CnIndexPage` (manifest
+		 * `config.bulkActions`), e.g. Move to organisation.
+		 */
+		bulkActions: {
+			type: Array,
+			default: () => [],
+		},
+
+		/**
 		 * Clickable filter-tab strip, forwarded to `CnIndexPage` (manifest
 		 * `config.quickFilters`) — e.g. the BIO BBN-level / DPIA-status quick
 		 * filters on the Modules page (bio-compliance-assessment). Composes
@@ -291,6 +307,18 @@ export default {
 		 * `onListSearch` hands it to the facet counts.
 		 */
 		sidebar: {
+			type: Object,
+			default: null,
+		},
+
+		/**
+		 * Copy settings, forwarded to `CnIndexPage` (manifest `config.copy`):
+		 * `include` lists the links a copy may take along, which the single and
+		 * mass copy dialogs then offer, ticked.
+		 *
+		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+		 */
+		copy: {
 			type: Object,
 			default: null,
 		},

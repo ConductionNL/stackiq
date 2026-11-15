@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -35,7 +36,7 @@ use OCP\IUser;
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
  */
-class OrganisationReportAccess {
+class OrganisationReportAccess implements OrganisationReportAccessInterface {
 	/**
 	 * Constructor.
 	 *

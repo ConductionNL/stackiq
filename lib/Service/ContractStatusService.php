@@ -28,6 +28,9 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -35,7 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Server-side maintenance of contract status (Actief → Verlopen).
  */
-class ContractStatusService {
+class ContractStatusService implements ContractStatusServiceInterface {
 	/**
 	 * The active status from which a contract may expire.
 	 */
@@ -139,6 +142,8 @@ class ContractStatusService {
 		];
 
 		try {
+			// System path (decision 409): the nightly expiry reads every organisation's
+			// contracts and returns none of their fields to a caller.
 			$contracts = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -159,10 +164,13 @@ class ContractStatusService {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					extend: [],
-					register: $contract->getRegister(),
-					schema: $contract->getSchema(),
-					uuid: $contract->getUuid()
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contract->getRegister(),
+								schema: $contract->getSchema()
+							),
+						uuid: $contract->getUuid()
+					)
 				);
 				$transitioned++;
 				$this->logger->info(

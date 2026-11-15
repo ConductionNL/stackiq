@@ -45,6 +45,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -124,6 +125,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -193,6 +195,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -274,6 +277,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -355,6 +359,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -436,6 +441,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [
@@ -519,6 +525,7 @@
 				{
 					"method": "POST",
 					"headers": {
+						"requesttoken": "token-1",
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					"body": [

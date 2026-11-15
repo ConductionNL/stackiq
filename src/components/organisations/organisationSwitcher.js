@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Pure helpers for OrganisationSwitcher.vue — extracted so the switch
  * decision logic is unit-testable without mounting the component (matches
  * the project's established "pure-logic unit tests" convention).

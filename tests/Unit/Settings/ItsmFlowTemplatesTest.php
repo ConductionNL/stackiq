@@ -18,6 +18,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-002-the-import-creates-and-updates-stackiq-records-and-never-duplicates-them
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

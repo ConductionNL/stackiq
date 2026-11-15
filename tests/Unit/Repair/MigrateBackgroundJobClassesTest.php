@@ -145,4 +145,34 @@ class MigrateBackgroundJobClassesTest extends TestCase {
 
 		(new MigrateBackgroundJobClasses($jobList, new NullLogger()))->run($output);
 	}//end testAThrowNeverEscapesTheInstaller()
+
+	/**
+	 * The summary counts only the jobs that were registered; a failure logs and warns instead.
+	 *
+	 * @return void
+	 */
+	public function testTheReportedLinesArePinned(): void {
+		$registered = array_slice(MigrateBackgroundJobClasses::LEGACY_JOB_CLASSES, 0, 2);
+		$jobList    = $this->createMock(IJobList::class);
+		$jobList->method('has')->willReturnCallback(static fn (mixed $job): bool => in_array($job, $registered, true));
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->once())->method('info')->with('Stackiq: deregistered 2 orphaned background job(s) from the legacy namespace');
+		$output->expects($this->never())->method('warning');
+		(new MigrateBackgroundJobClasses($jobList, new NullLogger()))->run($output);
+
+		$failing = $this->createMock(IJobList::class);
+		$error   = new RuntimeException('database gone');
+		$failing->method('has')->willThrowException($error);
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with(
+			'Stackiq: failed to deregister legacy background jobs: database gone',
+			['app' => 'stackiq', 'exception' => $error]
+		);
+		$warned = $this->createMock(IOutput::class);
+		$warned->expects($this->never())->method('info');
+		$warned->expects($this->once())->method('warning')->with('Stackiq: legacy background job cleanup failed; see the log.');
+		(new MigrateBackgroundJobClasses($failing, $logger))->run($warned);
+
+	}//end testTheReportedLinesArePinned()
 }//end class
