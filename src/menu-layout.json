@@ -4,7 +4,8 @@
 	},
 	"relocations": {
 		"Komplianties": "ReportsCompliance",
-		"ComplianceMatrix": "ReportsCompliance"
+		"ComplianceMatrix": "ReportsCompliance",
+		"Ask": "ReportsCompliance"
 	},
 	"removals": [],
 	"settingsSection": []

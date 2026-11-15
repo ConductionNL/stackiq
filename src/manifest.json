@@ -173,6 +173,16 @@
 			"order": 86
 		},
 		{
+			"id": "Ask",
+			"label": "Ask the catalogue",
+			"icon": "CommentQuestionOutline",
+			"route": "Ask",
+			"order": 87,
+			"visibleIf": {
+				"appInstalled": "hermiq"
+			}
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
@@ -938,6 +948,14 @@
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
 			}
+		},
+		{
+			"id": "Ask",
+			"route": "/ask",
+			"type": "custom",
+			"title": "Ask the catalogue",
+			"component": "AskView",
+			"_note": "insight-assistant-answers-and-action-trail D2 (REQ-ASK-001/002): one question, hermiq's reply, the cited entries linked and the searched entries folded away. Posts to POST /api/ask, which searches OpenRegister as the caller first. The menu entry shows only when hermiq is installed (visibleIf.appInstalled); without it the endpoint answers 503 and the page says the assistant is not available."
 		},
 		{
 			"id": "ComplianceMatrix",

@@ -20,8 +20,9 @@
 - **acceptance_criteria**:
   - GIVEN hermiq enabled WHEN the user opens Ask and submits a question THEN the reply and a linked Sources list render
   - GIVEN hermiq disabled WHEN the app loads THEN no Ask entry shows
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/ask-the-catalogue.spec.ts`)
+  > Built: custom page `Ask` at `/ask` (`src/views/AskView.vue`, registered in `src/customComponents.js`) over `src/utils/askCatalogue.js`: one question (at most 2000 characters), the reply, the cited Sources linked, and the searched entries in a folded list; an empty search says "No catalogue entries matched this question."; 503, 429 and other failures read as a message. Menu entry `Ask` relocated under Reports & Compliance (`src/menu-layout.json`), gated with the library's `visibleIf: { appInstalled: "hermiq" }`, so no `hermiqAvailable` initial state is needed. Strings in en and nl. Vitest `tests/vitest/askCatalogue.spec.js` (10 tests: request, answer, failures, manifest wiring). Test box left open: the Playwright spec needs a live instance with hermiq.
 
 ### Task 3: Assistant actions page
 - **spec_ref**: openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed

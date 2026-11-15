@@ -32,6 +32,7 @@ import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
+import AskView from './views/AskView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
@@ -159,6 +160,12 @@ export default {
 	// aggregation dashboard no built-in index/detail type expresses; stays custom
 	// until the lib grows a declarative aggregation/rollup widget.
 	LicensePostureView,
+
+	// Ask the catalogue (insight-assistant-answers-and-action-trail D2): one
+	// question answered by hermiq from the entries OpenRegister finds for the
+	// caller, with the cited entries linked. A conversation, not a list, form
+	// or detail: no built-in page type expresses it.
+	AskView,
 
 	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
 	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every

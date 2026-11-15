@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Ask the catalogue": "Ask the catalogue",
+        "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.",
+        "Your question": "Your question",
+        "Ask": "Ask",
+        "No catalogue entries matched this question.": "No catalogue entries matched this question.",
+        "Sources": "Sources",
+        "The reply cites no catalogue entry.": "The reply cites no catalogue entry.",
+        "Entries searched: {count}": "Entries searched: {count}",
+        "The assistant is not available.": "The assistant is not available.",
+        "You asked many questions in a short time. Try again in a minute.": "You asked many questions in a short time. Try again in a minute.",
+        "The assistant could not answer this question.": "The assistant could not answer this question.",
         "Set up the mail transport": "Set up the mail transport",
         "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",

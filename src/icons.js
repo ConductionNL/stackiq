@@ -30,6 +30,7 @@ import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue'
+import CommentQuestionOutline from 'vue-material-design-icons/CommentQuestionOutline.vue'
 import Cube from 'vue-material-design-icons/Cube.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import Database from 'vue-material-design-icons/Database.vue'
@@ -93,6 +94,7 @@ export default {
 	ClipboardCheckOutline,
 	CogOutline,
 	CommentOutline,
+	CommentQuestionOutline,
 	Cube,
 	CurrencyEur,
 	Database,
