@@ -42,7 +42,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+foreach (['ObjectEntityInterface'] as $contract) {
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {
@@ -64,6 +64,7 @@ spl_autoload_register(function (string $class): void {
 		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
 		// OpenRegister's MCP provider interface (mcp-full-action-surface).
 		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
+		'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\' => __DIR__ . '/Stubs/Kernel/Contracts/Value/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -115,3 +116,11 @@ unset($integriqStubEvent);
 
 // Doctrine and Symfony classes only the server ships; see bootstrap-stubs.php.
 require_once __DIR__ . '/bootstrap-stubs.php';
+
+// OpenRegister main's ObjectServiceInterface (hydra-gates still ships the release's) and the test helpers for its option objects.
+if (interface_exists('\\OCA\\OpenRegister\\Contract\\ObjectServiceInterface') === false) {
+	require_once __DIR__ . '/Stubs/Contract/ObjectServiceInterface.php';
+}
+
+require_once __DIR__ . '/Support/ReleaseObjectSignatures.php';
+require_once __DIR__ . '/Support/LegacyObjectArgs.php';

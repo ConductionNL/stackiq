@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Putting a contact person's user in their organisation's group, and the group configuration and listing.
@@ -181,7 +182,13 @@ class GroupHandlerOrganisationGroupsTest extends TestCase {
 			$found->method('getObject')->willReturn($organisation);
 		}
 
-		$this->objectService->method('find')->with('org-1', [], false, 5, 6)->willReturn($found);
+		$this->objectService->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'org-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 5,
+				'schema' => 6,
+			]))->willReturn($found);
 	}
 
 	/**

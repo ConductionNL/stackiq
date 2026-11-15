@@ -33,6 +33,9 @@ use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for importForModuleVersie().
@@ -189,6 +192,7 @@ class SbomImportGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use ($version) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', $args];
 				return isset($this->plan['missing']) === true ? null : $version;
 			}
@@ -214,13 +218,18 @@ class SbomImportGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register = null, $schema = null) {
+			function (array $objects, BulkSaveOptions $options = new BulkSaveOptions()) {
+				$register = $options->defaults->register;
+				$schema = $options->defaults->schema;
 				$this->trace[] = ['objects.saveObjects', count($objects), $objects[0] ?? null, $register, $schema];
 				return ['statistics' => ['objectsCreated' => count($objects)]];
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, $extend = null, $register = null, $schema = null) use ($version) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($version) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				if (isset($object['sbomLastImportedAt']) === true) {
 					$object['sbomLastImportedAt'] = '(time)';
 				}

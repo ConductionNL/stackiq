@@ -49,6 +49,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for the contactsUid link refresh of OrganizationContactSyncJob.
@@ -142,15 +143,15 @@ class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
 			->with('organization', ['id' => 'org-1', 'name' => 'Acme', 'contactsUid' => 'gone'])
 			->willReturn('fresh-uid');
 
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			['id' => 'org-1', 'name' => 'Acme', 'contactsUid' => 'fresh-uid'],
-			[],
-			5,
-			12,
-			'org-1',
-			false,
-			false
-		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['id' => 'org-1', 'name' => 'Acme', 'contactsUid' => 'fresh-uid'],
+				'extend' => [],
+				'register' => 5,
+				'schema' => 12,
+				'uuid' => 'org-1',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]));
 
 		$this->runJob($contacts, $this->configured());
 		$this->assertSame([], $this->logged);
@@ -204,7 +205,15 @@ class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
 			}
 		);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['id' => 'good', 'contactsUid' => 'uid-good'], [], 5, 12, 'good', false, false);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['id' => 'good', 'contactsUid' => 'uid-good'],
+				'extend' => [],
+				'register' => 5,
+				'schema' => 12,
+				'uuid' => 'good',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]));
 
 		$this->runJob($contacts, $this->configured());
 

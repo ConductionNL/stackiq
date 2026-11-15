@@ -40,6 +40,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Access scope of ViewService::getView() and ViewService::getAllViews().
@@ -185,15 +186,11 @@ class ViewServiceAccessScopeTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('find')
 			->willReturnCallback(
-				function (
-					int|string $id,
-					?array $_extend=[],
-					bool $files=false,
-					string|int|null $register=null,
-					string|int|null $schema=null,
-					bool $_rbac=true,
-					bool $_multitenancy=true
-				) use (&$seen) {
+				function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use (&$seen) {
+					$_extend = $options?->extend ?? [];
+					$files = $options?->files ?? false;
+					$register = $options?->register;
+					$schema = $options?->schema;
 					$seen = [
 						'id' => $id,
 						'register' => $register,
@@ -247,7 +244,11 @@ class ViewServiceAccessScopeTest extends TestCase {
 		$entity->method('jsonSerialize')->willReturn($stored);
 		$seen = [];
 		$this->objectService->expects($this->once())->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null, bool $_rbac=true, bool $_multitenancy=true) use (&$seen, $entity) {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use (&$seen, $entity) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$seen = [$id, $register, $schema, $_rbac, $_multitenancy];
 				return $entity;
 			}

@@ -31,6 +31,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The guard's decisions the listener tests do not reach: an organisation given
@@ -136,7 +137,11 @@ final class ContactPersonOrganisationGuardTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('find')
 			->willReturnCallback(
-				function (string|int $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null, bool $_rbac=true, bool $_multitenancy=true) use (&$calls): never {
+				function (string|int $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use (&$calls): never {
+					$_extend = $options?->extend ?? [];
+					$files = $options?->files ?? false;
+					$register = $options?->register;
+					$schema = $options?->schema;
 					$calls[] = [$id, $register, $schema, $_rbac, $_multitenancy];
 					throw new DoesNotExistException('gone');
 				}

@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\AangebodenGebruik;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -135,9 +137,8 @@ class GebruikBulkHandler {
 	private function processBulkItem(array $item, int $index, string $register, string $schema): array {
 		try {
 			$created = $this->objectService->saveObject(
-				register: $register,
-				schema: $schema,
-				object: $item
+				object: $item,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 
 			return [

@@ -30,6 +30,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Existing contracts without an approval state get "none", and nothing else changes.
@@ -212,7 +213,11 @@ class BackfillContractApprovalStateTest extends TestCase {
 		$saved = [];
 		$entity = $this->contract(uuid: 'x', data: []);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')->willReturnCallback(
-			static function (array $object, array $extend, $register, $schema, $uuid) use (&$saved, $entity) {
+			static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved, $entity) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved[$uuid] = [$object, $register, $schema];
 				return $entity;
 			}

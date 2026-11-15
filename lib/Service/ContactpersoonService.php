@@ -24,6 +24,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -218,8 +223,10 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
-								register: ($voorzieningenConfig['register'] ?? ''),
-								schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+								options: new ObjectFindOptions(
+									register: $voorzieningenConfig['register'] ?? '',
+									schema: $voorzieningenConfig['organisatie_schema'] ?? ''
+								),
 								_rbac: false,
 								_multitenancy: false
 							);
@@ -515,11 +522,14 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 			if ($objectService !== null) {
 				$objectService->saveObject(
 					object: $contactData,
-					register: $contactPersonObject->getRegister(),
-					schema: $contactPersonObject->getSchema(),
-					uuid: $contactPersonObject->getUuid(),
-					silent: true,
-					_validation: false
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contactPersonObject->getRegister(),
+								schema: $contactPersonObject->getSchema()
+							),
+						uuid: $contactPersonObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false)
+					)
 				);
 			}
 
@@ -1096,10 +1106,7 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 					try {
 						$contactObject = $objectService->findSilent(
 							id: $contactPersonId,
-							_extend: [],
-							files: false,
-							register: $contactRegister,
-							schema: $contactSchema
+							options: new ObjectFindOptions(register: $contactRegister, schema: $contactSchema)
 						);
 					} catch (DoesNotExistException $e) {
 						$this->logger->warning(
@@ -1300,12 +1307,15 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 
 				$objectService->saveObject(
 					object: $payload,
-					register: $contactObject->getRegister(),
-					schema: $contactObject->getSchema(),
-					uuid: $contactObject->getUuid(),
-					silent: true,
-					_validation: false,
-					currentUser: $actingUser
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contactObject->getRegister(),
+								schema: $contactObject->getSchema()
+							),
+						uuid: $contactObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false),
+						actor: new SaveActor(currentUser: $actingUser)
+					)
 				);
 			}
 
@@ -1357,8 +1367,7 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1428,8 +1437,7 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);

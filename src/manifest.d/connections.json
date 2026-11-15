@@ -17,6 +17,14 @@
 			"title": "Connections",
 			"actionsComponent": "ConnectionWizardAction",
 			"config": {
+				"bulkActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"handler": "moveConnectionsToOrganisation"
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
 				"showAdd": false,
@@ -48,6 +56,16 @@
 			"type": "detail",
 			"title": "Connection",
 			"config": {
+				"headerActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"type": "open-modal",
+						"target": "MoveToOrganisationLauncher",
+						"props": { "schema": "connection" }
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
 				"_note": "A connection is read for what it links and how: data 8 wide (name, type, status, direction, both applications, the national provision, the intermediary, the lifecycle dates), documents 4 wide at the right, then the related panel with the standards. Status transitions come from the schema's x-openregister-lifecycle (release, sunset, withdraw).",
