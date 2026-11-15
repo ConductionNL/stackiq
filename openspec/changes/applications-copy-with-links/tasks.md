@@ -9,10 +9,12 @@
   - GIVEN the Modules and Diensten pages WHEN read THEN their config has `copy.include: ["relationRows", "incoming", "files"]`
   - GIVEN `FacetedCatalogIndexView` WHEN it renders its embedded `CnIndexPage` THEN it passes the page's `copy` config through, so single and mass copy show the link list
   - GIVEN `@conduction/nextcloud-vue` WHEN installed THEN it is the release that ships `index-copy-with-relations`
-- [ ] Implement
-- [ ] Test (vitest `facetedIndexCopy.spec.js`)
+- [x] Implement
+- [x] Test (vitest `facetedIndexCopy.spec.js`)
 
 ### Task 2: A copy starts unpublished
+
+Open: no `@conduction/nextcloud-vue` release (checked 2.74.0 to 2.180.0) lets a page set copy overrides; `selfModeActions` passes only the name field to `useObjectCopy().copy()`. The library needs a `copy.overrides` config first.
 - **spec_ref**: openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
 - **files**: `src/manifest.json`, `tests/vitest/facetedIndexCopy.spec.js`
 - **acceptance_criteria**:

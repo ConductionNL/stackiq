@@ -1329,6 +1329,8 @@
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
+        "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
         "+{count} more": "+{count} more",
@@ -1350,6 +1352,15 @@
         "Choose an active organisation first.": "Choose an active organisation first.",
         "Could not load your organisations.": "Could not load your organisations.",
         "Only an administrator of both organisations may move entries.": "Only an administrator of both organisations may move entries.",
-        "The move could not be planned or carried out.": "The move could not be planned or carried out."
+        "The move could not be planned or carried out.": "The move could not be planned or carried out.",
+        "Applications ({count}): {names}": "Applications ({count}): {names}",
+        "Coverage on a GEMMA view": "Coverage on a GEMMA view",
+        "Empty view": "Empty view",
+        "GEMMA view": "GEMMA view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Pick a GEMMA view to see the coverage drawn on it.",
+        "Select a view": "Select a view",
+        "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
+        "The view could not be loaded.": "The view could not be loaded.",
+        "This view holds no elements.": "This view holds no elements."
     }
 }

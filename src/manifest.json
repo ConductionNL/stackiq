@@ -637,6 +637,9 @@
 						"handler": "moveModulesToOrganisation"
 					}
 				],
+				"copy": {
+					"include": ["relationRows", "incoming", "files"]
+				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
 				"detailRoute": "ModuleDetail",
@@ -710,6 +713,9 @@
 						"handler": "moveServicesToOrganisation"
 					}
 				],
+				"copy": {
+					"include": ["relationRows", "incoming", "files"]
+				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
