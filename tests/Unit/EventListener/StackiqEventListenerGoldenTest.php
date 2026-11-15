@@ -42,6 +42,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for StackiqEventListener::handle().
@@ -257,6 +258,7 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			 * @return ObjectEntity
 			 */
 			public function find(...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->test->refetch(args: $args);
 			}
 		};

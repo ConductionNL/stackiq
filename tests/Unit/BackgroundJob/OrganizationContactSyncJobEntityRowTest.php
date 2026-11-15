@@ -38,6 +38,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Entity rows in the contact link refresh.
@@ -77,7 +78,15 @@ final class OrganizationContactSyncJobEntityRowTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->expects($this->once())
 			->method('saveObject')
-			->with(['contactsUid' => 'fresh-uid'] + $data, [], 3, 9, 'entity-uuid', false, false);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['contactsUid' => 'fresh-uid'] + $data,
+					'extend' => [],
+					'register' => 3,
+					'schema' => 9,
+					'uuid' => 'entity-uuid',
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]));
 
 		$this->refresh($objects, $this->entity($data, 'entity-uuid'));
 	}//end testAnEntityRowIsReadThroughItsAccessors()
@@ -95,7 +104,15 @@ final class OrganizationContactSyncJobEntityRowTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->expects($this->once())
 			->method('saveObject')
-			->with(['id' => 'data-id', 'contactsUid' => 'fresh-uid'], [], 3, 9, null, false, false);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['id' => 'data-id', 'contactsUid' => 'fresh-uid'],
+					'extend' => [],
+					'register' => 3,
+					'schema' => 9,
+					'uuid' => null,
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]));
 
 		$this->refresh($objects, $this->entity($data, ''));
 	}//end testAnEntityWithoutAUuidIsSavedWithoutOne()

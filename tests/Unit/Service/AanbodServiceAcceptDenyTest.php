@@ -33,6 +33,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests that accepting or denying an aanbod is limited to its afnemer or aanbieder.
@@ -151,7 +153,11 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 	 */
 	private function findReturns(?ObjectEntity $aanbod, ?string $orgType=null): void {
 		$this->objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null) use ($aanbod, $orgType) {
+			function (int|string $id, ?ObjectFindOptions $options = null) use ($aanbod, $orgType) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($id === self::ACTING_ORG) {
 					$this->assertSame([2, 20], [$register, $schema]);
 					$organisation = $this->createMock(ObjectEntity::class);
@@ -187,21 +193,21 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 		$saved = $this->createMock(ObjectEntity::class);
 		$saved->method('getObject')->willReturn(['saved' => true]);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				[
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => [
 					'naam' => 'X',
 					'consumer' => ['id' => self::ACTING_ORG],
 					'provider' => 'org-other',
 					'@self' => ['organisation' => self::ACTING_ORG, 'owner' => 'alice'],
 					'registeredBy' => 'Supplier',
 				],
-				[],
-				'2',
-				'11',
-				'aanbod-1',
-				false,
-				false
-			)
+				'extend' => [],
+				'register' => '2',
+				'schema' => '11',
+				'uuid' => 'aanbod-1',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($saved);
 
 		$this->assertSame(
@@ -228,7 +234,9 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 		$saved = $this->createMock(ObjectEntity::class);
 		$saved->method('getObject')->willReturn([]);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['provider' => self::ACTING_ORG, '@self' => ['organisation' => self::ACTING_ORG, 'owner' => 'alice']])
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['provider' => self::ACTING_ORG, '@self' => ['organisation' => self::ACTING_ORG, 'owner' => 'alice']],
+			]))
 			->willReturn($saved);
 
 		$this->assertTrue($this->service->acceptAanbod('aanbod-1')['success']);
@@ -366,7 +374,13 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 		$this->objectService->expects($this->once())->method('setRegister')->with('2')->willReturnSelf();
 		$this->objectService->expects($this->once())->method('setSchema')->with('11')->willReturnSelf();
 		$this->objectService->expects($this->once())->method('deleteObject')
-			->with('aanbod-1', null, null, false, false)
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'aanbod-1',
+				'register' => null,
+				'schema' => null,
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn(true);
 
 		$this->assertSame(
