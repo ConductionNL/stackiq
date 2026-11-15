@@ -23,6 +23,10 @@
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
+use DateTimeImmutable;
+use InvalidArgumentException;
+use OCA\Stackiq\Service\ViewDocumentContent;
+use OCA\Stackiq\Service\ViewDocumentGateway;
 use OCA\Stackiq\Service\ViewImageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -34,6 +38,7 @@ use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Controller for handling view-related API operations.
@@ -66,6 +71,8 @@ class ViewController extends Controller {
 	 * @param LoggerInterface $logger The logger service
 	 * @param IUserSession $userSession The user session service
 	 * @param ViewImageService|null $imageService Draws a view as SVG (architecture-views-to-office-documents).
+	 * @param ViewDocumentGateway|null $documents Asks filinq for a document of a view (architecture-views-to-office-documents).
+	 * @param ViewDocumentContent|null $documentContent Builds the content of that document.
 	 */
 	public function __construct(
 		string $appName,
@@ -74,6 +81,8 @@ class ViewController extends Controller {
 		private readonly LoggerInterface $logger,
 		private readonly IUserSession $userSession,
 		private readonly ?ViewImageService $imageService = null,
+		private readonly ?ViewDocumentGateway $documents = null,
+		private readonly ?ViewDocumentContent $documentContent = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -111,6 +120,59 @@ class ViewController extends Controller {
 
 		return new DataDownloadResponse($svg, self::imageFileName(view: $view), 'image/svg+xml');
 	}//end getViewImage()
+
+	/**
+	 * Ask filinq for a Word document or a PowerPoint slide of the view.
+	 *
+	 * API Endpoint: POST /api/views/{viewId}/document, body `{format: "docx"|"pptx"}`
+	 *
+	 * The availability of filinq's document contract is checked before the
+	 * view is read, so a request that cannot be carried out writes nothing.
+	 * The view is read with OpenRegister's RBAC on, like the image route.
+	 *
+	 * @param string $viewId The view identifier.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @return JSONResponse 201 with the Files path, file id and name; 400 for another format, 401 without a user,
+	 *                      404 when the view is not there for the caller, 502 when filinq refuses, 503 without filinq's contract.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+	 */
+	#[NoAdminRequired]
+	public function createViewDocument(string $viewId): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$format = (string)$this->request->getParam('format', '');
+		if (in_array($format, ViewDocumentGateway::FORMATS, true) === false) {
+			return new JSONResponse(['success' => false, 'error' => 'Choose the format docx or pptx.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->documents === null || $this->documentContent === null || $this->documents->isAvailable() === false) {
+			return new JSONResponse(
+				['success' => false, 'error' => 'Word and PowerPoint need the document app filinq.'],
+				Http::STATUS_SERVICE_UNAVAILABLE
+			);
+		}
+
+		$view = $this->viewService->findStoredView(viewId: $viewId);
+		if ($view === null) {
+			return new JSONResponse(['success' => false, 'error' => 'View not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$content = $this->documentContent->contentFor(view: $view, viewId: $viewId, at: new DateTimeImmutable());
+		try {
+			$document = $this->documents->requestDocument(format: $format, content: $content, userId: $user->getUID());
+		} catch (InvalidArgumentException | RuntimeException $e) {
+			$this->logger->warning('Stackiq: the view document was not made', ['viewId' => $viewId, 'format' => $format, 'exception' => $e->getMessage()]);
+			return new JSONResponse(['success' => false, 'error' => 'filinq could not make the document.'], Http::STATUS_BAD_GATEWAY);
+		}
+
+		return new JSONResponse(['success' => true] + $document, Http::STATUS_CREATED);
+	}//end createViewDocument()
 
 	/**
 	 * The file name of a drawn view: its name with only letters, digits,

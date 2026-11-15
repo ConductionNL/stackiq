@@ -208,6 +208,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
         ['name' => 'view#getViewImage', 'url' => '/api/views/{viewId}/image.svg', 'verb' => 'GET'],
+        ['name' => 'view#createViewDocument', 'url' => '/api/views/{viewId}/document', 'verb' => 'POST'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================

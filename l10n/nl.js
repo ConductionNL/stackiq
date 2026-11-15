@@ -1534,7 +1534,14 @@ OC.L10N.register(
         "Select a view": "Selecteer een view",
         "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
         "The view could not be loaded.": "De view kon niet worden geladen.",
-        "This view holds no elements.": "Deze view bevat geen elementen."
+        "This view holds no elements.": "Deze view bevat geen elementen.",
+        "Download SVG": "SVG downloaden",
+        "Create Word document": "Word-document maken",
+        "Create PowerPoint slide": "PowerPoint-dia maken",
+        "Word and PowerPoint need the document app filinq": "Voor Word en PowerPoint is de documentapp filinq nodig",
+        "The document could not be made.": "Het document kon niet worden gemaakt.",
+        "{name} was saved in Files": "{name} is opgeslagen in Bestanden",
+        "Open in Files": "Openen in Bestanden"
     },
     "nplurals=2; plural=(n != 1);"
 )
