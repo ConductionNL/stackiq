@@ -6,7 +6,9 @@
 		"Komplianties": "ReportsCompliance",
 		"ComplianceMatrix": "ReportsCompliance",
 		"Ask": "ReportsCompliance",
-		"AssistantActions": "ReportsCompliance"
+		"AssistantActions": "ReportsCompliance",
+		"Standaarden": "Architecture",
+		"Views": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []

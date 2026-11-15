@@ -19,10 +19,12 @@ import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import ApplicationOutline from 'vue-material-design-icons/ApplicationOutline.vue'
 import ArchiveOutline from 'vue-material-design-icons/ArchiveOutline.vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
+import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
+import CardTextOutline from 'vue-material-design-icons/CardTextOutline.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ChartLine from 'vue-material-design-icons/ChartLine.vue'
@@ -83,10 +85,12 @@ export default {
 	ApplicationOutline,
 	ArchiveOutline,
 	ArrowRight,
+	BookmarkOutline,
 	BookOpenVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
 	Calendar,
+	CardTextOutline,
 	ChartBar,
 	ChartBoxOutline,
 	ChartLine,
