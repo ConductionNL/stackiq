@@ -1,0 +1,244 @@
+{
+	"already loading": {
+		"trace": [
+			[
+				"console.info",
+				"User info loading already in progress, skipping..."
+			]
+		],
+		"inProgress": true,
+		"loaded": false
+	},
+	"already loaded": {
+		"trace": [
+			[
+				"console.info",
+				"User info already loaded in this session, skipping..."
+			]
+		],
+		"inProgress": false,
+		"loaded": true
+	},
+	"no organisation": {
+		"trace": [
+			[
+				"console.info",
+				"No organisation data available for user info loading"
+			]
+		],
+		"inProgress": false,
+		"loaded": false
+	},
+	"no contact persons": {
+		"trace": [
+			[
+				"console.info",
+				"No organisation data available for user info loading"
+			]
+		],
+		"inProgress": false,
+		"loaded": false
+	},
+	"contacts without ids": {
+		"trace": [
+			[
+				"console.info",
+				"Starting SINGLE parallel loading of user info and available groups"
+			],
+			[
+				"console.info",
+				"Loading user info for contactpersons:",
+				0
+			],
+			[
+				"console.info",
+				"Contactpersoon IDs:",
+				[]
+			],
+			[
+				"fetchAvailableGroups"
+			],
+			[
+				"console.info",
+				"Received bulk user info:",
+				{}
+			],
+			[
+				"console.info",
+				"Completed SINGLE parallel loading of user info and available groups"
+			]
+		],
+		"inProgress": false,
+		"loaded": true
+	},
+	"contacts with info": {
+		"trace": [
+			[
+				"console.info",
+				"Starting SINGLE parallel loading of user info and available groups"
+			],
+			[
+				"console.info",
+				"Loading user info for contactpersons:",
+				2
+			],
+			[
+				"console.info",
+				"Contactpersoon IDs:",
+				[
+					"c1",
+					"c2"
+				]
+			],
+			[
+				"fetchAvailableGroups"
+			],
+			[
+				"getBulkUserInfo",
+				[
+					"c1",
+					"c2"
+				]
+			],
+			[
+				"console.info",
+				"Received bulk user info:",
+				{
+					"c1": {
+						"uid": "u1"
+					}
+				}
+			],
+			[
+				"updateContactpersonenWithUserInfo",
+				{
+					"c1": {
+						"uid": "u1"
+					}
+				}
+			],
+			[
+				"console.info",
+				"Completed SINGLE parallel loading of user info and available groups"
+			]
+		],
+		"inProgress": false,
+		"loaded": true
+	},
+	"empty bulk info": {
+		"trace": [
+			[
+				"console.info",
+				"Starting SINGLE parallel loading of user info and available groups"
+			],
+			[
+				"console.info",
+				"Loading user info for contactpersons:",
+				1
+			],
+			[
+				"console.info",
+				"Contactpersoon IDs:",
+				[
+					"c1"
+				]
+			],
+			[
+				"fetchAvailableGroups"
+			],
+			[
+				"getBulkUserInfo",
+				[
+					"c1"
+				]
+			],
+			[
+				"console.info",
+				"Received bulk user info:",
+				{}
+			],
+			[
+				"console.info",
+				"Completed SINGLE parallel loading of user info and available groups"
+			]
+		],
+		"inProgress": false,
+		"loaded": true
+	},
+	"null bulk info": {
+		"trace": [
+			[
+				"console.info",
+				"Starting SINGLE parallel loading of user info and available groups"
+			],
+			[
+				"console.info",
+				"Loading user info for contactpersons:",
+				1
+			],
+			[
+				"console.info",
+				"Contactpersoon IDs:",
+				[
+					"c1"
+				]
+			],
+			[
+				"fetchAvailableGroups"
+			],
+			[
+				"getBulkUserInfo",
+				[
+					"c1"
+				]
+			],
+			[
+				"console.info",
+				"Received bulk user info:",
+				null
+			],
+			[
+				"console.info",
+				"Completed SINGLE parallel loading of user info and available groups"
+			]
+		],
+		"inProgress": false,
+		"loaded": true
+	},
+	"groups fail": {
+		"trace": [
+			[
+				"console.info",
+				"Starting SINGLE parallel loading of user info and available groups"
+			],
+			[
+				"console.info",
+				"Loading user info for contactpersons:",
+				1
+			],
+			[
+				"console.info",
+				"Contactpersoon IDs:",
+				[
+					"c1"
+				]
+			],
+			[
+				"fetchAvailableGroups"
+			],
+			[
+				"getBulkUserInfo",
+				[
+					"c1"
+				]
+			],
+			[
+				"console.error",
+				"Error loading user info and groups:",
+				"Error: groups down"
+			]
+		],
+		"inProgress": false,
+		"loaded": false
+	}
+}

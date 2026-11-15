@@ -74,7 +74,7 @@ class DataQualityDerivation {
 
 		$entries = [];
 		foreach ($objects as $object) {
-			$entry = $this->evaluateEntry(rules: $rules, object: $object, now: $now);
+			$entry = $this->evaluateEntry(rules: $rules, run: new DataQualityEntryRun(object: $object, now: $now));
 			foreach ($entry['met'] as $index => $met) {
 				$ruleRows[$index]['met'] += (int)$met;
 			}
@@ -95,63 +95,90 @@ class DataQualityDerivation {
 	/**
 	 * Score one entry against every rule.
 	 *
+	 * The rules are a list (evaluate() passes them through array_values()), so
+	 * the `met` list keeps the rules' own indexes.
+	 *
 	 * @param array<int,array<string,mixed>> $rules The rules.
-	 * @param array<string,mixed> $object The entry.
-	 * @param DateTimeImmutable $now Reference moment.
+	 * @param DataQualityEntryRun            $run   The entry and the reference moment.
 	 *
 	 * @return array<string,mixed> id, score, completeness, missing, stale, confirmedAt and the per-rule `met` list.
 	 */
-	private function evaluateEntry(array $rules, array $object, DateTimeImmutable $now): array {
-		$weighted = 0.0;
-		$weights = 0.0;
-		$required = 0.0;
-		$requiredMet = 0.0;
-		$missing = [];
-		$met = [];
-		$stale = false;
-		$confirmedAt = null;
-
-		foreach ($rules as $index => $rule) {
-			$type = (string)($rule['type'] ?? 'required');
-			$field = (string)$rule['field'];
-			$weight = $this->weight(rule: $rule);
-			$value = $object[$field] ?? null;
-			$score = $this->ruleScore(type: $type, rule: $rule, value: $value, now: $now);
-
-			$weighted += $score * $weight;
-			$weights += $weight;
-			$met[$index] = $this->isMet(type: $type, rule: $rule, value: $value, now: $now);
-
-			if ($type === 'freshness') {
-				$confirmedAt = null;
-				if ($this->filled(value: $value) === true) {
-					$confirmedAt = (string)$value;
-				}
-
-				$stale = $stale || $met[$index] === false;
-				continue;
-			}
-
-			if ($type === 'required') {
-				$required += $weight;
-				$requiredMet += $weight * $score;
-			}
-
-			if ($met[$index] === false) {
-				$missing[] = $field;
-			}
-		}//end foreach
+	private function evaluateEntry(array $rules, DataQualityEntryRun $run): array {
+		foreach ($rules as $rule) {
+			$this->applyRule(run: $run, check: new DataQualityRuleCheck(rule: $rule, object: $run->object));
+		}
 
 		return [
-			'id' => (string)($object['id'] ?? ($object['@self']['id'] ?? '')),
-			'score' => $this->share(part: $weighted, whole: $weights),
-			'completeness' => $this->share(part: $requiredMet, whole: $required),
-			'missing' => $missing,
-			'stale' => $stale,
-			'confirmedAt' => $confirmedAt,
-			'met' => $met,
+			'id' => (string)($run->object['id'] ?? ($run->object['@self']['id'] ?? '')),
+			'score' => $this->share(part: $run->weighted, whole: $run->weights),
+			'completeness' => $this->share(part: $run->requiredMet, whole: $run->required),
+			'missing' => $run->missing,
+			'stale' => $run->stale,
+			'confirmedAt' => $run->confirmedAt,
+			'met' => $run->met,
 		];
 	}//end evaluateEntry()
+
+	/**
+	 * Score one rule on the entry and add it to the running totals.
+	 *
+	 * @param DataQualityEntryRun  $run   The entry being evaluated.
+	 * @param DataQualityRuleCheck $check The rule applied to the entry.
+	 *
+	 * @return void
+	 */
+	private function applyRule(DataQualityEntryRun $run, DataQualityRuleCheck $check): void {
+		$check->weight = $this->weight(rule: $check->rule);
+		$check->score  = $this->ruleScore(check: $check, now: $run->now);
+		$check->met    = $this->isMet(check: $check, now: $run->now);
+
+		$run->weighted += $check->score * $check->weight;
+		$run->weights  += $check->weight;
+		$run->met[]     = $check->met;
+
+		if ($check->type === 'freshness') {
+			$this->recordFreshness(run: $run, check: $check);
+			return;
+		}
+
+		$this->recordCompleteness(run: $run, check: $check);
+	}//end applyRule()
+
+	/**
+	 * Record what a freshness rule says: when the entry was confirmed, and whether it is stale.
+	 *
+	 * @param DataQualityEntryRun  $run   The entry being evaluated.
+	 * @param DataQualityRuleCheck $check The freshness rule applied to the entry.
+	 *
+	 * @return void
+	 */
+	private function recordFreshness(DataQualityEntryRun $run, DataQualityRuleCheck $check): void {
+		$run->confirmedAt = null;
+		if ($this->filled(value: $check->value) === true) {
+			$run->confirmedAt = (string)$check->value;
+		}
+
+		$run->stale = $run->stale || $check->met === false;
+	}//end recordFreshness()
+
+	/**
+	 * Record what a non-freshness rule says: its part of the completeness, and a missing field.
+	 *
+	 * @param DataQualityEntryRun  $run   The entry being evaluated.
+	 * @param DataQualityRuleCheck $check The rule applied to the entry.
+	 *
+	 * @return void
+	 */
+	private function recordCompleteness(DataQualityEntryRun $run, DataQualityRuleCheck $check): void {
+		if ($check->type === 'required') {
+			$run->required    += $check->weight;
+			$run->requiredMet += $check->weight * $check->score;
+		}
+
+		if ($check->met === false) {
+			$run->missing[] = $check->field;
+		}
+	}//end recordCompleteness()
 
 	/**
 	 * The register-wide figures.
@@ -190,57 +217,78 @@ class DataQualityDerivation {
 	/**
 	 * A rule's score for one value, between 0 and 1.
 	 *
-	 * @param string $type Rule type.
-	 * @param array<string,mixed> $rule The rule.
-	 * @param mixed $value The field value.
-	 * @param DateTimeImmutable $now Reference moment.
+	 * @param DataQualityRuleCheck $check The rule type, the rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
 	 *
 	 * @return float The score.
 	 */
-	private function ruleScore(string $type, array $rule, mixed $value, DateTimeImmutable $now): float {
-		if ($type === 'freshness') {
-			$age = $this->ageInDays(value: $value, now: $now);
+	private function ruleScore(DataQualityRuleCheck $check, DateTimeImmutable $now): float {
+		if ($check->type === 'freshness') {
+			$age = $this->ageInDays(value: $check->value, now: $now);
 			if ($age === null) {
 				return 0.0;
 			}
 
-			return 0.5 ** ($age / $this->halfLife(rule: $rule));
+			return 0.5 ** ($age / $this->halfLife(rule: $check->rule));
 		}
 
-		return (float)$this->isMet(type: $type, rule: $rule, value: $value, now: $now);
+		return (float)$this->isMet(check: $check, now: $now);
 	}//end ruleScore()
 
 	/**
 	 * Whether one value meets its rule.
 	 *
-	 * @param string $type Rule type.
-	 * @param array<string,mixed> $rule The rule.
-	 * @param mixed $value The field value.
-	 * @param DateTimeImmutable $now Reference moment.
+	 * @param DataQualityRuleCheck $check The rule type, the rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
 	 *
 	 * @return bool True when met.
 	 */
-	private function isMet(string $type, array $rule, mixed $value, DateTimeImmutable $now): bool {
-		if ($type === 'freshness') {
-			$age = $this->ageInDays(value: $value, now: $now);
-			return $age !== null && $age < $this->halfLife(rule: $rule);
+	private function isMet(DataQualityRuleCheck $check, DateTimeImmutable $now): bool {
+		if ($check->type === 'freshness') {
+			return $this->isFresh(check: $check, now: $now);
 		}
 
-		if ($this->filled(value: $value) === false) {
+		if ($this->filled(value: $check->value) === false) {
 			return false;
 		}
 
-		if ($type !== 'format') {
+		if ($check->type !== 'format') {
 			return true;
 		}
 
+		return self::matchesFormat(rule: $check->rule, value: $check->value);
+	}//end isMet()
+
+	/**
+	 * Whether a value is younger than its rule's half-life.
+	 *
+	 * @param DataQualityRuleCheck $check The rule and the field value.
+	 * @param DateTimeImmutable    $now   Reference moment.
+	 *
+	 * @return bool
+	 */
+	private function isFresh(DataQualityRuleCheck $check, DateTimeImmutable $now): bool {
+		$age = $this->ageInDays(value: $check->value, now: $now);
+
+		return $age !== null && $age < $this->halfLife(rule: $check->rule);
+	}//end isFresh()
+
+	/**
+	 * Whether a filled value matches its rule's pattern, or its named format; true when the rule names neither.
+	 *
+	 * @param array<string,mixed> $rule  The format rule.
+	 * @param mixed               $value The field value.
+	 *
+	 * @return bool
+	 */
+	private static function matchesFormat(array $rule, mixed $value): bool {
 		$pattern = self::FORMATS[(string)($rule['format'] ?? '')] ?? null;
 		if (isset($rule['pattern']) === true && is_string($rule['pattern']) === true) {
 			$pattern = '/' . str_replace('/', '\/', $rule['pattern']) . '/';
 		}
 
 		return $pattern === null || (is_scalar($value) === true && preg_match($pattern, (string)$value) === 1);
-	}//end isMet()
+	}//end matchesFormat()
 
 	/**
 	 * Whether a value counts as filled in.

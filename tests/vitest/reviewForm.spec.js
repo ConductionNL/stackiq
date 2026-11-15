@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the submit-a-review form helpers (catalog-ratings, stackiq#375).
  *
  * The mandated security property under test: buildReviewSubmission() never

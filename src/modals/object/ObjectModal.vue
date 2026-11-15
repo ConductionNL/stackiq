@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
@@ -367,6 +371,69 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import StandardTabs from '../../components/StandardTabs.vue'
 import { getTheme } from '../../services/getTheme.js'
 
+/**
+ * The select option of a catalogue, register or schema.
+ *
+ * @param {{id: string|number, title: string}} item The item.
+ * @return {{id: string|number, label: string}} The option.
+ */
+function optionOf(item) {
+	return { id: item.id, label: item.title }
+}
+
+/**
+ * Whether a catalogue lists exactly one entry under a key.
+ *
+ * @param {object|null} catalog The catalogue.
+ * @param {string} key The list key (registers, schemas).
+ * @return {boolean} Whether it has exactly one.
+ */
+function hasSingle(catalog, key) {
+	return Boolean(catalog && catalog[key] && catalog[key].length === 1)
+}
+
+/**
+ * Whether the navigation asked for a new object.
+ *
+ * @param {string|null} transferData The navigation's transfer data.
+ * @return {boolean} Whether it is create mode.
+ */
+function isCreateTransfer(transferData) {
+	return transferData === 'ignore selectedCatalogus' || transferData === 'create'
+}
+
+/**
+ * Whether there is no active object, or an empty one.
+ *
+ * @param {object|null|undefined} activeObject The active object.
+ * @return {boolean} Whether it is absent or empty.
+ */
+function isAbsentObject(activeObject) {
+	return (
+		activeObject === null
+		|| activeObject === undefined
+		|| Object.keys(activeObject || {}).length === 0
+	)
+}
+
+/**
+ * Whether the modal edits a new object: in create mode, without an active
+ * object, with an empty one, or with one that has no id.
+ *
+ * @param {object|null|undefined} activeObject The active object.
+ * @param {boolean} isCreateMode Whether the navigation asked for a new object.
+ * @return {boolean} Whether the object is new.
+ */
+function isNewObjectState(activeObject, isCreateMode) {
+	// Force new object detection if in create mode or if activeObject is null/empty
+	if (isCreateMode || isAbsentObject(activeObject)) {
+		return true
+	}
+
+	// More robust detection of new vs existing objects
+	return !activeObject || (!activeObject?.['@self']?.id && !activeObject?.id)
+}
+
 export default {
 	name: 'ObjectModal',
 	components: {
@@ -581,7 +648,51 @@ export default {
 		 */
 		initializeData() {
 			const activeCatalog = objectStore.getActiveObject('catalog')
+			this.selectInitialCatalog(activeCatalog)
 
+			const state = this.readInitialState(activeCatalog)
+			if (!this.isNewObject) {
+				this.loadExistingObject(state.activeObject)
+			} else {
+				this.preselectFromCatalog(state.updatedActiveCatalog)
+			}
+		},
+
+		/**
+		 * Read the active object, the (possibly auto-selected) active catalogue and
+		 * the navigation's transfer data, decide whether the object is new, and log
+		 * that state (on the development host).
+		 *
+		 * @param {object|null} activeCatalog The active catalogue before auto-selection.
+		 * @return {object} What was read.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		readInitialState(activeCatalog) {
+			const state = {
+				activeObject: objectStore.getActiveObject(this.objectTypeKey),
+				activeCatalog,
+				// Update activeCatalog reference in case we auto-selected one above
+				updatedActiveCatalog: objectStore.getActiveObject('catalog'),
+				// Check if we're in create mode based on navigation transfer data
+				transferData: navigationStore.getTransferData(),
+			}
+			state.isCreateMode = isCreateTransfer(state.transferData)
+			this.isNewObject = isNewObjectState(
+				state.activeObject,
+				state.isCreateMode,
+			)
+
+			this.logInitialState(state)
+			return state
+		},
+
+		/**
+		 * Select the active catalogue; with none selected and only one available, select and activate that one.
+		 *
+		 * @param {object|null} activeCatalog The active catalogue.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectInitialCatalog(activeCatalog) {
 			// Set selected catalog based on active catalog
 			const catalogMatch = activeCatalog
 				? objectStore
@@ -589,123 +700,108 @@ export default {
 						.results.find((catalog) => catalog.id === activeCatalog.id)
 				: null
 
-			this.selectedCatalogus = catalogMatch
-				? {
-						id: catalogMatch.id,
-						label: catalogMatch.title,
-					}
-				: null
+			this.selectedCatalogus = catalogMatch ? optionOf(catalogMatch) : null
+			this.selectOnlyCatalog()
+		},
 
-			// If no catalog is selected but there's only one available, auto-select it
+		/**
+		 * If no catalog is selected but there's only one available, auto-select it.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectOnlyCatalog() {
 			if (
-				!this.selectedCatalogus
-				&& objectStore.getCollection('catalog').results.length === 1
+				this.selectedCatalogus
+				|| objectStore.getCollection('catalog').results.length !== 1
 			) {
-				const onlyCatalog = objectStore.getCollection('catalog').results[0]
-				this.selectedCatalogus = {
-					id: onlyCatalog.id,
-					label: onlyCatalog.title,
-				}
-				// Also set it as the active catalog in the store
-				objectStore.setActiveObject('catalog', onlyCatalog)
+				return
 			}
 
-			const activeObject = objectStore.getActiveObject(this.objectTypeKey)
-			// Update activeCatalog reference in case we auto-selected one above
-			const updatedActiveCatalog = objectStore.getActiveObject('catalog')
+			const onlyCatalog = objectStore.getCollection('catalog').results[0]
+			this.selectedCatalogus = optionOf(onlyCatalog)
+			// Also set it as the active catalog in the store
+			objectStore.setActiveObject('catalog', onlyCatalog)
+		},
 
-			// Check if we're in create mode based on navigation transfer data
-			const transferData = navigationStore.getTransferData()
-			const isCreateMode =
-				transferData === 'ignore selectedCatalogus'
-				|| transferData === 'create'
-
-			// Force new object detection if in create mode or if activeObject is null/empty
-			if (
-				isCreateMode
-				|| activeObject === null
-				|| activeObject === undefined
-				|| Object.keys(activeObject || {}).length === 0
-			) {
-				this.isNewObject = true
-			} else {
-				// More robust detection of new vs existing objects
-				this.isNewObject =
-					!activeObject
-					|| (!activeObject?.['@self']?.id && !activeObject?.id)
-			}
-
+		/**
+		 * Log the initial state, on the development host only.
+		 *
+		 * @param {object} state The objects and flags initialisation read.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		logInitialState(state) {
 			// Temporary debug to understand the state
-			if (window.location.hostname === 'nextcloud.local') {
-				// eslint-disable-next-line no-console
-				console.log('ObjectModal debug:', {
-					activeObject,
-					activeCatalog,
-					updatedActiveCatalog,
-					selectedCatalogus: this.selectedCatalogus,
-					transferData,
-					isCreateMode,
-					isNewObject: this.isNewObject,
-					objectKeys: activeObject ? Object.keys(activeObject) : 'null',
-				})
+			if (window.location.hostname !== 'nextcloud.local') {
+				return
 			}
 
-			if (!this.isNewObject) {
-				// is edit modal
-				// Initialize form with existing object data
+			const {
+				activeObject,
+				activeCatalog,
+				updatedActiveCatalog,
+				transferData,
+				isCreateMode,
+			} = state
+			// eslint-disable-next-line no-console
+			console.log('ObjectModal debug:', {
+				activeObject,
+				activeCatalog,
+				updatedActiveCatalog,
+				selectedCatalogus: this.selectedCatalogus,
+				transferData,
+				isCreateMode,
+				isNewObject: this.isNewObject,
+				objectKeys: activeObject ? Object.keys(activeObject) : 'null',
+			})
+		},
 
-				this.formData = cloneDeep(activeObject)
-				this.jsonData = JSON.stringify(activeObject, null, 2)
+		/**
+		 * Initialise the form with an existing object, and select its register and schema.
+		 *
+		 * @param {object} activeObject The object being edited.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		loadExistingObject(activeObject) {
+			// is edit modal
+			// Initialize form with existing object data
+			this.formData = cloneDeep(activeObject)
+			this.jsonData = JSON.stringify(activeObject, null, 2)
 
-				// Set register and schema from existing object
-				const register = objectStore.availableRegisters.find(
-					(register) =>
-						String(register.id)
-						=== String(activeObject['@self'].register),
-				)
-				this.selectedRegister = register && {
-					id: register.id,
-					label: register.title,
-				}
+			// Set register and schema from existing object
+			const register = objectStore.availableRegisters.find(
+				(register) =>
+					String(register.id) === String(activeObject['@self'].register),
+			)
+			this.selectedRegister = register && optionOf(register)
 
+			const schema = objectStore.availableSchemas.find(
+				(schema) =>
+					String(schema.id) === String(activeObject['@self'].schema),
+			)
+			this.selectedSchema = schema && optionOf(schema)
+		},
+
+		/**
+		 * For a new object, select the register (and then the schema) when the catalogue has only one.
+		 *
+		 * @param {object|null} catalog The active catalogue.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		preselectFromCatalog(catalog) {
+			if (!hasSingle(catalog, 'registers')) {
+				return
+			}
+
+			const register = objectStore.availableRegisters.find(
+				(register) => register.id === catalog.registers[0],
+			)
+			this.selectedRegister = register && optionOf(register)
+
+			if (catalog.schemas && catalog.schemas.length === 1) {
 				const schema = objectStore.availableSchemas.find(
-					(schema) =>
-						String(schema.id) === String(activeObject['@self'].schema),
+					(schema) => schema.id === catalog.schemas[0],
 				)
-				this.selectedSchema = schema && {
-					id: schema.id,
-					label: schema.title,
-				}
-			} else {
-				// For new objects, auto-select register/schema if catalog only has one
-				if (
-					updatedActiveCatalog
-					&& updatedActiveCatalog.registers
-					&& updatedActiveCatalog.registers.length === 1
-				) {
-					const register = objectStore.availableRegisters.find(
-						(register) =>
-							register.id === updatedActiveCatalog.registers[0],
-					)
-					this.selectedRegister = register && {
-						id: register.id,
-						label: register.title,
-					}
-
-					if (
-						updatedActiveCatalog.schemas
-						&& updatedActiveCatalog.schemas.length === 1
-					) {
-						const schema = objectStore.availableSchemas.find(
-							(schema) =>
-								schema.id === updatedActiveCatalog.schemas[0],
-						)
-						this.selectedSchema = schema && {
-							id: schema.id,
-							label: schema.title,
-						}
-					}
-				}
+				this.selectedSchema = schema && optionOf(schema)
 			}
 		},
 
@@ -754,6 +850,7 @@ export default {
 					method,
 					body: JSON.stringify(dataToSave),
 					headers: {
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 					},
 				})
@@ -1085,103 +1182,6 @@ export default {
 	border-radius: 0 !important;
 	border: none !important;
 }
-
-.codeMirrorContainer.light > .vue-codemirror {
-	border: 1px dotted silver;
-}
-
-.codeMirrorContainer.dark > .vue-codemirror {
-	border: 1px dotted grey;
-}
-
-/* value text color */
-/* string */
-.codeMirrorContainer.light :deep(.ͼe) {
-	color: #448c27;
-}
-
-.codeMirrorContainer.dark :deep(.ͼe) {
-	color: #88c379;
-}
-
-/* boolean */
-.codeMirrorContainer.light :deep(.ͼc) {
-	color: #221199;
-}
-
-.codeMirrorContainer.dark :deep(.ͼc) {
-	color: #8d64f7;
-}
-
-/* null */
-.codeMirrorContainer.light :deep(.ͼb) {
-	color: #770088;
-}
-
-.codeMirrorContainer.dark :deep(.ͼb) {
-	color: #be55cd;
-}
-
-/* number */
-.codeMirrorContainer.light :deep(.ͼd) {
-	color: #d19a66;
-}
-
-.codeMirrorContainer.dark :deep(.ͼd) {
-	color: #9d6c3a;
-}
-
-/* text cursor */
-.codeMirrorContainer :deep(.cm-content) * {
-	cursor: text !important;
-}
-
-/* selection color */
-.codeMirrorContainer.light :deep(.cm-line)::selection,
-.codeMirrorContainer.light :deep(.cm-line) ::selection {
-	background-color: #d7eaff !important;
-	color: black;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line)::selection,
-.codeMirrorContainer.dark :deep(.cm-line) ::selection {
-	background-color: #8fb3e6 !important;
-	color: black;
-}
-
-/* string */
-.codeMirrorContainer.light :deep(.cm-line .ͼe)::selection {
-	color: #2d770f;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼe)::selection {
-	color: #104e0c;
-}
-
-/* boolean */
-.codeMirrorContainer.light :deep(.cm-line .ͼc)::selection {
-	color: #221199;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼc)::selection {
-	color: #4026af;
-}
-
-/* null */
-.codeMirrorContainer.light :deep(.cm-line .ͼb)::selection {
-	color: #770088;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼb)::selection {
-	color: #770088;
-}
-
-/* number */
-.codeMirrorContainer.light :deep(.cm-line .ͼd)::selection {
-	color: #8c5c2c;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
-	color: #623907;
-}
 </style>
+
+<style scoped src="./codeMirrorJsonTheme.css"></style>

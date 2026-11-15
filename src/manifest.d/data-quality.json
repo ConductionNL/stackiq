@@ -15,7 +15,8 @@
 			"route": "/datakwaliteit",
 			"type": "custom",
 			"title": "Data quality",
-			"component": "DataQualityReportView"
+			"component": "DataQualityReportView",
+			"_note": "A report, not a list or a detail: it shows the register score, average completeness, the declared rules with how many entries meet each, and the least complete entries with what is missing, all from one organisation-scoped GET /api/data-quality answer. No standard page type renders that combination."
 		}
 	]
 }

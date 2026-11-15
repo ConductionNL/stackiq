@@ -1,109 +1,50 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * @file MassPublishObjects.vue * @module Modals/Object * @author Your Name *
 @copyright 2024 Your Organization * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
+import { objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog
-		:name="dialogTitle"
-		:canClose="true"
-		size="normal"
-		class="mass-action-dialog"
-		@update:open="handleDialogClose">
-		<!-- Object Selection Review -->
-		<div v-if="success === null" class="publish-step">
-			<NcNoteCard type="info">
+	<MassObjectDialog
+		:title="dialogTitle"
+		stepClass="publish-step"
+		noteType="info"
+		:singleTitle="t('stackiq', 'Publication to Publish')"
+		:successOne="t('stackiq', 'Object successfully published')"
+		:successMany="t('stackiq', 'Objects successfully published')"
+		buttonVariant="primary"
+		:buttonLabel="t('stackiq', 'Publish')"
+		:action="massAction">
+		<template #note>
 				{{
 					t(
 						'stackiq',
 						'Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.',
 					)
 				}}
-			</NcNoteCard>
-
-			<SelectedObjectsList
-				:title="
-					(objectStore.selectedObjects?.length || 0) === 1
-						? t('stackiq', 'Publication to Publish')
-						: t('stackiq', 'Selected Publications')
-				"
-				:showRemove="true" />
-		</div>
-
-		<NcNoteCard v-if="success" type="success">
-			<p>
-				{{
-					originalSelectedCount > 1
-						? t('stackiq', 'Objects successfully published')
-						: t('stackiq', 'Object successfully published')
-				}}
-			</p>
-		</NcNoteCard>
-		<NcNoteCard v-if="error" type="error">
-			<p>{{ error }}</p>
-		</NcNoteCard>
-
-		<template #actions>
-			<NcButton @click="closeDialog">
-				<template #icon>
-					<Cancel :size="20" />
-				</template>
-				{{
-					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
-				}}
-			</NcButton>
-			<NcButton
-				v-if="success === null"
-				:disabled="
-					loading || (objectStore.selectedObjects?.length || 0) === 0
-				"
-				variant="primary"
-				@click="publishObjects()">
-				<template #icon>
-					<NcLoadingIcon v-if="loading" :size="20" />
-					<Publish v-if="!loading" :size="20" />
-				</template>
-				{{ t('stackiq', 'Publish') }}
-			</NcButton>
 		</template>
-	</NcDialog>
+		<template #icon>
+			<Publish :size="20" />
+		</template>
+	</MassObjectDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
-import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
+import MassObjectDialog from './MassObjectDialog.vue'
 
 export default {
 	name: 'MassPublishObjects',
 	components: {
-		NcDialog,
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
-		SelectedObjectsList,
+		MassObjectDialog,
 		// Icons
 		Publish,
-		Cancel,
-	},
-
-	props: {
-		// No props needed - always uses selected objects from store
-	},
-
-	data() {
-		return {
-			success: null,
-			loading: false,
-			error: false,
-			result: null,
-			closeModalTimeout: null,
-			originalSelectedCount: 0,
-		}
 	},
 
 	computed: {
@@ -132,108 +73,29 @@ export default {
 				count,
 			})
 		},
-	},
-
-	mounted() {
-		this.initializeSelection()
-	},
-
-	methods: {
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		initializeSelection() {
-			// Store the original count for success message
-			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
-		},
 
 		/**
+		 * The store call and the texts of this mass action.
+		 *
+		 * @return {object} The action, as runMassObjectAction takes it
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		closeDialog() {
-			// Clear any pending timeout that might reopen the dialog
-			if (this.closeModalTimeout) {
-				clearTimeout(this.closeModalTimeout)
-				this.closeModalTimeout = null
-			}
-			navigationStore.setDialog(false)
-		},
+		massAction() {
+			return {
+				run: () =>
+					objectStore.massPublishObjects([
+						...(objectStore.selectedObjects || []),
+					]),
 
-		/**
-		 * @param isOpen
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		handleDialogClose(isOpen) {
-			if (!isOpen) {
-				this.closeDialog()
-			}
-		},
+				failedText: (count) =>
+					this.t('stackiq', 'Failed to publish {count} objects', {
+						count,
+					}),
 
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		async publishObjects() {
-			this.loading = true
-
-			try {
-				// Get the objects to publish
-				const objectsToProcess = [...(objectStore.selectedObjects || [])]
-
-				// Use the store's mass publish method
-				const { successful, failed } =
-					await objectStore.massPublishObjects(objectsToProcess)
-
-				if (successful.length > 0) {
-					this.success = true
-					// Refresh publications using catalogStore
-					catalogStore.fetchPublications()
-
-					// Only auto-close if there are no failures
-					if (failed.length === 0) {
-						this.closeModalTimeout = setTimeout(() => {
-							this.closeDialog()
-						}, 2000)
-					}
-				}
-
-				if (failed.length > 0) {
-					this.error = this.t(
-						'stackiq',
-						'Failed to publish {count} objects',
-						{ count: failed.length },
-					)
-				}
-			} catch (error) {
-				this.success = false
-				this.error =
-					error.message
-					|| this.t(
-						'stackiq',
-						'An error occurred while publishing objects',
-					)
-			} finally {
-				this.loading = false
+				errorText: () =>
+					this.t('stackiq', 'An error occurred while publishing objects'),
 			}
 		},
 	},
 }
 </script>
-
-<style scoped>
-.publish-step {
-	padding: 0;
-}
-
-.step-title {
-	margin-top: 0 !important;
-	margin-bottom: 16px;
-	color: var(--color-main-text);
-}
-</style>
-
-<style scoped>
-/* Ensure mass action dialogs appear on top of other modals */
-.mass-action-dialog {
-	z-index: 10000 !important;
-}
-</style>

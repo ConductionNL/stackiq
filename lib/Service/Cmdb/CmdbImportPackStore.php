@@ -3,6 +3,9 @@
 /**
  * The CMDB import packs in OpenRegister's migration-pack store.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The four sheet packs (module, manufacturer, usage, business owner) are
  * seeded into OpenRegister's `MigrationPackService` as built-in packs, so an
  * administrator can view and edit them in OpenRegister. Each seeded definition
@@ -29,17 +32,15 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Cmdb;
 
-use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
  */
-class CmdbImportPackStore {
+class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	/**
 	 * OpenRegister's migration-pack service (not a public contract).
 	 */
@@ -65,16 +66,6 @@ class CmdbImportPackStore {
 	 * The store resolved the pack as it was.
 	 */
 	public const FOUND = 'found';
-
-	/**
-	 * The store created the pack from the shipped file.
-	 */
-	public const SEEDED = 'seeded';
-
-	/**
-	 * The store replaced an unedited pack with a newer shipped one.
-	 */
-	public const UPDATED = 'updated';
 
 	/**
 	 * A class only an OpenRegister with the hardened pack store has.
@@ -93,7 +84,6 @@ class CmdbImportPackStore {
 	 * The exception OpenRegister throws when a pack was saved after the caller read it.
 	 */
 	public const PACK_CHANGED_CLASS = 'OCA\OpenRegister\Exception\PackChangedException';
-
 
 	/**
 	 * Decides whether OpenRegister's store may be used, and hands out its service.
@@ -165,11 +155,22 @@ class CmdbImportPackStore {
 			return [];
 		}
 
-		$decoded = json_decode($config->getValueString(Application::APP_ID, self::CONFIG_KEY, ''), true);
+		$decoded = json_decode($config->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}
 
+		return $this->validPackIds(decoded: $decoded);
+	}//end recordedPackIds()
+
+	/**
+	 * The recorded entries that are a pack slug with a positive row id.
+	 *
+	 * @param array<mixed, mixed> $decoded The decoded config value.
+	 *
+	 * @return array<string, int>
+	 */
+	private function validPackIds(array $decoded): array {
 		$ids = [];
 		foreach ($decoded as $slug => $id) {
 			if (is_string($slug) === true && is_int($id) === true && $id > 0) {
@@ -178,7 +179,7 @@ class CmdbImportPackStore {
 		}
 
 		return $ids;
-	}//end recordedPackIds()
+	}//end validPackIds()
 
 	/**
 	 * Refuse the shipped files once the packs were stored in OpenRegister.
@@ -543,7 +544,7 @@ class CmdbImportPackStore {
 
 		$ids[$slug] = $id;
 		ksort($ids);
-		$config->setValueString(Application::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
+		$config->setValueString(AppIdentity::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
 	}//end record()
 
 	/**
@@ -569,18 +570,28 @@ class CmdbImportPackStore {
 			return $this->appConfig;
 		}
 
+		$this->appConfig = $this->containerAppConfig();
+		return $this->appConfig;
+	}//end appConfig()
+
+	/**
+	 * The app config the container holds, or null when it holds none.
+	 *
+	 * @return IAppConfig|null
+	 */
+	private function containerAppConfig(): ?IAppConfig {
 		try {
 			if ($this->container->has(IAppConfig::class) === true) {
 				$config = $this->container->get(IAppConfig::class);
 				if ($config instanceof IAppConfig) {
-					$this->appConfig = $config;
+					return $config;
 				}
 			}
 		} catch (Throwable $e) {
 			// No app config in this container: nothing is recorded.
-			$this->appConfig = null;
+			return null;
 		}
 
-		return $this->appConfig;
-	}//end appConfig()
+		return null;
+	}//end containerAppConfig()
 }//end class

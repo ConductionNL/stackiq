@@ -18,7 +18,12 @@
 				{{ t('stackiq', 'Data quality') }}
 			</h2>
 			<p class="data-quality__intro">
-				{{ t('stackiq', 'How correct, complete and current the register of an organisation is.') }}
+				{{
+					t(
+						'stackiq',
+						'How correct, complete and current the register of an organisation is.',
+					)
+				}}
 			</p>
 		</header>
 
@@ -41,28 +46,49 @@
 		<NcEmptyContent
 			v-else-if="!report"
 			:name="t('stackiq', 'Select an organisation')"
-			:description="t('stackiq', 'Pick an organisation above to see the quality of its register.')" />
+			:description="
+				t(
+					'stackiq',
+					'Pick an organisation above to see the quality of its register.',
+				)
+			" />
 
 		<template v-else>
 			<NcNoteCard v-if="report.truncated" type="warning">
-				{{ t('stackiq', 'The figures cover the first {count} of {total} applications in use.', { count: report.summary.entries, total: report.total }) }}
+				{{
+					t(
+						'stackiq',
+						'The figures cover the first {count} of {total} applications in use.',
+						{ count: report.summary.entries, total: report.total },
+					)
+				}}
 			</NcNoteCard>
 
 			<CnKpiGrid :columns="3" data-testid="data-quality-kpis">
 				<CnStatsBlock
 					:title="t('stackiq', 'Register score')"
 					:count="report.summary.score ?? 0"
-					:countLabel="t('stackiq', 'of 100, against {count} rules', { count: report.summary.ruleCount })"
+					:countLabel="
+						t('stackiq', 'of 100, against {count} rules', {
+							count: report.summary.ruleCount,
+						})
+					"
 					showZeroCount />
 				<CnStatsBlock
 					:title="t('stackiq', 'Average completeness')"
 					:count="report.summary.completeness ?? 0"
-					:countLabel="t('stackiq', '% of {count} applications in use', { count: report.summary.entries })"
+					:countLabel="
+						t('stackiq', '% of {count} applications in use', {
+							count: report.summary.entries,
+						})
+					"
 					showZeroCount />
 				<CnStatsBlock
 					:title="t('stackiq', 'Not confirmed')"
 					:count="report.summary.notConfirmed"
-					:countLabel="t('stackiq', 'entries never or too long ago confirmed')"
+					:countLabel="
+						t('stackiq', 'entries never or too long ago confirmed')
+					"
 					showZeroCount />
 			</CnKpiGrid>
 
@@ -83,9 +109,12 @@
 					:rows="report.lowest"
 					:columns="columns"
 					rowKey="id"
-					:emptyText="t('stackiq', 'No applications in use for this organisation')">
+					:emptyText="
+						t('stackiq', 'No applications in use for this organisation')
+					">
 					<template #column-name="{ row }">
-						<router-link :to="{ name: 'GebruikDetail', params: { id: row.id } }">
+						<router-link
+							:to="{ name: 'GebruikDetail', params: { id: row.id } }">
 							{{ row.name || t('stackiq', 'Unnamed application') }}
 						</router-link>
 					</template>
@@ -93,10 +122,18 @@
 						{{ Math.round(row.completeness * 100) }}%
 					</template>
 					<template #column-missing="{ row }">
-						{{ row.missing.length ? row.missing.join(', ') : t('stackiq', 'Nothing') }}
+						{{
+							row.missing.length
+								? row.missing.join(', ')
+								: t('stackiq', 'Nothing')
+						}}
 					</template>
 					<template #column-confirmedAt="{ row }">
-						{{ row.confirmedAt ? formatDate(row.confirmedAt) : t('stackiq', 'Never') }}
+						{{
+							row.confirmedAt
+								? formatDate(row.confirmedAt)
+								: t('stackiq', 'Never')
+						}}
 					</template>
 				</CnDataTable>
 			</section>
@@ -105,16 +142,16 @@
 </template>
 
 <script>
-import { CnDataTable, CnKpiGrid, CnProgressBar, CnStatsBlock } from '@conduction/nextcloud-vue'
+import {
+	CnDataTable,
+	CnKpiGrid,
+	CnProgressBar,
+	CnStatsBlock,
+} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-} from '@nextcloud/vue'
+import { NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
@@ -169,11 +206,15 @@ export default {
 		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organization')?.results || []).map((org) => {
-				const data = org.object || org
-				const uuid = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				return { uuid, label: data.name || data.title || uuid }
-			})
+			return (objectStore.getCollection('organization')?.results || []).map(
+				(org) => {
+					const data = org.object || org
+					const uuid = resolveUuid(
+						org.uuid ?? org.id ?? org['@self']?.id ?? org,
+					)
+					return { uuid, label: data.name || data.title || uuid }
+				},
+			)
 		},
 
 		/**
@@ -185,7 +226,11 @@ export default {
 		ruleItems() {
 			return (this.report?.rules || []).map((rule) => ({
 				key: rule.type + ':' + rule.field,
-				label: t('stackiq', '{rule}: {met} of {total} meet it', { rule: this.ruleLabel(rule), met: rule.met, total: rule.total }),
+				label: t('stackiq', '{rule}: {met} of {total} meet it', {
+					rule: this.ruleLabel(rule),
+					met: rule.met,
+					total: rule.total,
+				}),
 				count: rule.met,
 				total: rule.total,
 			}))
@@ -243,13 +288,17 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.get(generateUrl('/apps/stackiq/api/data-quality'), {
-					params: { organisation: this.selectedOrg.uuid },
-				})
+				const response = await axios.get(
+					generateUrl('/apps/stackiq/api/data-quality'),
+					{
+						params: { organisation: this.selectedOrg.uuid },
+					},
+				)
 				this.report = response.data
 			} catch (error) {
 				this.report = null
-				this.error = error?.response?.data?.message
+				this.error =
+					error?.response?.data?.message
 					|| error?.response?.data?.error
 					|| t('stackiq', 'The data quality could not be loaded.')
 			} finally {

@@ -86,6 +86,17 @@ import {
 	resolveSwitchError,
 } from './organisationSwitcher.js'
 
+/**
+ * The body of a refused switch response (an empty object when it is not
+ * JSON), or null for an accepted one.
+ *
+ * @param {Response} response The switch response.
+ * @return {Promise<object>|null} The body.
+ */
+function switchErrorBody(response) {
+	return response.ok ? null : response.json().catch(() => ({}))
+}
+
 export default {
 	name: 'OrganisationSwitcher',
 
@@ -193,32 +204,50 @@ export default {
 			this.errorMessage = ''
 
 			try {
-				const url = generateUrl(
-					'/apps/openregister/api/organisations/{uuid}/set-active',
-					{ uuid },
-				)
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: { requesttoken: OC.requestToken },
-				})
-
-				const body = response.ok
-					? null
-					: await response.json().catch(() => ({}))
-				const error = resolveSwitchError(
-					response.ok,
-					body,
-					this.t('stackiq', 'Failed to switch organisation'),
-				)
-				if (error) {
-					throw new Error(error)
-				}
-
+				await this.requestSwitch(uuid)
 				window.location.reload()
 			} catch (error) {
 				this.errorMessage = error.message
 				this.switching = false
 			}
+		},
+
+		/**
+		 * Ask OpenRegister to make an organisation the active one, and throw
+		 * the server's error (or the fallback) unless it accepts.
+		 *
+		 * @param {string} uuid The organisation UUID to switch to.
+		 * @return {Promise<void>} Resolves when the server accepted the switch.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-switching-the-active-organisation-must-be-verified-against-server-side-membership-never-a-client-supplied-claim-req-001
+		 */
+		async requestSwitch(uuid) {
+			const response = await this.postSetActive(uuid)
+			const error = resolveSwitchError(
+				response.ok,
+				await switchErrorBody(response),
+				this.t('stackiq', 'Failed to switch organisation'),
+			)
+			if (error) {
+				throw new Error(error)
+			}
+		},
+
+		/**
+		 * Post the set-active request for an organisation to OpenRegister.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @return {Promise<Response>} The response.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-switching-the-active-organisation-must-be-verified-against-server-side-membership-never-a-client-supplied-claim-req-001
+		 */
+		postSetActive(uuid) {
+			const url = generateUrl(
+				'/apps/openregister/api/organisations/{uuid}/set-active',
+				{ uuid },
+			)
+			return fetch(url, {
+				method: 'POST',
+				headers: { requesttoken: OC.requestToken },
+			})
 		},
 	},
 }

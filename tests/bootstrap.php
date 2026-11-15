@@ -13,9 +13,27 @@
  * @version GIT: <git-id>
  *
  * @link https://SoftwareCatalog.app
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
+
+// Without an installed Nextcloud to boot, nothing provides OCP or the
+// OpenRegister classes the tests mock. Such a run goes through the standalone
+// bootstrap that phpunit-unit.xml uses, which maps vendor/nextcloud/ocp and the
+// tests/Stubs tree. Booting a tree that is not installed is unsafe, see
+// stackiq_nc_root_is_installed() below.
+$stackiqNcRoot = realpath(__DIR__ . '/../../..');
+if ($stackiqNcRoot === false
+	|| file_exists($stackiqNcRoot . '/lib/base.php') === false
+	|| stackiq_nc_root_is_installed($stackiqNcRoot) === false
+) {
+	unset($stackiqNcRoot);
+	require __DIR__ . '/bootstrap-unit.php';
+	return;
+}
 
 // Define that we're running PHPUnit
 define('PHPUNIT_RUN', 1);
@@ -107,69 +125,54 @@ function stackiq_nc_root_is_installed(string $ncRoot): bool
 	return ($config['installed'] ?? false) === true;
 }//end stackiq_nc_root_is_installed()
 
-// Bootstrap Nextcloud if not already done. Only an INSTALLED root is booted;
-// a bare source tree runs in pure-unit mode with the composer autoload and the
-// stubs above. NC's tests/autoload.php requires lib/base.php itself, so it
-// sits behind the same guard, and so do the OC_App calls that need a booted
-// server.
+// Bootstrap the installed Nextcloud found above (a tree that is not installed
+// never gets here, see the top of this file). NC's tests/autoload.php requires
+// lib/base.php itself, so it sits behind the same guard, and so do the OC_App
+// calls that need a booted server.
 if (!defined('OC_CONSOLE')) {
-	$stackiqNcRoot = realpath(__DIR__ . '/../../..');
-	if ($stackiqNcRoot !== false && file_exists($stackiqNcRoot . '/lib/base.php') === true) {
-		if (stackiq_nc_root_is_installed($stackiqNcRoot) === true) {
-			try {
-				require_once $stackiqNcRoot . '/lib/base.php';
+	try {
+		require_once $stackiqNcRoot . '/lib/base.php';
 
-				// Load Test\TestCase and other NC test classes (NC convention).
-				if (file_exists($stackiqNcRoot . '/tests/autoload.php') === true) {
-					require_once $stackiqNcRoot . '/tests/autoload.php';
-				}
-
-				// Load all enabled apps, then our specific app, then clear hooks
-				// for testing. These need a booted server, so they belong inside the
-				// same try: when base.php fails part-way there is no OC_App to call,
-				// and the warning below is the whole answer.
-				\OC_App::loadApps();
-				\OC_App::loadApp('stackiq');
-				OC_Hook::clear();
-			} catch (\Throwable $e) {
-				// The tree IS installed, so the dangerous case this guard exists for
-				// (loading a bare source tree) did not happen. base.php still failed
-				// part-way.
-				//
-				// This does NOT abort. `OC::$server` is a typed static, so a half-built
-				// container cannot be unset, and aborting was tried: it turned all six
-				// PHPUnit legs red on a suite that passes (humaniq, 2026-09-08). The
-				// runaway this guard exists for needs an autowiring lookup to reach the
-				// poisoned container, this app has none in lib, and phpunit.xml's 2G cap
-				// bounds one anyway.
-				//
-				// So: say plainly that the container is unreliable, and let the pure unit
-				// tests run. A container-bound test failing loudly is the intended outcome.
-				fwrite(
-					STDERR,
-					sprintf(
-						"[stackiq/tests/bootstrap] Nextcloud at %s could not finish booting (%s).\n"
-						. "  \\OC::\$server now holds a HALF-BUILT container and cannot be unset. Pure unit tests\n"
-						. "  continue; anything resolving a service from that container is UNVERIFIED by this run.\n",
-						$stackiqNcRoot,
-						$e->getMessage()
-					)
-				);
-			}
-		} else {
-			fwrite(
-				STDERR,
-				sprintf(
-					"[stackiq/tests/bootstrap] Nextcloud root at %s is not an installed instance (config/config.php lacks installed => true); "
-					. "skipping lib/base.php and running with composer autoload only (pure-unit mode).\n",
-					$stackiqNcRoot
-				)
-			);
+		// Load Test\TestCase and other NC test classes (NC convention).
+		if (file_exists($stackiqNcRoot . '/tests/autoload.php') === true) {
+			require_once $stackiqNcRoot . '/tests/autoload.php';
 		}
-	}
 
-	unset($stackiqNcRoot);
+		// Load all enabled apps, then our specific app, then clear hooks
+		// for testing. These need a booted server, so they belong inside the
+		// same try: when base.php fails part-way there is no OC_App to call,
+		// and the warning below is the whole answer.
+		\OC_App::loadApps();
+		\OC_App::loadApp('stackiq');
+		OC_Hook::clear();
+	} catch (\Throwable $e) {
+		// The tree IS installed, so the dangerous case this guard exists for
+		// (loading a bare source tree) did not happen. base.php still failed
+		// part-way.
+		//
+		// This does NOT abort. `OC::$server` is a typed static, so a half-built
+		// container cannot be unset, and aborting was tried: it turned all six
+		// PHPUnit legs red on a suite that passes (humaniq, 2026-09-08). The
+		// runaway this guard exists for needs an autowiring lookup to reach the
+		// poisoned container, this app has none in lib, and phpunit.xml's 2G cap
+		// bounds one anyway.
+		//
+		// So: say plainly that the container is unreliable, and let the pure unit
+		// tests run. A container-bound test failing loudly is the intended outcome.
+		fwrite(
+			STDERR,
+			sprintf(
+				"[stackiq/tests/bootstrap] Nextcloud at %s could not finish booting (%s).\n"
+				. "  \\OC::\$server now holds a HALF-BUILT container and cannot be unset. Pure unit tests\n"
+				. "  continue; anything resolving a service from that container is UNVERIFIED by this run.\n",
+				$stackiqNcRoot,
+				$e->getMessage()
+			)
+		);
+	}
 }
+
+unset($stackiqNcRoot);
 
 // Integriq's connection-registry events (adopt-connection-registry).
 // ConnectionReportService sends them by string class name behind class_exists
@@ -203,3 +206,7 @@ if (class_exists('\\OCP\\EventDispatcher\\Event') === true
 ) {
 	require_once __DIR__ . '/Stubs/OpenRegister/Event/ObjectCreatedEvent.php';
 }
+
+// Doctrine and Symfony classes only the server ships, for a run without a
+// booted server. After a boot class_exists() finds the real ones.
+require_once __DIR__ . '/bootstrap-stubs.php';

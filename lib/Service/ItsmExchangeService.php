@@ -29,7 +29,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use InvalidArgumentException;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
-class ItsmExchangeService {
+class ItsmExchangeService implements ItsmExchangeServiceInterface {
 
 	/**
 	 * App setting that holds the desk, the organisation and the flow uuids.
@@ -171,7 +172,7 @@ class ItsmExchangeService {
 
 		return [
 			'available'    => $this->gateway->available(),
-			'enabled'      => $this->appConfig->getValueBool(Application::APP_ID, self::ENABLED_KEY, false),
+			'enabled'      => $this->appConfig->getValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, false),
 			'desk'         => ($config['desk'] ?? null),
 			'organisation' => ($config['organisation'] ?? null),
 			'flows'        => ($config['flows'] ?? []),
@@ -201,7 +202,7 @@ class ItsmExchangeService {
 		}
 
 		$profile = self::DESKS[$desk];
-		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . Application::APP_ID), '/');
+		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/');
 		$base    = self::baseOf(location: $location);
 		$flows   = [];
 		foreach (self::FLOWS as $key => $flow) {
@@ -311,7 +312,7 @@ class ItsmExchangeService {
 		}
 
 		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
-		$this->appConfig->setValueBool(Application::APP_ID, self::ENABLED_KEY, true);
+		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true);
 		$this->connectionReports?->itsmSetUp(
 			created: true,
 			message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.'
@@ -339,19 +340,44 @@ class ItsmExchangeService {
 			return 'Unknown service desk "' . $desk . '".';
 		}
 
-		$found = $this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation);
-		if ($found === null || (string) ($found['uuid'] ?? '') === '') {
+		$uuid = $this->organisationUuid(organisation: $organisation);
+		if ($uuid === '') {
 			return 'The organisation ' . $organisation . ' does not exist in stackiq.';
 		}
 
+		return $this->withDeskSource(desk: $desk, organisationUuid: $uuid);
+	}//end preconditions()
+
+	/**
+	 * The uuid of the organisation given by uuid, id or slug, or '' when stackiq does not hold it.
+	 *
+	 * @param string $organisation The organisation's uuid, id or slug.
+	 *
+	 * @return string
+	 */
+	private function organisationUuid(string $organisation): string {
+		$found = $this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation);
+
+		return (string) ($found['uuid'] ?? '');
+	}//end organisationUuid()
+
+	/**
+	 * Integriq's source for the desk with the organisation's uuid, or why the set-up cannot start without it.
+	 *
+	 * @param string $desk             A known desk key.
+	 * @param string $organisationUuid The organisation's uuid.
+	 *
+	 * @return array{source: array<string, mixed>, organisation: string}|string
+	 */
+	private function withDeskSource(string $desk, string $organisationUuid): array|string {
 		$profile = self::DESKS[$desk];
 		$source  = $this->gateway->findObject(register: 'integriq', schema: 'source', id: $profile['source']);
 		if ($source === null) {
 			return 'Integriq has no source "' . $profile['source'] . '". Add the ' . $profile['label'] . ' source in integriq first.';
 		}
 
-		return ['source' => $source, 'organisation' => (string) $found['uuid']];
-	}//end preconditions()
+		return ['source' => $source, 'organisation' => $organisationUuid];
+	}//end withDeskSource()
 
 	/**
 	 * Preflight every flow and keep the blocking findings.
@@ -404,35 +430,53 @@ class ItsmExchangeService {
 	 */
 	public static function fill(mixed $value, array $values): mixed {
 		if (is_array($value) === true) {
-			$filled = [];
-			foreach ($value as $key => $item) {
-				$filled[$key] = self::fill(value: $item, values: $values);
-			}
-
-			return $filled;
+			return array_map(static fn (mixed $item): mixed => self::fill(value: $item, values: $values), $value);
 		}
 
 		if (is_string($value) === false) {
 			return $value;
 		}
 
-		if (preg_match('/^%([A-Z_]+)%$/', $value, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
+		return self::fillText(text: $value, values: $values);
+	}//end fill()
+
+	/**
+	 * Fill the placeholders of one string.
+	 *
+	 * @param string               $text   The string.
+	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
+	 *
+	 * @return mixed The value itself for a string that is exactly one known placeholder, else the filled text.
+	 */
+	private static function fillText(string $text, array $values): mixed {
+		if (preg_match('/^%([A-Z_]+)%$/', $text, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
 			return $values[$whole[1]];
 		}
 
+		[$search, $replace] = self::textReplacements(values: $values);
+
+		return str_replace($search, $replace, $text);
+	}//end fillText()
+
+	/**
+	 * The placeholders that take text, and their texts; list and object values are left out.
+	 *
+	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
+	 *
+	 * @return array{0: array<int, string>, 1: array<int, string>} The placeholders and their texts.
+	 */
+	private static function textReplacements(array $values): array {
 		$search  = [];
 		$replace = [];
 		foreach ($values as $key => $text) {
-			if (is_array($text) === true) {
-				continue;
+			if (is_array($text) === false) {
+				$search[]  = '%' . $key . '%';
+				$replace[] = (string) $text;
 			}
-
-			$search[]  = '%' . $key . '%';
-			$replace[] = (string) $text;
 		}
 
-		return str_replace($search, $replace, $value);
-	}//end fill()
+		return [$search, $replace];
+	}//end textReplacements()
 
 	/**
 	 * The scheme, host and port of a location, without its path.
@@ -487,7 +531,7 @@ class ItsmExchangeService {
 	 * @return array<string, mixed> The stored set-up, or an empty array.
 	 */
 	private function config(): array {
-		$decoded = json_decode($this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, '{}'), true);
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '{}'), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}
@@ -506,7 +550,7 @@ class ItsmExchangeService {
 	 */
 	private function storeConfig(string $desk, string $organisation, array $flows): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_KEY,
 			(string) json_encode(['desk' => $desk, 'organisation' => $organisation, 'flows' => $flows, 'setUpAt' => date(DATE_ATOM)])
 		);

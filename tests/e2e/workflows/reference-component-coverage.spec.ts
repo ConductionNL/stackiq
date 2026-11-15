@@ -10,7 +10,7 @@
  * RUN_ID, and removes exactly those rows afterwards. The states are covered
  * by tests/Unit/Service/ReferenceComponentCoverageDerivationTest.php.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
@@ -43,7 +43,11 @@ const missing = `${RUN_ID} knowledge base`
  * @param data The object.
  * @return The new id.
  */
-async function seed(register: string, schema: string, data: Record<string, unknown>): Promise<string> {
+async function seed(
+	register: string,
+	schema: string,
+	data: Record<string, unknown>,
+): Promise<string> {
 	const id = await createObject(apiCtx, register, schema, data)
 	seeded.push([register, schema, id])
 	return id
@@ -52,13 +56,31 @@ async function seed(register: string, schema: string, data: Record<string, unkno
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.doubled = await seed(GEMMA_REGISTER, 'element', { name: doubled, gemmaType: 'referentiecomponent', grouping: RUN_ID })
-	ids.missing = await seed(GEMMA_REGISTER, 'element', { name: missing, gemmaType: 'referentiecomponent', grouping: RUN_ID })
+	ids.doubled = await seed(GEMMA_REGISTER, 'element', {
+		name: doubled,
+		gemmaType: 'referentiecomponent',
+		grouping: RUN_ID,
+	})
+	ids.missing = await seed(GEMMA_REGISTER, 'element', {
+		name: missing,
+		gemmaType: 'referentiecomponent',
+		grouping: RUN_ID,
+	})
 	ids.org = await seed(cfg.register, 'organization', { name: organisation })
 	ids.a = await seed(cfg.register, 'module', { name: `${RUN_ID} application A` })
 	ids.b = await seed(cfg.register, 'module', { name: `${RUN_ID} application B` })
-	await seed(cfg.register, 'usage', { consumer: ids.org, module: ids.a, status: 'In production', usedForReferenceComponents: [ids.doubled] })
-	await seed(cfg.register, 'usage', { consumer: ids.org, module: ids.b, status: 'In production', usedForReferenceComponents: [ids.doubled] })
+	await seed(cfg.register, 'usage', {
+		consumer: ids.org,
+		module: ids.a,
+		status: 'In production',
+		usedForReferenceComponents: [ids.doubled],
+	})
+	await seed(cfg.register, 'usage', {
+		consumer: ids.org,
+		module: ids.b,
+		status: 'In production',
+		usedForReferenceComponents: [ids.doubled],
+	})
 })
 
 test.afterAll(async () => {
@@ -83,9 +105,15 @@ test('the GEMMA plate shows the overlap with both applications and the gap', asy
 	await expect(tile).toHaveAttribute('data-state', 'overlap', { timeout: 30000 })
 	await expect(tile).toContainText(`${RUN_ID} application A`)
 	await expect(tile).toContainText(`${RUN_ID} application B`)
-	await expect(plate.getByRole('button', { name: new RegExp(missing) })).toHaveAttribute('data-state', 'gap')
+	await expect(
+		plate.getByRole('button', { name: new RegExp(missing) }),
+	).toHaveAttribute('data-state', 'gap')
 
 	await page.getByTestId('gemma-plate-filter-overlap').click()
-	await expect(plate.getByRole('button', { name: new RegExp(missing) })).toHaveCount(0)
-	await expect(plate.getByRole('button', { name: new RegExp(doubled) })).toBeVisible()
+	await expect(
+		plate.getByRole('button', { name: new RegExp(missing) }),
+	).toHaveCount(0)
+	await expect(
+		plate.getByRole('button', { name: new RegExp(doubled) }),
+	).toBeVisible()
 })

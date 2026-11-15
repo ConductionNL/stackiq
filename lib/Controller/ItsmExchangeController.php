@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
-use OCA\Stackiq\Service\ItsmExchangeService;
-use OCA\Stackiq\Service\ItsmFileImportService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,17 +49,17 @@ class ItsmExchangeController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest              $request      The request.
-	 * @param ItsmExchangeService   $exchange     Sets up the flows.
-	 * @param ItsmFileImportService $fileImport   Imports a spreadsheet.
+	 * @param ItsmExchangeServiceInterface   $exchange     Sets up the flows.
+	 * @param ItsmFileImportServiceInterface $fileImport   Imports a spreadsheet.
 	 * @param IUserSession          $userSession  The signed-in user, who the imports run as.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ItsmExchangeService $exchange,
-		private readonly ItsmFileImportService $fileImport,
+		private readonly ItsmExchangeServiceInterface $exchange,
+		private readonly ItsmFileImportServiceInterface $fileImport,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

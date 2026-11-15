@@ -526,6 +526,50 @@ const COUNTED_ONLY_TILES = [
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
+/**
+ * List the municipalities in the organisation register as chooser options.
+ *
+ * @param {{register: string, schema: string}} source The register and organisation schema.
+ * @return {Promise<Array>} The options.
+ */
+async function listMunicipalities(source) {
+	const response = await axios.get(
+		generateUrl('/apps/openregister/api/objects/{register}/{schema}', {
+			register: source.register,
+			schema: source.schema,
+		}),
+		{ params: { type: 'Municipality', _limit: 1000 } },
+	)
+	return municipalityOptions(response?.data?.results || [])
+}
+
+/**
+ * The numbers the finished sentence names: the municipality and the row counts, 0 when absent.
+ *
+ * @param {object|null} report The import report.
+ * @return {object} The sentence's placeholders.
+ */
+function finishedCounts(report) {
+	const summary = report?.summary || {}
+	return {
+		name: report?.municipality?.name || '',
+		read: countOf(summary.rowsRead),
+		created: countOf(summary.created),
+		updated: countOf(summary.updated),
+		unchanged: countOf(summary.unchanged),
+	}
+}
+
+/**
+ * A count as a number, 0 when it is none.
+ *
+ * @param {number|string|null|undefined} value The count.
+ * @return {number} The number.
+ */
+function countOf(value) {
+	return Number(value) || 0
+}
+
 export default {
 	name: 'CmdbImport',
 
@@ -747,37 +791,7 @@ export default {
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		finishedText() {
-			const summary = this.report?.summary || {}
-			const counts = {
-				name: this.report?.municipality?.name || '',
-				read: Number(summary.rowsRead) || 0,
-				created: Number(summary.created) || 0,
-				updated: Number(summary.updated) || 0,
-				unchanged: Number(summary.unchanged) || 0,
-			}
-			let sentence
-			if (this.report?.cancelled) {
-				sentence = t(
-					'stackiq',
-					'Import for {name} cancelled after {read} rows.',
-					counts,
-					AS_TEXT,
-				)
-			} else if (this.report?.municipality?.created) {
-				sentence = t(
-					'stackiq',
-					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
-					counts,
-					AS_TEXT,
-				)
-			} else {
-				sentence = t(
-					'stackiq',
-					'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
-					counts,
-					AS_TEXT,
-				)
-			}
+			const sentence = this.finishedSentence(finishedCounts(this.report))
 			const applications = this.applicationChangesText
 			return applications === '' ? sentence : `${sentence} ${applications}`
 		},
@@ -962,6 +976,38 @@ export default {
 		},
 
 		/**
+		 * The sentence that says the import finished: cancelled, with a new municipality, or plain.
+		 *
+		 * @param {object} counts The sentence's placeholders.
+		 * @return {string} The sentence
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		finishedSentence(counts) {
+			if (this.report?.cancelled) {
+				return t(
+					'stackiq',
+					'Import for {name} cancelled after {read} rows.',
+					counts,
+					AS_TEXT,
+				)
+			}
+			if (this.report?.municipality?.created) {
+				return t(
+					'stackiq',
+					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
+					counts,
+					AS_TEXT,
+				)
+			}
+			return t(
+				'stackiq',
+				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
+				counts,
+				AS_TEXT,
+			)
+		},
+
+		/**
 		 * Read the organisations of type Municipality from OpenRegister.
 		 *
 		 * @return {Promise<void>}
@@ -971,31 +1017,7 @@ export default {
 			this.loadingMunicipalities = true
 			this.municipalityLoadError = ''
 			try {
-				const configResponse = await axios.get(
-					generateUrl('/apps/stackiq/api/voorzieningen/config'),
-				)
-				const register = configResponse?.data?.config?.register
-				const schema = configResponse?.data?.config?.organisatie_schema
-				if (!register || !schema) {
-					this.municipalityLoadError = t(
-						'stackiq',
-						'The organisation register is not configured, so existing municipalities cannot be listed. You can still type the name of a municipality.',
-					)
-					return
-				}
-				const response = await axios.get(
-					generateUrl(
-						'/apps/openregister/api/objects/{register}/{schema}',
-						{
-							register,
-							schema,
-						},
-					),
-					{ params: { type: 'Municipality', _limit: 1000 } },
-				)
-				this.municipalityOptions = municipalityOptions(
-					response?.data?.results || [],
-				)
+				await this.fetchMunicipalities()
 			} catch {
 				this.municipalityLoadError = t(
 					'stackiq',
@@ -1004,6 +1026,29 @@ export default {
 			} finally {
 				this.loadingMunicipalities = false
 			}
+		},
+
+		/**
+		 * Read the organisation register from the voorzieningen config and list its municipalities.
+		 *
+		 * @return {Promise<void>}
+		 * @throws {Error} When the config or the list cannot be loaded.
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
+		 */
+		async fetchMunicipalities() {
+			const configResponse = await axios.get(
+				generateUrl('/apps/stackiq/api/voorzieningen/config'),
+			)
+			const register = configResponse?.data?.config?.register
+			const schema = configResponse?.data?.config?.organisatie_schema
+			if (!register || !schema) {
+				this.municipalityLoadError = t(
+					'stackiq',
+					'The organisation register is not configured, so existing municipalities cannot be listed. You can still type the name of a municipality.',
+				)
+				return
+			}
+			this.municipalityOptions = await listMunicipalities({ register, schema })
 		},
 
 		/**
@@ -1076,16 +1121,42 @@ export default {
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		async startImport() {
-			if (!this.canImport) {
-				return
-			}
-			const problem = checkFile(this.selectedFile)
-			if (problem) {
-				this.error = { ...problem, message: '', status: 0 }
-				this.report = null
+			if (!this.canImport || this.refuseSelectedFile()) {
 				return
 			}
 
+			this.beginImport()
+			try {
+				await this.postImport()
+			} catch (error) {
+				await this.handleImportError(error)
+			} finally {
+				this.endImport()
+			}
+		},
+
+		/**
+		 * Refuse a selected file that is no spreadsheet export, clearing the report.
+		 *
+		 * @return {boolean} Whether the file was refused.
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		refuseSelectedFile() {
+			const problem = checkFile(this.selectedFile)
+			if (!problem) {
+				return false
+			}
+			this.error = { ...problem, message: '', status: 0 }
+			this.report = null
+			return true
+		},
+
+		/**
+		 * Clear the previous run, take a new operation id and start following its progress.
+		 *
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		beginImport() {
 			this.importing = true
 			this.cancelling = false
 			this.cancelStatus = ''
@@ -1100,35 +1171,57 @@ export default {
 					this.progress = progress
 				},
 			})
+		},
 
-			try {
-				const form = buildImportForm({
-					file: this.selectedFile,
-					municipality: {
-						uuid: this.municipality.isNew ? null : this.municipality.id,
-						name: this.municipality.name || this.municipality.label,
-					},
-					updateExisting: this.updateExisting,
-					publish: this.publish,
-					missingRecords: this.missingRecords,
-					operationId: this.operationId,
-				})
-				const response = await axios.post(importUrl(), form)
-				this.showReport(response.data)
-			} catch (error) {
-				const normalised = normaliseError(error)
-				if (normalised.interrupted) {
-					await this.recoverInterruptedImport(normalised)
-				} else {
-					this.error = normalised
-				}
-			} finally {
-				this.stopPolling()
-				this.importing = false
-				this.cancelling = false
-				this.cancelStatus = ''
-				this.operationId = null
+		/**
+		 * Upload the export with the chosen municipality and options, and show the report.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		async postImport() {
+			const form = buildImportForm({
+				file: this.selectedFile,
+				municipality: {
+					uuid: this.municipality.isNew ? null : this.municipality.id,
+					name: this.municipality.name || this.municipality.label,
+				},
+				updateExisting: this.updateExisting,
+				publish: this.publish,
+				missingRecords: this.missingRecords,
+				operationId: this.operationId,
+			})
+			const response = await axios.post(importUrl(), form)
+			this.showReport(response.data)
+		},
+
+		/**
+		 * Follow an interrupted import to its outcome; show any other error.
+		 *
+		 * @param {Error} error The failure.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		async handleImportError(error) {
+			const normalised = normaliseError(error)
+			if (normalised.interrupted) {
+				await this.recoverInterruptedImport(normalised)
+			} else {
+				this.error = normalised
 			}
+		},
+
+		/**
+		 * Stop following the progress and leave the importing state.
+		 *
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		endImport() {
+			this.stopPolling()
+			this.importing = false
+			this.cancelling = false
+			this.cancelStatus = ''
+			this.operationId = null
 		},
 
 		/**

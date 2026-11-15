@@ -40,6 +40,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Test class for SbomImportService.
@@ -59,6 +61,11 @@ class SbomImportServiceTest extends TestCase {
 	 * @var ProgressTracker|MockObject
 	 */
 	private ProgressTracker|MockObject $progressTracker;
+
+	/**
+	 * @var array<int,array{0:string,1:mixed,2:mixed}> The method, register and schema of every save.
+	 */
+	private array $savedTargets = [];
 
 	/**
 	 * @var array<int,array<string,mixed>> Objects saved via saveObjects().
@@ -166,14 +173,21 @@ class SbomImportServiceTest extends TestCase {
 		);
 
 		$this->objectService->method('saveObjects')->willReturnCallback(
-			function (array $objects) {
+			function (array $objects, BulkSaveOptions $options = new BulkSaveOptions()) {
+				$register = $options->defaults->register;
+				$schema = $options->defaults->schema;
+				$this->savedTargets[] = ['saveObjects', $register, $schema];
 				$this->savedBatches[] = $objects;
 				return ['statistics' => ['objectsCreated' => count($objects)]];
 			}
 		);
 
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object) use ($entity) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($entity) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$this->savedTargets[] = ['saveObject', $register, $schema];
 				$this->savedModuleVersion = $object;
 				return $entity;
 			}
@@ -327,6 +341,10 @@ class SbomImportServiceTest extends TestCase {
 		$this->assertSame('cyclonedx-json', $this->savedModuleVersion['sbomFormat']);
 		$this->assertSame('my-sbom.json', $this->savedModuleVersion['sbomFileName']);
 		$this->assertNotEmpty($this->savedModuleVersion['sbomLastImportedAt']);
+
+		// Components go to the sbomComponent schema, provenance to the moduleVersie schema, both in register 1.
+		$this->assertContains(needle: ['saveObjects', 1, 20], haystack: $this->savedTargets);
+		$this->assertSame(expected: ['saveObject', 1, 10], actual: end($this->savedTargets));
 	}//end testImportRecordsProvenanceAndCarriesExistingFieldsForward()
 
 	/**

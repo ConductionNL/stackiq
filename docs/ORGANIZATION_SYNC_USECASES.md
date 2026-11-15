@@ -72,6 +72,8 @@ This document outlines the use cases and testing scenarios for the new organizat
 4. Create contactpersonen for the organization
 5. Verify users are created but set to inactive initially
 
+**Parent organisation:** when an organisation is created while another one is active (for example a leverancier created under a gemeente), the new organisation gets the active one as its parent. This is done in two steps: the organisation is created first, then its `parent` is set. Setting the parent at creation used to leave the new organisation unreadable, because in OpenRegister a parent does not see its children's resources. The second step is skipped when no organisation is active, and never makes an organisation its own parent. When linking fails, the organisation stays without a parent and is not lost; the failure is logged. Background: `openspec/changes/organisation-parent-hierarchy-rbac-fix/design.md`.
+
 ### 2. Organization Status Change - Activation
 
 **Scenario:** Organization status changes from `inactief` to `actief`

@@ -18,6 +18,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -29,6 +32,10 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -60,10 +67,11 @@ class SettingsControllerProgressTest extends TestCase {
 	 * @param string     $callerUid The signed-in user.
 	 * @param bool       $isAdmin   Whether the caller is a Nextcloud admin.
 	 * @param array|null $progress  What the tracker holds for the operation.
+	 * @param bool       $functionalAdmin Whether the caller is in `functioneel-beheerder`.
 	 *
 	 * @return SettingsController The controller under test.
 	 */
-	private function makeController(string $callerUid, bool $isAdmin, ?array $progress): SettingsController {
+	private function makeController(string $callerUid, bool $isAdmin, ?array $progress, bool $functionalAdmin = false): SettingsController {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn($callerUid);
 		$userSession = $this->createMock(IUserSession::class);
@@ -72,6 +80,9 @@ class SettingsControllerProgressTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturnCallback(
 			static fn (string $uid): bool => $uid === $callerUid && $isAdmin
+		);
+		$groupManager->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $group): bool => $uid === $callerUid && $group === 'functioneel-beheerder' && $functionalAdmin
 		);
 
 		$progressTracker = $this->createMock(ProgressTracker::class);
@@ -86,10 +97,14 @@ class SettingsControllerProgressTest extends TestCase {
 			$groupManager,
 			$userSession,
 			$this->createMock(SettingsService::class),
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->createMock(RoleGroupSettings::class),
 			$progressTracker,
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end makeController()
@@ -202,5 +217,20 @@ class SettingsControllerProgressTest extends TestCase {
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}//end testTheStreamRefusesAnotherUsersOperation()
+
+	/**
+	 * A functional administrator follows the organisation sync, which cron
+	 * runs without an owner, but no other operation without an owner.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function testAFunctionalAdministratorReadsTheOrganisationSyncOnly(): void {
+		$sync = ['operation_type' => 'organisation_sync', 'owner_uid' => null] + $this->operation(null);
+		$this->assertSame(200, $this->makeController('fb', false, $sync, true)->getProgress('organisation_sync_x')->getStatus());
+		$this->assertSame(404, $this->makeController('fb', false, $this->operation(null), true)->getProgress('sbom-import_abc')->getStatus());
+		$this->assertSame(404, $this->makeController('bob', false, $sync, false)->getProgress('organisation_sync_x')->getStatus());
+	}//end testAFunctionalAdministratorReadsTheOrganisationSyncOnly()
 
 }//end class

@@ -140,7 +140,7 @@ class CmdbImportPackRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-1
 	 */
 	public function testTheOwnerPackMayMapAnEmailAddressAndAnEmployeeNumber(): void {
 		$profile = $this->shipped(file: 'topdesk-profile.json');
@@ -343,4 +343,25 @@ class CmdbImportPackRulesTest extends TestCase {
 			$this->assertSame('The stackiq register definition cannot be read, so the CMDB import packs cannot be checked', $e->getMessage());
 		}
 	}//end testAnUnreadableRegisterIsMappingUnavailable()
+
+	/**
+	 * A malformed never-written list or defaults block counts as empty, so the pinned defaults are still demanded.
+	 *
+	 * @return void
+	 */
+	public function testMalformedListsCountAsEmpty(): void {
+		$profile = $this->shipped(file: 'topdesk-profile.json');
+		$profile['neverWritten']['manufacturer'] = 'name';
+		$pack = $this->shipped(file: 'topdesk-manufacturer.json');
+		$pack['defaults'] = 'Supplier';
+
+		$this->assertSame(
+			[
+				'default "type" must stay "Supplier"',
+				'default "status" must stay "Active"',
+				'default "registeredBy" must stay "Supplier"',
+			],
+			(new CmdbImportPackRules())->violations(target: 'manufacturer', pack: $pack, profile: $profile)
+		);
+	}//end testMalformedListsCountAsEmpty()
 }//end class

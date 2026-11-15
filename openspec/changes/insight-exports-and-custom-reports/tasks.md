@@ -10,8 +10,8 @@
   - GIVEN a user whose active organisation is A WHEN the guard checks A THEN it allows, and WHEN it checks B THEN it refuses
   - GIVEN a refused user WHEN they call the organisation ArchiMate export THEN stackiq answers 403 before `ArchiMateService::exportOrgArchiMate()` runs
   - GIVEN the portfolio report WHEN the same users call it THEN the answers are unchanged
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/OrganisationScopeGuardTest.php and tests/Unit/Controller/SettingsControllerOrgExportTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/OrganisationScopeGuardTest.php and tests/Unit/Controller/SettingsControllerOrgExportTest.php)
 
 ### Task 2: Add the Export as ArchiMate action to the organisation detail page
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation

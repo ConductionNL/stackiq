@@ -15,7 +15,8 @@
 			"route": "/gemma-plaat",
 			"type": "custom",
 			"title": "GEMMA plate",
-			"component": "GemmaPlateView"
+			"component": "GemmaPlateView",
+			"_note": "A plate, not a list: the GEMMA reference components grouped as the GEMMA model groups them, each with the applications the organisation uses for it and its state (covered, gap or overlap), from one organisation-scoped GET /api/reference-component-coverage answer. No standard page type renders grouped coverage like this."
 		}
 	]
 }

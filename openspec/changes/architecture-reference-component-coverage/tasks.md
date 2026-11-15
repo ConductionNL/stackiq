@@ -33,7 +33,7 @@
 - [x] Test (PHPUnit `ReferenceComponentCoverageControllerTest`, `ReferenceComponentCoverageServiceTest`)
 
 ### Task 4: GEMMA plate page (board SkGemmaPlaat)
-- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 - **files**: `src/manifest.d/reference-component-coverage.json` (menu child of Reports & Compliance), `src/views/organisaties/GemmaPlate.vue`, `src/utils/referenceComponentCoverage.js`, `tests/vitest/referenceComponentCoverage.spec.js`, `src/customComponents.js`, `tests/e2e/workflows/reference-component-coverage.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the Reports page WHEN it renders THEN it shows the card Reference component coverage next to Portfolio rationalization
@@ -48,7 +48,7 @@
 - **acceptance_criteria**:
   - GIVEN a picked view WHEN it renders THEN it is read-only and every reference component node carries its state as a CSS variable colour and as text
   - GIVEN a node whose element is not a reference component WHEN it renders THEN it carries no state
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `coverageViewMap.spec.js`, Playwright map scenario)
 
 ### Task 6: Overlap in the portfolio report
@@ -58,16 +58,16 @@
   - GIVEN two rows that share a component WHEN the report is built THEN both carry `overlapsWith` and the payload counts two overlapping rows
   - GIVEN the CSV WHEN it is built THEN it has the `overlapsWith` column
   - GIVEN the page WHEN the report has overlap THEN an Overlap section lists each component with its applications
-- [ ] Implement
+- [x] Implement
 - [ ] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario)
 
 ### Task 7: Documentation and translations
-- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 - **files**: `docs/features/reference-component-coverage.md`, `docs/features/portfolio-rationalization.md`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the feature pages WHEN they are read THEN they show the coverage table, the map and the Overlap section, each in a screenshot
   - GIVEN a Dutch instance WHEN the coverage page renders THEN every new label reads in Dutch
-- [ ] Implement
+- [x] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
 ## Verification
