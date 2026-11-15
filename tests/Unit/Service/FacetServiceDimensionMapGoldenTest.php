@@ -3,7 +3,7 @@
 /**
  * Golden test of the per-object GEMMA dimension values of the facet service.
  *
- * Pins buildDimensionValueMap for objects whose modules carry repeated,
+ * Pins the dimension map (dimensionValuesAndDefinitions) for objects whose modules carry repeated,
  * unresolved and nameless referenceComponents, padded and empty domains,
  * standards with empty names, and application services linked by relation.
  *
@@ -71,9 +71,9 @@ class FacetServiceDimensionMapGoldenTest extends TestCase {
 			$cacheFactory
 		);
 
-		$method = new \ReflectionMethod(FacetService::class, 'buildDimensionValueMap');
+		$method = new \ReflectionMethod(FacetService::class, 'dimensionValuesAndDefinitions');
 		$method->setAccessible(true);
-		return $method->invoke($service, $modulesByObjectId);
+		return $method->invoke($service, $modulesByObjectId)[0];
 	}//end map()
 
 	/**

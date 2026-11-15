@@ -47,8 +47,8 @@
   - GIVEN the reference component facet WHEN it renders THEN each value has an information button whose popover shows the name, "from GEMMA", `element.documentation` and a "More in GEMMA Online" link to `element.gemmaUrl`
   - GIVEN the facet endpoint WHEN it returns reference component buckets THEN each bucket carries `documentation` and `gemmaUrl`
   - GIVEN a component without documentation WHEN its popover opens THEN only the name and the link show
-- [ ] Implement
-- [ ] Test (vitest `gemmaDefinitionPopover.spec.js`, PHPUnit `FacetServiceDefinitionTest`)
+- [x] Implement
+- [x] Test (vitest `gemmaDefinitionPopover.spec.js`, PHPUnit `FacetServiceDefinitionTest`)
 
 ### Task 6: Documentation and matrix
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md

@@ -1352,7 +1352,11 @@ OC.L10N.register(
         "What comparable organisations use": "What comparable organisations use",
         "What comparable organisations use could not be loaded.": "What comparable organisations use could not be loaded.",
         "What comparable organisations use: {type}": "What comparable organisations use: {type}",
-        "What comparable organisations use: {type}, {band}": "What comparable organisations use: {type}, {band}"
+        "What comparable organisations use: {type}, {band}": "What comparable organisations use: {type}, {band}",
+        "{name}, from GEMMA": "{name}, from GEMMA",
+        "More in GEMMA Online": "More in GEMMA Online",
+        "What is {name}?": "What is {name}?",
+        "What the reference components are": "What the reference components are"
     },
     "nplurals=2; plural=(n != 1);"
 )
