@@ -22,11 +22,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 
+require_once __DIR__ . '/../Support/MainApiObjectService.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\ContractStatusJob;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\MainApiObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -94,7 +97,7 @@ class ContractStatusJobTest extends TestCase {
 		parent::setUp();
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->locator = $this->createMock(ObjectTypeLocatorInterface::class);
-		$this->objects = $this->createMock(ObjectServiceInterface::class);
+		$this->objects = $this->createMock(MainApiObjectService::class);
 		$this->apps = $this->createMock(IAppManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		foreach (['info', 'error'] as $level) {
@@ -226,7 +229,14 @@ class ContractStatusJobTest extends TestCase {
 			);
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['status' => 'Expired', 'endDate' => '2000-01-31', 'name' => 'Old'], [], '7', '12', 'u-past');
+			->willReturnCallback(
+				function (array $object, mixed ...$rest): ObjectEntityInterface {
+					$options = MainApiObjectService::optionsOf(args: $rest);
+					$this->assertSame(['status' => 'Expired', 'endDate' => '2000-01-31', 'name' => 'Old'], $object);
+					$this->assertSame(['7', '12', 'u-past'], [$options?->target->register, $options?->target->schema, $options?->uuid]);
+					return $this->contract('u-past', $object);
+				}
+			);
 
 		$this->runJob($this->job());
 

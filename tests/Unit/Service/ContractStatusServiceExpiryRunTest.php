@@ -20,11 +20,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/MainApiObjectService.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\MainApiObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -69,7 +72,7 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$this->container = $this->createMock(originalClassName: ContainerInterface::class);
 		$this->locator = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
 		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->objects = $this->createMock(originalClassName: MainApiObjectService::class);
 	}//end setUp()
 
 	/**
@@ -194,12 +197,13 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 			);
 
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(
-				['status' => 'Expired', 'endDate' => '2026-06-01', 'name' => 'A'],
-				[],
-				'7',
-				'9',
-				'past'
+			->willReturnCallback(
+				function (array $object, mixed ...$rest): ObjectEntityInterface {
+					$options = MainApiObjectService::optionsOf(args: $rest);
+					$this->assertSame(['status' => 'Expired', 'endDate' => '2026-06-01', 'name' => 'A'], $object);
+					$this->assertSame(['7', '9', 'past'], [$options?->target->register, $options?->target->schema, $options?->uuid]);
+					return $this->contract(uuid: 'past', data: $object);
+				}
 			);
 
 		$this->assertSame(expected: 1, actual: $this->service()->expirePastContracts($this->now()));
@@ -221,8 +225,8 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$saved = $this->contract(uuid: 'second', data: []);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')
 			->willReturnCallback(
-				static function (array $object, array $extend, $register, $schema, $uuid) use ($saved) {
-					if ($uuid === 'first') {
+				static function (array $object, mixed ...$rest) use ($saved) {
+					if (MainApiObjectService::optionsOf(args: $rest)?->uuid === 'first') {
 						throw new RuntimeException('locked');
 					}
 

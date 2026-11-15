@@ -18,11 +18,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/MainApiObjectService.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\MainApiObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -64,7 +68,7 @@ class ContractStatusExpiringPassTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->objects = $this->createMock(ObjectServiceInterface::class);
+		$this->objects = $this->createMock(MainApiObjectService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->saved = [];
 	}//end setUp()
@@ -133,7 +137,11 @@ class ContractStatusExpiringPassTest extends TestCase {
 			}
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, array $extend, $register, $schema, $uuid) {
+			function (array $object, mixed ...$rest) {
+				$options = MainApiObjectService::optionsOf(args: $rest);
+				$this->assertInstanceOf(ObjectSaveOptions::class, $options);
+				$this->assertSame(['7', '9'], [$options->target->register, $options->target->schema]);
+				$uuid = $options->uuid;
 				$this->saved[$uuid] = $object['status'];
 				return $this->contract(uuid: $uuid, data: $object);
 			}
