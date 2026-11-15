@@ -42,11 +42,13 @@
   - GIVEN it does not WHEN checked THEN an issue is filed on nextcloud-vue and the tab is left as it is
 - [ ] Implement
 - [ ] Test (vitest on the manifest config, or the library's own test once the label map exists)
+  > Checked: the `audit` widget's `CnAuditTrailCard` gained `actionLabels` in later `@conduction/nextcloud-vue` releases (stackiq is locked to 2.74.0, which has none), but it matches an action exactly (`labels[action]`) and fills only `{actor}`, `{state}`, `{changed.*}` and `{object.*}`: there is no `mcp.*` wildcard and no `{toolId}` token, so "Assistant: {toolId}" cannot be configured. Needed in nextcloud-vue `actionLabelFor`/`fillAuditLabel`: a prefix key (`mcp.*`) and a `{toolId}` token. The History tab is left as it is; the Assistant actions page carries these rows.
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used
 - **files**: `docs/features/ask-the-catalogue.md`, `docs/features/assistant-actions.md`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens either page THEN it explains what is searched, what is sent to hermiq, and where to review assistant actions
-- [ ] Implement
+- [x] Implement
+  > Written: `docs/features/ask-the-catalogue.md` (what is searched, what is sent to hermiq, the answer) and `docs/features/assistant-actions.md` (columns, filters, source, who can see it, the History tab). The docs build is left to the docs pipeline.
 - [ ] Test (docs build)
