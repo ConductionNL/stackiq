@@ -35,6 +35,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\PublicationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
@@ -114,8 +117,7 @@ class PublicationService implements PublicationServiceInterface {
 		try {
 			$entity = $objectService->find(
 				id: $uuid,
-				register: (string)$registerId,
-				schema: (string)$schemaId
+				options: new ObjectFindOptions(register: (string)$registerId, schema: (string)$schemaId)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug(
@@ -237,9 +239,10 @@ class PublicationService implements PublicationServiceInterface {
 		try {
 			$objectService->saveObject(
 				object: $data,
-				register: $entry['register'],
-				schema: $entry['schema'],
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $entry['register'], schema: $entry['schema']),
+					uuid: $uuid
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(

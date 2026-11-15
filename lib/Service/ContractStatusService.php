@@ -28,6 +28,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
@@ -162,10 +164,13 @@ class ContractStatusService implements ContractStatusServiceInterface {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					extend: [],
-					register: $contract->getRegister(),
-					schema: $contract->getSchema(),
-					uuid: $contract->getUuid()
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contract->getRegister(),
+								schema: $contract->getSchema()
+							),
+						uuid: $contract->getUuid()
+					)
 				);
 				$transitioned++;
 				$this->logger->info(
