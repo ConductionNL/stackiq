@@ -22,15 +22,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-require_once __DIR__ . '/../Support/SearchCallShape.php';
-
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\DataQualityDerivation;
 use OCA\Stackiq\Service\DataQualityReportService;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -92,7 +89,7 @@ final class DataQualityReportBuildGoldenTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (...$args) use (&$trace, $case): array {
-				$trace[] = ['searchObjectsPaginated', SearchCallShape::paginated(args: $args)];
+				$trace[] = ['searchObjectsPaginated', $args];
 				return ($case['page'] ?? []);
 			}
 		);
@@ -168,11 +165,11 @@ final class DataQualityReportBuildGoldenTest extends TestCase {
 		);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(($case['apps'] ?? ['openregister']));
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(CatalogueLocator::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(($case['config'] ?? ['register' => '1', 'gebruik_schema' => '20']));
 
 		$service = new DataQualityReportService(
-			settingsService: $settings,
+			catalogue: $settings,
 			appManager: $appManager,
 			container: $container,
 			logger: new NullLogger(),

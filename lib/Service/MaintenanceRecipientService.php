@@ -30,8 +30,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
-use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -226,10 +224,14 @@ class MaintenanceRecipientService {
 		// A failed read is thrown, not taken as "nobody to notify": the job tries
 		// again, while an empty list would be recorded as resolved for good.
 		$people = $objectService->searchObjects(
-			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-			_rbac: false,
-			_multitenancy: false,
-			options: new SearchOptions(selection: new ObjectSelection(ids: $contactIds))
+			...array_merge(
+				[
+					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+					'_rbac' => false,
+					'_multitenancy' => false,
+				],
+				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
+			)
 		);
 
 		$userIds = [];

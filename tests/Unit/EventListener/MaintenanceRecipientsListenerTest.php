@@ -27,7 +27,6 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCA\Stackiq\BackgroundJob\MaintenanceRecipientsJob;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
@@ -188,8 +187,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->objectService->method('searchObjects')->willReturnCallback(
-			function (array $query=[], bool $_rbac=true, bool $_multitenancy=true, ?SearchOptions $options=null) use ($usages, $people): array {
-				$ids = $options?->selection->ids;
+			function (array $query=[], bool $_rbac=true, bool $_multitenancy=true, ?array $ids=null) use ($usages, $people): array {
 				if ($query['schema'] === self::SCHEMAS['usage'] && $this->failUsages === true) {
 					throw new \RuntimeException('index offline');
 				}
@@ -606,7 +604,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheListenerIsRegistered(): void {
-		$source = (string) file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+		$source = (string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 
 		$this->assertMatchesRegularExpression(
 			'/registerEventListener\(\s*ObjectCreatedEvent::class,\s*MaintenanceRecipientsListener::class\s*\)/',

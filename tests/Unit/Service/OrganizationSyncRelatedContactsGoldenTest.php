@@ -222,11 +222,7 @@ class OrganizationSyncRelatedContactsGoldenTest extends TestCase {
 				continue;
 			}
 
-			// An object default (a value-object argument) is a fresh instance each call: compare by value.
-			$default = $param->isDefaultValueAvailable() === true ? $param->getDefaultValue() : null;
-			if ($param->isDefaultValueAvailable() === true
-				&& ($default === $args[$i] || (is_object($default) === true && $default == $args[$i]))
-			) {
+			if ($param->isDefaultValueAvailable() === true && $param->getDefaultValue() === $args[$i]) {
 				continue;
 			}
 

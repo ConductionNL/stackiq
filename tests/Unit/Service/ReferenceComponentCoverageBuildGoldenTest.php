@@ -22,14 +22,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-require_once __DIR__ . '/../Support/SearchCallShape.php';
-
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
 use OCA\Stackiq\Service\ReferenceComponentCoverageDerivation;
 use OCA\Stackiq\Service\ReferenceComponentCoverageService;
 use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -84,7 +81,7 @@ final class ReferenceComponentCoverageBuildGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjectsPaginated')->willReturnCallback(
 			function (...$args) use (&$trace, $case, $usages): array {
-				$trace[] = ['searchObjectsPaginated', SearchCallShape::paginated(args: $args)];
+				$trace[] = ['searchObjectsPaginated', $args];
 				$total   = array_key_exists('usageTotal', $case) === true ? $case['usageTotal'] : count($usages);
 				return match ($args[0]['@self']['schema']) {
 					20 => array_filter(['results' => $usages, 'total' => $total], static fn ($v): bool => $v !== null),

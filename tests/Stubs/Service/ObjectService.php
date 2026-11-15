@@ -18,8 +18,6 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
-use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 
 /**
  * Stub for ObjectService with the surface used by Stackiq tests.
@@ -68,10 +66,11 @@ abstract class ObjectService {
 	/**
 	 * Search objects with pagination.
 	 *
-	 * @param array         $query         Search query.
-	 * @param bool          $_rbac         Apply RBAC.
-	 * @param bool          $_multitenancy Apply multitenancy.
-	 * @param SearchOptions $options       Ids/uses selection, views, view scope and deleted.
+	 * @param array $query Search query.
+	 * @param bool $_rbac Apply RBAC.
+	 * @param bool $_multitenancy Apply multitenancy.
+	 * @param bool|null $deleted Include/exclude deleted objects.
+	 * @param string|null $uses Optional uses (relations) filter.
 	 *
 	 * @return array
 	 */
@@ -79,16 +78,19 @@ abstract class ObjectService {
 		array $query = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		SearchOptions $options = new SearchOptions(),
+		?bool $deleted = null,
+		?string $uses = null,
 	): array;
 
 	/**
 	 * Search objects (non-paginated).
 	 *
-	 * @param array         $query         Search query.
-	 * @param bool          $_rbac         Apply RBAC.
-	 * @param bool          $_multitenancy Apply multitenancy.
-	 * @param SearchOptions $options       Ids/uses selection, views, view scope and deleted.
+	 * @param array $query Search query.
+	 * @param bool $_rbac Apply RBAC.
+	 * @param bool $_multitenancy Apply multitenancy.
+	 * @param array|null $ids Optional id filter.
+	 * @param string|null $uses Optional uses filter.
+	 * @param array|null $views Optional views filter.
 	 *
 	 * @return array|int
 	 */
@@ -96,16 +98,19 @@ abstract class ObjectService {
 		array $query = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		SearchOptions $options = new SearchOptions(),
+		?array $ids = null,
+		?string $uses = null,
+		?array $views = null,
 	): array|int;
 
 	/**
 	 * Count objects matching a query (true SQL COUNT, no hydration).
 	 *
-	 * @param array           $query         Search query.
-	 * @param bool            $_rbac         Apply RBAC.
-	 * @param bool            $_multitenancy Apply multitenancy.
-	 * @param ObjectSelection $selection     Ids/uses selection.
+	 * @param array $query Search query.
+	 * @param bool $_rbac Apply RBAC.
+	 * @param bool $_multitenancy Apply multitenancy.
+	 * @param array|null $ids Optional id filter.
+	 * @param string|null $uses Optional uses filter.
 	 *
 	 * @return int
 	 */
@@ -113,7 +118,8 @@ abstract class ObjectService {
 		array $query = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		ObjectSelection $selection = new ObjectSelection(),
+		?array $ids = null,
+		?string $uses = null,
 	): int;
 
 	/**

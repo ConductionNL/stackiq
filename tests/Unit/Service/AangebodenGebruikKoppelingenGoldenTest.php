@@ -43,6 +43,8 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the koppelingen and gebruik lookup by uuid.
  *
  * @covers \OCA\Stackiq\Service\AangebodenGebruikService
+ * @uses \OCA\Stackiq\Service\EmptyListing
+ * @uses \OCA\Stackiq\Service\OpenRegisterLookup
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
  */
@@ -256,8 +258,8 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 						'query'         => $args[0],
 						'_rbac'         => $args[1],
 						'_multitenancy' => $args[2],
-						'deleted'       => $args[3]->deleted,
-						'uses'          => $args[3]->selection->uses,
+						'deleted'       => $args[3],
+						'uses'          => $args[5] ?? null,
 					],
 				];
 				if (isset($this->plan['searchThrows']) === true) {

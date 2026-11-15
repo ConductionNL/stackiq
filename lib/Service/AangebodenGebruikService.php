@@ -25,8 +25,6 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
-use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -483,10 +481,10 @@ class AangebodenGebruikService {
 		$this->logger->debug('Executing koppelingen-gebruik by suite/module UUID', ['uuid' => $uuid, 'query' => $searchQuery]);
 
 		return $request['objectService']->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			options: new SearchOptions(selection: new ObjectSelection(uses: $uuid))
+			...array_merge(
+				['query' => $searchQuery, '_rbac' => false, '_multitenancy' => false],
+				SearchSelection::uses(service: $request['objectService'], method: 'searchObjectsPaginated', uses: $uuid, older: ['deleted' => false])
+			)
 		);
 	}//end searchKoppelingen()
 
@@ -706,15 +704,14 @@ class AangebodenGebruikService {
 
 			// Execute search following PublicationsController.php used() method pattern.
 			// Use database source and uses parameter for relationship filtering.
+			// RBAC and multitenancy off to reach any object of any organisation.
+			// Deleted objects are excluded by default; uses finds the objects
+			// that have this UUID in their relations array.
 			$searchResult = $objectService->searchObjectsPaginated(
-				query: $query,
-				_rbac: false,
-				// Disable RBAC to access any object.
-				_multitenancy: false,
-				// Disable multitenancy to access objects from any organisation.
-				// Deleted objects are excluded by default; uses finds the objects
-				// that have this UUID in their relations array.
-				options: new SearchOptions(selection: new ObjectSelection(uses: $suiteId))
+				...array_merge(
+					['query' => $query, '_rbac' => false, '_multitenancy' => false],
+					SearchSelection::uses(service: $objectService, method: 'searchObjectsPaginated', uses: $suiteId, older: ['deleted' => false])
+				)
 			);
 
 			$this->logger->debug(
