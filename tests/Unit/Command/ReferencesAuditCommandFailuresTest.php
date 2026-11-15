@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Command;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Command\ReferencesAuditCommand;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -118,29 +119,23 @@ class ReferencesAuditCommandFailuresTest extends TestCase {
 			}
 
 			/**
-			 * @param string               $objectId      The object id.
-			 * @param array<string, mixed> $data          The patch.
-			 * @param string|null          $register      The register.
-			 * @param string|null          $schema        The schema.
-			 * @param bool                 $_rbac         RBAC flag.
-			 * @param bool                 $_multitenancy Multitenancy flag.
+			 * @param ObjectPatch $patch         The patch.
+			 * @param bool        $_rbac         RBAC flag.
+			 * @param bool        $_multitenancy Multitenancy flag.
 			 *
 			 * @return array<string, mixed> The patch, echoed.
 			 */
 			public function patchObject(
-				string $objectId,
-				array $data,
-				?string $register = null,
-				?string $schema = null,
+				ObjectPatch $patch,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
-				if (in_array($objectId, $this->failingPatchIds, true) === true) {
+				if (in_array($patch->objectId, $this->failingPatchIds, true) === true) {
 					throw new RuntimeException('locked by another process');
 				}
 
-				$this->test->patched[] = $objectId;
-				return $data;
+				$this->test->patched[] = $patch->objectId;
+				return $patch->data;
 			}
 		};
 
