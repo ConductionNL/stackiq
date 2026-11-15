@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -478,8 +479,7 @@ class ViewService implements ViewServiceInterface {
 			// no way around the list's scope.
 			$view = $objectService->find(
 				id: $viewId,
-				register: $registerId,
-				schema: $viewSchemaId
+				options: new ObjectFindOptions(register: $registerId, schema: $viewSchemaId)
 			);
 
 			// Serialise the entity to an array. No `is_array()` / `method_exists()`

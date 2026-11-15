@@ -37,6 +37,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts what the mirror writes, and that the listener reaches it.
@@ -243,6 +244,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$written = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$written, $stale) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$written[] = $args;
 				return $stale;
 			}
@@ -271,7 +273,9 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	public function testADepublishedModuleClearsItsVersions(): void {
 		$service = $this->service();
 		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality'])]);
-		$this->objects->expects($this->once())->method('saveObject')->with($this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null));
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null),
+			]));
 		$module = self::entity('m-1', '43', ['registeredBy' => 'Municipality']);
 		$this->objects->method('find')->willReturn($module);
 
@@ -287,7 +291,9 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	public function testAVersionReadsItsModuleAndStopsWhenInStep(): void {
 		$service = $this->service();
 		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
-		$this->objects->expects($this->once())->method('saveObject')->with($this->callback(static fn (array $data): bool => $data['moduleRegisteredBy'] === 'Supplier'));
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $data): bool => $data['moduleRegisteredBy'] === 'Supplier'),
+			]));
 
 		$this->assertSame(1, $service->objectSaved(object: self::entity('v-9', '46', ['module' => 'm-1'])));
 		$this->assertSame(0, $service->objectSaved(object: self::entity('v-9', '46', ['module' => 'm-1', 'modulePublicationDate' => null, 'moduleRegisteredBy' => 'Supplier'])));
@@ -349,9 +355,9 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	public function testADeletedModuleClearsItsVersions(): void {
 		$service = $this->service();
 		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null)
-		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null),
+			]));
 
 		$this->objects->expects($this->never())->method('find');
 
@@ -372,9 +378,9 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		// OpenRegister's find() throws for a missing object; it does not return null.
 		$this->objects->method('find')->willThrowException(new DoesNotExistException('gone'));
 		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null)
-		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null),
+			]));
 
 		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();

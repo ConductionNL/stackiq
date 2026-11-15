@@ -35,6 +35,7 @@ use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Cases for the publication copy job.
@@ -76,7 +77,11 @@ class ModuleVersionPublicationJobRunTest extends TestCase {
 
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $_extend=[], $files=false, $register=null, $schema=null, $_rbac=true, $_multitenancy=true) use ($module) {
+			function ($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($module) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->trace[] = ['find', $id, $register, $schema, $_rbac, $_multitenancy];
 				if ($this->plan['find'] === 'missing') {
 					throw new DoesNotExistException('gone');
