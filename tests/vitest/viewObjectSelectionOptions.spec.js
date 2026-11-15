@@ -41,6 +41,21 @@ const { default: ViewObject } =
 
 const computed = ViewObject.computed
 
+/**
+ * A plain context with the component's own methods bound, so a computed
+ * property can call the helpers it uses (schemaOptionsOf).
+ *
+ * @param {object} fields The data fields.
+ * @return {object} The context.
+ */
+function withMethods(fields) {
+	const ctx = { ...fields }
+	for (const [name, fn] of Object.entries(ViewObject.methods || {})) {
+		ctx[name] = fn.bind(ctx)
+	}
+	return ctx
+}
+
 beforeEach(() => {
 	store.collections = {
 		catalog: {
@@ -126,22 +141,22 @@ describe('ViewObject catalog, register and schema options', () => {
 	})
 
 	it('lists only schemas both the register and the catalog carry', () => {
-		expect(computed.schemaOptions.call({
+		expect(computed.schemaOptions.call(withMethods({
 			selectedCatalog: { id: 'c1' },
 			selectedRegister: { id: 'r1' },
-		})).toEqual([
+		}))).toEqual([
 			{ id: 's1', label: 'Schema One' },
 			{ id: 's3', label: 'Schema Three' },
 		])
 	})
 
 	it('has no schemas without both selections, an unknown one, or no overlap', () => {
-		expect(computed.schemaOptions.call({ selectedCatalog: { id: 'c1' }, selectedRegister: null })).toEqual([])
-		expect(computed.schemaOptions.call({ selectedCatalog: null, selectedRegister: { id: 'r1' } })).toEqual([])
-		expect(computed.schemaOptions.call({ selectedCatalog: { id: 'c1' }, selectedRegister: { id: 'nope' } })).toEqual([])
-		expect(computed.schemaOptions.call({ selectedCatalog: { id: 'nope' }, selectedRegister: { id: 'r1' } })).toEqual([])
-		expect(computed.schemaOptions.call({ selectedCatalog: { id: 'c1' }, selectedRegister: { id: 'r3' } })).toEqual([])
-		expect(computed.schemaOptions.call({ selectedCatalog: { id: 'c2' }, selectedRegister: { id: 'r2' } })).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: { id: 'c1' }, selectedRegister: null }))).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: null, selectedRegister: { id: 'r1' } }))).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: { id: 'c1' }, selectedRegister: { id: 'nope' } }))).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: { id: 'nope' }, selectedRegister: { id: 'r1' } }))).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: { id: 'c1' }, selectedRegister: { id: 'r3' } }))).toEqual([])
+		expect(computed.schemaOptions.call(withMethods({ selectedCatalog: { id: 'c2' }, selectedRegister: { id: 'r2' } }))).toEqual([])
 	})
 
 	it('has a selected schema only once properties are shown', () => {
