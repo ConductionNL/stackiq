@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import fragment from '../../lib/Settings/register.d/contracts-expiry-and-owner.json'
 import register from '../../lib/Settings/softwarecatalogus_register.json'

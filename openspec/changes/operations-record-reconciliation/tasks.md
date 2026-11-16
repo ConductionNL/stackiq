@@ -42,7 +42,7 @@
   - `FacetService` leaves Merged records out of the lists and facet counts (`FacetServiceMergedTest`).
   - `src/components/merge/MergedRecordBanner.vue`, a `before-body` widget on `ModuleDetail`, says the entry was merged and links to the survivor (the services list has no detail page).
   - Find duplicates on `/modules` and `/diensten`: a link in the toolbar of `FacetedCatalogIndexView` to OpenRegister's `/duplicates` page, shown when `/api/me` answers `mayFindDuplicates` (a Nextcloud admin or a member of `functioneel-beheerder`, `SyncAccessPolicy::isAdministrator()`).
-  - Not on `/organisaties`: an index page's `headerActions` cannot be hidden per user in `@conduction/nextcloud-vue` 2.74, so the action would show to everyone; it waits for a visibility rule on header actions.
+  - Find duplicates on `/organisaties`: a `headerActions` entry of the index page linking to `/apps/openregister/duplicates`, drawn only when the `visibleWhen` endpoint condition on `/api/me` answers `mayFindDuplicates` (`@conduction/nextcloud-vue` 2.181 added `visibleWhen` to index header actions; `organisatiesFindDuplicates.spec.js`).
 - [ ] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php and Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts)
 
 ### Task 5: Remove the unused merge modal, seed a duplicate and document the flow

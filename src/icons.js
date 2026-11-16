@@ -36,6 +36,7 @@ import ClipboardListOutline from 'vue-material-design-icons/ClipboardListOutline
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import Cube from 'vue-material-design-icons/Cube.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import Database from 'vue-material-design-icons/Database.vue'
@@ -110,6 +111,7 @@ export default {
 	ClockOutline,
 	CogOutline,
 	CommentOutline,
+	ContentDuplicate,
 	Cube,
 	CurrencyEur,
 	Database,

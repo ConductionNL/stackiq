@@ -400,6 +400,15 @@
 				"cardComponent": "OrganisatieCard",
 				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Draft", "Active", "Inactive"] },
+				"headerActions": [
+					{
+						"id": "find-duplicates",
+						"label": "Find duplicates",
+						"icon": "ContentDuplicate",
+						"href": "/apps/openregister/duplicates",
+						"visibleWhen": { "endpoint": "/apps/stackiq/api/me", "field": "mayFindDuplicates", "op": "eq", "value": true }
+					}
+				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
 			},

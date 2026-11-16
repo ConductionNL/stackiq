@@ -19,8 +19,9 @@ Nextcloud admins and functional administrators (members of the
 
 ## Finding and merging duplicates
 
-1. Open **Applications** or **Services**.
-2. Choose **Find duplicates** in the toolbar. OpenRegister's **Duplicate
+1. Open **Applications**, **Services** or **Organisation relationships**.
+2. Choose **Find duplicates** in the toolbar (on the organisations page, in
+   the page header). OpenRegister's **Duplicate
    candidates** page opens.
 3. Pick the register and schema. The page lists the pairs that look alike.
    Applications and services are compared on their name (normalised and by
@@ -29,9 +30,8 @@ Nextcloud admins and functional administrators (members of the
 4. Open a pair to start OpenRegister's merge wizard, check the preview, and
    merge. Or dismiss a pair that is not a duplicate.
 
-On `/organisaties` there is no Find duplicates button yet: open
-OpenRegister's Duplicate candidates page from its own menu. Organisations
-are merged with stackiq's own [organisation merge](organisation-merge.md).
+Organisations found this way are merged with stackiq's own
+[organisation merge](organisation-merge.md).
 
 ## What happens after a merge
 
