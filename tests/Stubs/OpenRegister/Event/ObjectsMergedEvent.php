@@ -24,7 +24,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+ * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCP\EventDispatcher\Event;
 /**
  * Fired after a merge (or a merge reversal) completes.
  *
- * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+ * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
  */
 class ObjectsMergedEvent extends Event {
 	/**
@@ -47,7 +47,7 @@ class ObjectsMergedEvent extends Event {
 	 * @param string $mergeOperationId UUID of the persisted `mergeOperation` row.
 	 * @param bool $isReversal True when this event represents a reversal, not a merge.
 	 *
-	 * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+	 * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Immutable read-only event
 	 *   data, not a control-flow switch: `isReversal` is a fact about what
@@ -69,7 +69,7 @@ class ObjectsMergedEvent extends Event {
 	 *
 	 * @return string Survivor uuid.
 	 *
-	 * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+	 * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
 	 */
 	public function getSurvivorUuid(): string {
 		return $this->survivorUuid;
@@ -80,7 +80,7 @@ class ObjectsMergedEvent extends Event {
 	 *
 	 * @return array<int, string> Merged-from uuids.
 	 *
-	 * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+	 * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
 	 */
 	public function getMergedFromUuids(): array {
 		return $this->mergedFromUuids;
@@ -91,7 +91,7 @@ class ObjectsMergedEvent extends Event {
 	 *
 	 * @return string Merge-operation uuid.
 	 *
-	 * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+	 * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
 	 */
 	public function getMergeOperationId(): string {
 		return $this->mergeOperationId;
@@ -102,7 +102,7 @@ class ObjectsMergedEvent extends Event {
 	 *
 	 * @return bool True when this is a reversal.
 	 *
-	 * @spec openspec/changes/mdm-merge-engine/tasks.md#3.1
+	 * @spec exclude Test stub of the OpenRegister merge event, no functional requirement.
 	 */
 	public function isReversal(): bool {
 		return $this->isReversal;
