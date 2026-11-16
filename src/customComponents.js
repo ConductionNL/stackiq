@@ -20,6 +20,7 @@
 import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
@@ -132,6 +133,11 @@ export default {
 	// The contracts behind an application, a bodyWidgets section on ModuleDetail
 	// (landscape-application-page): two hops, so not an object-list widget.
 	ApplicationContractsPanel,
+
+	// The connections of an application as a map, with SVG, PNG and CSV
+	// downloads (connections-diagram-and-graph-export D1, D3): a one-hop graph
+	// over two queries, which no object-list widget draws.
+	ConnectionMapWidget,
 
 	ContractApprovalPanel,
 

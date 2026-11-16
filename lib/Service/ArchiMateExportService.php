@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\ArchiMate\ConnectionFlows;
 use OCA\Stackiq\Service\ArchiMate\XmlAttribute;
 use OCA\Stackiq\Service\ArchiMate\XmlAttributeRun;
 use Psr\Log\LoggerInterface;
@@ -79,6 +80,13 @@ class ArchiMateExportService {
 	 * Nested structures whose property-like and invalid-tag fields are filtered out.
 	 */
 	private const NESTED_CONTAINER_KEYS = ['elementProperties', 'properties', 'viewNodes'];
+
+	/**
+	 * How many connections the last organisation export skipped.
+	 *
+	 * @var int
+	 */
+	private int $lastSkippedConnections = 0;
 
 	/**
 	 * The identifier of the "Gedeeld door" property definition the export adds.
@@ -2477,6 +2485,7 @@ XML;
 	 * @param array $modulesData Module objects.
 	 * @param array $deelnamesData Deelnames data.
 	 * @param array $options Export options.
+	 * @param array $connectionsData The connection objects, written as flows when options.connections is true (REQ-CDX-004).
 	 *
 	 * @return string Generated XML.
 	 * @spec   openspec/specs/archimate-export/spec.md
@@ -2491,8 +2500,10 @@ XML;
 		array $modulesData,
 		array $deelnamesData = [],
 		array $options = [],
+		array $connectionsData = [],
 	): string {
 		$startTime = microtime(true);
+		$this->lastSkippedConnections = 0;
 		$this->logger->info(
 			'Starting organization ArchiMate export',
 			[
@@ -2568,6 +2579,18 @@ XML;
 			sourcePropDefId: $sourcePropDefId
 		);
 
+		// Step 4b: The organisation's connections as flows (REQ-CDX-004), in the model only.
+		$flows = [];
+		if (($options['connections'] ?? false) === true) {
+			$written = (new ConnectionFlows())->flows(
+				connections: $connectionsData,
+				elements: array_merge(self::elementIdentifiers(baseObjects: $baseObjects), self::applicationIdentifiers(appElements: $allAppElements)),
+				sourcePropDefId: $sourcePropDefId
+			);
+			$flows = $written['relationships'];
+			$this->lastSkippedConnections = $written['skipped'];
+		}
+
 		// Step 5: Build SWC organization folders with typed structure.
 		$swcFolders = $this->buildSwcOrganizationFolders(
 			gebruiktAppElements: $gebruiktAppElements,
@@ -2581,7 +2604,7 @@ XML;
 			baseObjects: $baseObjects,
 			orgName: $orgName,
 			appElements: $allAppElements,
-			relationships: $allRelationships,
+			relationships: array_merge($allRelationships, $flows),
 			viewCopies: $viewCopies,
 			swcFolders: $swcFolders,
 			sourcePropDefId: $sourcePropDefId
@@ -2763,6 +2786,60 @@ XML;
 		$this->logger->debug('Bron property definition not found, will create', ['id' => $sourceId]);
 		return $sourceId;
 	}//end ensureBronPropertyDefinition()
+
+	/**
+	 * How many connections the last organisation export skipped: an end was not in the model.
+	 *
+	 * @return int The count.
+	 *
+	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 */
+	public function lastSkippedConnections(): int {
+		return $this->lastSkippedConnections;
+	}//end lastSkippedConnections()
+
+	/**
+	 * The element identifier of every base element, by its object id: the national provisions a connection can target.
+	 *
+	 * @param array<int, mixed> $baseObjects The base AMEF objects.
+	 *
+	 * @return array<string, string> Identifiers by object id.
+	 */
+	private static function elementIdentifiers(array $baseObjects): array {
+		$identifiers = [];
+		foreach ($baseObjects as $object) {
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$object = $object->jsonSerialize();
+			}
+
+			$objectId = (string)($object['id'] ?? $object['@self']['id'] ?? '');
+			$identifier = (string)($object['xml']['_identifier'] ?? $object['identifier'] ?? '');
+			if (($object['section'] ?? '') === 'element' && $objectId !== '' && $identifier !== '') {
+				$identifiers[$objectId] = $identifier;
+			}
+		}
+
+		return $identifiers;
+	}//end elementIdentifiers()
+
+	/**
+	 * The element identifier of every exported application, by module id; the first one wins.
+	 *
+	 * @param array<int, array<string, mixed>> $appElements The generated application elements.
+	 *
+	 * @return array<string, string> Identifiers by module id.
+	 */
+	private static function applicationIdentifiers(array $appElements): array {
+		$identifiers = [];
+		foreach ($appElements as $element) {
+			$moduleId = (string)($element['moduleId'] ?? '');
+			if ($moduleId !== '' && isset($identifiers[$moduleId]) === false) {
+				$identifiers[$moduleId] = $element['identifier'];
+			}
+		}
+
+		return $identifiers;
+	}//end applicationIdentifiers()
 
 	/**
 	 * Generate ApplicationComponent element arrays for each module.
@@ -3434,6 +3511,11 @@ XML;
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $rel['bronPropDefId']);
 			$propEl->addChild('value', 'Stackiq');
+			foreach (($rel['properties'] ?? []) as $property) {
+				$extraEl = $propsEl->addChild('property');
+				$extraEl->addAttribute('propertyDefinitionRef', $property['ref']);
+				$extraEl->addChild('value', htmlspecialchars($property['value'], ENT_XML1));
+			}
 		}
 
 		// --- Property Definitions section ---.
@@ -3452,6 +3534,17 @@ XML;
 						propertyDefinitionMap: $propDefMap
 					);
 				}
+			}
+		}
+
+		// The connection flow properties (REQ-CDX-004), when a flow uses them.
+		if (str_contains(json_encode($relationships), 'id-swc-propdef-connection-') === true) {
+			foreach (ConnectionFlows::PROPERTY_DEFINITIONS as $identifier => $name) {
+				$flowPropNode = $propDefsFolder->addChild('propertyDefinition');
+				$flowPropNode->addAttribute('identifier', $identifier);
+				$flowPropNode->addAttribute('type', 'string');
+				$flowName = $flowPropNode->addChild('name', $name);
+				$flowName->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
 			}
 		}
 

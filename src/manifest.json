@@ -548,6 +548,7 @@
 				],
 				"bodyWidgets": [
 					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "md-connection-map", "component": "ConnectionMapWidget", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
 				],
