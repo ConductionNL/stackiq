@@ -472,4 +472,55 @@ class McpCuratedToolsTest extends TestCase {
 		$this->assertSame(['status' => ['lastRun' => 'yesterday']], $this->reads($admin)->getEolSyncStatus([]));
 		$this->assertSame(['status' => ['lastRun' => 'now']], $this->writes($admin)->triggerEolSync([]));
 	}//end testThePlainDelegates()
+	/**
+	 * A service that refuses comes back as a validation error with its reason, and one that fails as unavailable.
+	 *
+	 * @return void
+	 */
+	public function testRefusalsAndFailuresAreStructuredErrors(): void {
+		$this->svc(ModerationServiceInterface::class)->method('listPending')->willReturn(['ok' => false, 'reason' => 'unknown type']);
+		$this->svc(ReviewAggregateServiceInterface::class)->method('getAggregate')->willReturnOnConsecutiveCalls(
+			['ok' => false, 'reason' => 'no such module'],
+			$this->throwException(new RuntimeException('index offline'))
+		);
+		$this->svc(ReviewServiceInterface::class)->method('submit')->willReturnOnConsecutiveCalls(
+			['ok' => false, 'reason' => 'rating out of range'],
+			$this->throwException(new RuntimeException('store offline'))
+		);
+		$this->svc(IntakeServiceInterface::class)->method('submit')->willReturn(['ok' => false, 'reason' => 'name taken']);
+		$admin = $this->caller(uid: 'root', admin: true);
+		$reads = $this->reads($admin);
+		$writes = $this->writes($admin);
+		$subject = ['subjectType' => 'module', 'subjectId' => self::A];
+		$review = $subject + ['review' => ['rating' => 11]];
+
+		$this->assertSame(['validation_error', 'unknown type'], self::errorOf($reads->listPendingModerations(['type' => 'software-review'])));
+		$this->assertSame(['validation_error', 'no such module'], self::errorOf($reads->getReviewAggregate($subject)));
+		$this->assertSame(['unavailable', 'index offline'], self::errorOf($reads->getReviewAggregate($subject)));
+		$this->assertSame(['validation_error', 'rating out of range'], self::errorOf($writes->submitReview($review)));
+		$this->assertSame(['unavailable', 'store offline'], self::errorOf($writes->submitReview($review)));
+		$this->assertSame(['validation_error', 'name taken'], self::errorOf($writes->registerOrganisation(['organisation' => ['name' => 'Gemeente X']])));
+	}//end testRefusalsAndFailuresAreStructuredErrors()
+
+	/**
+	 * A contact profile answer that is not an object reads as an empty profile.
+	 *
+	 * @return void
+	 */
+	public function testANonObjectProfileReadsAsEmpty(): void {
+		$this->svc(ContactpersonenController::class)->method('getMe')->willReturn(new JSONResponse('not an object'));
+
+		$this->assertSame([], $this->reads($this->caller(uid: 'ann'))->getMyContactProfile([]));
+	}//end testANonObjectProfileReadsAsEmpty()
+
+	/**
+	 * The error code and message of a structured error.
+	 *
+	 * @param array<string, mixed> $result The tool result.
+	 *
+	 * @return array{0: mixed, 1: mixed}
+	 */
+	private static function errorOf(array $result): array {
+		return [($result['error'] ?? null), ($result['message'] ?? null)];
+	}//end errorOf()
 }//end class
