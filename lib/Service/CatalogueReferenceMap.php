@@ -55,6 +55,7 @@ final class CatalogueReferenceMap {
 			['schema' => 'aiSystem', 'field' => 'module', 'list' => false],
 			['schema' => 'maintenanceWindow', 'field' => 'module', 'list' => false],
 			['schema' => 'scenarioChange', 'field' => 'module', 'list' => false],
+			['schema' => 'complianceDocument', 'field' => 'module', 'list' => false],
 		],
 		'catalogService' => [
 			['schema' => 'usage', 'field' => 'diensten', 'list' => true],
@@ -78,6 +79,8 @@ final class CatalogueReferenceMap {
 			['schema' => 'model', 'field' => 'organizations', 'list' => true],
 			['schema' => 'aiSystem', 'field' => 'provider', 'list' => false],
 			['schema' => 'scenario', 'field' => 'organisation', 'list' => false],
+			['schema' => 'complianceDocument', 'field' => 'publisher', 'list' => false],
+			['schema' => 'complianceDocument', 'field' => 'sharedWithOrganisations', 'list' => true],
 		],
 	];
 

@@ -129,6 +129,8 @@ class CatalogueReferenceMapTest extends TestCase {
 				'modelOrganizations' => ['field' => '', 'arrayField' => 'organizations', 'schema' => 'model'],
 				'aiSystemProvider' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'aiSystem'],
 				'scenarioOrganisation' => ['field' => 'organisation', 'arrayField' => null, 'schema' => 'scenario'],
+				'complianceDocumentPublisher' => ['field' => 'publisher', 'arrayField' => null, 'schema' => 'complianceDocument'],
+				'complianceDocumentSharedWithOrganisations' => ['field' => '', 'arrayField' => 'sharedWithOrganisations', 'schema' => 'complianceDocument'],
 			],
 			array_slice($types, 5, null, true)
 		);
