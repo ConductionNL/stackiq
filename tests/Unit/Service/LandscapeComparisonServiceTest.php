@@ -14,6 +14,7 @@ use DomainException;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\LandscapeAtDateDerivation;
 use OCA\Stackiq\Service\LandscapeComparisonService;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
@@ -115,7 +116,12 @@ final class LandscapeComparisonServiceTest extends TestCase {
 
 	public function testAScenarioUsesItsTargetDateAndItsOpenChangesReadWithRbacOn(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('s1', [], false, 'stackiq', 'scenario', true, true)
+			->with(
+				's1',
+				$this->callback(static fn (mixed $options): bool => $options instanceof ObjectFindOptions && $options->register === 'stackiq' && $options->schema === 'scenario'),
+				true,
+				true
+			)
 			->willReturn($this->entity(uuid: 's1', data: ['name' => 'Servicedesk 2027', 'organisation' => ['id' => 'zuiddrecht'], 'targetDate' => '2027-06-30', 'status' => 'proposed']));
 		$this->objects->expects($this->once())->method('searchObjectsBySlug')
 			->with('stackiq', 'scenarioChange', ['scenario' => 's1', '_limit' => LandscapeComparisonService::CHANGE_LIMIT], true, true)

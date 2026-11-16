@@ -31,6 +31,7 @@ use DomainException;
 use Exception;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Kernel\Contracts\LandscapeComparisonServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -170,7 +171,12 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 */
 	private function scenario(string $scenarioId, string $organisationUuid): array {
 		try {
-			$entity = $this->objectService()->find(id: $scenarioId, register: self::REGISTER, schema: 'scenario', _rbac: true, _multitenancy: true);
+			$entity = $this->objectService()->find(
+				id: $scenarioId,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: 'scenario'),
+				_rbac: true,
+				_multitenancy: true
+			);
 		} catch (\Throwable $e) {
 			$entity = null;
 		}
