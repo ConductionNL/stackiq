@@ -1,3 +1,8 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+  -->
+
 # Compliance documents
 
 Organisations publish compliance documents about an application, so other organisations can reuse them instead of asking the supplier again. A document is a DPIA, a processing agreement, a pentest report, an assurance report, a certificate, an ENSIA statement or another kind.
