@@ -46,6 +46,7 @@ use OCA\Stackiq\Kernel\Contracts\DataQualityReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CatalogExportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
 use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
@@ -149,6 +150,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(DemoDataServiceInterface::class, DemoDataService::class);
 		$context->registerServiceAlias(EmailSettingsInterface::class, EmailSettings::class);
 		$context->registerServiceAlias(EolSyncServiceInterface::class, EolSyncService::class);
+		$context->registerServiceAlias(CatalogExportServiceInterface::class, CatalogExportService::class);
 		$context->registerServiceAlias(FacetServiceInterface::class, FacetService::class);
 		$context->registerServiceAlias(FederationConfigInterface::class, FederationConfig::class);
 		$context->registerServiceAlias(FederationServiceInterface::class, FederationService::class);

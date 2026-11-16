@@ -33,6 +33,7 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\CatalogExportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCA\Stackiq\Service\Export\CatalogExportGate;
 use OCA\Stackiq\Service\Export\CatalogExportRequest;
@@ -47,14 +48,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
-class CatalogExportService {
-
-	/**
-	 * The schemas this export serves: the two faceted lists.
-	 *
-	 * @var array<int, string>
-	 */
-	public const SCHEMAS = ['module', 'catalogService'];
+class CatalogExportService implements CatalogExportServiceInterface {
 
 	/**
 	 * The formats it writes.
