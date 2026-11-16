@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 OC.L10N.register(
     "stackiq",
     {
@@ -720,6 +724,13 @@ OC.L10N.register(
         "Node {name} added": "Node {name} added",
         "Node {name} changed: {fields}": "Node {name} changed: {fields}",
         "Node {name} removed": "Node {name} removed",
+        "Connection map": "Connection map",
+        "This application": "This application",
+        "Download as SVG": "Download as SVG",
+        "Download as PNG": "Download as PNG",
+        "Download links as CSV": "Download links as CSV",
+        "The connections could not be loaded.": "The connections could not be loaded.",
+        "This application has no connections you can see.": "This application has no connections you can see.",
         "Place": "Place",
         "Place an existing element": "Place an existing element",
         "Published": "Published",
@@ -1427,13 +1438,6 @@ OC.L10N.register(
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
         "+{count} more": "+{count} more",
-        "Connection map": "Connection map",
-        "This application": "This application",
-        "Download as SVG": "Download as SVG",
-        "Download as PNG": "Download as PNG",
-        "Download links as CSV": "Download links as CSV",
-        "The connections could not be loaded.": "The connections could not be loaded.",
-        "This application has no connections you can see.": "This application has no connections you can see.",
         "Applications ({count}): {names}": "Applications ({count}): {names}",
         "Coverage on a GEMMA view": "Coverage on a GEMMA view",
         "Empty view": "Empty view",

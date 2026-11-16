@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 OC.L10N.register(
     "stackiq",
     {
@@ -754,6 +758,13 @@ OC.L10N.register(
         "Node {name} added": "Knooppunt {name} toegevoegd",
         "Node {name} changed: {fields}": "Knooppunt {name} gewijzigd: {fields}",
         "Node {name} removed": "Knooppunt {name} verwijderd",
+        "Connection map": "Koppelingenkaart",
+        "This application": "Deze applicatie",
+        "Download as SVG": "Downloaden als SVG",
+        "Download as PNG": "Downloaden als PNG",
+        "Download links as CSV": "Koppelingen downloaden als CSV",
+        "The connections could not be loaded.": "De koppelingen konden niet worden geladen.",
+        "This application has no connections you can see.": "Deze applicatie heeft geen koppelingen die u kunt zien.",
         "Place": "Plaatsen",
         "Place an existing element": "Een bestaand element plaatsen",
         "Published": "Gepubliceerd",
@@ -1495,13 +1506,6 @@ OC.L10N.register(
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
         "+{count} more": "+{count} meer",
-        "Connection map": "Koppelingenkaart",
-        "This application": "Deze applicatie",
-        "Download as SVG": "Downloaden als SVG",
-        "Download as PNG": "Downloaden als PNG",
-        "Download links as CSV": "Koppelingen downloaden als CSV",
-        "The connections could not be loaded.": "De koppelingen konden niet worden geladen.",
-        "This application has no connections you can see.": "Deze applicatie heeft geen koppelingen die u kunt zien.",
         "Applications ({count}): {names}": "Applicaties ({count}): {names}",
         "Coverage on a GEMMA view": "Dekking op een GEMMA-view",
         "Empty view": "Lege view",
