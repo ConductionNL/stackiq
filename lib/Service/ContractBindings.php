@@ -32,6 +32,7 @@ use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionSuggestionServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonEmailInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
@@ -87,6 +88,7 @@ use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -130,6 +132,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(CmdbImportProfileInterface::class, CmdbImportProfile::class);
 		$context->registerServiceAlias(ConnectionReportServiceInterface::class, ConnectionReportService::class);
 		$context->registerServiceAlias(ConnectionSuggestionServiceInterface::class, ConnectionSuggestionService::class);
+		$context->registerServiceAlias(ContactPersonEmailInterface::class, ContactPersonEmail::class);
 		$context->registerServiceAlias(ContactPersonHandlerInterface::class, ContactPersonHandler::class);
 		$context->registerServiceAlias(ContactPersonOrganisationGuardInterface::class, ContactPersonOrganisationGuard::class);
 		$context->registerServiceAlias(ContactpersoonServiceInterface::class, ContactpersoonService::class);
