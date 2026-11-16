@@ -105,10 +105,24 @@ export function createAttestationHandlers({
 	notifyError,
 }) {
 	return {
+		/**
+		 * Opens the dialog that starts a confirmation round.
+		 *
+		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @return {void}
+		 */
 		startAttestationRound() {
 			setDialog(START_ROUND_DIALOG)
 		},
 
+		/**
+		 * Confirms an attestation request unchanged and refreshes the page.
+		 *
+		 * @param {object} context The row context.
+		 * @param {object} context.item The attestation request row.
+		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+		 * @return {Promise<void>}
+		 */
 		async confirmAttestationRequest({ item } = {}) {
 			const id = rowId(item)
 			if (id === '') {
@@ -126,6 +140,14 @@ export function createAttestationHandlers({
 			}
 		},
 
+		/**
+		 * Opens the landscape entry an attestation request is about, so the owner can correct it.
+		 *
+		 * @param {object} context The row context.
+		 * @param {object} context.item The attestation request row.
+		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+		 * @return {void}
+		 */
 		openAttestationEntry({ item } = {}) {
 			const path = ENTRY_PATHS[item?.entrySchema]
 			const id = String(item?.entryId || '')
