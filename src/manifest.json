@@ -410,6 +410,7 @@
 			"route": "/organisaties/:id",
 			"type": "detail",
 			"title": "Organisation",
+			"actionsComponent": "OrganisationExportAction",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "organization",
@@ -955,6 +956,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "compliancy",
+				"allowExport": true,
 				"columns": [
 					"module",
 					"standardVersion",
@@ -1013,6 +1015,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersion",
+				"allowExport": true,
 				"columns": [
 					{ "key": "version", "label": "Version" },
 					{ "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
@@ -1131,6 +1134,13 @@
 						"description": "Overlapping and ageing software across the portfolio.",
 						"icon": "BriefcaseOutline",
 						"route": "PortfolioReport"
+					},
+					{
+						"id": "CustomReports",
+						"label": "Custom reports",
+						"description": "Your own reports over the catalogue, as a CSV or JSON file.",
+						"icon": "FileTableOutline",
+						"route": "CustomReports"
 					}
 				]
 			},
