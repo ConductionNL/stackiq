@@ -53,10 +53,10 @@
 		<table v-else class="custom-reports__table" data-testid="custom-reports-list">
 			<thead>
 				<tr>
-					<th>{{ t('stackiq', 'Name') }}</th>
-					<th>{{ t('stackiq', 'Report over') }}</th>
-					<th>{{ t('stackiq', 'Format') }}</th>
-					<th>
+					<th scope="col">{{ t('stackiq', 'Name') }}</th>
+					<th scope="col">{{ t('stackiq', 'Report over') }}</th>
+					<th scope="col">{{ t('stackiq', 'Format') }}</th>
+					<th scope="col">
 						<span class="hidden-visually">{{ t('stackiq', 'Actions') }}</span>
 					</th>
 				</tr>
