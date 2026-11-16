@@ -52,6 +52,7 @@ export default {
 	computed: {
 		/**
 		 * @return {object} The form's JSON schema.
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		formSchema() {
 			return reportFormSchema(this.schema, (text) => t('stackiq', text))

@@ -62,6 +62,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The organisation's uuid.
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 		 */
 		organisationUuid() {
 			return organisationUuidOf(this.object, this.objectId)
@@ -69,6 +70,7 @@ export default {
 
 		/**
 		 * @return {string} The export's download URL.
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 		 */
 		exportUrl() {
 			return organisationExportUrl(generateUrl, this.organisationUuid)
@@ -80,6 +82,7 @@ export default {
 		 * Ask again when the page moves to another organisation.
 		 *
 		 * @return {void}
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 		 */
 		organisationUuid() {
 			this.checkAccess()

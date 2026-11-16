@@ -19,6 +19,7 @@ export const FACET_PREFIX = '_gf_'
  *
  * @param {Array<string|object>} columns The manifest columns.
  * @return {Array<{key: string, label: string}>}
+ * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 export function exportColumns(columns) {
 	return (columns ?? [])
