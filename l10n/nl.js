@@ -759,6 +759,7 @@ OC.L10N.register(
         "Node {name} changed: {fields}": "Knooppunt {name} gewijzigd: {fields}",
         "Node {name} removed": "Knooppunt {name} verwijderd",
         "Connection map": "Koppelingenkaart",
+        "Connections on the map": "Koppelingen op de kaart",
         "This application": "Deze applicatie",
         "Download as SVG": "Downloaden als SVG",
         "Download as PNG": "Downloaden als PNG",

@@ -725,6 +725,7 @@ OC.L10N.register(
         "Node {name} changed: {fields}": "Node {name} changed: {fields}",
         "Node {name} removed": "Node {name} removed",
         "Connection map": "Connection map",
+        "Connections on the map": "Connections on the map",
         "This application": "This application",
         "Download as SVG": "Download as SVG",
         "Download as PNG": "Download as PNG",

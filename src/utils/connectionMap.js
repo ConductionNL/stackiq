@@ -62,3 +62,20 @@ export function connectionMap(rootId, rootLabel, connections) {
 	const around = [...others.values()].sort((x, y) => x.label.localeCompare(y.label) || x.id.localeCompare(y.id))
 	return { nodes: [root, ...around], edges }
 }
+
+/**
+ * One line of text per edge of a connection map, naming both ends and the
+ * transport type: the keyboard path to each connection, because a drawn line
+ * cannot take focus (REQ-CDX-001, WCAG 2.1.1).
+ *
+ * @param {{nodes: Array<object>, edges: Array<object>}} graph A graph from connectionMap.
+ * @return {Array<{id: string, text: string}>} The connection id and its text, in edge order.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ */
+export function connectionLinks(graph) {
+	const names = new Map((graph?.nodes || []).map((node) => [node.id, node.label || node.id]))
+	return (graph?.edges || []).map((edge) => ({
+		id: edge.id,
+		text: `${names.get(edge.source) ?? edge.source} ${edge.label} ${names.get(edge.target) ?? edge.target}`,
+	}))
+}

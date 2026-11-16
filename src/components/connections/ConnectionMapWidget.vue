@@ -8,7 +8,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { connectionsCsv, downloadText, svgDocument } from '../../utils/connectionExport.js'
-import { connectionMap } from '../../utils/connectionMap.js'
+import { connectionLinks, connectionMap } from '../../utils/connectionMap.js'
 import { ensureObjectType } from '../../utils/objectTypes.js'
 
 /**
@@ -57,6 +57,16 @@ export default {
 		 */
 		graph() {
 			return connectionMap(this.objectId, t('stackiq', 'This application'), this.connections)
+		},
+
+		/**
+		 * One link per connection, the keyboard path to each line on the map.
+		 *
+		 * @return {Array<{id: string, text: string}>} The links.
+		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 */
+		links() {
+			return connectionLinks(this.graph)
 		},
 	},
 
@@ -233,17 +243,23 @@ export default {
 		<p v-else-if="graph.edges.length === 0" class="connection-map__empty">
 			{{ t('stackiq', 'This application has no connections you can see.') }}
 		</p>
-		<div
-v-else
-			ref="map"
-			class="connection-map"
-			@click="openEdge">
+		<div v-else ref="map" class="connection-map">
+			<!-- A click on a drawn line opens its connection; the list below is
+				the same path by keyboard, since a line cannot take focus. -->
 			<CnRelationshipGraph
 				:nodes="graph.nodes"
 				:edges="graph.edges"
 				layout="radial"
 				:aria-label="t('stackiq', 'Connection map')"
+				@click="openEdge"
 				@nodeClick="openNode" />
+			<ul class="connection-map__links" :aria-label="t('stackiq', 'Connections on the map')">
+				<li v-for="link in links" :key="link.id">
+					<router-link :to="{ name: 'KoppelingDetail', params: { id: String(link.id) } }">
+						{{ link.text }}
+					</router-link>
+				</li>
+			</ul>
 		</div>
 	</CnWidgetWrapper>
 </template>
@@ -252,6 +268,11 @@ v-else
 .connection-map {
 	max-width: 520px;
 	margin: 0 auto;
+}
+
+.connection-map__links {
+	margin: 8px 0 0;
+	padding-inline-start: 20px;
 }
 
 .connection-map__empty {

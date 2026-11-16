@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { connectionMap } from '../../src/utils/connectionMap.js'
+import { connectionLinks, connectionMap } from '../../src/utils/connectionMap.js'
 
 const x = { id: 'x', name: 'Zaaksysteem' }
 const y = { id: 'y', name: 'DMS' }
@@ -64,5 +64,27 @@ describe('connectionMap', () => {
 
 		expect(edges.map((edge) => edge.id)).toEqual(['k1'])
 		expect(nodes.map((node) => node.id)).toEqual(['x', 'y'])
+	})
+})
+
+describe('connectionLinks', () => {
+	it('names both ends and the transport type of every connection, from the sender', () => {
+		const graph = connectionMap('x', 'Zaaksysteem', [
+			{ id: 'k1', moduleA: x, moduleB: y, type: 'api', dataExchangeDirection: 'AtoB' },
+			{ id: 'k2', moduleA: x, moduleB: z, type: 'digikoppeling', dataExchangeDirection: 'BtoA' },
+			{ id: 'k3', moduleA: x, nonMunicipalProvision: { id: 'p', name: 'BRP' }, type: 'webservices', dataExchangeDirection: 'bi-directional' },
+		])
+
+		expect(connectionLinks(graph)).toEqual([
+			{ id: 'k1', text: 'Zaaksysteem api → DMS' },
+			{ id: 'k2', text: 'Archief digikoppeling → Zaaksysteem' },
+			{ id: 'k3', text: 'Zaaksysteem webservices ↔ BRP' },
+		])
+	})
+
+	it('falls back to the id for an end without a node, and to nothing for no graph', () => {
+		expect(connectionLinks({ nodes: [], edges: [{ id: 'k9', source: 'a', target: 'b', label: 'api →' }] }))
+			.toEqual([{ id: 'k9', text: 'a api → b' }])
+		expect(connectionLinks(null)).toEqual([])
 	})
 })
