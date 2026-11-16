@@ -105,6 +105,9 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, LifecycleCalendarListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, LifecycleCalendarListener::class);
 
+		// An owner's own edit of an entry answers their confirmation request (landscape-owner-attestation).
+		$context->registerEventListener(ObjectUpdatedEvent::class, AttestationCorrectionListener::class);
+
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
