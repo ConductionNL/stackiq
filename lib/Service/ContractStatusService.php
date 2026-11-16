@@ -225,7 +225,6 @@ class ContractStatusService implements ContractStatusServiceInterface {
 			return $counts;
 		}
 
-		$window = $this->windowDays();
 		foreach ([self::STATUS_ACTIVE, self::STATUS_EXPIRING] as $status) {
 			$query = ['register' => $registerId, 'schema' => $schemaId, 'status' => $status, '_limit' => 5000];
 			try {
@@ -236,8 +235,8 @@ class ContractStatusService implements ContractStatusServiceInterface {
 			}
 
 			foreach ($contracts as $contract) {
-				$next = $this->nextStatus(data: $contract->getObject(), now: $now, window: $window);
-				if ($next !== null && $this->moveTo(objectService: $objectService, contract: $contract, status: $next) === true) {
+				$next = $this->nextStatus(data: $contract->getObject(), now: $now);
+				if ($next !== null && $this->moveTo(contract: $contract, status: $next) === true) {
 					$counts[strtolower($next)]++;
 				}
 			}
@@ -249,13 +248,13 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	/**
 	 * The status a contract moves to in the daily pass, or null to leave it.
 	 *
-	 * @param array             $data   The contract data.
-	 * @param DateTimeImmutable $now    Logical "now".
-	 * @param int               $window The notice window in days.
+	 * @param array             $data The contract data.
+	 * @param DateTimeImmutable $now  Logical "now".
 	 *
 	 * @return string|null Expired, Expiring, Active or null.
 	 */
-	private function nextStatus(array $data, DateTimeImmutable $now, int $window): ?string {
+	private function nextStatus(array $data, DateTimeImmutable $now): ?string {
+		$window = $this->windowDays();
 		if ($this->shouldExpire(contractData: $data, now: $now) === true) {
 			return self::STATUS_EXPIRED;
 		}
@@ -274,13 +273,17 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	/**
 	 * Save a contract with a new status; a failed save is logged and not counted.
 	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param object                 $contract      The contract entity.
-	 * @param string                 $status        The new status.
+	 * @param object $contract The contract entity.
+	 * @param string $status   The new status.
 	 *
 	 * @return bool True when saved.
 	 */
-	private function moveTo(ObjectServiceInterface $objectService, object $contract, string $status): bool {
+	private function moveTo(object $contract, string $status): bool {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return false;
+		}
+
 		$data = $contract->getObject();
 		$data['status'] = $status;
 		try {
