@@ -17,15 +17,21 @@
 //   - openspec/changes/stackiq-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
+import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -45,8 +51,10 @@ import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import DataQualityReportView from './views/organisaties/DataQualityReport.vue'
 import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
+import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { createMoveHandlers } from './services/moveToOrganisation.js'
 import { navigationStore } from './store/store.js'
@@ -63,6 +71,21 @@ export default {
 	...createConnectionHandlers({
 		generateUrl,
 		assign: (url) => window.location.assign(url),
+	}),
+
+	// Confirmation rounds (landscape-owner-attestation D5): Start round opens
+	// StartAttestationRoundDialog; Confirm and Open entry are the row actions of
+	// My confirmation requests. Confirm POSTs the request's confirm endpoint and
+	// refetches the list.
+	...createAttestationHandlers({
+		setDialog: (name, properties) =>
+			navigationStore.setDialog(name, properties),
+		post: (url) => axios.post(url),
+		generateUrl,
+		assign: (url) => window.location.assign(url),
+		refresh: () => emit('cn:page:refresh', {}),
+		notifyError: (message) =>
+			showError(message || t('stackiq', 'The request could not be confirmed')),
 	}),
 
 	// Bulk-action handlers: Move to organisation on the Applications,
@@ -132,6 +155,11 @@ export default {
 	// (landscape-application-page): two hops, so not an object-list widget.
 	ApplicationContractsPanel,
 
+	// The connections of an application as a map, with SVG, PNG and CSV
+	// downloads (connections-diagram-and-graph-export D1, D3): a one-hop graph
+	// over two queries, which no object-list widget draws.
+	ConnectionMapWidget,
+
 	ContractApprovalPanel,
 
 	// Licences in use against licences bought (contracts-licence-seats).
@@ -163,6 +191,11 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// OrganisatieDetail's actions slot: Export as ArchiMate for the organisation
+	// on the page, shown when the server says the caller may export it
+	// (insight-exports-and-custom-reports, REQ-CER-003).
+	OrganisationExportAction,
 
 	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
 	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),
@@ -211,6 +244,9 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// The Custom reports page (insight-exports-and-custom-reports, REQ-CER-004):
+	// the caller's OpenRegister export profiles over the catalogue register.
+	CustomReportsView,
 	// --- Lib gap: the organisation-scoped data quality report. ---
 	// GET /api/data-quality evaluates the usage schema's declared quality
 	// rules over one organisation's usages, bounded like the portfolio report.

@@ -30,6 +30,7 @@ use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Middleware\MiddlewareRegistrar;
 use OCA\Stackiq\Service\ServiceRegistrar;
+use OCA\Stackiq\Service\ViewDocumentGateway;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -243,7 +244,30 @@ class Application extends App implements IBootstrap {
 		}
 
 		$initialState->provideInitialState('amef_register', $amefProvisioned);
+
+		$this->provideViewDocumentExport(initialState: $initialState, container: $container);
 	}//end boot()
+
+	/**
+	 * Provide `view_document_export`: whether filinq's document contract resolves.
+	 *
+	 * Lazy, so the gateway is only asked when a page renders, not on every
+	 * request that boots the app. The view page's Export menu reads it to
+	 * disable the Word and PowerPoint actions with the reason when it is false.
+	 *
+	 * @param IInitialState      $initialState The initial state service.
+	 * @param ContainerInterface $container    The app container.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+	 */
+	private function provideViewDocumentExport(IInitialState $initialState, ContainerInterface $container): void {
+		$initialState->provideLazyInitialState(
+			'view_document_export',
+			static fn (): bool => $container->get(ViewDocumentGateway::class)->isAvailable()
+		);
+	}//end provideViewDocumentExport()
 
 	/**
 	 * Resolve the numeric AMEF (vng-gemma) register id from the canonical config.

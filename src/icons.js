@@ -16,6 +16,7 @@ import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import ApplicationOutline from 'vue-material-design-icons/ApplicationOutline.vue'
 import ArchiveOutline from 'vue-material-design-icons/ArchiveOutline.vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
@@ -29,7 +30,10 @@ import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ChartLine from 'vue-material-design-icons/ChartLine.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
+import ClipboardListOutline from 'vue-material-design-icons/ClipboardListOutline.vue'
+import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue'
 import Cube from 'vue-material-design-icons/Cube.vue'
@@ -38,9 +42,11 @@ import Database from 'vue-material-design-icons/Database.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
+import FileCertificateOutline from 'vue-material-design-icons/FileCertificateOutline.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
+import FileTableOutline from 'vue-material-design-icons/FileTableOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
@@ -54,13 +60,16 @@ import MapOutline from 'vue-material-design-icons/MapOutline.vue'
 import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
 import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
+import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
 import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
+import Send from 'vue-material-design-icons/Send.vue'
 import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
@@ -81,6 +90,7 @@ export default {
 	AccountGroup,
 	AccountMultiple,
 	AlertCircle,
+	AlertCircleOutline,
 	ApplicationOutline,
 	ArchiveOutline,
 	ArrowRight,
@@ -94,7 +104,10 @@ export default {
 	ChartBoxOutline,
 	ChartLine,
 	CheckCircle,
+	CheckCircleOutline,
 	ClipboardCheckOutline,
+	ClipboardListOutline,
+	ClockOutline,
 	CogOutline,
 	CommentOutline,
 	Cube,
@@ -103,9 +116,11 @@ export default {
 	Domain,
 	Eye,
 	EyeOutline,
+	FileCertificateOutline,
 	FileDocument,
 	FileDocumentEdit,
 	FileSign,
+	FileTableOutline,
 	FolderOutline,
 	Gauge,
 	Gavel,
@@ -119,13 +134,16 @@ export default {
 	NoteTextOutline,
 	OfficeBuilding,
 	OfficeBuildingOutline,
+	OpenInNew,
 	Package,
 	PackageVariant,
 	PackageVariantClosed,
+	PencilOutline,
 	PowerPlugOutline,
 	PuzzleOutline,
 	RobotOutline,
 	ScaleBalance,
+	Send,
 	ShieldAlert,
 	ShieldAlertOutline,
 	ShieldCheckOutline,

@@ -53,7 +53,9 @@
             "moduleVersie_schema": "",
             "sector_schema": "",
             "sbomComponent_schema": "",
-            "maintenanceWindow_schema": ""
+            "maintenanceWindow_schema": "",
+            "attestationRound_schema": "",
+            "attestationRequest_schema": ""
         },
         "full": {
             "register": "5",
@@ -71,7 +73,9 @@
             "moduleVersie_schema": "",
             "sector_schema": "",
             "sbomComponent_schema": "",
-            "maintenanceWindow_schema": ""
+            "maintenanceWindow_schema": "",
+            "attestationRound_schema": "",
+            "attestationRequest_schema": ""
         },
         "legacy": {
             "register": "3",
@@ -89,7 +93,9 @@
             "moduleVersie_schema": "",
             "sector_schema": "",
             "sbomComponent_schema": "",
-            "maintenanceWindow_schema": ""
+            "maintenanceWindow_schema": "",
+            "attestationRound_schema": "",
+            "attestationRequest_schema": ""
         },
         "list": {
             "register": "",
@@ -107,7 +113,9 @@
             "moduleVersie_schema": "",
             "sector_schema": "",
             "sbomComponent_schema": "",
-            "maintenanceWindow_schema": ""
+            "maintenanceWindow_schema": "",
+            "attestationRound_schema": "",
+            "attestationRequest_schema": ""
         },
         "strings": {
             "register": "",
@@ -125,13 +133,15 @@
             "moduleVersie_schema": "",
             "sector_schema": "0",
             "sbomComponent_schema": "1",
-            "maintenanceWindow_schema": "12.5"
+            "maintenanceWindow_schema": "12.5",
+            "attestationRound_schema": "",
+            "attestationRequest_schema": ""
         },
         "written": [
             [
                 "stackiq",
                 "voorzieningen_config",
-                "{\n    \"register\": \"8\",\n    \"organisatie_schema\": \"\",\n    \"contactpersoon_schema\": \"\",\n    \"suite_schema\": \"\",\n    \"dienst_schema\": \"\",\n    \"kwetsbaarheid_schema\": \"\",\n    \"gebruik_schema\": \"\",\n    \"contract_schema\": \"2\",\n    \"koppeling_schema\": \"\",\n    \"beoordeeling_schema\": \"\",\n    \"module_schema\": \"\",\n    \"compliancy_schema\": \"\",\n    \"moduleVersie_schema\": \"\",\n    \"sector_schema\": \"\",\n    \"sbomComponent_schema\": \"\",\n    \"maintenanceWindow_schema\": \"\"\n}"
+                "{\n    \"register\": \"8\",\n    \"organisatie_schema\": \"\",\n    \"contactpersoon_schema\": \"\",\n    \"suite_schema\": \"\",\n    \"dienst_schema\": \"\",\n    \"kwetsbaarheid_schema\": \"\",\n    \"gebruik_schema\": \"\",\n    \"contract_schema\": \"2\",\n    \"koppeling_schema\": \"\",\n    \"beoordeeling_schema\": \"\",\n    \"module_schema\": \"\",\n    \"compliancy_schema\": \"\",\n    \"moduleVersie_schema\": \"\",\n    \"sector_schema\": \"\",\n    \"sbomComponent_schema\": \"\",\n    \"maintenanceWindow_schema\": \"\",\n    \"attestationRound_schema\": \"\",\n    \"attestationRequest_schema\": \"\"\n}"
             ]
         ]
     }

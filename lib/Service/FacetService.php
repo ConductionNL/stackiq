@@ -246,7 +246,8 @@ class FacetService implements FacetServiceInterface {
 		$startTime = microtime(true);
 		$schema    = $request['schema'];
 
-		$baseObjects = $this->fetchBaseObjects(objectService: $objectService, request: $request);
+		$fetched     = $this->fetchBaseObjects(objectService: $objectService, request: $request);
+		$baseObjects = $fetched['objects'];
 
 		$modulesByObjectId = $this->resolveModulesPerObject(
 			objectService: $objectService,
@@ -297,6 +298,9 @@ class FacetService implements FacetServiceInterface {
 					'processingTimeMs' => $processingTimeMs,
 					'cached' => false,
 					'matchedObjectIds' => array_values($matchedObjectIds),
+					// The base set stopped at the paging ceiling, so the ids may be incomplete
+					// (insight-exports-and-custom-reports: an export says so in its last row).
+					'truncated' => $fetched['truncated'],
 				],
 			]
 		);
@@ -407,23 +411,25 @@ class FacetService implements FacetServiceInterface {
 	 * @param array $request The request: `schema` (`module` or `dienst`), `search` (the free-text
 	 *                       query or null) and `organization` (the organisation override or null).
 	 *
-	 * @return array<int,array> The candidate objects.
+	 * @return array{objects: array<int,array>, truncated: bool} The candidate objects, and whether the paging ceiling cut them.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-must-respect-the-callers-rbactenant-context
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	private function fetchBaseObjects(ObjectServiceInterface $objectService, array $request): array {
 		$baseQuery = $this->baseObjectQuery(request: $request);
 		if ($baseQuery === null) {
-			return [];
+			return ['objects' => [], 'truncated' => false];
 		}
 
-		$fetched = $this->fetchBasePages(objectService: $objectService, baseQuery: $baseQuery);
-		if ($fetched['page'] > self::MAX_BASE_PAGES) {
+		$fetched   = $this->fetchBasePages(objectService: $objectService, baseQuery: $baseQuery);
+		$truncated = ($fetched['page'] > self::MAX_BASE_PAGES);
+		if ($truncated === true) {
 			$this->logPagingCeiling(schema: $request['schema']);
 		}
 
-		return $fetched['objects'];
+		return ['objects' => $fetched['objects'], 'truncated' => $truncated];
 	}//end fetchBaseObjects()
 
 	/**
