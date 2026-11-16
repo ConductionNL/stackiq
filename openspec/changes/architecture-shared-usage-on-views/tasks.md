@@ -57,7 +57,7 @@ Starts after `architecture-views-editor` has landed the read-only GEMMA view pag
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN a GEMMA view opens with both switches on THEN at least one own and one shared application show on the same component
   - GIVEN the docs WHEN a reader opens the page THEN it explains both switches, the legend and the export colours, with a screenshot (ADR-010)
-- [ ] Implement
+- [ ] Implement (docs done: `docs/features/shared-usage-on-views.md`, linked from the features index. Left: the screenshot needs a live instance; the demo seed is left too, because `stackiq_mock_register.json` is a generated descriptor and whether a usage counts as own or shared depends on the organisation that installs it, so a static seed cannot promise both kinds on one component)
 
 ## Verification
 
