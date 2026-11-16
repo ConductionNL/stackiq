@@ -9,7 +9,7 @@
  * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars = {}) => text.replace(/{(\w+)}/g, (m, k) => (k in vars ? String(vars[k]) : m)),
@@ -29,6 +29,7 @@ const {
 	viewExportActions,
 	viewImageUrl,
 } = await import('../../src/services/viewExport.js')
+const { default: http } = await import('@nextcloud/axios')
 
 describe('viewExportActions', () => {
 	it('lists Download SVG, Create Word document and Create PowerPoint slide, all enabled with filinq', () => {
@@ -71,27 +72,31 @@ describe('documentExportAvailable', () => {
 })
 
 describe('createViewDocument', () => {
-	it('posts the format to the document route and answers the filed document', async () => {
-		const http = { post: vi.fn().mockResolvedValue({ data: { success: true, name: 'Landschap.docx', path: '/Stackiq/Landschap.docx', fileId: 42 } }) }
+	beforeEach(() => {
+		http.post.mockReset()
+	})
 
-		const answer = await createViewDocument('v 1', 'word', http)
+	it('posts the format to the document route and answers the filed document', async () => {
+		http.post.mockResolvedValue({ data: { success: true, name: 'Landschap.docx', path: '/Stackiq/Landschap.docx', fileId: 42 } })
+
+		const answer = await createViewDocument('v 1', 'word')
 
 		expect(http.post).toHaveBeenCalledWith('/nc/apps/stackiq/api/views/v%201/document', { format: 'docx' })
 		expect(answer).toEqual({ ok: true, name: 'Landschap.docx', path: '/Stackiq/Landschap.docx', fileId: 42 })
 	})
 
 	it('asks for pptx for the PowerPoint action', async () => {
-		const http = { post: vi.fn().mockResolvedValue({ data: { name: 'a.pptx', path: '/a.pptx', fileId: 1 } }) }
+		http.post.mockResolvedValue({ data: { name: 'a.pptx', path: '/a.pptx', fileId: 1 } })
 
-		await createViewDocument('v1', 'powerpoint', http)
+		await createViewDocument('v1', 'powerpoint')
 
 		expect(http.post.mock.calls[0][1]).toEqual({ format: 'pptx' })
 	})
 
 	it('answers the route reason and marks a 503 as unavailable', async () => {
-		const http = { post: vi.fn().mockRejectedValue({ response: { status: 503, data: { error: 'Word and PowerPoint need the document app filinq' } } }) }
+		http.post.mockRejectedValue({ response: { status: 503, data: { error: 'Word and PowerPoint need the document app filinq' } } })
 
-		expect(await createViewDocument('v1', 'word', http)).toEqual({
+		expect(await createViewDocument('v1', 'word')).toEqual({
 			ok: false,
 			error: 'Word and PowerPoint need the document app filinq',
 			unavailable: true,
@@ -99,9 +104,9 @@ describe('createViewDocument', () => {
 	})
 
 	it('falls back to a generic reason when the failure carries none', async () => {
-		const http = { post: vi.fn().mockRejectedValue(new Error('network')) }
+		http.post.mockRejectedValue(new Error('network'))
 
-		expect(await createViewDocument('v1', 'powerpoint', http)).toEqual({
+		expect(await createViewDocument('v1', 'powerpoint')).toEqual({
 			ok: false,
 			error: 'The document could not be made.',
 			unavailable: false,
@@ -109,9 +114,7 @@ describe('createViewDocument', () => {
 	})
 
 	it('refuses an unknown action without a request', async () => {
-		const http = { post: vi.fn() }
-
-		const answer = await createViewDocument('v1', 'svg', http)
+		const answer = await createViewDocument('v1', 'svg')
 
 		expect(answer.ok).toBe(false)
 		expect(http.post).not.toHaveBeenCalled()

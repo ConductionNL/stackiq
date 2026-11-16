@@ -75,18 +75,17 @@ export function viewImageUrl(viewId) {
  *
  * @param {string} viewId The view.
  * @param {string} action `word` or `powerpoint`.
- * @param {object} [http] The HTTP client; `@nextcloud/axios` by default.
  * @return {Promise<{ok: true, name: string, path: string, fileId: (number|string)}|{ok: false, error: string, unavailable: boolean}>} The outcome.
  * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
-export async function createViewDocument(viewId, action, http = axios) {
+export async function createViewDocument(viewId, action) {
 	const format = DOCUMENT_FORMATS[action]
 	if (format === undefined) {
 		return { ok: false, error: t('stackiq', 'The document could not be made.'), unavailable: false }
 	}
 
 	try {
-		const { data } = await http.post(
+		const { data } = await axios.post(
 			generateUrl('/apps/stackiq/api/views/{viewId}/document', { viewId }),
 			{ format },
 		)
