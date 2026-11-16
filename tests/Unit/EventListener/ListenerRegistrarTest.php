@@ -30,6 +30,7 @@ use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
 use OCA\Stackiq\EventListener\AttestationCorrectionListener;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
+use OCA\Stackiq\EventListener\ContractApprovalListener;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
 use OCA\Stackiq\EventListener\LifecycleCalendarListener;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
@@ -93,6 +94,8 @@ final class ListenerRegistrarTest extends TestCase {
 				[ObjectCreatingEvent::class, AnonymousRegistrationListener::class],
 				[ObjectCreatingEvent::class, ContactPersonOrganisationListener::class],
 				[ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class],
+				[ObjectCreatingEvent::class, ContractApprovalListener::class],
+				[ObjectUpdatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatedEvent::class, MaintenanceRecipientsListener::class],
 				[ObjectCreatedEvent::class, ModuleVersionPublicationListener::class],
