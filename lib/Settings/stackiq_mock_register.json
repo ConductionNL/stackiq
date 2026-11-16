@@ -424,6 +424,34 @@
         "@self": {
           "register": "stackiq",
           "schema": "catalogContract",
+          "slug": "contract-expiring-6"
+        },
+        "service": {},
+        "usage": {},
+        "startDate": "{{today-2y}}",
+        "contractNumber": "Voorbeeld Contractnumber 6",
+        "contractType": "SLA",
+        "status": "Expiring",
+        "approvalState": "none",
+        "endDate": "{{today+45d}}",
+        "cost": 6.0,
+        "costPeriod": "Annually",
+        "responsibleUser": "admin",
+        "contactPersonProvider": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "contactPersonUser": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "documentReference": "Voorbeeld Documentreference 6",
+        "opmerkingen": "Voorbeeld Opmerkingen 6"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "catalogContract",
           "slug": "contract-seats-5"
         },
         "service": {},

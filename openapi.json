@@ -154,6 +154,10 @@
         {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "catalog-export",
+            "description": "The filtered list export route, GET /api/catalog/{schema}/export."
         }
     ],
     "paths": {
@@ -740,6 +744,58 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "organizationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organizationUuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/archimate/export/organization/{organizationUuid}/access": {
+            "get": {
+                "operationId": "settings-org-export-access",
+                "summary": "Whether the caller may export one organisation as ArchiMate",
+                "description": "Whether the caller may export one organisation as ArchiMate. The organisation detail page's Export as ArchiMate action asks this before it shows itself; no export work runs here.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{mayExport: bool}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "mayExport": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "mayExport"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 },
                 "parameters": [
@@ -2523,6 +2579,60 @@
                         "description": "The schema.",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/catalog/{schema}/export": {
+            "get": {
+                "operationId": "catalog-export-export",
+                "summary": "Export the Applications or Services list as filtered",
+                "description": "Export the Applications (module) or Services (catalogService) list as CSV or XLSX: the objects the GEMMA facets and the search match, narrowed by the active quick filter, read with the caller's rights, in the page's columns. Query parameters: _gf_referenceComponent, _gf_standard, _gf_applicationService, _gf_domain (or the plain dimension names), search, quickFilter (JSON object), columns (JSON list of {key, label}), format (csv or xlsx). When the facet set stopped at its paging ceiling the file's last row says so. A schema whose authorization names export admits only those groups.",
+                "tags": [
+                    "catalog-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file: text/csv, or for format=xlsx an XLSX workbook (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "application/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "required": true,
+                        "description": "module or catalogService.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "catalogService"
+                            ]
                         }
                     }
                 ]
