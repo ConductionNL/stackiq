@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use InvalidArgumentException;
-use OCA\Stackiq\Service\CatalogExportService;
+use OCA\Stackiq\Kernel\Contracts\CatalogExportServiceInterface;
 use OCA\Stackiq\Service\Export\CatalogExportRequest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -75,7 +75,7 @@ class CatalogExportController extends Controller {
 	 *
 	 * @param string               $appName The app name.
 	 * @param IRequest             $request The request.
-	 * @param CatalogExportService $exports Builds the file.
+	 * @param CatalogExportServiceInterface $exports Builds the file.
 	 * @param LoggerInterface      $logger  Logs a failed export.
 	 *
 	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
@@ -83,7 +83,7 @@ class CatalogExportController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CatalogExportService $exports,
+		private readonly CatalogExportServiceInterface $exports,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -109,7 +109,7 @@ class CatalogExportController extends Controller {
 			$this->exports->assertSchema(schema: $schema);
 		} catch (InvalidArgumentException $exception) {
 			return new JSONResponse(
-				['message' => $exception->getMessage(), 'supportedSchemas' => CatalogExportService::SCHEMAS],
+				['message' => $exception->getMessage(), 'supportedSchemas' => CatalogExportServiceInterface::SCHEMAS],
 				400
 			);
 		}
