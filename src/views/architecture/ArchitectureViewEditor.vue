@@ -46,6 +46,28 @@
 					<NcButton v-if="!imported" :to="{ name: 'ViewCompare', params: { id: viewId } }">
 						{{ t('stackiq', 'Compare versions') }}
 					</NcButton>
+					<NcActions
+						:menuName="t('stackiq', 'Export')"
+						:forceName="true"
+						data-testid="view-export-menu">
+						<template v-for="action in exportActions" :key="action.id">
+							<NcActionLink
+								v-if="action.id === 'svg'"
+								:href="imageUrl"
+								:download="imageFileName"
+								data-testid="view-export-svg">
+								{{ action.label }}
+							</NcActionLink>
+							<NcActionButton
+								v-else
+								:disabled="action.disabled || exporting"
+								:description="action.reason"
+								:data-testid="`view-export-${action.id}`"
+								@click="exportDocument(action.id)">
+								{{ action.label }}
+							</NcActionButton>
+						</template>
+					</NcActions>
 				</div>
 			</header>
 
@@ -135,9 +157,11 @@
 import { CnGraphCanvas, LockConflictError, useObjectLock } from '@conduction/nextcloud-vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcActionButton, NcActionLink, NcActions, NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { computed, reactive, ref } from 'vue'
+import { createViewDocument, documentExportAvailable, documentSavedMessage, filesLink, openInFilesLabel, viewExportActions, viewImageUrl } from '../../services/viewExport.js'
 import { createArchitectureViewStore, ELEMENT_TYPES, isImported, RELATION_TYPES, uuidOf } from '../../store/modules/architectureView.js'
 import { applyEdgeChanges, applyNodeChanges, connect, layerOf, placeElement, removeNode } from '../../utils/viewEditorCanvas.js'
 import { toCanvas } from '../../utils/viewGraph.js'
@@ -157,6 +181,9 @@ export default {
 
 	components: {
 		CnGraphCanvas,
+		NcActionButton,
+		NcActionLink,
+		NcActions,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -201,6 +228,8 @@ export default {
 			relationType: 'Association',
 			versionLabel: '',
 			lockConflict: null,
+			exporting: false,
+			documentExport: documentExportAvailable(),
 		}
 	},
 
@@ -248,6 +277,24 @@ export default {
 		/** @return {Array<{id: string, label: string}>} The palette's element types. */
 		elementTypeOptions() {
 			return ELEMENT_TYPES.map(({ type }) => ({ id: type, label: type }))
+		},
+
+		/**
+		 * @return {Array<{id: string, label: string, disabled: boolean, reason: string}>} The Export menu's actions.
+		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+		 */
+		exportActions() {
+			return viewExportActions(this.documentExport)
+		},
+
+		/** @return {string} The SVG image route of this view. */
+		imageUrl() {
+			return viewImageUrl(uuidOf(this.view) || this.viewId)
+		},
+
+		/** @return {string} The suggested file name of the SVG download. */
+		imageFileName() {
+			return `${(this.view?.name || 'view').replace(/[\\/:*?"<>|]+/g, '-')}.svg`
 		},
 
 		/** @return {string[]} The relation types. */
@@ -504,6 +551,34 @@ export default {
 			if (edges !== this.canvas.edges) {
 				this.canvas = { ...this.canvas, edges }
 				this.dirty = true
+			}
+		},
+
+		/**
+		 * Ask filinq for a Word document or a PowerPoint slide of this view and
+		 * say where it was filed. A 503 means filinq went away: the document
+		 * actions are disabled from then on.
+		 *
+		 * @param {string} action `word` or `powerpoint`.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+		 */
+		async exportDocument(action) {
+			this.exporting = true
+			try {
+				const result = await createViewDocument(uuidOf(this.view) || this.viewId, action)
+				if (result.ok) {
+					showSuccess(`${documentSavedMessage(result.name)} · ${openInFilesLabel()}`, {
+						onClick: () => window.open(filesLink(result.fileId), '_blank', 'noopener'),
+					})
+					return
+				}
+				if (result.unavailable) {
+					this.documentExport = false
+				}
+				showError(result.error)
+			} finally {
+				this.exporting = false
 			}
 		},
 

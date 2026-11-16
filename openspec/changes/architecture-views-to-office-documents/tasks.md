@@ -40,10 +40,11 @@
   - GIVEN a view page WHEN the Export menu opens THEN it lists Download SVG, Create Word document and Create PowerPoint slide
   - GIVEN `view_document_export` is false WHEN the menu opens THEN the two document actions are disabled with the text about filinq
   - GIVEN Download SVG WHEN it is chosen THEN the browser receives the SVG file
-- [ ] Implement
+- [x] Implement
   - Done (2026-11-15): `Application::provideViewDocumentExport()` provides `view_document_export` lazily from `ViewDocumentGateway::isAvailable()` (`tests/Unit/AppInfo/ApplicationViewDocumentExportTest.php`). `src/services/viewExport.js` holds the menu: the three actions in order, the two document actions disabled with "Word and PowerPoint need the document app filinq" when the flag is false, the image URL, the document request (never throws; a 503 reads as unavailable), the toast text and the Open in Files link (`tests/vitest/viewExport.spec.js`, 12).
-  - Left: mounting the menu in `src/views/architecture/ArchitectureViewEditor.vue`, which exists only on the unmerged `quality/build-architecture-views-editor` branch (change `architecture-views-editor`).
+  - Done (2026-11-16): the menu is mounted in the header of `src/views/architecture/ArchitectureViewEditor.vue` (now on development): Download SVG as a download link to the image route, the two document actions calling the document route, a toast naming the filed document that opens it in Files, and a 503 disabling the document actions. Mounted vitest in `tests/vitest/architectureViewEditorMounted.spec.js` (4).
 - [ ] Test (Playwright `architecture-view-export.spec.ts`)
+  - Left: e2e against a live instance with and without filinq; not run in this build.
 
 ### Task 5: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
@@ -51,9 +52,10 @@
 - **acceptance_criteria**:
   - GIVEN the feature page WHEN it is read THEN an Export section shows the menu and a downloaded SVG in a screenshot and says what filinq adds
   - GIVEN a Dutch instance WHEN the Export menu opens THEN every label and the filinq notice read in Dutch
-- [ ] Implement
+- [x] Implement
   - Done (2026-11-15): the menu's English and Dutch strings in `l10n/en.json`, `l10n/nl.json` and their `.js`.
-  - Left: the Export section of `docs/features/architecture-views.md`, which the `architecture-views-editor` branch creates (writing it here would conflict), with its screenshot.
+  - Done (2026-11-16): the Export section of `docs/features/architecture-views.md`.
+  - Left: its screenshot of the menu and a downloaded SVG, captured with Playwright on a live instance.
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
 ## Verification

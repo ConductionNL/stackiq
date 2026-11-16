@@ -20,6 +20,8 @@ const db = { view: [], element: [], relation: [], 'view-version': [] }
 const calls = []
 let sequence = 0
 const lockState = { mode: 'mine', holder: null }
+const exportState = { available: true, answer: null }
+const toasts = []
 
 const http = {
 	async get(url, config = {}) {
@@ -35,6 +37,10 @@ const http = {
 	},
 	async post(url, body) {
 		calls.push(['POST', url, body])
+		if (url.includes('/apps/stackiq/api/views/')) {
+			if (exportState.answer.status >= 400) throw Object.assign(new Error(String(exportState.answer.status)), { response: exportState.answer })
+			return exportState.answer
+		}
 		const schema = url.slice(BASE.length).split('/')[0]
 		const saved = { ...JSON.parse(JSON.stringify(body)), '@self': { id: `uuid-${++sequence}` } }
 		db[schema].push(saved)
@@ -50,6 +56,14 @@ const http = {
 }
 
 vi.mock('@nextcloud/axios', () => ({ default: http }))
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params = {}) => '/index.php' + url.replace(/{(\w+)}/g, (m, k) => encodeURIComponent(params[k])),
+}))
+vi.mock('@nextcloud/initial-state', () => ({ loadState: (app, key, fallback) => (key === 'view_document_export' ? exportState.available : fallback) }))
+vi.mock('@nextcloud/dialogs', () => ({
+	showSuccess: (text, options) => toasts.push({ type: 'success', text, options }),
+	showError: (text) => toasts.push({ type: 'error', text }),
+}))
 vi.mock('@nextcloud/auth', () => ({ getCurrentUser: () => ({ uid: 'ines' }) }))
 vi.mock('@nextcloud/l10n', () => {
 	const fill = (text, vars) => String(text).replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m))
@@ -70,13 +84,16 @@ function passthrough (name, tag = 'div') {
   return defineComponent({
 	name,
 	inheritAttrs: false,
-	props: ['name', 'description', 'type', 'disabled', 'to', 'label', 'inputLabel', 'modelValue', 'options'],
+	props: ['name', 'description', 'type', 'disabled', 'to', 'label', 'inputLabel', 'modelValue', 'options', 'menuName', 'href', 'download'],
 	emits: ['click', 'update:modelValue', 'search'],
 	setup(props, { slots, emit, attrs }) {
 		return () => h(tag, {
 			...attrs,
 			'data-stub': name,
-			'data-label': props.inputLabel ?? props.label ?? props.name ?? '',
+			'data-label': props.inputLabel ?? props.label ?? props.name ?? props.menuName ?? '',
+			'data-description': props.description ?? '',
+			href: props.href,
+			download: props.download,
 			disabled: props.disabled,
 			onClick: () => emit('click'),
 		}, [props.name ? h('span', props.name) : null, slots.default?.()])
@@ -85,6 +102,9 @@ function passthrough (name, tag = 'div') {
 }
 
 vi.mock('@nextcloud/vue', () => ({
+	NcActions: passthrough('NcActions'),
+	NcActionButton: passthrough('NcActionButton', 'button'),
+	NcActionLink: passthrough('NcActionLink', 'a'),
 	NcButton: passthrough('NcButton', 'button'),
 	NcEmptyContent: passthrough('NcEmptyContent'),
 	NcLoadingIcon: passthrough('NcLoadingIcon'),
@@ -168,6 +188,9 @@ beforeEach(() => {
 	sequence = 0
 	lockState.mode = 'mine'
 	lockState.holder = null
+	exportState.available = true
+	exportState.answer = null
+	toasts.length = 0
 })
 
 describe('the view editor', () => {
@@ -260,5 +283,69 @@ describe('the version compare', () => {
 
 		expect(wrapper.find('[data-label="No saved versions yet"]').exists()).toBe(true)
 		expect(wrapper.find('.view-compare__summary').exists()).toBe(false)
+	})
+})
+
+describe('the Export menu', () => {
+	const view = () => ({ name: 'Zaak / landschap', origin: 'imported', status: 'published', xml: { viewNodes: [nodeA], viewRelationships: [] }, '@self': { id: 'g1' } })
+	const action = (wrapper, id) => wrapper.find(`[data-testid="view-export-${id}"]`)
+
+	it('lists Download SVG, Create Word document and Create PowerPoint slide, with the SVG as a download', async () => {
+		db.view.push(view())
+
+		const { wrapper } = await open(ArchitectureViewEditor, 'g1')
+
+		const menu = wrapper.find('[data-testid="view-export-menu"]')
+		expect(menu.attributes('data-label')).toBe('Export')
+		expect(menu.findAll('button, a').map((el) => el.text())).toEqual(['Download SVG', 'Create Word document', 'Create PowerPoint slide'])
+		const svg = action(wrapper, 'svg')
+		expect(svg.attributes('href')).toMatch(/\/apps\/stackiq\/api\/views\/g1\/image\.svg$/)
+		expect(svg.attributes('download')).toBe('Zaak - landschap.svg')
+		expect(action(wrapper, 'word').attributes('disabled')).toBeUndefined()
+	})
+
+	it('disables the two document actions with the text about filinq when filinq is absent', async () => {
+		exportState.available = false
+		db.view.push(view())
+
+		const { wrapper } = await open(ArchitectureViewEditor, 'g1')
+
+		for (const id of ['word', 'powerpoint']) {
+			expect(action(wrapper, id).attributes('disabled')).toBeDefined()
+			expect(action(wrapper, id).attributes('data-description')).toBe('Word and PowerPoint need the document app filinq')
+		}
+		expect(action(wrapper, 'svg').attributes('disabled')).toBeUndefined()
+	})
+
+	it('asks for a docx and names the filed document in a toast that opens Files', async () => {
+		db.view.push(view())
+		exportState.answer = { data: { name: 'Zaak.docx', path: '/Stackiq/Zaak.docx', fileId: 42 } }
+		const opened = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+		const { wrapper } = await open(ArchitectureViewEditor, 'g1')
+		await action(wrapper, 'word').trigger('click')
+		await flushPromises()
+
+		const request = calls.find(([method, url]) => method === 'POST' && url.endsWith('/apps/stackiq/api/views/g1/document'))
+		expect(request[2]).toEqual({ format: 'docx' })
+		expect(toasts).toHaveLength(1)
+		expect(toasts[0]).toMatchObject({ type: 'success', text: 'Zaak.docx was saved in Files · Open in Files' })
+		toasts[0].options.onClick()
+		expect(opened).toHaveBeenCalledWith(expect.stringMatching(/\/f\/42$/), '_blank', 'noopener')
+		opened.mockRestore()
+	})
+
+	it('shows the reason and disables the document actions when filinq answers 503', async () => {
+		db.view.push(view())
+		exportState.answer = { status: 503, data: { error: 'Word and PowerPoint need the document app filinq.' } }
+
+		const { wrapper } = await open(ArchitectureViewEditor, 'g1')
+		await action(wrapper, 'powerpoint').trigger('click')
+		await flushPromises()
+
+		expect(calls.find(([method, url]) => method === 'POST' && url.endsWith('/document'))[2]).toEqual({ format: 'pptx' })
+		expect(toasts).toEqual([{ type: 'error', text: 'Word and PowerPoint need the document app filinq.' }])
+		expect(action(wrapper, 'word').attributes('disabled')).toBeDefined()
+		expect(action(wrapper, 'powerpoint').attributes('disabled')).toBeDefined()
 	})
 })

@@ -37,6 +37,17 @@ A view from the GEMMA import opens read-only, because the next import would over
 
 In the editor, type a **Version label** and click **Save version** to keep a numbered copy of the saved view. Click **Compare versions** to compare two versions, or a version with the current view: both are drawn side by side, with added items marked in green, removed items in red and changed items in yellow, and the same changes listed as text below.
 
+## Export
+
+Every view, drawn or imported, has an **Export** menu in the editor's header:
+
+- **Download SVG** saves the view as an image: every element at its place and size, with the connections and their arrowheads. Anyone who may read the view can download it.
+- **Create Word document** and **Create PowerPoint slide** make a document that holds the view's name, description, viewpoint, a legend of its element types, the date, a link back to the view and the image. The document is saved in your Files, and a notice names it with a link to open it.
+
+Word and PowerPoint documents are made by the document app filinq. Without filinq the two document actions are disabled and say so; **Download SVG** keeps working.
+
+Specification: [`openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md).
+
 ## Who sees what
 
 GEMMA views, elements and relations are public. Views, elements and relations drawn in stackiq are only read by signed-in users of the organisation that drew them, and they stay out of the shared views list (`/api/views`) and of the full ArchiMate export.
