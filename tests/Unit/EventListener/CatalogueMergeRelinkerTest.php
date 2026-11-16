@@ -122,7 +122,11 @@ class CatalogueMergeRelinkerTest extends TestCase {
 		$objects->method('findAll')->willReturnCallback(
 			function (array $config): array {
 				$slug = array_search($config['_schema'], self::SCHEMA_IDS, true);
-				return ($this->stored[$slug] ?? []);
+				return array_slice(
+					array: ($this->stored[$slug] ?? []),
+					offset: (int)($config['offset'] ?? 0),
+					length: (int)($config['limit'] ?? PHP_INT_MAX)
+				);
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
@@ -180,6 +184,26 @@ class CatalogueMergeRelinkerTest extends TestCase {
 		$this->assertSame([['name' => 'Voorbeeld name 1', 'recordStatus' => 'Merged', 'mergedInto' => 'orig']], $this->savesOf(uuid: 'dup'));
 		$this->assertSame([], $this->savesOf(uuid: 'orig'));
 	}//end testUsagesAndConnectionsFollowTheSurvivor()
+
+	/**
+	 * A reference past the first page of a schema still follows the survivor.
+	 *
+	 * @return void
+	 */
+	public function testAReferencePastTheFirstPageFollowsTheSurvivor(): void {
+		$this->object(schema: 'module', uuid: 'orig', data: []);
+		$this->object(schema: 'module', uuid: 'dup', data: []);
+		for ($i = 0; $i < 500; $i++) {
+			$this->object(schema: 'usage', uuid: 'filler-' . $i, data: ['module' => 'other']);
+		}
+
+		$this->object(schema: 'usage', uuid: 'late', data: ['module' => 'dup']);
+
+		$this->relinker()->handle(new ObjectsMergedEvent(survivorUuid: 'orig', mergedFromUuids: ['dup'], mergeOperationId: 'op-paged'));
+
+		$this->assertSame([['module' => 'orig']], $this->savesOf(uuid: 'late'));
+		$this->assertSame([], $this->savesOf(uuid: 'filler-499'));
+	}//end testAReferencePastTheFirstPageFollowsTheSurvivor()
 
 	/**
 	 * A list that held both records holds the survivor once, in place.

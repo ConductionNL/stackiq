@@ -57,11 +57,12 @@ class CatalogueMergeRelinker implements IEventListener {
 	public const RELINKED_SCHEMAS = ['module', 'catalogService'];
 
 	/**
-	 * Most objects of one referencing schema read in one walk.
+	 * Objects of one referencing schema read per page; the walk pages on
+	 * until a page comes back short, so no reference is left behind.
 	 *
 	 * @var int
 	 */
-	private const WALK_LIMIT = 10000;
+	private const PAGE_SIZE = 500;
 
 	/**
 	 * Constructor.
@@ -173,11 +174,50 @@ class CatalogueMergeRelinker implements IEventListener {
 			return;
 		}
 
-		$entities = $objects->findAll(
-			config: ['_register' => $register, '_schema' => $schema, 'limit' => self::WALK_LIMIT],
-			_rbac: false,
-			_multitenancy: false
-		);
+		$offset = 0;
+		do {
+			$entities = $objects->findAll(
+				config: ['_register' => $register, '_schema' => $schema, 'limit' => self::PAGE_SIZE, 'offset' => $offset],
+				_rbac: false,
+				_multitenancy: false
+			);
+			$this->relinkPage(
+				objects: $objects,
+				entities: $entities,
+				ids: ['register' => $register, 'schema' => $schema],
+				reference: $reference,
+				losers: $losers,
+				event: $event
+			);
+			$offset += self::PAGE_SIZE;
+		} while (count($entities) === self::PAGE_SIZE);
+	}//end relinkReference()
+
+	/**
+	 * Re-point one reference on each object of one page that holds a merged record.
+	 * Only the reference field changes, so the walk's order and paging hold.
+	 *
+	 * @param ObjectServiceInterface                           $objects   The object service.
+	 * @param array<int, ObjectEntityInterface>                $entities  The page.
+	 * @param array{register: int|string, schema: int|string}  $ids       The register and schema.
+	 * @param array{schema: string, field: string, list: bool} $reference The reference.
+	 * @param array<int, string>                               $losers    The merged records.
+	 * @param ObjectsMergedEvent                               $event     The merge.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 */
+	private function relinkPage(
+		ObjectServiceInterface $objects,
+		array $entities,
+		array $ids,
+		array $reference,
+		array $losers,
+		ObjectsMergedEvent $event
+	): void {
+		$register = $ids['register'];
+		$schema = $ids['schema'];
 		foreach ($entities as $entity) {
 			$data = self::repointed(
 				data: $entity->getObject(),
@@ -200,7 +240,7 @@ class CatalogueMergeRelinker implements IEventListener {
 			);
 			$this->audit(reference: $reference, objectUuid: (string)$entity->getUuid(), event: $event);
 		}
-	}//end relinkReference()
+	}//end relinkPage()
 
 	/**
 	 * The object's data with the merged records replaced by the survivor in
