@@ -33,6 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
@@ -151,8 +153,7 @@ class IntakeService implements IntakeServiceInterface {
 		try {
 			$entity = $objectService->saveObject(
 				object: $clean,
-				register: $target['register'],
-				schema: $target['schema']
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('IntakeService: submit failed', ['error' => $e->getMessage()]);

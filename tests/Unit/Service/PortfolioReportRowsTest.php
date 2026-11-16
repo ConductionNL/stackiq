@@ -36,6 +36,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Characterisation tests for the portfolio report rows and CSV export.
@@ -91,11 +92,15 @@ class PortfolioReportRowsTest extends TestCase {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function contracts(): array {
+		$ownA = ['@self' => ['organisation' => 'org-a']];
 		return [
-			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'],
-			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'],
-			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually'],
-			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'],
+			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'] + $ownA,
+			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'] + $ownA,
+			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually', '_organisation' => 'org-a'],
+			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'] + $ownA,
+			// Decision 409: a supplier's contract on org-a's usage, and one without a readable owner, are not org-a's to read.
+			['usage' => 'g-1', 'cost' => 1000, 'costPeriod' => 'Annually', '@self' => ['organisation' => 'supplier-v']],
+			['usage' => 'g-2', 'cost' => 7, 'costPeriod' => 'One-off'],
 		];
 	}//end contracts()
 
@@ -143,6 +148,7 @@ class PortfolioReportRowsTest extends TestCase {
 		);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) use ($entities) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->foundIds[] = $args[0];
 				if (isset($entities[$args[0]]) === false) {
 					throw new RuntimeException('not found');
@@ -269,6 +275,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['SaaS'],
 				'annualisedCost' => 120.0,
 				'oneOffCost' => 99.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -290,6 +298,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['IaaS'],
 				'annualisedCost' => 5.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -311,6 +321,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => [],
 				'annualisedCost' => 0.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 		];
 	}//end expectedRows()
@@ -322,9 +334,9 @@ class PortfolioReportRowsTest extends TestCase {
 	 */
 	private function expectedCsv(): string {
 		return 'organisation,module,timeClassification,timeRationale,timeReviewDate,lifecyclePhase,eolStatus,hostingModel,annualisedCost,oneOffCost,'
-			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch\n"
-			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no\n"
-			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no\n"
-			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no\n";
+			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch,overlapsWith\n"
+			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no,\n"
+			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no,\n"
+			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no,\n";
 	}//end expectedCsv()
 }//end class
