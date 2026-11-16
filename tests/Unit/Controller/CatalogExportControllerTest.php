@@ -24,10 +24,12 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 use InvalidArgumentException;
 use OCA\Stackiq\Controller\CatalogExportController;
 use OCA\Stackiq\Service\CatalogExportService;
+use OCA\Stackiq\Service\Export\CatalogExportRequest;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -38,6 +40,7 @@ use RuntimeException;
  * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
  */
 #[CoversClass(CatalogExportController::class)]
+#[UsesClass(CatalogExportRequest::class)]
 class CatalogExportControllerTest extends TestCase {
 
 	/**
@@ -98,11 +101,13 @@ class CatalogExportControllerTest extends TestCase {
 		$exports->method('mayExport')->willReturn(true);
 		$exports->expects(self::once())->method('export')->with(
 			'module',
-			['referenceComponent' => ['Zaakregistratiecomponent'], 'domain' => ['Zaken', 'Burgerzaken']],
-			'zaak',
-			['bbnLevel' => 'BBN2'],
-			[['key' => 'name', 'label' => 'Name'], ['key' => 'bbnLevel', 'label' => 'bbnLevel']],
-			'xlsx'
+			new CatalogExportRequest(
+				facets: ['referenceComponent' => ['Zaakregistratiecomponent'], 'domain' => ['Zaken', 'Burgerzaken']],
+				search: 'zaak',
+				quickFilter: ['bbnLevel' => 'BBN2'],
+				columns: [['key' => 'name', 'label' => 'Name'], ['key' => 'bbnLevel', 'label' => 'bbnLevel']],
+				format: 'xlsx'
+			)
 		)->willReturn(['body' => 'PK', 'contentType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'filename' => 'module-export.xlsx']);
 
 		$response = $this->controller(
@@ -144,7 +149,7 @@ class CatalogExportControllerTest extends TestCase {
 
 		$csv = $this->createMock(CatalogExportService::class);
 		$csv->method('mayExport')->willReturn(true);
-		$csv->expects(self::once())->method('export')->with('catalogService', [], null, [], [], 'csv')
+		$csv->expects(self::once())->method('export')->with('catalogService', new CatalogExportRequest())
 			->willReturn(['body' => "name\n", 'contentType' => 'text/csv; charset=utf-8', 'filename' => 'c.csv']);
 		self::assertSame("name\n", $this->controller(params: [], exports: $csv)->export(schema: 'catalogService')->render());
 	}//end testFailuresAndTheDefaultFormat()

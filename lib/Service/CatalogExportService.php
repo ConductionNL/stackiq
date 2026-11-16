@@ -34,15 +34,13 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
+use OCA\Stackiq\Service\Export\CatalogExportGate;
+use OCA\Stackiq\Service\Export\CatalogExportRequest;
 use OCA\Stackiq\Service\Export\SimpleXlsxWriter;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
-use OCP\IGroupManager;
 use OCP\IL10N;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
-use Throwable;
 
 /**
  * Builds the CSV or XLSX export of a faceted catalogue list.
@@ -80,13 +78,11 @@ class CatalogExportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param FacetServiceInterface $facets       The GEMMA facet matching the list uses.
-	 * @param CatalogueLocator      $catalogue    The catalogue register and schema ids.
-	 * @param ContainerInterface    $container    Reaches OpenRegister's ObjectService and SchemaMapper.
-	 * @param IUserSession          $userSession  The caller.
-	 * @param IGroupManager         $groupManager The caller's groups, for a schema's `export` grant.
-	 * @param IL10N                 $l10n         The cut-off row in the caller's language.
-	 * @param LoggerInterface       $logger       Logs a schema it could not read.
+	 * @param FacetServiceInterface $facets    The GEMMA facet matching the list uses.
+	 * @param CatalogueLocator      $catalogue The catalogue register and schema ids.
+	 * @param ContainerInterface    $container Reaches OpenRegister's ObjectService.
+	 * @param IL10N                 $l10n      The cut-off row in the caller's language.
+	 * @param CatalogExportGate     $gate      Whether the caller may export a schema.
 	 *
 	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
@@ -94,10 +90,8 @@ class CatalogExportService {
 		private readonly FacetServiceInterface $facets,
 		private readonly CatalogueLocator $catalogue,
 		private readonly ContainerInterface $container,
-		private readonly IUserSession $userSession,
-		private readonly IGroupManager $groupManager,
 		private readonly IL10N $l10n,
-		private readonly LoggerInterface $logger,
+		private readonly CatalogExportGate $gate,
 	) {
 	}//end __construct()
 
@@ -119,10 +113,7 @@ class CatalogExportService {
 	}//end assertSchema()
 
 	/**
-	 * Whether the caller may export the schema: when its `authorization` names
-	 * `export`, the caller must be in one of those groups (an administrator
-	 * always is); otherwise the `read` grant applies, which the RBAC read
-	 * enforces row by row. A schema that cannot be read refuses.
+	 * Whether the caller may export the schema (see CatalogExportGate).
 	 *
 	 * @param string $schema The schema slug, already checked.
 	 *
@@ -131,51 +122,14 @@ class CatalogExportService {
 	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public function mayExport(string $schema): bool {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return false;
-		}
-
-		try {
-			$schemaId = $this->catalogue->getSchemaIdForObjectType(objectType: $schema);
-			if ($schemaId === null) {
-				return false;
-			}
-
-			$entity        = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schemaId, _rbac: false, _multitenancy: false);
-			$authorization = (array)($entity->getAuthorization() ?? []);
-		} catch (Throwable $exception) {
-			$this->logger->warning('[CatalogExportService] The schema could not be read: {msg}', ['msg' => $exception->getMessage(), 'schema' => $schema]);
-			return false;
-		}
-
-		if (array_key_exists('export', $authorization) === false) {
-			return true;
-		}
-
-		$uid = $user->getUID();
-		if ($this->groupManager->isAdmin($uid) === true) {
-			return true;
-		}
-
-		foreach ((array)$authorization['export'] as $group) {
-			if (is_string($group) === true && $this->groupManager->isInGroup($uid, $group) === true) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->gate->mayExport(schema: $schema);
 	}//end mayExport()
 
 	/**
 	 * The export file of the list as filtered.
 	 *
-	 * @param string                $schema      `module` or `catalogService`, already checked.
-	 * @param array<string, array>  $facets      The selected facet values per GEMMA dimension.
-	 * @param string|null           $search      The search box.
-	 * @param array<string, mixed>  $quickFilter The active quick filter's field values.
-	 * @param array<int, array{key: string, label: string}> $columns The page's columns.
-	 * @param string                $format      `csv` or `xlsx`.
+	 * @param string               $schema  `module` or `catalogService`, already checked.
+	 * @param CatalogExportRequest $request The facets, search, quick filter, columns and format.
 	 *
 	 * @return array{body: string, contentType: string, filename: string}
 	 *
@@ -184,77 +138,125 @@ class CatalogExportService {
 	 *
 	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
-	public function export(string $schema, array $facets, ?string $search, array $quickFilter, array $columns, string $format): array {
-		if (in_array($format, self::FORMATS, true) === false) {
+	public function export(string $schema, CatalogExportRequest $request): array {
+		if (in_array($request->format, self::FORMATS, true) === false) {
 			throw new InvalidArgumentException('The format is csv or xlsx.');
 		}
 
-		if ($columns === []) {
-			$columns = array_map(static fn (string $key): array => ['key' => $key, 'label' => $key], self::DEFAULT_COLUMNS);
+		$matched = $this->facets->getFacets(schema: $schema, filters: $request->facets, search: $request->search);
+		$ids     = array_values(array_filter(($matched['_meta']['matchedObjectIds'] ?? []), 'is_string'));
+		// The `@self` placeholder keeps the query's key order; readObjects() fills it in.
+		$query = array_merge(
+			self::quickFilterQuery(quickFilter: $request->quickFilter),
+			['@self' => null, 'id' => $ids, '_limit' => count($ids), '_page' => 1]
+		);
+		$objects = [];
+		if ($ids !== []) {
+			$objects = $this->readObjects(schema: $schema, query: $query);
 		}
 
-		$matched = $this->facets->getFacets(schema: $schema, filters: $facets, search: $search);
-		$ids     = array_values(array_filter(($matched['_meta']['matchedObjectIds'] ?? []), 'is_string'));
-		$objects = $this->readObjects(schema: $schema, ids: $ids, quickFilter: $quickFilter);
+		$rows = $this->rows(objects: $objects, columns: self::columnsOrDefault(columns: $request->columns));
+		if (($matched['_meta']['truncated'] ?? false) === true) {
+			$rows[] = [$this->l10n->t(self::CUT_ROW, [count($objects)])];
+		}
 
+		if ($request->format === 'xlsx') {
+			return self::xlsxFile(schema: $schema, rows: $rows);
+		}
+
+		return self::csvFile(schema: $schema, rows: $rows);
+	}//end export()
+
+	/**
+	 * The page's columns, or the default ones when it sent none.
+	 *
+	 * @param array<int, array{key: string, label: string}> $columns The page's columns.
+	 *
+	 * @return array<int, array{key: string, label: string}>
+	 */
+	private static function columnsOrDefault(array $columns): array {
+		if ($columns !== []) {
+			return $columns;
+		}
+
+		return array_map(static fn (string $key): array => ['key' => $key, 'label' => $key], self::DEFAULT_COLUMNS);
+	}//end columnsOrDefault()
+
+	/**
+	 * The header row and one row of cells per object.
+	 *
+	 * @param array<int, array<string, mixed>>              $objects The objects.
+	 * @param array<int, array{key: string, label: string}> $columns The columns.
+	 *
+	 * @return array<int, array<int, string>>
+	 */
+	private function rows(array $objects, array $columns): array {
 		$rows = [array_column($columns, 'label')];
 		foreach ($objects as $object) {
 			$rows[] = array_map(fn (array $column): string => self::cell(value: $this->valueAt(object: $object, key: $column['key'])), $columns);
 		}
 
-		if (($matched['_meta']['truncated'] ?? false) === true) {
-			$rows[] = [$this->l10n->t(self::CUT_ROW, [count($objects)])];
-		}
+		return $rows;
+	}//end rows()
 
-		$name = $schema . '-export-' . gmdate('Y-m-d');
-		if ($format === 'xlsx') {
-			return [
-				'body' => (new SimpleXlsxWriter())->write(sheetName: $schema, rows: $rows),
-				'contentType' => SimpleXlsxWriter::CONTENT_TYPE,
-				'filename' => $name . '.xlsx',
-			];
-		}
+	/**
+	 * The rows as an XLSX file, one sheet named after the schema.
+	 *
+	 * @param string                         $schema The schema slug.
+	 * @param array<int, array<int, string>> $rows   The rows.
+	 *
+	 * @return array{body: string, contentType: string, filename: string}
+	 */
+	private static function xlsxFile(string $schema, array $rows): array {
+		return [
+			'body' => (new SimpleXlsxWriter())->write(sheetName: $schema, rows: $rows),
+			'contentType' => SimpleXlsxWriter::CONTENT_TYPE,
+			'filename' => self::fileName(schema: $schema) . '.xlsx',
+		];
+	}//end xlsxFile()
 
-		return ['body' => self::csv(rows: $rows), 'contentType' => 'text/csv; charset=utf-8', 'filename' => $name . '.csv'];
-	}//end export()
+	/**
+	 * The rows as a CSV file.
+	 *
+	 * @param string                         $schema The schema slug.
+	 * @param array<int, array<int, string>> $rows   The rows.
+	 *
+	 * @return array{body: string, contentType: string, filename: string}
+	 */
+	private static function csvFile(string $schema, array $rows): array {
+		return ['body' => self::csv(rows: $rows), 'contentType' => 'text/csv; charset=utf-8', 'filename' => self::fileName(schema: $schema) . '.csv'];
+	}//end csvFile()
+
+	/**
+	 * The export's file name without its extension.
+	 *
+	 * @param string $schema The schema slug.
+	 *
+	 * @return string
+	 */
+	private static function fileName(string $schema): string {
+		return $schema . '-export-' . gmdate('Y-m-d');
+	}//end fileName()
 
 	/**
 	 * The matched objects, narrowed by the quick filter, read with the caller's rights.
 	 *
-	 * @param string                $schema      The schema slug.
-	 * @param array<int, string>    $ids         The ids FacetService matched.
-	 * @param array<string, mixed>  $quickFilter The quick filter's field values.
+	 * @param string               $schema The schema slug.
+	 * @param array<string, mixed> $query  The quick filter fields, the ids and the paging; `@self` is filled in here.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 */
-	private function readObjects(string $schema, array $ids, array $quickFilter): array {
-		if ($ids === []) {
-			return [];
-		}
-
+	private function readObjects(string $schema, array $query): array {
 		$registerId = $this->catalogue->getRegisterIdForObjectType(objectType: $schema);
 		$schemaId   = $this->catalogue->getSchemaIdForObjectType(objectType: $schema);
 		if ($registerId === null || $schemaId === null) {
 			return [];
 		}
 
-		$objectService = $this->container->get(ObjectService::class);
-		if ($objectService instanceof ObjectServiceInterface === false) {
-			throw new RuntimeException('OpenRegister ObjectService not available');
-		}
-
-		$query = array_merge(
-			self::quickFilterQuery(quickFilter: $quickFilter),
-			[
-				'@self' => ['register' => $registerId, 'schema' => $schemaId],
-				'id' => $ids,
-				'_limit' => count($ids),
-				'_page' => 1,
-			]
-		);
-		$result = $objectService->searchObjectsPaginated($query);
+		$query['@self'] = ['register' => $registerId, 'schema' => $schemaId];
+		$result         = $this->objectService()->searchObjectsPaginated($query);
 
 		$objects = [];
 		foreach (($result['results'] ?? []) as $object) {
@@ -267,6 +269,22 @@ class CatalogExportService {
 
 		return $objects;
 	}//end readObjects()
+
+	/**
+	 * OpenRegister's object service.
+	 *
+	 * @return ObjectServiceInterface
+	 *
+	 * @throws RuntimeException When OpenRegister is not available.
+	 */
+	private function objectService(): ObjectServiceInterface {
+		$objectService = $this->container->get(ObjectService::class);
+		if ($objectService instanceof ObjectServiceInterface === false) {
+			throw new RuntimeException('OpenRegister ObjectService not available');
+		}
+
+		return $objectService;
+	}//end objectService()
 
 	/**
 	 * The quick filter as query fields: plain field names with a scalar or a list of scalars.
@@ -284,13 +302,28 @@ class CatalogExportService {
 				continue;
 			}
 
-			if (is_scalar($value) === true || (is_array($value) === true && array_filter($value, 'is_scalar') === $value && $value !== [])) {
+			if (self::isFilterValue(value: $value) === true) {
 				$query[$field] = $value;
 			}
 		}
 
 		return $query;
 	}//end quickFilterQuery()
+
+	/**
+	 * Whether a quick filter value is a scalar or a non-empty list of scalars.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return bool
+	 */
+	private static function isFilterValue(mixed $value): bool {
+		if (is_scalar($value) === true) {
+			return true;
+		}
+
+		return is_array($value) === true && $value !== [] && array_filter($value, 'is_scalar') === $value;
+	}//end isFilterValue()
 
 	/**
 	 * The value at a column key, a dotted path into the object.

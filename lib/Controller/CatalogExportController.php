@@ -32,6 +32,7 @@ namespace OCA\Stackiq\Controller;
 
 use InvalidArgumentException;
 use OCA\Stackiq\Service\CatalogExportService;
+use OCA\Stackiq\Service\Export\CatalogExportRequest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -120,11 +121,13 @@ class CatalogExportController extends Controller {
 		try {
 			$file = $this->exports->export(
 				schema: $schema,
-				facets: $this->facets(),
-				search: $this->text(name: 'search'),
-				quickFilter: $this->quickFilter(),
-				columns: $this->columns(),
-				format: ($this->text(name: 'format') ?? 'csv')
+				request: new CatalogExportRequest(
+					facets: $this->facets(),
+					search: $this->text(name: 'search'),
+					quickFilter: $this->jsonParam(name: 'quickFilter'),
+					columns: $this->columns(),
+					format: ($this->text(name: 'format') ?? 'csv')
+				)
 			);
 		} catch (InvalidArgumentException $exception) {
 			return new JSONResponse(['message' => $exception->getMessage()], 400);
@@ -159,12 +162,16 @@ class CatalogExportController extends Controller {
 	}//end facets()
 
 	/**
-	 * The active quick filter: an object, or its JSON text.
+	 * An object or list parameter, or its JSON text; [] for anything else.
 	 *
-	 * @return array<string, mixed>
+	 * The quick filter is read this way, as are the columns.
+	 *
+	 * @param string $name The parameter.
+	 *
+	 * @return array<mixed>
 	 */
-	private function quickFilter(): array {
-		$value = $this->request->getParam('quickFilter');
+	private function jsonParam(string $name): array {
+		$value = $this->request->getParam($name);
 		if (is_string($value) === true) {
 			$value = json_decode($value, true);
 		}
@@ -174,7 +181,7 @@ class CatalogExportController extends Controller {
 		}
 
 		return $value;
-	}//end quickFilter()
+	}//end jsonParam()
 
 	/**
 	 * The page's columns: a list of `{key, label}`, or of keys, or its JSON text.
@@ -182,31 +189,38 @@ class CatalogExportController extends Controller {
 	 * @return array<int, array{key: string, label: string}>
 	 */
 	private function columns(): array {
-		$value = $this->request->getParam('columns');
-		if (is_string($value) === true) {
-			$value = json_decode($value, true);
-		}
-
-		if (is_array($value) === false) {
-			return [];
-		}
-
 		$columns = [];
-		foreach ($value as $column) {
-			$key   = $column;
-			$label = $column;
-			if (is_array($column) === true) {
-				$key   = ($column['key'] ?? null);
-				$label = ($column['label'] ?? $key);
-			}
-
-			if (is_string($key) === true && preg_match('/^[A-Za-z_][A-Za-z0-9_.]*$/', $key) === 1) {
-				$columns[] = ['key' => $key, 'label' => (string)$label];
+		foreach ($this->jsonParam(name: 'columns') as $column) {
+			$parsed = self::column(column: $column);
+			if ($parsed !== null) {
+				$columns[] = $parsed;
 			}
 		}
 
 		return $columns;
 	}//end columns()
+
+	/**
+	 * One column, `{key, label}` or a bare key, or null when its key is not a field path.
+	 *
+	 * @param mixed $column The column as sent.
+	 *
+	 * @return array{key: string, label: string}|null
+	 */
+	private static function column(mixed $column): ?array {
+		$key   = $column;
+		$label = $column;
+		if (is_array($column) === true) {
+			$key   = ($column['key'] ?? null);
+			$label = ($column['label'] ?? $key);
+		}
+
+		if (is_string($key) === false || preg_match('/^[A-Za-z_][A-Za-z0-9_.]*$/', $key) !== 1) {
+			return null;
+		}
+
+		return ['key' => $key, 'label' => (string)$label];
+	}//end column()
 
 	/**
 	 * A text parameter, or null.

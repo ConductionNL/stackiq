@@ -26,6 +26,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCA\Stackiq\Service\CatalogExportService;
+use OCA\Stackiq\Service\Export\CatalogExportGate;
+use OCA\Stackiq\Service\Export\CatalogExportRequest;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -45,6 +47,8 @@ use ZipArchive;
  */
 #[CoversClass(CatalogExportService::class)]
 #[UsesClass(\OCA\Stackiq\Service\Export\SimpleXlsxWriter::class)]
+#[UsesClass(CatalogExportRequest::class)]
+#[UsesClass(CatalogExportGate::class)]
 #[UsesClass(\OCA\Stackiq\Service\PortfolioReportService::class)]
 class CatalogExportServiceTest extends TestCase {
 
@@ -144,10 +148,14 @@ class CatalogExportServiceTest extends TestCase {
 			facets: $facets,
 			catalogue: $catalogue,
 			container: $container,
-			userSession: $session,
-			groupManager: $groupManager,
 			l10n: $l10n,
-			logger: $this->createMock(LoggerInterface::class)
+			gate: new CatalogExportGate(
+				catalogue: $catalogue,
+				container: $container,
+				userSession: $session,
+				groupManager: $groupManager,
+				logger: $this->createMock(LoggerInterface::class)
+			)
 		);
 	}//end service()
 
@@ -183,11 +191,13 @@ class CatalogExportServiceTest extends TestCase {
 
 		$file = $service->export(
 			schema: 'module',
-			facets: ['referenceComponent' => ['Zaakregistratiecomponent']],
-			search: 'zaak',
-			quickFilter: ['bbnLevel' => 'BBN2', '_limit' => 5000, 'bad key' => 'x'],
-			columns: [['key' => 'name', 'label' => 'Name'], ['key' => 'supplier', 'label' => 'Supplier'], ['key' => 'tags', 'label' => 'Tags'], ['key' => 'bbnLevel', 'label' => 'BBN']],
-			format: 'csv'
+			request: new CatalogExportRequest(
+				facets: ['referenceComponent' => ['Zaakregistratiecomponent']],
+				search: 'zaak',
+				quickFilter: ['bbnLevel' => 'BBN2', '_limit' => 5000, 'bad key' => 'x'],
+				columns: [['key' => 'name', 'label' => 'Name'], ['key' => 'supplier', 'label' => 'Supplier'], ['key' => 'tags', 'label' => 'Tags'], ['key' => 'bbnLevel', 'label' => 'BBN']],
+				format: 'csv'
+			)
 		);
 
 		self::assertSame(['schema' => 'module', 'filters' => ['referenceComponent' => ['Zaakregistratiecomponent']], 'search' => 'zaak'], $facetsCall);
@@ -211,13 +221,13 @@ class CatalogExportServiceTest extends TestCase {
 	 */
 	public function testACutSetSaysSoInItsLastRow(): void {
 		$cut = $this->service(meta: ['matchedObjectIds' => ['m1'], 'truncated' => true], rows: [['name' => 'Zaaksysteem']]);
-		$lines = explode("\n", trim($cut->export(schema: 'catalogService', facets: [], search: null, quickFilter: [], columns: [], format: 'csv')['body']));
+		$lines = explode("\n", trim($cut->export(schema: 'catalogService', request: new CatalogExportRequest())['body']));
 
 		self::assertSame(['name', 'Zaaksysteem', '"' . sprintf(CatalogExportService::CUT_ROW, 1) . '"'], $lines);
 
 		$this->queries = [];
 		$empty = $this->service(meta: ['matchedObjectIds' => [], 'truncated' => false]);
-		self::assertSame("name\n", $empty->export(schema: 'module', facets: [], search: null, quickFilter: [], columns: [], format: 'csv')['body']);
+		self::assertSame("name\n", $empty->export(schema: 'module', request: new CatalogExportRequest())['body']);
 		self::assertSame([], $this->queries, 'no ids, no read');
 	}//end testACutSetSaysSoInItsLastRow()
 
@@ -229,7 +239,7 @@ class CatalogExportServiceTest extends TestCase {
 	public function testExcelIsAWorkbookWithTheSameCells(): void {
 		$service = $this->service(meta: ['matchedObjectIds' => ['m1']], rows: [['name' => 'Zaak & Co <1>']]);
 
-		$file = $service->export(schema: 'module', facets: [], search: null, quickFilter: [], columns: [['key' => 'name', 'label' => 'Name']], format: 'xlsx');
+		$file = $service->export(schema: 'module', request: new CatalogExportRequest(columns: [['key' => 'name', 'label' => 'Name']], format: 'xlsx'));
 
 		self::assertSame('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $file['contentType']);
 		self::assertStringEndsWith('.xlsx', $file['filename']);
@@ -244,7 +254,7 @@ class CatalogExportServiceTest extends TestCase {
 		self::assertStringContainsString('<c r="A2" t="inlineStr"><is><t xml:space="preserve">Zaak &amp; Co &lt;1&gt;</t></is></c>', $sheet);
 
 		$this->expectException(InvalidArgumentException::class);
-		$service->export(schema: 'module', facets: [], search: null, quickFilter: [], columns: [], format: 'pdf');
+		$service->export(schema: 'module', request: new CatalogExportRequest(format: 'pdf'));
 	}//end testExcelIsAWorkbookWithTheSameCells()
 
 	/**
