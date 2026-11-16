@@ -52,4 +52,15 @@ interface ContractStatusServiceInterface {
 	 * @spec openspec/specs/contract-administration/spec.md
 	 */
 	public function expirePastContracts(?DateTimeImmutable $now = null): int;
+
+	/**
+	 * The daily pass over Active and Expiring contracts: Active to Expiring
+	 * inside the notice window, Active or Expiring to Expired after the end
+	 * date, Expiring to Active when the end date moved past the window.
+	 *
+	 * @param DateTimeImmutable|null $now Logical "now" (defaults to the current time).
+	 *
+	 * @return array{expiring: int, expired: int, active: int} How many contracts moved to each status.
+	 */
+	public function updateContractStatuses(?DateTimeImmutable $now = null): array;
 }//end interface
