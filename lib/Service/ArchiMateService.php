@@ -323,7 +323,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 				$options,
 				$this->orgConnections(
 					objectService: $objectService,
-					register: $orgRegisterId,
+					orgScope: ['register' => $orgRegisterId, 'organisation' => $organizationUuid],
 					schemaId: $voorzConfig['koppeling_schema'] ?? null,
 					options: $options
 				)
@@ -416,30 +416,27 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	}//end requireAmefRegisterId()
 
 	/**
-	 * The connections the organisation export may write as flows, when it is asked to (REQ-CDX-004).
+	 * The organisation's connections the export may write as flows, when it is asked to (REQ-CDX-004).
 	 *
-	 * Every connection in the register is read; the flow writer keeps only those
-	 * whose ends are both in the exported model and counts the rest.
+	 * Only the connections the exported organisation owns are read, like its
+	 * gebruik and modules; the flow writer keeps those whose ends are both in
+	 * the exported model and counts the rest.
 	 *
 	 * @param ObjectServiceInterface $objectService The object service.
-	 * @param mixed $register The register the connections live in.
-	 * @param mixed $schemaId The connection schema, or null when none is configured.
-	 * @param array<string, bool> $options The export options.
+	 * @param array                  $orgScope      The organisation register id ('register') and UUID ('organisation').
+	 * @param mixed                  $schemaId      The connection schema, or null when none is configured.
+	 * @param array<string, bool>    $options       The export options.
 	 *
 	 * @return array<int, mixed> The connections, or none.
 	 *
 	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
 	 */
-	private function orgConnections(ObjectServiceInterface $objectService, mixed $register, mixed $schemaId, array $options): array {
-		if (($options['connections'] ?? false) !== true || empty($schemaId) === true) {
+	private function orgConnections(ObjectServiceInterface $objectService, array $orgScope, mixed $schemaId, array $options): array {
+		if (($options['connections'] ?? false) !== true) {
 			return [];
 		}
 
-		return $objectService->searchObjects(
-			query: ['@self' => ['register' => $register, 'schema' => $schemaId], '_limit' => 10000],
-			_rbac: false,
-			_multitenancy: false
-		);
+		return $this->searchOrgObjects(objectService: $objectService, orgScope: $orgScope, schemaId: $schemaId);
 	}//end orgConnections()
 
 	/**
