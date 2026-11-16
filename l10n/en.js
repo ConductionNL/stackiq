@@ -762,6 +762,13 @@ OC.L10N.register(
         "Move {count} entries from {source} to another organisation.": "Move {count} entries from {source} to another organisation.",
         "{count} entry moved.": "{count} entry moved.",
         "{count} entries moved.": "{count} entries moved.",
+        "Download SVG": "Download SVG",
+        "Create Word document": "Create Word document",
+        "Create PowerPoint slide": "Create PowerPoint slide",
+        "Word and PowerPoint need the document app filinq": "Word and PowerPoint need the document app filinq",
+        "The document could not be made.": "The document could not be made.",
+        "{name} was saved in Files": "{name} was saved in Files",
+        "Open in Files": "Open in Files",
         "Select the organisation to move to": "Select the organisation to move to",
         "Moving": "Moving",
         "Nothing moves.": "Nothing moves.",
@@ -1439,14 +1446,7 @@ OC.L10N.register(
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
         "The view could not be loaded.": "The view could not be loaded.",
-        "This view holds no elements.": "This view holds no elements.",
-        "Download SVG": "Download SVG",
-        "Create Word document": "Create Word document",
-        "Create PowerPoint slide": "Create PowerPoint slide",
-        "Word and PowerPoint need the document app filinq": "Word and PowerPoint need the document app filinq",
-        "The document could not be made.": "The document could not be made.",
-        "{name} was saved in Files": "{name} was saved in Files",
-        "Open in Files": "Open in Files"
+        "This view holds no elements.": "This view holds no elements."
     },
     "nplurals=2; plural=(n != 1);"
 )
