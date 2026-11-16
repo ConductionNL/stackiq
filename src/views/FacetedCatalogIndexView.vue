@@ -93,6 +93,23 @@ generic route-query-to-filter passthrough never sees it (see the
 				</template>
 				{{ t('stackiq', 'Find duplicates') }}
 			</NcButton>
+			<NcActions :aria-label="t('stackiq', 'Export')" :menuName="t('stackiq', 'Export')">
+				<template #icon>
+					<Download :size="20" />
+				</template>
+				<NcActionButton @click="exportList('csv')">
+					<template #icon>
+						<FileDelimitedOutline :size="20" />
+					</template>
+					{{ t('stackiq', 'Export as CSV') }}
+				</NcActionButton>
+				<NcActionButton @click="exportList('xlsx')">
+					<template #icon>
+						<FileExcelOutline :size="20" />
+					</template>
+					{{ t('stackiq', 'Export as Excel') }}
+				</NcActionButton>
+			</NcActions>
 		</div>
 
 		<p
@@ -157,11 +174,15 @@ import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud/vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import FileDelimitedOutline from 'vue-material-design-icons/FileDelimitedOutline.vue'
+import FileExcelOutline from 'vue-material-design-icons/FileExcelOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
+import { catalogExportUrl } from '../utils/catalogExportUrl.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
@@ -216,6 +237,9 @@ export default {
 		CnIndexPage,
 		SaveFacetViewModal,
 		ContentSaveOutline,
+		Download,
+		FileDelimitedOutline,
+		FileExcelOutline,
 		FolderOutline,
 		FolderStarOutline,
 	},
@@ -530,6 +554,26 @@ export default {
 		 * @return {void}
 		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
+		/**
+		 * Download the list as filtered: the GEMMA facets, the search and the
+		 * active quick filter go to stackiq's export, in the page's columns.
+		 *
+		 * @param {string} format `csv` or `xlsx`.
+		 * @return {void}
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+		 */
+		exportList(format) {
+			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
+			window.location.assign(catalogExportUrl({
+				schema: this.schema,
+				activeFilters: this.facetStore[this.schema].activeFilters,
+				search: this.facetStore[this.schema].search,
+				quickFilter: tab?.filter ?? null,
+				columns: this.columns,
+				format,
+			}, generateUrl))
+		},
+
 		onQuickFilterChange(index) {
 			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
 		},

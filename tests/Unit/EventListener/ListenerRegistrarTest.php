@@ -29,6 +29,7 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
+use OCA\Stackiq\EventListener\AttestationCorrectionListener;
 use OCA\Stackiq\EventListener\CatalogueMergeRelinker;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
@@ -102,6 +103,7 @@ final class ListenerRegistrarTest extends TestCase {
 				[ObjectDeletedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectCreatedEvent::class, LifecycleCalendarListener::class],
 				[ObjectUpdatedEvent::class, LifecycleCalendarListener::class],
+				[ObjectUpdatedEvent::class, AttestationCorrectionListener::class],
 				[UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class],
 			],
 			$pairs

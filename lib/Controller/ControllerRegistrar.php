@@ -26,6 +26,7 @@ use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationServ
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersonenControllerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -79,5 +80,6 @@ final class ControllerRegistrar {
 				);
 			}
 		);
+		$context->registerServiceAlias(ContactpersonenControllerInterface::class, ContactpersonenController::class);
 	}//end register()
 }//end class

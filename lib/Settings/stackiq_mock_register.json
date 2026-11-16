@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -419,6 +419,34 @@
         "decisions": [
           "00000000-0000-4000-8000-000000000002"
         ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "catalogContract",
+          "slug": "contract-expiring-6"
+        },
+        "service": {},
+        "usage": {},
+        "startDate": "{{today-2y}}",
+        "contractNumber": "Voorbeeld Contractnumber 6",
+        "contractType": "SLA",
+        "status": "Expiring",
+        "approvalState": "none",
+        "endDate": "{{today+45d}}",
+        "cost": 6.0,
+        "costPeriod": "Annually",
+        "responsibleUser": "admin",
+        "contactPersonProvider": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "contactPersonUser": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "documentReference": "Voorbeeld Documentreference 6",
+        "opmerkingen": "Voorbeeld Opmerkingen 6"
       },
       {
         "@self": {
@@ -3653,6 +3681,242 @@
         "effectiveDate": "2026-03-03",
         "note": "Voorbeeld Note 3",
         "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-1"
+        },
+        "name": "Bevestigingsronde applicaties Q1",
+        "deadline": "2026-03-31",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 4,
+        "answeredCount": 1,
+        "unassigned": [
+          {
+            "entryId": "usage-usage-3-3",
+            "entryName": "Voorbeeld gebruik 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "complianceDocument",
+          "slug": "compliance-document-processing-agreement"
+        },
+        "module": {},
+        "documentType": "processing agreement",
+        "title": "Processing agreement template",
+        "summary": "The standard processing agreement for municipalities that use this product.",
+        "issuedOn": "2026-01-15",
+        "validUntil": "2027-01-15",
+        "publisher": {},
+        "audience": "public",
+        "sharedWithOrganisations": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-2"
+        },
+        "name": "Bevestigingsronde modules voorjaar",
+        "deadline": "2026-04-30",
+        "scopeSchema": "module",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 3,
+        "answeredCount": 0,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-3"
+        },
+        "name": "Bevestigingsronde applicaties 2025",
+        "deadline": "2025-12-15",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "startedBy": "admin",
+        "status": "closed",
+        "requestCount": 2,
+        "answeredCount": 2,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-1"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-1-1",
+        "entryName": "Voorbeeld gebruik 1",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-03-31",
+        "status": "pending"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-2"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "entrySchema": "module",
+        "entryId": "module-module-2-2",
+        "entryName": "Voorbeeld module 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-04-30",
+        "status": "confirmed",
+        "respondedAt": "2026-04-02T10:15:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-3"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-2-2",
+        "entryName": "Voorbeeld gebruik 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2025-12-15",
+        "status": "overdue"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-1"
+        },
+        "name": "Bevestigingsronde applicaties Q1",
+        "deadline": "2026-03-31",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 4,
+        "answeredCount": 1,
+        "unassigned": [
+          {
+            "entryId": "usage-usage-3-3",
+            "entryName": "Voorbeeld gebruik 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-2"
+        },
+        "name": "Bevestigingsronde modules voorjaar",
+        "deadline": "2026-04-30",
+        "scopeSchema": "module",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 3,
+        "answeredCount": 0,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-3"
+        },
+        "name": "Bevestigingsronde applicaties 2025",
+        "deadline": "2025-12-15",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "startedBy": "admin",
+        "status": "closed",
+        "requestCount": 2,
+        "answeredCount": 2,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-1"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-1-1",
+        "entryName": "Voorbeeld gebruik 1",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-03-31",
+        "status": "pending"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-2"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "entrySchema": "module",
+        "entryId": "module-module-2-2",
+        "entryName": "Voorbeeld module 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-04-30",
+        "status": "confirmed",
+        "respondedAt": "2026-04-02T10:15:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-3"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-2-2",
+        "entryName": "Voorbeeld gebruik 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2025-12-15",
+        "status": "overdue"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "complianceDocument",
+          "slug": "compliance-document-pentest-report"
+        },
+        "module": {},
+        "documentType": "pentest report",
+        "title": "Pentest report 2026",
+        "summary": "The yearly penetration test of the hosted product, shared with one municipality.",
+        "issuedOn": "2026-03-01",
+        "validUntil": "2027-03-01",
+        "publisher": {},
+        "audience": "named",
+        "sharedWithOrganisations": []
       }
     ]
   }
