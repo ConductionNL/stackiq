@@ -150,6 +150,10 @@
         {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "catalog-export",
+            "description": "The filtered list export route, GET /api/catalog/{schema}/export."
         }
     ],
     "paths": {
@@ -782,6 +786,9 @@
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
@@ -2583,7 +2590,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "The file.",
+                        "description": "The file: text/csv, or for format=xlsx an XLSX workbook (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet).",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
@@ -2595,7 +2602,7 @@
                                     "type": "string"
                                 }
                             },
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                            "application/*": {
                                 "schema": {
                                     "type": "string",
                                     "format": "binary"
