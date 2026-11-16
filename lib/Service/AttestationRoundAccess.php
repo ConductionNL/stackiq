@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\AttestationRoundAccessInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use Psr\Container\ContainerInterface;
@@ -34,7 +35,7 @@ use Throwable;
  *
  * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  */
-class AttestationRoundAccess {
+class AttestationRoundAccess implements AttestationRoundAccessInterface {
 
 	/**
 	 * The group of an organisation's maintainers.

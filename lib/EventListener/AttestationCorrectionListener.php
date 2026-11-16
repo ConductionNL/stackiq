@@ -22,8 +22,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Stackiq\Service\AttestationAnswerService;
-use OCA\Stackiq\Service\AttestationService;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -74,7 +74,8 @@ class AttestationCorrectionListener implements IEventListener {
 			return;
 		}
 
-		if (AttestationAnswerService::changedByHand(before: (array) $event->getOldObject()->getObject(), after: (array) $object->getObject()) === false) {
+		$answers = $this->container->get(AttestationAnswerServiceInterface::class);
+		if ($answers->isChangedByHand(before: (array) $event->getOldObject()->getObject(), after: (array) $object->getObject()) === false) {
 			return;
 		}
 
@@ -84,7 +85,7 @@ class AttestationCorrectionListener implements IEventListener {
 		}
 
 		try {
-			$this->container->get(AttestationAnswerService::class)->markCorrected(
+			$answers->markCorrected(
 				entrySchema: $entrySchema,
 				entryId: (string) $object->getUuid(),
 				uid: $user->getUID()
@@ -106,7 +107,7 @@ class AttestationCorrectionListener implements IEventListener {
 	 */
 	private function entrySchema(mixed $schemaId): ?string {
 		$locator = $this->container->get(ObjectTypeLocatorInterface::class);
-		foreach (array_keys(AttestationService::SCOPES) as $type) {
+		foreach (array_keys(AttestationServiceInterface::SCOPES) as $type) {
 			$id = $locator->getSchemaIdForObjectType($type);
 			if ($id !== null && (int) $id === (int) $schemaId) {
 				return $type;

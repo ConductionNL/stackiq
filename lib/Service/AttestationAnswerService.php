@@ -25,6 +25,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OutOfBoundsException;
@@ -47,7 +48,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
-class AttestationAnswerService {
+class AttestationAnswerService implements AttestationAnswerServiceInterface {
 
 	/**
 	 * The statuses a request can still be answered in.
@@ -206,6 +207,20 @@ class AttestationAnswerService {
 		$this->recountAll(rounds: $rounds);
 		return $moved;
 	}//end markOverdue()
+
+	/**
+	 * Whether an update changed anything a person typed, for callers that hold the contract.
+	 *
+	 * @param array<string, mixed> $before The entry before the save.
+	 * @param array<string, mixed> $after  The entry after the save.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 */
+	public function isChangedByHand(array $before, array $after): bool {
+		return self::changedByHand(before: $before, after: $after);
+	}//end isChangedByHand()
 
 	/**
 	 * Whether an update changed anything a person typed: a field outside DERIVED_FIELDS.

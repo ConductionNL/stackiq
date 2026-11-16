@@ -13,6 +13,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\EventListener\AttestationCorrectionListener;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
 use OCA\Stackiq\Service\AttestationAnswerService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUser;
@@ -45,7 +46,7 @@ final class AttestationCorrectionListenerTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->answers = $this->createMock(AttestationAnswerService::class);
+		$this->answers = $this->createPartialMock(AttestationAnswerService::class, ['markCorrected']);
 		$this->logger  = $this->createMock(LoggerInterface::class);
 	}//end setUp()
 
@@ -71,7 +72,7 @@ final class AttestationCorrectionListenerTest extends TestCase {
 		$services = [
 			IUserSession::class               => $session,
 			ObjectTypeLocatorInterface::class => $locator,
-			AttestationAnswerService::class   => $this->answers,
+			AttestationAnswerServiceInterface::class => $this->answers,
 			LoggerInterface::class            => $this->logger,
 		];
 		$container = $this->createMock(ContainerInterface::class);

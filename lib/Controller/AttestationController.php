@@ -21,9 +21,9 @@ namespace OCA\Stackiq\Controller;
 
 use DomainException;
 use InvalidArgumentException;
-use OCA\Stackiq\Service\AttestationAnswerService;
-use OCA\Stackiq\Service\AttestationRoundAccess;
-use OCA\Stackiq\Service\AttestationService;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationRoundAccessInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,19 +48,19 @@ class AttestationController extends Controller {
 	 * @param string                   $appName     The app name.
 	 * @param IRequest                 $request     The request.
 	 * @param IUserSession             $userSession The signed-in user.
-	 * @param AttestationRoundAccess   $access      Who may start a round.
-	 * @param AttestationService       $attestation Creates the round and its requests.
+	 * @param AttestationRoundAccessInterface   $access      Who may start a round.
+	 * @param AttestationServiceInterface       $attestation Creates the round and its requests.
 	 * @param LoggerInterface          $logger      The logger.
-	 * @param AttestationAnswerService $answers     Answers a request.
+	 * @param AttestationAnswerServiceInterface $answers     Answers a request.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly AttestationRoundAccess $access,
-		private readonly AttestationService $attestation,
+		private readonly AttestationRoundAccessInterface $access,
+		private readonly AttestationServiceInterface $attestation,
 		private readonly LoggerInterface $logger,
-		private readonly AttestationAnswerService $answers,
+		private readonly AttestationAnswerServiceInterface $answers,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()

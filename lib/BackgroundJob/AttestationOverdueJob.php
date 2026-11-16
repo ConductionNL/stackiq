@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\AttestationAnswerService;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -39,7 +39,7 @@ class AttestationOverdueJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory             $timeFactory The clock.
-	 * @param AttestationAnswerService $answers     Marks the overdue requests.
+	 * @param AttestationAnswerServiceInterface $answers     Marks the overdue requests.
 	 * @param IAppManager              $appManager  Whether OpenRegister is installed.
 	 * @param LoggerInterface          $logger      The logger.
 	 *
@@ -47,7 +47,7 @@ class AttestationOverdueJob extends TimedJob {
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		private readonly AttestationAnswerService $answers,
+		private readonly AttestationAnswerServiceInterface $answers,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {

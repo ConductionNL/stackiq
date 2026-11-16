@@ -24,6 +24,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\AttestationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,17 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  */
-class AttestationService {
-
-	/**
-	 * Per entry type: the field naming the organisation, and the owner fields.
-	 *
-	 * @var array<string, array{organisation: string, owners: array<int, string>}>
-	 */
-	public const SCOPES = [
-		'usage'  => ['organisation' => 'consumer', 'owners' => ['businessOwner', 'technicalOwner']],
-		'module' => ['organisation' => 'provider', 'owners' => ['contactPerson']],
-	];
+class AttestationService implements AttestationServiceInterface {
 
 	/**
 	 * The most entries one round reads.
