@@ -389,9 +389,11 @@ class ContractStatusService implements ContractStatusServiceInterface {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					// @phpstan-ignore argument.unknown (the contract interface phpstan loads predates the options form.)
 					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $contract->getRegister(), schema: $contract->getSchema()),
+						target: new ObjectFindTarget(
+								register: $contract->getRegister(),
+								schema: $contract->getSchema()
+							),
 						uuid: $contract->getUuid()
 					)
 				);

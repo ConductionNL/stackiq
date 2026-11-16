@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * addUserToOrganizationEntity(): appends the username to the organisation's
@@ -322,7 +323,15 @@ class ContactPersonHandlerOrganisationEntityTest extends TestCase {
 	public function testAFailingOpenRegisterLookupAddsNobody(): void {
 		$this->mapper->method('findByUuid')->willThrowException(new DoesNotExistException('missing'));
 		$this->objects->expects($this->once())->method('find')
-			->with('org-1', [], false, '5', '1', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'org-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => '5',
+				'schema' => '1',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willThrowException(new RuntimeException('index offline'));
 		$this->mapper->expects($this->never())->method('findBySlug');
 		$this->mapper->expects($this->never())->method('update');

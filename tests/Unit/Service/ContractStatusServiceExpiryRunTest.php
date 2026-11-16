@@ -33,6 +33,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The cron run that moves active contracts past their end date to Expired.
@@ -197,14 +199,13 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 			);
 
 		$this->objects->expects($this->once())->method('saveObject')
-			->willReturnCallback(
-				function (array $object, mixed ...$rest): ObjectEntityInterface {
-					$options = MainApiObjectService::optionsOf(args: $rest);
-					$this->assertSame(['status' => 'Expired', 'endDate' => '2026-06-01', 'name' => 'A'], $object);
-					$this->assertSame(['7', '9', 'past'], [$options?->target->register, $options?->target->schema, $options?->uuid]);
-					return $this->contract(uuid: 'past', data: $object);
-				}
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['status' => 'Expired', 'endDate' => '2026-06-01', 'name' => 'A'],
+				'extend' => [],
+				'register' => '7',
+				'schema' => '9',
+				'uuid' => 'past',
+			]));
 
 		$this->assertSame(expected: 1, actual: $this->service()->expirePastContracts($this->now()));
 	}//end testOnlyPastActiveContractsAreExpired()
@@ -225,8 +226,12 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$saved = $this->contract(uuid: 'second', data: []);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')
 			->willReturnCallback(
-				static function (array $object, mixed ...$rest) use ($saved) {
-					if (MainApiObjectService::optionsOf(args: $rest)?->uuid === 'first') {
+				static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($saved) {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
+					if ($uuid === 'first') {
 						throw new RuntimeException('locked');
 					}
 

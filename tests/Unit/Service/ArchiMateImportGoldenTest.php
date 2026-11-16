@@ -42,6 +42,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 
 /**
  * Golden cases for the ArchiMate import.
@@ -227,7 +228,11 @@ class ArchiMateImportGoldenTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register, $schema, $rbac, $multitenancy, $validation, $events): array {
+			function (array $objects, BulkSaveOptions $options = new BulkSaveOptions(), bool $rbac = true, bool $multitenancy = true): array {
+				$register = $options->defaults->register;
+				$schema = $options->defaults->schema;
+				$validation = $options->validation;
+				$events = $options->events;
 				$this->trace[] = [
 					'objects.saveObjects',
 					[

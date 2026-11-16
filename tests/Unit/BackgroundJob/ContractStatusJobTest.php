@@ -37,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for ContractStatusJob.
@@ -229,14 +230,13 @@ class ContractStatusJobTest extends TestCase {
 			);
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->willReturnCallback(
-				function (array $object, mixed ...$rest): ObjectEntityInterface {
-					$options = MainApiObjectService::optionsOf(args: $rest);
-					$this->assertSame(['status' => 'Expired', 'endDate' => '2000-01-31', 'name' => 'Old'], $object);
-					$this->assertSame(['7', '12', 'u-past'], [$options?->target->register, $options?->target->schema, $options?->uuid]);
-					return $this->contract('u-past', $object);
-				}
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['status' => 'Expired', 'endDate' => '2000-01-31', 'name' => 'Old'],
+					'extend' => [],
+					'register' => '7',
+					'schema' => '12',
+					'uuid' => 'u-past',
+				]));
 
 		$this->runJob($this->job());
 

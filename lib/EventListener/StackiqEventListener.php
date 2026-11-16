@@ -30,6 +30,7 @@ use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
@@ -378,9 +379,11 @@ class StackiqEventListener implements IEventListener {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$orgWithContacts = $objectService->find(
 				id: $objectId,
-				register: $register,
-				schema: $organizationSchema,
-				_extend: ['contactpersonen'],
+				options: new ObjectFindOptions(
+					register: $register,
+					schema: $organizationSchema,
+					extend: ['contactpersonen']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

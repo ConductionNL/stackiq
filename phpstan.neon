@@ -32,10 +32,6 @@ parameters:
         - tests/analysis-stubs/phpspreadsheet-read-filter.stub.php
         # OpenRegister's MCP provider interface, present at runtime only.
         - tests/Stubs/OpenRegister/Mcp/IMcpToolProvider.php
-        - tests/Stubs/OpenRegister/Kernel/Contracts/Value/ObjectFindTarget.php
-        - tests/Stubs/OpenRegister/Kernel/Contracts/Value/ObjectSaveOptions.php
-        - tests/Stubs/OpenRegister/Kernel/Contracts/Value/SavePolicy.php
-        - tests/Stubs/OpenRegister/Kernel/Contracts/Value/SaveActor.php
         # Integriq's connection-registry events (adopt-connection-registry).
         # ConnectionReportService names them by string behind class_exists.
         - tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php
