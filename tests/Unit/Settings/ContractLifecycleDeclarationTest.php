@@ -129,6 +129,6 @@ class ContractLifecycleDeclarationTest extends TestCase {
 
 		$this->assertTrue(version_compare($register['components']['schemas']['catalogContract']['version'], '0.1.5', '>'));
 		$this->assertTrue(version_compare($register['info']['version'], '2.5.8', '>'));
-		$this->assertStringStartsWith($register['info']['version'] . ': catalogContract gains the Expiring status', $register['info']['changelog']);
+		$this->assertMatchesRegularExpression('/(^| )\d+\.\d+\.\d+: catalogContract gains the Expiring status/', $register['info']['changelog']);
 	}//end testTheVersionsMovedUp()
 }//end class

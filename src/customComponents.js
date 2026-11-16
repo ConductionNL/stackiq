@@ -17,6 +17,10 @@
 //   - openspec/changes/stackiq-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
@@ -49,6 +53,7 @@ import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { createMoveHandlers } from './services/moveToOrganisation.js'
 import { navigationStore } from './store/store.js'
@@ -65,6 +70,21 @@ export default {
 	...createConnectionHandlers({
 		generateUrl,
 		assign: (url) => window.location.assign(url),
+	}),
+
+	// Confirmation rounds (landscape-owner-attestation D5): Start round opens
+	// StartAttestationRoundDialog; Confirm and Open entry are the row actions of
+	// My confirmation requests. Confirm POSTs the request's confirm endpoint and
+	// refetches the list.
+	...createAttestationHandlers({
+		setDialog: (name, properties) =>
+			navigationStore.setDialog(name, properties),
+		post: (url) => axios.post(url),
+		generateUrl,
+		assign: (url) => window.location.assign(url),
+		refresh: () => emit('cn:page:refresh', {}),
+		notifyError: (message) =>
+			showError(message || t('stackiq', 'The request could not be confirmed')),
 	}),
 
 	// Bulk-action handlers: Move to organisation on the Applications,

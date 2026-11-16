@@ -208,6 +208,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
         ['name' => 'view#getViewImage', 'url' => '/api/views/{viewId}/image.svg', 'verb' => 'GET'],
+        ['name' => 'viewDocument#createViewDocument', 'url' => '/api/views/{viewId}/document', 'verb' => 'POST'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
@@ -354,6 +355,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+        ['name' => 'attestation#start', 'url' => '/api/attestation-rounds', 'verb' => 'POST'],
+        // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+        ['name' => 'attestation#confirm', 'url' => '/api/attestation-requests/{id}/confirm', 'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         // `postfix` keeps this SPA catch-all from colliding with the bare-root
