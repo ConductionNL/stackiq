@@ -33,6 +33,7 @@ use SimpleXMLElement;
  * @covers \OCA\Stackiq\Service\ArchiMate\ConnectionFlows
  * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttribute
  * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttributeRun
+ * @uses \OCA\Stackiq\Service\ViewOrigin
  *
  * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
  */
