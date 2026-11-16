@@ -44,6 +44,8 @@ interface ContactPersonEmailInterface {
 	 *
 	 * @return string The email address, or '' when there is none.
 	 *
+	 * @SuppressWarnings(PHPMD.ShortMethodName) The name of ContactPersonEmail::of(), which callers already use.
+	 *
 	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
 	 */
 	public function of(array $contactData): string;
