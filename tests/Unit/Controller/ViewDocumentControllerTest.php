@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\Stackiq\Controller\ViewController;
+use OCA\Stackiq\Controller\ViewDocumentController;
 use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
 use OCA\Stackiq\Service\ViewDocumentContent;
 use OCA\Stackiq\Service\ViewDocumentGateway;
@@ -33,12 +33,11 @@ use OCP\IUserSession;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 
-#[CoversClass(ViewController::class)]
-class ViewControllerDocumentTest extends TestCase {
+#[CoversClass(ViewDocumentController::class)]
+class ViewDocumentControllerTest extends TestCase {
 
 	private ViewServiceInterface&MockObject $viewService;
 
@@ -48,28 +47,24 @@ class ViewControllerDocumentTest extends TestCase {
 
 	private ViewDocumentContent&MockObject $documentContent;
 
-	private LoggerInterface&MockObject $logger;
-
 	protected function setUp(): void {
 		parent::setUp();
 		$this->viewService     = $this->createMock(ViewServiceInterface::class);
 		$this->userSession     = $this->createMock(IUserSession::class);
 		$this->documents       = $this->createMock(ViewDocumentGateway::class);
 		$this->documentContent = $this->createMock(ViewDocumentContent::class);
-		$this->logger          = $this->createMock(LoggerInterface::class);
 	}
 
-	private function controller(string $format, bool $withGateway = true): ViewController {
+	private function controller(string $format): ViewDocumentController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->with('format', '')->willReturn($format);
 
-		return new ViewController(
+		return new ViewDocumentController(
 			appName: 'stackiq',
 			request: $request,
 			viewService: $this->viewService,
-			logger: $this->logger,
 			userSession: $this->userSession,
-			documents: ($withGateway === true ? $this->documents : null),
+			documents: $this->documents,
 			documentContent: $this->documentContent,
 		);
 	}
@@ -86,7 +81,7 @@ class ViewControllerDocumentTest extends TestCase {
 		$this->documents->method('isAvailable')->willReturn(true);
 		$this->viewService->expects($this->once())->method('findStoredView')->with('v-1')->willReturn($view);
 		$this->documentContent->expects($this->once())->method('contentFor')
-			->with($view, 'v-1', $this->isInstanceOf(\DateTimeInterface::class))
+			->with($view, 'v-1')
 			->willReturn(['name' => 'Zaakgericht werken']);
 		$this->documents->expects($this->once())->method('requestDocument')
 			->with('docx', ['name' => 'Zaakgericht werken'], 'eigenaar')
@@ -111,8 +106,6 @@ class ViewControllerDocumentTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
 		$this->assertSame(['success' => false, 'error' => 'Word and PowerPoint need the document app filinq.'], $response->getData());
-
-		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $this->controller('pptx', false)->createViewDocument(viewId: 'v-1')->getStatus());
 	}
 
 	public function testAnotherFormatIs400(): void {
@@ -133,13 +126,12 @@ class ViewControllerDocumentTest extends TestCase {
 		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller('docx')->createViewDocument(viewId: 'v-9')->getStatus());
 	}
 
-	public function testARefusalByFilinqIs502AndLogged(): void {
+	public function testARefusalByFilinqIs502(): void {
 		$this->signedIn();
 		$this->documents->method('isAvailable')->willReturn(true);
 		$this->viewService->method('findStoredView')->willReturn(['name' => 'X']);
 		$this->documentContent->method('contentFor')->willReturn([]);
 		$this->documents->method('requestDocument')->willThrowException(new RuntimeException('filinq could not make the document: down'));
-		$this->logger->expects($this->once())->method('warning');
 
 		$response = $this->controller('docx')->createViewDocument(viewId: 'v-1');
 
@@ -155,7 +147,7 @@ class ViewControllerDocumentTest extends TestCase {
 	}
 
 	public function testTheRouteIsOpenToUsersAndKeepsCsrf(): void {
-		$method = new ReflectionMethod(ViewController::class, 'createViewDocument');
+		$method = new ReflectionMethod(ViewDocumentController::class, 'createViewDocument');
 
 		$this->assertCount(1, $method->getAttributes(NoAdminRequired::class));
 		$this->assertSame([], $method->getAttributes(NoCSRFRequired::class));

@@ -150,6 +150,10 @@
         {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "view-document",
+            "description": "The view document route, POST /api/views/{viewId}/document."
         }
     ],
     "paths": {
@@ -5964,11 +5968,11 @@
         },
         "/views/{viewId}/document": {
             "post": {
-                "operationId": "view-create-view-document",
+                "operationId": "view-document-create-view-document",
                 "summary": "Ask filinq for a Word document or a PowerPoint slide of the view.",
                 "description": "Sends the view's name, description, viewpoint, legend, date, a link to the view page and its SVG to filinq through filinq's published document contract, and answers the Files path and file id of the document filinq made in the caller's Files. 503 when the contract does not resolve; nothing is written then.",
                 "tags": [
-                    "view"
+                    "view-document"
                 ],
                 "requestBody": {
                     "required": true,

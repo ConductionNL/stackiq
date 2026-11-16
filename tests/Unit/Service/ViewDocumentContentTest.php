@@ -23,6 +23,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use DateTimeImmutable;
 use OCA\Stackiq\Service\ViewDocumentContent;
 use OCA\Stackiq\Service\ViewImageService;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -34,21 +35,45 @@ class ViewDocumentContentTest extends TestCase {
 
 	private ViewImageService&MockObject $images;
 
+	private ITimeFactory&MockObject $clock;
+
 	private ViewDocumentContent $content;
 
 	protected function setUp(): void {
 		parent::setUp();
+		$urls = $this->urls();
+		$l10n = $this->l10n();
+		$this->images  = $this->createMock(ViewImageService::class);
+		$this->clock   = $this->createMock(ITimeFactory::class);
+		$this->clock->method('now')->willReturn(new DateTimeImmutable('2026-01-02'));
+		$this->content = new ViewDocumentContent(urlGenerator: $urls, l10n: $l10n, images: $this->images, clock: $this->clock);
+	}
+
+	private function urls(): IURLGenerator&MockObject {
 		$urls = $this->createMock(IURLGenerator::class);
 		$urls->method('getAbsoluteURL')->with('/index.php/apps/stackiq')
 			->willReturn('https://cloud.example/index.php/apps/stackiq/');
+
+		return $urls;
+	}
+
+	private function l10n(): IL10N&MockObject {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text): string => 'nl:' . $text);
-		$this->images  = $this->createMock(ViewImageService::class);
-		$this->content = new ViewDocumentContent(urlGenerator: $urls, l10n: $l10n, images: $this->images);
+
+		return $l10n;
 	}
 
 	public function testTheContentHoldsTheViewItsLegendDateLinkAndDrawing(): void {
 		$at   = new DateTimeImmutable('2026-11-15T09:30:00+01:00');
+		$this->clock   = $this->createMock(ITimeFactory::class);
+		$this->clock->expects($this->once())->method('now')->willReturn($at);
+		$this->content = new ViewDocumentContent(
+			urlGenerator: $this->urls(),
+			l10n: $this->l10n(),
+			images: $this->images,
+			clock: $this->clock
+		);
 		$view = [
 			'name' => ' Zaakgericht werken ',
 			'documentation' => 'De applicaties rond de zaak.',
@@ -80,7 +105,7 @@ class ViewDocumentContentTest extends TestCase {
 				'svg' => '<svg/>',
 				'labels' => ['viewpoint' => 'nl:Viewpoint'],
 			],
-			$this->content->contentFor(view: $view, viewId: 'view 1', at: $at)
+			$this->content->contentFor(view: $view, viewId: 'view 1')
 		);
 	}
 
@@ -96,7 +121,7 @@ class ViewDocumentContentTest extends TestCase {
 			],
 		];
 
-		$content = $this->content->contentFor(view: $view, viewId: 'v-2', at: new DateTimeImmutable('2026-01-02'));
+		$content = $this->content->contentFor(view: $view, viewId: 'v-2');
 
 		$this->assertSame('Uit de import', $content['name']);
 		$this->assertSame('Toelichting uit de import.', $content['description']);
@@ -107,9 +132,10 @@ class ViewDocumentContentTest extends TestCase {
 	public function testAViewWithoutNodesHasAnEmptyLegend(): void {
 		$this->images->method('renderSvg')->willReturn('<svg/>');
 
-		$content = $this->content->contentFor(view: ['name' => 'Leeg', 'nodes' => 'none'], viewId: 'v-3', at: new DateTimeImmutable());
+		$content = $this->content->contentFor(view: ['name' => 'Leeg', 'nodes' => 'none'], viewId: 'v-3');
 
 		$this->assertSame([], $content['legend']);
 		$this->assertSame('', $content['description']);
+		$this->assertSame('2026-01-02', $content['generatedAt']);
 	}
 }

@@ -160,8 +160,10 @@ class ViewDocumentGatewayTest extends TestCase {
 		$gateway->requestDocument(format: 'docx', content: $this->content(), userId: 'eigenaar');
 	}
 
-	public function testAnUnansweredRequestIsRaised(): void {
+	public function testAnUnansweredRequestIsRaisedAndLogged(): void {
 		$gateway = $this->gateway();
+		$this->logger->expects($this->once())->method('warning')
+			->with('Stackiq: filinq did not answer the view document request', ['format' => 'docx']);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('filinq did not answer the document request.');

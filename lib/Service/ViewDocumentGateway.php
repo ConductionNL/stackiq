@@ -124,7 +124,9 @@ class ViewDocumentGateway {
 		}
 
 		$eventClass = $this->contractEvent;
-		$event = new $eventClass($this->requestFor(format: $format, content: $content, userId: $userId), self::REQUESTING_APP);
+		$request = $this->requestFor(format: $format, content: $content);
+		$request['userId'] = $userId;
+		$event = new $eventClass($request, self::REQUESTING_APP);
 		$this->eventDispatcher->dispatchTyped($event);
 
 		$error = $event->getError();
@@ -135,6 +137,7 @@ class ViewDocumentGateway {
 
 		$result = $event->getResult();
 		if (is_array($result) === false || (string)($result['path'] ?? '') === '') {
+			$this->logger->warning('Stackiq: filinq did not answer the view document request', ['format' => $format]);
 			throw new RuntimeException('filinq did not answer the document request.');
 		}
 
@@ -146,15 +149,15 @@ class ViewDocumentGateway {
 	}//end requestDocument()
 
 	/**
-	 * The contract request: an inline template over the content, filed as a file of the user.
+	 * The contract request: an inline template over the content, filed as a file;
+	 * the caller adds the user whose Files receive it.
 	 *
 	 * @param string               $format  The format.
 	 * @param array<string, mixed> $content The content fields.
-	 * @param string               $userId  The owner.
 	 *
-	 * @return array<string, mixed> The request.
+	 * @return array<string, mixed> The request, without its userId.
 	 */
-	private function requestFor(string $format, array $content, string $userId): array {
+	private function requestFor(string $format, array $content): array {
 		$data = $content;
 		$data['svgBase64'] = base64_encode((string)($content['svg'] ?? ''));
 		unset($data['svg']);
@@ -166,7 +169,6 @@ class ViewDocumentGateway {
 			'format' => $format,
 			'storeFile' => true,
 			'filename' => $this->fileName(name: (string)($content['name'] ?? ''), format: $format),
-			'userId' => $userId,
 			'metadata' => ['source' => 'stackiq', 'kind' => 'architecture-view'],
 		];
 	}//end requestFor()

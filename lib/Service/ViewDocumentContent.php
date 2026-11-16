@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use DateTimeInterface;
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 
@@ -45,6 +45,7 @@ class ViewDocumentContent {
 	 * @param IURLGenerator    $urlGenerator Builds the link back to the view page.
 	 * @param IL10N            $l10n         Translates the labels in the document.
 	 * @param ViewImageService $images       Draws the view.
+	 * @param ITimeFactory     $clock        Gives the generation moment.
 	 *
 	 * @return void
 	 */
@@ -52,6 +53,7 @@ class ViewDocumentContent {
 		private readonly IURLGenerator $urlGenerator,
 		private readonly IL10N $l10n,
 		private readonly ViewImageService $images,
+		private readonly ITimeFactory $clock,
 	) {
 	}//end __construct()
 
@@ -60,14 +62,15 @@ class ViewDocumentContent {
 	 *
 	 * @param array<string, mixed> $view   The stored view.
 	 * @param string               $viewId The id the view was read by, for the link.
-	 * @param DateTimeInterface    $at     The generation moment.
 	 *
 	 * @return array<string, mixed> The content: name, description, viewpoint, legend
 	 *                              (type and count per element type), generatedAt, link, svg and labels.
 	 *
 	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
 	 */
-	public function contentFor(array $view, string $viewId, DateTimeInterface $at): array {
+	public function contentFor(array $view, string $viewId): array {
+		$at = $this->clock->now();
+
 		return [
 			'name' => $this->field(view: $view, keys: ['name']),
 			'description' => $this->field(view: $view, keys: ['documentation', 'description']),
