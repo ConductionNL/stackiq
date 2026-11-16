@@ -12,6 +12,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\AttestationService;
 use OCA\Stackiq\Service\MaintenanceRecipientService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
@@ -84,7 +85,9 @@ final class AttestationServiceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$register = $options->target->register;
+				$schema   = $options->target->schema;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				return $this->entity('saved-' . count($this->saves), $object);
 			}

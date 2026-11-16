@@ -22,6 +22,8 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -373,7 +375,12 @@ class AttestationService {
 	 */
 	private function save(string $type, array $object): string {
 		[$register, $schema] = $this->location(type: $type);
-		$saved = $this->objectService()->saveObject(object: $object, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+		$saved = $this->objectService()->saveObject(
+			object: $object,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false,
+			_multitenancy: false
+		);
 
 		return self::savedId(saved: $saved);
 	}//end save()

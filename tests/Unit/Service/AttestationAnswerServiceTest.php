@@ -13,6 +13,8 @@ use DateTimeImmutable;
 use DomainException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\AttestationAnswerService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -67,7 +69,8 @@ final class AttestationAnswerServiceTest extends TestCase {
 	private function service(): AttestationAnswerService {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true): ?ObjectEntityInterface {
+				$schema = $options?->schema;
 				$row = ($this->store[(string) $id] ?? null);
 				if ($row === null || $row['schema'] !== $schema || ($_rbac === true && in_array((string) $id, $this->hidden, true) === true)) {
 					return null;
@@ -97,7 +100,9 @@ final class AttestationAnswerServiceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options, bool $_rbac = true): ObjectEntityInterface {
+				$schema = $options->target->schema;
+				$uuid   = $options->uuid;
 				$this->saves[] = ['uuid' => (string) $uuid, 'schema' => $schema, 'rbac' => $_rbac];
 				$this->store[(string) $uuid] = ['schema' => $schema, 'data' => $object];
 				return $this->entity((string) $uuid, $object);

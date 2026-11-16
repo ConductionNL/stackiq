@@ -22,6 +22,9 @@ namespace OCA\Stackiq\Service;
 use DomainException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OutOfBoundsException;
@@ -290,7 +293,12 @@ class AttestationAnswerService {
 
 		$data = (array) $entry->getObject();
 		$data['lastConfirmedAt'] = $now;
-		$this->objectService()->saveObject(object: $data, register: $register, schema: $schema, uuid: $entryId, _rbac: true, _multitenancy: true);
+		$this->objectService()->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $entryId),
+			_rbac: true,
+			_multitenancy: true
+		);
 	}//end confirmEntry()
 
 	/**
@@ -310,7 +318,12 @@ class AttestationAnswerService {
 
 		$data = (array) $entry->getObject();
 		$data['lastConfirmedAt'] = $now;
-		$this->objectService()->saveObject(object: $data, register: $register, schema: $schema, uuid: $ref['entryId'], _rbac: false, _multitenancy: false);
+		$this->objectService()->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $ref['entryId']),
+			_rbac: false,
+			_multitenancy: false
+		);
 	}//end stampEntry()
 
 	/**
@@ -440,7 +453,12 @@ class AttestationAnswerService {
 	private function findOrNull(array $location, string $id): ?ObjectEntityInterface {
 		[$register, $schema, $rbac] = $location;
 		try {
-			return $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: $rbac, _multitenancy: $rbac);
+			return $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: $rbac,
+				_multitenancy: $rbac
+			);
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -457,7 +475,12 @@ class AttestationAnswerService {
 	 */
 	private function save(string $type, array $object, string $uuid): array {
 		[$register, $schema] = $this->location(type: $type);
-		$saved = $this->objectService()->saveObject(object: $object, register: $register, schema: $schema, uuid: $uuid, _rbac: false, _multitenancy: false);
+		$saved = $this->objectService()->saveObject(
+			object: $object,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid),
+			_rbac: false,
+			_multitenancy: false
+		);
 
 		return ['id' => $uuid] + (array) $saved->getObject();
 	}//end save()
