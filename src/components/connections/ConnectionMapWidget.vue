@@ -136,6 +136,7 @@ export default {
 		 * The drawn map.
 		 *
 		 * @return {SVGElement|null} The svg element.
+		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		drawing() {
 			return this.$refs.map?.querySelector('svg') ?? null

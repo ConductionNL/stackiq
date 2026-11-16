@@ -22,6 +22,7 @@ import { connectionEnds } from './connectionLayout.js'
  * @param {string} rootLabel The application's name, used when no connection names it.
  * @param {Array<object>} connections The connections with the application at either end.
  * @return {{nodes: Array<object>, edges: Array<object>}} The graph for CnRelationshipGraph.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 export function connectionMap(rootId, rootLabel, connections) {
 	const root = { id: rootId, label: rootLabel || rootId, isRoot: true, kind: 'application' }
