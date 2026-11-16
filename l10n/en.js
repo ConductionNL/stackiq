@@ -802,6 +802,8 @@ OC.L10N.register(
         "Move {count} entries from {source} to another organisation.": "Move {count} entries from {source} to another organisation.",
         "{count} entry moved.": "{count} entry moved.",
         "{count} entries moved.": "{count} entries moved.",
+        "Select the organisation to move to": "Select the organisation to move to",
+        "Moving": "Moving",
         "Download SVG": "Download SVG",
         "Create Word document": "Create Word document",
         "Create PowerPoint slide": "Create PowerPoint slide",
@@ -809,8 +811,6 @@ OC.L10N.register(
         "The document could not be made.": "The document could not be made.",
         "{name} was saved in Files": "{name} was saved in Files",
         "Open in Files": "Open in Files",
-        "Select the organisation to move to": "Select the organisation to move to",
-        "Moving": "Moving",
         "Nothing moves.": "Nothing moves.",
         "Staying with {source}": "Staying with {source}",
         "Preview": "Preview",
@@ -1532,7 +1532,14 @@ OC.L10N.register(
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
         "The view could not be loaded.": "The view could not be loaded.",
-        "This view holds no elements.": "This view holds no elements."
+        "This view holds no elements.": "This view holds no elements.",
+        "Show applications": "Show applications",
+        "Our applications": "Our applications",
+        "Shared with partners": "Shared with partners",
+        "Our application": "Our application",
+        "Shared with a partner": "Shared with a partner",
+        "Legend": "Legend",
+        "The applications on this view could not be loaded.": "The applications on this view could not be loaded."
     },
     "nplurals=2; plural=(n != 1);"
 )

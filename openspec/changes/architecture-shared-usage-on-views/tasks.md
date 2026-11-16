@@ -36,8 +36,8 @@ Starts after `architecture-views-editor` has landed the read-only GEMMA view pag
   - GIVEN any switch on WHEN the page renders THEN the legend lists "Our application" and "Shared with a partner"
   - GIVEN a Dutch instance WHEN the page renders THEN every new label is Dutch
   - GIVEN a click on an overlay node WHEN it is handled THEN the usage detail page (`GebruikDetail`) opens
-- [ ] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/shared-usage-on-views.spec.ts)
+- [x] Implement (`ArchitectureViewEditor.vue`: a "Show applications" fieldset with two switches on imported views only, the overlay nested through `usageOverlayNodes()`, `UsageOverlayLegend.vue`, a click on an application opens `GebruikDetail`; the dashed border and badge are drawn on the node body the slot renders, so they do not depend on Vue Flow passing `class` to its wrapper; unit-tested in vitest `tests/vitest/architectureViewEditorUsageOverlay.spec.js`)
+- [ ] Test (Playwright tests/e2e/spec-coverage/shared-usage-on-views.spec.ts: needs a live instance with imported GEMMA views and usage data)
 
 ### Task 4: Style shared applications apart in the organisation export
 - **spec_ref**: openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-003-the-organisation-archimate-export-must-draw-shared-applications-apart-from-own-ones

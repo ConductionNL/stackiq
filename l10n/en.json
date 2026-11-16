@@ -1527,6 +1527,13 @@
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
         "The view could not be loaded.": "The view could not be loaded.",
-        "This view holds no elements.": "This view holds no elements."
+        "This view holds no elements.": "This view holds no elements.",
+        "Show applications": "Show applications",
+        "Our applications": "Our applications",
+        "Shared with partners": "Shared with partners",
+        "Our application": "Our application",
+        "Shared with a partner": "Shared with a partner",
+        "Legend": "Legend",
+        "The applications on this view could not be loaded.": "The applications on this view could not be loaded."
     }
 }

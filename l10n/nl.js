@@ -836,6 +836,8 @@ OC.L10N.register(
         "Revoke access": "Toegang intrekken",
         "Vulnerability": "Kwetsbaarheid",
         "Connection": "Koppeling",
+        "Assessment": "Beoordeling",
+        "SBOM component": "SBOM-component",
         "Download SVG": "SVG downloaden",
         "Create Word document": "Word-document maken",
         "Create PowerPoint slide": "PowerPoint-dia maken",
@@ -843,8 +845,6 @@ OC.L10N.register(
         "The document could not be made.": "Het document kon niet worden gemaakt.",
         "{name} was saved in Files": "{name} is opgeslagen in Bestanden",
         "Open in Files": "Openen in Bestanden",
-        "Assessment": "Beoordeling",
-        "SBOM component": "SBOM-component",
         "Move to organisation": "Naar organisatie verplaatsen",
         "Move {count} entry from {source} to another organisation.": "{count} item van {source} naar een andere organisatie verplaatsen.",
         "Move {count} entries from {source} to another organisation.": "{count} items van {source} naar een andere organisatie verplaatsen.",
@@ -1599,7 +1599,14 @@ OC.L10N.register(
         "Select a view": "Selecteer een view",
         "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
         "The view could not be loaded.": "De view kon niet worden geladen.",
-        "This view holds no elements.": "Deze view bevat geen elementen."
+        "This view holds no elements.": "Deze view bevat geen elementen.",
+        "Show applications": "Toon applicaties",
+        "Our applications": "Onze applicaties",
+        "Shared with partners": "Gedeeld met partners",
+        "Our application": "Onze applicatie",
+        "Shared with a partner": "Gedeeld met een partner",
+        "Legend": "Legenda",
+        "The applications on this view could not be loaded.": "De applicaties op deze view konden niet worden geladen."
     },
     "nplurals=2; plural=(n != 1);"
 )

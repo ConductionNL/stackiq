@@ -1594,6 +1594,13 @@
         "Select a view": "Selecteer een view",
         "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
         "The view could not be loaded.": "De view kon niet worden geladen.",
-        "This view holds no elements.": "Deze view bevat geen elementen."
+        "This view holds no elements.": "Deze view bevat geen elementen.",
+        "Show applications": "Toon applicaties",
+        "Our applications": "Onze applicaties",
+        "Shared with partners": "Gedeeld met partners",
+        "Our application": "Onze applicatie",
+        "Shared with a partner": "Gedeeld met een partner",
+        "Legend": "Legenda",
+        "The applications on this view could not be loaded.": "De applicaties op deze view konden niet worden geladen."
     }
 }
