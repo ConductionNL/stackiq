@@ -24,6 +24,7 @@ use PHPUnit\Framework\TestCase;
  * descriptor dispatches to its own handler.
  *
  * @covers \OCA\Stackiq\Mcp\StackiqToolProvider
+ * @uses   \OCA\Stackiq\Mcp\McpArgumentValidator
  */
 class McpToolCatalogueTest extends TestCase {
 
