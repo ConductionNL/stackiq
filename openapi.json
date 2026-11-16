@@ -156,6 +156,10 @@
             "description": "Controller for handling view-related API operations"
         },
         {
+            "name": "view-document",
+            "description": "The view document route, POST /api/views/{viewId}/document."
+        },
+        {
             "name": "catalog-export",
             "description": "The filtered list export route, GET /api/catalog/{schema}/export."
         }
@@ -6061,6 +6065,109 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "viewId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The viewId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/views/{viewId}/document": {
+            "post": {
+                "operationId": "view-document-create-view-document",
+                "summary": "Ask filinq for a Word document or a PowerPoint slide of the view.",
+                "description": "Sends the view's name, description, viewpoint, legend, date, a link to the view page and its SVG to filinq through filinq's published document contract, and answers the Files path and file id of the document filinq made in the caller's Files. 503 when the contract does not resolve; nothing is written then.",
+                "tags": [
+                    "view-document"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "format"
+                                ],
+                                "properties": {
+                                    "format": {
+                                        "type": "string",
+                                        "enum": [
+                                            "docx",
+                                            "pptx"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The document filinq filed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "fileId": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "502": {
+                        "description": "filinq refused or did not answer the request.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
                     }
                 },
                 "parameters": [
