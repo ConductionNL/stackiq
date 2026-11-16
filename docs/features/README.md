@@ -11,6 +11,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
@@ -23,6 +24,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
 | [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap |
+| [Catalogue Exports and Custom Reports](catalogue-exports-and-reports.md) | Export lists, faceted lists and one organisation as ArchiMate, and define your own reports |
 
 ## Software Registration
 
