@@ -37,11 +37,12 @@
 				<template v-for="field in config.fields" :key="field.key">
 					<NcSelect
 						v-if="field.options"
-						:modelValue="stepData[field.key] || null"
+						:modelValue="field.multiple ? (stepData[field.key] || []) : (stepData[field.key] || null)"
 						:options="field.options"
-						:inputLabel="field.label()"
+						:multiple="Boolean(field.multiple)"
+						:inputLabel="field.required ? t('stackiq', '{field} (required)', { field: field.label() }) : field.label()"
 						:data-testid="`entry-wizard-field-${field.key}`"
-						@update:modelValue="(value) => setStepData({ ...stepData, [field.key]: value || '' })" />
+						@update:modelValue="(value) => setStepData({ ...stepData, [field.key]: value || (field.multiple ? [] : '') })" />
 					<NcTextField
 						v-else
 						:modelValue="stepData[field.key]"
@@ -49,6 +50,18 @@
 						:data-testid="`entry-wizard-field-${field.key}`"
 						@update:modelValue="(value) => setStepData({ ...stepData, [field.key]: value })" />
 				</template>
+				<NcSelect
+					v-for="relation in relationsOf('details')"
+					:key="relation.key"
+					:modelValue="stepData[relation.key]"
+					:options="optionsFor(relation.schema)"
+					:multiple="Boolean(relation.multiple)"
+					:loading="loading"
+					:inputLabel="relation.required ? t('stackiq', '{field} (required)', { field: relation.label() }) : relation.label()"
+					trackBy="uuid"
+					label="label"
+					:data-testid="`entry-wizard-relation-${relation.key}`"
+					@update:modelValue="(value) => setStepData({ ...stepData, [relation.key]: value || (relation.multiple ? [] : null) })" />
 			</div>
 		</template>
 
@@ -58,16 +71,17 @@
 					{{ loadError }}
 				</NcNoteCard>
 				<NcSelect
-					v-for="relation in config.relations"
+					v-for="relation in relationsOf('related')"
 					:key="relation.key"
 					:modelValue="stepData[relation.key]"
 					:options="optionsFor(relation.schema)"
+					:multiple="Boolean(relation.multiple)"
 					:loading="loading"
 					:inputLabel="relation.required ? t('stackiq', '{field} (required)', { field: relation.label() }) : relation.label()"
 					trackBy="uuid"
 					label="label"
 					:data-testid="`entry-wizard-relation-${relation.key}`"
-					@update:modelValue="(value) => setStepData({ ...stepData, [relation.key]: value || null })" />
+					@update:modelValue="(value) => setStepData({ ...stepData, [relation.key]: value || (relation.multiple ? [] : null) })" />
 			</div>
 		</template>
 
@@ -91,6 +105,7 @@ import {
 	validateWizardStep,
 	wizardDefaults,
 	wizardKind,
+	wizardRelations,
 	wizardSummary,
 } from '../utils/entryWizard.js'
 import { mapApplicationOptions } from '../utils/suiteWizard.js'
@@ -176,6 +191,16 @@ export default {
 		},
 
 		/**
+		 * The relations a step asks for.
+		 *
+		 * @param {string} stepId `details` or `related`.
+		 * @return {Array<object>}
+		 */
+		relationsOf(stepId) {
+			return wizardRelations(this.kind, stepId)
+		},
+
+		/**
 		 * The rows of the summary step.
 		 *
 		 * @param {object} stepData The data entered.
@@ -232,11 +257,14 @@ export default {
 				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
 					await objectStore.fetchSettings()
 				}
-				const schemas = [...new Set(this.config.relations.map((relation) => relation.schema))]
-				for (const schema of schemas) {
+				const queries = new Map()
+				for (const relation of this.config.relations) {
+					queries.set(relation.schema, { ...(queries.get(relation.schema) || {}), ...(relation.query || {}) })
+				}
+				for (const [schema, query] of queries) {
 					this.registerType(schema)
 					if (typeof objectStore.fetchCollection === 'function') {
-						await objectStore.fetchCollection(schema, { _limit: 1000 })
+						await objectStore.fetchCollection(schema, { ...query, _limit: 1000 })
 					}
 				}
 			} catch {

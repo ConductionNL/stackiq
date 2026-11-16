@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * The guided entry wizard (capability-requirements-from-the-matrix task 1):
- * the connection kind's defaults, the step checks that keep a step open and
+ * the connection, application and service kinds' defaults, the step checks that keep a step open and
  * name the missing field, the saved record and the summary; the dialog's
  * steps, validation and save; the action that opens the record's page.
  *
@@ -25,6 +25,7 @@ const {
 	validateWizardStep,
 	wizardDefaults,
 	wizardKind,
+	wizardRelations,
 	wizardSummary,
 } = await import('../../src/utils/entryWizard.js')
 const { default: EntryWizardDialog } = await import('../../src/dialogs/EntryWizardDialog.vue')
@@ -95,6 +96,76 @@ describe('the connection kind', () => {
 	})
 })
 
+const component = { uuid: 'rc-1', label: 'Zaakregistratiecomponent' }
+const component2 = { uuid: 'rc-2', label: 'Documentregistratiecomponent' }
+const supplier = { uuid: 'org-1', label: 'Leverancier BV' }
+
+describe('the application kind', () => {
+	it('starts with no reference components and opens the application page', () => {
+		expect(wizardDefaults('module')).toEqual({ name: '', shortDescription: '', type: '', licentietype: '', referenceComponents: [] })
+		expect(wizardKind('module').detailRoute).toBe('ModuleDetail')
+	})
+
+	it('needs a name, and lets the reference components be left empty', () => {
+		expect(validateWizardStep('module', 'details', { name: ' ' })).toBe('Name is required.')
+		expect(validateWizardStep('module', 'related', { referenceComponents: [] })).toBe(true)
+	})
+
+	it('saves every chosen reference component by id', () => {
+		expect(buildWizardPayload('module', {
+			name: ' Zaaksysteem ',
+			shortDescription: '',
+			type: 'Application',
+			licentietype: '',
+			referenceComponents: [component, component2],
+		})).toEqual({ name: 'Zaaksysteem', type: 'Application', referenceComponents: ['rc-1', 'rc-2'] })
+		expect(buildWizardPayload('module', { name: 'x', referenceComponents: [] })).toEqual({ name: 'x' })
+	})
+
+	it('summarises the reference components as one list', () => {
+		const rows = wizardSummary('module', { name: 'Zaaksysteem', referenceComponents: [component, component2] })
+		expect(rows.find((row) => row.key === 'referenceComponents')).toEqual({
+			key: 'referenceComponents',
+			label: 'Reference components',
+			value: 'Zaakregistratiecomponent, Documentregistratiecomponent',
+		})
+	})
+})
+
+describe('the service kind', () => {
+	it('asks its provider on the details step and the applications after it', () => {
+		expect(wizardRelations('catalogService', 'details').map((relation) => relation.key)).toEqual(['provider'])
+		expect(wizardRelations('catalogService', 'related').map((relation) => relation.key)).toEqual(['modules'])
+		expect(wizardDefaults('catalogService')).toEqual({ name: '', shortDescription: '', type: [], provider: null, modules: [] })
+	})
+
+	it('keeps the details step open until name, type and provider are given', () => {
+		expect(validateWizardStep('catalogService', 'details', { name: 'Beheer', type: [], provider: supplier })).toBe('Service type is required.')
+		expect(validateWizardStep('catalogService', 'details', { name: 'Beheer', type: ['Training'], provider: null })).toBe('Provider is required.')
+		expect(validateWizardStep('catalogService', 'details', { name: 'Beheer', type: ['Training'], provider: supplier })).toBe(true)
+	})
+
+	it('saves the service with its types, provider and the applications it runs on', () => {
+		expect(buildWizardPayload('catalogService', {
+			name: 'Beheer',
+			shortDescription: '',
+			type: ['Functional management', 'Training'],
+			provider: supplier,
+			modules: [appA, appB],
+		})).toEqual({
+			name: 'Beheer',
+			type: ['Functional management', 'Training'],
+			provider: 'org-1',
+			modules: ['a-1', 'b-2'],
+		})
+	})
+
+	it('summarises the types and applications as lists', () => {
+		const rows = wizardSummary('catalogService', { name: 'Beheer', type: ['Training'], provider: supplier, modules: [appA, appB] })
+		expect(rows.map((row) => row.value)).toEqual(['Beheer', '', 'Training', 'Leverancier BV', 'Zaaksysteem, Burgerportaal'])
+	})
+})
+
 describe('EntryWizardDialog', () => {
 	it('asks the details, then the applications, then a summary', () => {
 		const steps = EntryWizardDialog.computed.wizardSteps.call({ config: wizardKind('connection') })
@@ -145,6 +216,30 @@ describe('EntryWizardDialog', () => {
 		expect(ctx.loadError).toBe('The records to link could not be loaded.')
 		expect(ctx.loading).toBe(false)
 	})
+
+	it('loads only reference components for an application, and providers and applications for a service', async () => {
+		store.objectStore.fetchCollection = vi.fn().mockResolvedValue(undefined)
+		await context(EntryWizardDialog, { kind: 'module' }).loadRelated()
+		expect(store.objectStore.fetchCollection).toHaveBeenCalledWith('element', { gemmaType: 'referentiecomponent', _limit: 1000 })
+
+		store.objectStore.fetchCollection = vi.fn().mockResolvedValue(undefined)
+		await context(EntryWizardDialog, { kind: 'catalogService' }).loadRelated()
+		expect(store.objectStore.fetchCollection.mock.calls).toEqual([
+			['organization', { _limit: 1000 }],
+			['module', { _limit: 1000 }],
+		])
+	})
+
+	it('saves a service with its applications', async () => {
+		const wizard = { setResult: vi.fn(), setError: vi.fn() }
+		store.objectStore.saveObject = vi.fn().mockResolvedValue({ uuid: 's-3' })
+		const ctx = context(EntryWizardDialog, { kind: 'catalogService', $refs: { wizard } })
+
+		await ctx.onSubmit({ name: 'Beheer', type: ['Training'], provider: supplier, modules: [appA] })
+
+		expect(store.objectStore.saveObject).toHaveBeenCalledWith('catalogService', { name: 'Beheer', type: ['Training'], provider: 'org-1', modules: ['a-1'] })
+		expect(ctx.$emit).toHaveBeenCalledWith('created', 's-3')
+	})
 })
 
 describe('EntryWizardAction', () => {
@@ -156,6 +251,14 @@ describe('EntryWizardAction', () => {
 
 		expect(ctx.open).toBe(false)
 		expect(push).toHaveBeenCalledWith({ name: 'KoppelingDetail', params: { id: 'c-9' } })
+	})
+
+	it('closes the wizard and stays on the list for a kind without a page', () => {
+		const push = vi.fn()
+		const ctx = context(EntryWizardAction, { kind: 'catalogService', open: true, $router: { push } })
+		ctx.onCreated('s-3')
+		expect(ctx.open).toBe(false)
+		expect(push).not.toHaveBeenCalled()
 	})
 
 	it('stays on the list without an id', () => {

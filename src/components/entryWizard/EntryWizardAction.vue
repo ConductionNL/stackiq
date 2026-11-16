@@ -56,7 +56,7 @@ export default {
 		t,
 
 		/**
-		 * Close the wizard and open the saved record's page.
+		 * Close the wizard and open the saved record's page, when its kind has one.
 		 *
 		 * @param {string|undefined} id The saved record's id.
 		 * @return {void}
@@ -64,8 +64,9 @@ export default {
 		 */
 		onCreated(id) {
 			this.open = false
-			if (id && this.$router) {
-				this.$router.push({ name: wizardKind(this.kind).detailRoute, params: { id } }).catch(() => {})
+			const detailRoute = wizardKind(this.kind).detailRoute
+			if (id && detailRoute && this.$router) {
+				this.$router.push({ name: detailRoute, params: { id } }).catch(() => {})
 			}
 		},
 	},
