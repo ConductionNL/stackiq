@@ -43,7 +43,9 @@
   - GIVEN the Koppelingen page WHEN it renders THEN a "Shared with" column lists the participants of the usages that hold each connection, or "nobody"
   - GIVEN a participant WHEN it opens a shared connection THEN KoppelingDetail opens without edit actions
 - [ ] Implement
-- [ ] Test (vitest `sharedWithCell.spec.js`)
+  - Done: column "Shared with" on Koppelingen (cell widget `sharedWith`, one `GET /api/gebruik/shared-connections` per page load, names resolved, "nobody" when no shared usage holds it, empty when the lookup is refused), and `permissions: true` on KoppelingDetail so Edit follows the record's update right.
+  - Left: a participant still cannot open or list a shared connection, because the connection schema has no read rule for it (task 1: not expressible through `usage.koppelingen`). It needs either an OpenRegister rule that matches through a relation, or a stackiq read of the connection by id that checks `/api/gebruik/shared-connections` first.
+- [x] Test (vitest `sharedWithCell.spec.js`)
 
 ### Task 5: Cooperation participants on Organisations (board SkOrganisaties)
 - **spec_ref**: openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012

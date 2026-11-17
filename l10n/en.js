@@ -1989,7 +1989,9 @@ OC.L10N.register(
         "Run by {owner} for {count} organisation": "Run by {owner} for {count} organisation",
         "Run by {owner} for {count} organisations": "Run by {owner} for {count} organisations",
         "Shared by {count} organisation": "Shared by {count} organisation",
-        "Shared by {count} organisations": "Shared by {count} organisations"
+        "Shared by {count} organisations": "Shared by {count} organisations",
+        "nobody": "nobody",
+        "Shared with": "Shared with"
     },
     "nplurals=2; plural=(n != 1);"
 )

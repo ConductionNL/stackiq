@@ -2053,7 +2053,9 @@ OC.L10N.register(
         "Run by {owner} for {count} organisation": "Beheerd door {owner} voor {count} organisatie",
         "Run by {owner} for {count} organisations": "Beheerd door {owner} voor {count} organisaties",
         "Shared by {count} organisation": "Gedeeld door {count} organisatie",
-        "Shared by {count} organisations": "Gedeeld door {count} organisaties"
+        "Shared by {count} organisations": "Gedeeld door {count} organisaties",
+        "nobody": "niemand",
+        "Shared with": "Gedeeld met"
     },
     "nplurals=2; plural=(n != 1);"
 )

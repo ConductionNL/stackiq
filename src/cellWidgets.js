@@ -8,10 +8,13 @@
 
 import ContactNameCell from './components/cells/ContactNameCell.vue'
 import SharedUsageCell from './components/cells/SharedUsageCell.vue'
+import SharedWithCell from './components/connections/SharedWithCell.vue'
 
 export default {
 	// The owner column of the usage list (landscape-usage-registration).
 	contactName: ContactNameCell,
 	// The Shared column of the usage list (shared-usage-visible-to-participants).
 	sharedUsage: SharedUsageCell,
+	// The Shared with column of the connections list (shared-usage-visible-to-participants).
+	sharedWith: SharedWithCell,
 }
