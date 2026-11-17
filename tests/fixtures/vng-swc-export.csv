@@ -1,0 +1,4 @@
+Gebruik ID;Leverancier ID;Leverancier;Leverancier KvK;Pakket ID;Pakket;Pakket omschrijving;Versie;Status;Referentiecomponenten;Koppelingen;Toelichting;Contactpersoon
+1001;L-10;Voorbeeld Software B.V.;01234567;P-100;Voorbeeld Financien;Financiele administratie;2026.1;In gebruik;Financieel systeem;;;Persoon Een
+1002;L-11;Voorbeeld Leverancier B.V.;12345678;P-200;Voorbeeld Zaken;;3.4;Gepland;"Zaaksysteem; Documentbeheersysteem";Voorbeeld koppeling;Na de aanbesteding;Persoon Twee
+1003;L-12;Nieuwe Leverancier;;P-300;Onbekend Pakket;;;Uitgefaseerd;;;;

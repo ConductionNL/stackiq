@@ -1,0 +1,12 @@
+{
+  "id": "stackiq-vng-swc-module",
+  "name": "Previous Softwarecatalogus export to stackiq module",
+  "description": "The Pakket column becomes the product (module) of the supplier. An existing module of that supplier matches on its exact name; an unmatched product is created as a concept: unpublished, of type Application.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Pakket", "target": "name", "required": true, "transform": { "type": "trim" } },
+    { "source": "Pakket omschrijving", "target": "shortDescription", "transform": { "type": "trim" } }
+  ],
+  "idStrategy": { "type": "generate" }
+}

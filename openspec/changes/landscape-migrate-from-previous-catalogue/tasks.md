@@ -8,8 +8,9 @@
 - **acceptance_criteria**:
   - GIVEN the profile WHEN loaded THEN it names the export's sheet and columns, the key column (previous catalogue id), the required columns and the limits, and one pack per target
   - GIVEN the fixture WHEN read THEN rows normalise to supplier, module, version and usage records; a file without the required columns is refused with their names
-- [ ] Implement
-- [ ] Test (PHPUnit `VngSwcProfileTest`)
+- [x] Implement
+- [x] Test (PHPUnit `VngSwcProfileTest`)
+- Done: `lib/Settings/cmdb-import/vng-swc-{profile,supplier,module,version,usage}.json`, `CmdbImportProfile` (targets, editable targets, legacy id and link columns, CSV sheet from the profile), `CmdbImportPackRules` (target schemas and required mappings from the profile, `legacyId` managed), `lib/Service/Cmdb/CmdbCsvReader.php`, `CmdbWorkbookReader` (MISSING_COLUMN names every missing column), fixtures `tests/fixtures/vng-swc-export.{xlsx,csv}` built by `tests/fixtures/build-vng-swc-export.py`; tests `VngSwcProfileTest`, `CmdbCsvReaderTest`.
 
 ### Task 2: Matching and the preview (dry run)
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-preview-shows-the-mapping-before-anything-is-written-req-lcm-002

@@ -85,7 +85,7 @@ class CmdbImportPackRules {
 	 *
 	 * @var array<int, string>
 	 */
-	private const MANAGED_FIELDS = ['@self', 'id', 'provider', 'consumer', 'module', 'externalKey', 'businessOwner'];
+	private const MANAGED_FIELDS = ['@self', 'id', 'provider', 'consumer', 'module', 'externalKey', 'businessOwner', 'legacyId'];
 
 	/**
 	 * Fields only the catalogue or an administrator sets: the publication dates and the admin fields.
@@ -178,18 +178,23 @@ class CmdbImportPackRules {
 			$never = [];
 		}
 
+		$schema = self::targetSchema(target: $target, profile: $profile);
 		$refused = [
 			'managed' => array_merge(self::MANAGED_FIELDS, (self::MATCH_FIELDS[$target] ?? []), array_map('strval', $never)),
 			'protected' => array_merge(self::PROTECTED_FIELDS, (self::PROTECTED_TARGET_FIELDS[$target] ?? [])),
-			'relation' => $this->fieldsWithReason(target: $target, reason: 'relation'),
-			'system' => $this->fieldsWithReason(target: $target, reason: 'system'),
+			'relation' => $this->fieldsWithReason(schema: $schema, reason: 'relation'),
+			'system' => $this->fieldsWithReason(schema: $schema, reason: 'system'),
 		];
-		$allowed = array_values(array_diff($this->targetFields(target: $target), ...array_values($refused)));
+		$allowed = array_values(array_diff($this->targetFields(target: $target, schema: $schema), ...array_values($refused)));
 
 		return array_values(
 			array_unique(
 				array_merge(
-					$this->requiredViolations(target: $target, pack: $pack, keyColumn: (string)($profile['keyColumn'] ?? 'APPID')),
+					$this->requiredViolations(
+						required: self::requiredFields(target: $target, profile: $profile),
+						pack: $pack,
+						keyColumn: (string)($profile['keyColumn'] ?? 'APPID')
+					),
 					$this->mappingViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused),
 					$this->defaultViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused)
 				)
@@ -198,9 +203,47 @@ class CmdbImportPackRules {
 	}//end violations()
 
 	/**
-	 * The required mappings a pack lacks.
+	 * The register schema a target writes into: the profile's `targetSchemas`, else the CMDB export's.
 	 *
 	 * @param string $target The target.
+	 * @param array<string, mixed> $profile The decoded import profile.
+	 *
+	 * @return string|null Null for a target that writes into no schema.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	private static function targetSchema(string $target, array $profile): ?string {
+		$schema = $profile['targetSchemas'][$target] ?? null;
+		if (is_string($schema) === true && $schema !== '') {
+			return $schema;
+		}
+
+		return (self::TARGET_SCHEMAS[$target] ?? null);
+	}//end targetSchema()
+
+	/**
+	 * The fields a target's pack must map as required: the profile's `requiredMappings`, else the CMDB export's.
+	 *
+	 * @param string $target The target.
+	 * @param array<string, mixed> $profile The decoded import profile.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	private static function requiredFields(string $target, array $profile): array {
+		$required = $profile['requiredMappings'][$target] ?? null;
+		if (is_array($required) === true) {
+			return array_values(array_map('strval', $required));
+		}
+
+		return (self::REQUIRED_TARGETS[$target] ?? []);
+	}//end requiredFields()
+
+	/**
+	 * The required mappings a pack lacks.
+	 *
+	 * @param array<int, string> $required The fields the pack must map as required.
 	 * @param array<string, mixed> $pack The pack.
 	 * @param string $keyColumn The match key column.
 	 *
@@ -208,9 +251,9 @@ class CmdbImportPackRules {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function requiredViolations(string $target, array $pack, string $keyColumn): array {
+	private function requiredViolations(array $required, array $pack, string $keyColumn): array {
 		$violations = [];
-		foreach ((self::REQUIRED_TARGETS[$target] ?? []) as $field) {
+		foreach ($required as $field) {
 			if ($this->hasRequiredMapping(pack: $pack, field: $field, keyColumn: $keyColumn) === true) {
 				continue;
 			}
@@ -363,6 +406,7 @@ class CmdbImportPackRules {
 	 * The properties of a target's schema, or the fixed fields of a target without one.
 	 *
 	 * @param string $target The target.
+	 * @param string|null $schema The schema it writes into, or null for none.
 	 *
 	 * @return array<int, string>
 	 *
@@ -370,8 +414,7 @@ class CmdbImportPackRules {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function targetFields(string $target): array {
-		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
+	private function targetFields(string $target, ?string $schema): array {
 		if ($schema === null) {
 			return (self::FIELDS_WITHOUT_SCHEMA[$target] ?? []);
 		}
@@ -382,7 +425,7 @@ class CmdbImportPackRules {
 	/**
 	 * The properties of a target's schema that no pack may write for one reason.
 	 *
-	 * @param string $target The target.
+	 * @param string|null $schema The schema the target writes into, or null for none.
 	 * @param string $reason `relation` or `system`.
 	 *
 	 * @return array<int, string>
@@ -391,8 +434,7 @@ class CmdbImportPackRules {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function fieldsWithReason(string $target, string $reason): array {
-		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
+	private function fieldsWithReason(?string $schema, string $reason): array {
 		if ($schema === null) {
 			return [];
 		}

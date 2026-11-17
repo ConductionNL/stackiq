@@ -1,0 +1,13 @@
+{
+  "id": "stackiq-vng-swc-supplier",
+  "name": "Previous Softwarecatalogus export to stackiq supplier organisation",
+  "description": "The Leverancier column becomes the supplier organisation. An existing organisation matches on its KvK number, else on its exact name; an unmatched supplier is created as a concept (status Draft) of type Supplier.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Leverancier", "target": "name", "required": true, "transform": { "type": "trim" } },
+    { "source": "Leverancier KvK", "target": "registrationNumber", "transform": { "type": "trim" } }
+  ],
+  "defaults": { "type": "Supplier", "status": "Draft" },
+  "idStrategy": { "type": "generate" }
+}

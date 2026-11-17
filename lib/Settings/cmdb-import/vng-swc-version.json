@@ -1,0 +1,11 @@
+{
+  "id": "stackiq-vng-swc-version",
+  "name": "Previous Softwarecatalogus export to stackiq module version",
+  "description": "The Versie column becomes the version of the product. An existing version of that module matches on its version number; an unmatched one is created. A row without a version gets a usage without one.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Versie", "target": "version", "transform": { "type": "trim" } }
+  ],
+  "idStrategy": { "type": "generate" }
+}

@@ -52,6 +52,7 @@ final class CmdbImportExceptionTest extends TestCase {
 			CmdbImportException::ARCHIVE_UNAVAILABLE    => 503,
 			CmdbImportException::WORKBOOK_TOO_LARGE     => 413,
 			CmdbImportException::IMPORT_IN_PROGRESS     => 409,
+			CmdbImportException::NOT_CSV                => 400,
 		];
 
 		foreach ($expected as $code => $status) {

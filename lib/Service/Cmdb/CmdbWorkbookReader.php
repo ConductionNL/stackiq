@@ -706,14 +706,14 @@ class CmdbWorkbookReader {
 			$worksheet = $spreadsheet->getSheetByName($sheetName);
 			$columns = $this->resolveColumns(worksheet: $worksheet, referenced: $referenced);
 
-			foreach ($required as $column) {
-				if (in_array($column, $columns, true) === false) {
-					throw new CmdbImportException(
-						errorCode: CmdbImportException::MISSING_COLUMN,
-						message: 'A source sheet lacks a required column',
-						details: ['sheet' => $sheetName, 'column' => $column]
-					);
-				}
+			$missing = array_values(array_diff($required, $columns));
+			if ($missing !== []) {
+				// `column` names the first, as before; `columns` names every one, so the user fixes them at once.
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::MISSING_COLUMN,
+					message: 'A source sheet lacks a required column',
+					details: ['sheet' => $sheetName, 'column' => $missing[0], 'columns' => $missing]
+				);
 			}
 
 			$skip = array_merge($required, $profile->absentColumns(sheetName: $sheetName));
@@ -923,7 +923,7 @@ class CmdbWorkbookReader {
 	private function packSources(CmdbImportProfile $profile): array {
 		$constants = $profile->constantColumns();
 		$sources = [];
-		foreach (CmdbImportProfile::TARGETS as $target) {
+		foreach ($profile->targets() as $target) {
 			if ($target === 'municipality') {
 				continue;
 			}

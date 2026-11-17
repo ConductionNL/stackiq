@@ -432,7 +432,7 @@ class CmdbWorkbookReaderLogicTest extends TestCase {
 		$e = $this->refusal();
 
 		$this->assertSame(CmdbImportException::MISSING_COLUMN, $e->getErrorCode());
-		$this->assertSame(['sheet' => self::MANAGED, 'column' => 'Applicatie Naam'], $e->getDetails());
+		$this->assertSame(['sheet' => self::MANAGED, 'column' => 'Applicatie Naam', 'columns' => ['Applicatie Naam']], $e->getDetails());
 		$this->assertCount(1, FakeXlsxReader::$loads);
 	}//end testAMissingRequiredColumnIsRefusedAfterTheHeaderPass()
 

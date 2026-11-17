@@ -228,7 +228,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 		} catch (CmdbImportException $e) {
 			$this->assertSame('MISSING_COLUMN', $e->getErrorCode());
 			$this->assertSame(422, $e->getHttpStatus());
-			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'column' => 'APPID'], $e->getDetails());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'column' => 'APPID', 'columns' => ['APPID']], $e->getDetails());
 		}
 	}//end testAMissingRequiredColumnIsNamed()
 

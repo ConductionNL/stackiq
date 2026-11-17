@@ -239,8 +239,8 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 			validator: $this->resolveValidator(),
 			profile: $this->decodeFile(fileName: $this->profileFile)
 		);
-		$run->readStored = $this->storeReader(storedPack: $storedPack);
-		foreach (self::TARGETS as $target) {
+		$run->readStored = $this->storeReader(storedPack: $storedPack, profile: $run->profile);
+		foreach (self::targetsOf(profile: $run->profile) as $target) {
 			$this->loadTarget(run: $run, target: $target);
 		}
 
@@ -256,7 +256,11 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * A store that is not available is allowed only when no pack was ever
 	 * stored there; otherwise the load fails closed.
 	 *
+	 * A profile without editable targets (one whose packs are only ever the
+	 * shipped files) never asks the store.
+	 *
 	 * @param callable $storedPack (store, shipped pack) => the stored pack, or null to use the shipped file.
+	 * @param array<string, mixed> $profile The decoded profile.
 	 *
 	 * @return Closure|null (shipped pack) => the stored pack or null; null without a store.
 	 *
@@ -264,7 +268,11 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function storeReader(callable $storedPack): ?Closure {
+	private function storeReader(callable $storedPack, array $profile): ?Closure {
+		if (self::editableTargetsOf(profile: $profile) === []) {
+			return null;
+		}
+
 		$store = $this->packStore();
 		if ($store->isAvailable() === false) {
 			$store->assertShippedFallbackAllowed();
@@ -308,7 +316,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function takeStoredPack(CmdbPackLoadRun $run, string $target): void {
-		if ($run->readStored === null || in_array($target, self::EDITABLE_TARGETS, true) === false) {
+		if ($run->readStored === null || in_array($target, self::editableTargetsOf(profile: $run->profile), true) === false) {
 			return;
 		}
 
@@ -395,7 +403,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 		$profile = $this->decodeFile(fileName: $this->profileFile);
 
 		$packs = [];
-		foreach (self::EDITABLE_TARGETS as $target) {
+		foreach (self::editableTargetsOf(profile: $profile) as $target) {
 			$packs[$target] = $this->readShippedPack(profile: $profile, target: $target, validator: $validator);
 		}
 
@@ -797,7 +805,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 */
 	public function dateColumns(): array {
 		$columns = $this->stringList(key: 'dateColumns');
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			if ($target === 'municipality') {
 				continue;
 			}
@@ -857,6 +865,127 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	}//end idColumns()
 
 	/**
+	 * The targets this profile names a pack for, in profile order.
+	 *
+	 * A profile's `targets` lists them; a profile without one has the CMDB
+	 * export's five (self::TARGETS).
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function targets(): array {
+		return self::targetsOf(profile: $this->profile());
+	}//end targets()
+
+	/**
+	 * The targets whose pack an administrator edits in OpenRegister.
+	 *
+	 * A profile's `editableTargets` lists them, an empty list for a profile
+	 * whose packs are only ever its shipped files; a profile without one has
+	 * self::EDITABLE_TARGETS.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function editableTargets(): array {
+		return self::editableTargetsOf(profile: $this->profile());
+	}//end editableTargets()
+
+	/**
+	 * The column that holds a record's id in the source catalogue, per target, as target => column.
+	 *
+	 * The import stores that id as the record's `legacyId`, so a second run
+	 * finds what the first one wrote (profile key `legacyIdColumns`).
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function legacyIdColumns(): array {
+		return $this->stringMap(key: 'legacyIdColumns');
+	}//end legacyIdColumns()
+
+	/**
+	 * The columns that list links by name, per kind, as kind => column (profile key `linkColumns`).
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function linkColumns(): array {
+		return $this->stringMap(key: 'linkColumns');
+	}//end linkColumns()
+
+	/**
+	 * The separator between the names in a link column (profile key `linkSeparator`, default `;`).
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function linkSeparator(): string {
+		$separator = $this->profile()['linkSeparator'] ?? ';';
+		if (is_string($separator) === false || $separator === '') {
+			return ';';
+		}
+
+		return $separator;
+	}//end linkSeparator()
+
+	/**
+	 * The sheet name the rows of a CSV file are read as, or null when the profile reads no CSV.
+	 *
+	 * A CSV file has no sheets; the profile's `csvSheet` names the sheet its
+	 * rows stand for, which must be one of the profile's sheets.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function csvSheetName(): ?string {
+		$name = $this->profile()['csvSheet'] ?? null;
+		if (is_string($name) === false || in_array($name, $this->sheetNames(), true) === false) {
+			return null;
+		}
+
+		return $name;
+	}//end csvSheetName()
+
+	/**
+	 * The targets of a decoded profile: its `targets` list, or self::TARGETS.
+	 *
+	 * @param array<string, mixed> $profile The decoded profile.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function targetsOf(array $profile): array {
+		$targets = $profile['targets'] ?? null;
+		if (is_array($targets) === false || $targets === []) {
+			return self::TARGETS;
+		}
+
+		return array_values(array_unique(array_map('strval', $targets)));
+	}//end targetsOf()
+
+	/**
+	 * The editable targets of a decoded profile: its `editableTargets` list, or self::EDITABLE_TARGETS.
+	 *
+	 * @param array<string, mixed> $profile The decoded profile.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function editableTargetsOf(array $profile): array {
+		$targets = $profile['editableTargets'] ?? null;
+		if (is_array($targets) === false) {
+			return self::EDITABLE_TARGETS;
+		}
+
+		return array_values(array_intersect(array_map('strval', $targets), self::targetsOf(profile: $profile)));
+	}//end editableTargetsOf()
+
+	/**
 	 * The prefix of the module match key ("topdesk").
 	 *
 	 * @return string
@@ -870,7 +999,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	/**
 	 * The validated pack for a target.
 	 *
-	 * @param string $target One of self::TARGETS.
+	 * @param string $target One of targets().
 	 *
 	 * @return array<string, mixed>
 	 *
@@ -1034,7 +1163,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 */
 	public function referencedColumns(): array {
 		$columns = $this->profileColumns();
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			$columns = array_merge($columns, $this->packColumns(target: $target));
 		}
 
@@ -1048,7 +1177,8 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	}//end referencedColumns()
 
 	/**
-	 * The columns the profile itself names: the key, the name, the required, date and id columns.
+	 * The columns the profile itself names: the key, the name, the required, date and id columns, the
+	 * columns that hold a record's id in the source catalogue and the columns that list links.
 	 *
 	 * @return array<int, string>
 	 */
@@ -1057,7 +1187,9 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 			[$this->keyColumn(), $this->nameColumn()],
 			$this->requiredColumns(),
 			$this->dateColumns(),
-			$this->idColumns()
+			$this->idColumns(),
+			array_values($this->legacyIdColumns()),
+			array_values($this->linkColumns())
 		);
 	}//end profileColumns()
 
@@ -1109,7 +1241,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 		$this->profile();
 
 		$packs = [];
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			$packs[] = $this->packOverview(target: $target);
 		}
 
@@ -1174,7 +1306,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 			$this->packIdentity(target: $target, pack: $pack),
 			$this->writeRuleOverview(target: $target, pack: $pack),
 			$this->sources[$target],
-			['editable' => in_array($target, self::EDITABLE_TARGETS, true)]
+			['editable' => in_array($target, self::editableTargetsOf(profile: $this->profile()), true)]
 		);
 	}//end packOverview()
 
@@ -1316,6 +1448,29 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 
 		return array_values(array_map('strval', $value));
 	}//end stringList()
+
+	/**
+	 * A map of non-empty strings from the profile, as key => value.
+	 *
+	 * @param string $key The profile key.
+	 *
+	 * @return array<string, string>
+	 */
+	private function stringMap(string $key): array {
+		$value = $this->profile()[$key] ?? [];
+		if (is_array($value) === false || array_is_list($value) === true) {
+			return [];
+		}
+
+		$map = [];
+		foreach ($value as $name => $column) {
+			if (is_string($column) === true && $column !== '') {
+				$map[(string)$name] = $column;
+			}
+		}
+
+		return $map;
+	}//end stringMap()
 
 	/**
 	 * OpenRegister's pack store, built on the container when none was injected.

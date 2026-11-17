@@ -1,0 +1,31 @@
+{
+  "id": "stackiq-vng-swc-usage",
+  "name": "Previous Softwarecatalogus export to stackiq usage",
+  "description": "The usage of the product by the active organisation. The previous catalogue's statuses map to stackiq's; an unknown status drops the field, so the usage keeps its default (In production).",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    {
+      "source": "Status",
+      "target": "status",
+      "transform": {
+        "type": "lookup",
+        "map": {
+          "In gebruik": "In production",
+          "In productie": "In production",
+          "Productie": "In production",
+          "Gepland": "Planned",
+          "In verwerving": "Acquisition",
+          "Verwerving": "Acquisition",
+          "In aanbesteding": "Acquisition",
+          "Uit te faseren": "To be phased out",
+          "In uitfasering": "To be phased out",
+          "Uitgefaseerd": "Phased out",
+          "Niet meer in gebruik": "Phased out"
+        }
+      }
+    },
+    { "source": "Toelichting", "target": "interneAnnotation", "transform": { "type": "trim" } }
+  ],
+  "idStrategy": { "type": "generate" }
+}
