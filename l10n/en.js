@@ -1972,7 +1972,24 @@ OC.L10N.register(
         "The type could not be changed.": "The type could not be changed.",
         "The type was changed.": "The type was changed.",
         "This entry is an application.": "This entry is an application.",
-        "This entry is system software.": "This entry is system software."
+        "This entry is system software.": "This entry is system software.",
+        "{owner}, {count}": "{owner}, {count}",
+        "a cooperation": "a cooperation",
+        "an unknown organisation": "an unknown organisation",
+        "Joined": "Joined",
+        "Loading the participants": "Loading the participants",
+        "Not recorded": "Not recorded",
+        "The participants could not be loaded.": "The participants could not be loaded.",
+        "This application in use is not shared with other organisations": "This application in use is not shared with other organisations",
+        "Your organisation takes part in this application in use. Only the owner can change it.": "Your organisation takes part in this application in use. Only the owner can change it.",
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Run by {owner} for {count} organisation","Run by {owner} for {count} organisations"],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Shared by {count} organisation","Shared by {count} organisations"],
+        "Shared through a cooperation": "Shared through a cooperation",
+        "[{count:shared} shared through a cooperation]": "[{count:shared} shared through a cooperation]",
+        "Run by {owner} for {count} organisation": "Run by {owner} for {count} organisation",
+        "Run by {owner} for {count} organisations": "Run by {owner} for {count} organisations",
+        "Shared by {count} organisation": "Shared by {count} organisation",
+        "Shared by {count} organisations": "Shared by {count} organisations"
     },
     "nplurals=2; plural=(n != 1);"
 )

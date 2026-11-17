@@ -43,6 +43,7 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageParticipantsCard from './components/usages/UsageParticipantsCard.vue'
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
@@ -196,6 +197,10 @@ export default {
 	// (operations-technology-components D5): a state derived per row is not
 	// something a built-in object list shows.
 	UsageRunsOnPanel,
+
+	// The Participants card of a shared application in use: the owner and each
+	// participant (shared-usage-visible-to-participants REQ-DLG-010).
+	UsageParticipantsCard,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,

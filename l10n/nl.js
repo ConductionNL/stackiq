@@ -2036,7 +2036,24 @@ OC.L10N.register(
         "The type could not be changed.": "Het type kon niet worden gewijzigd.",
         "The type was changed.": "Het type is gewijzigd.",
         "This entry is an application.": "Deze registratie is een applicatie.",
-        "This entry is system software.": "Deze registratie is systeemsoftware."
+        "This entry is system software.": "Deze registratie is systeemsoftware.",
+        "{owner}, {count}": "{owner}, {count}",
+        "a cooperation": "een samenwerking",
+        "an unknown organisation": "een onbekende organisatie",
+        "Joined": "Deelnemer sinds",
+        "Loading the participants": "De deelnemers worden geladen",
+        "Not recorded": "Niet vastgelegd",
+        "The participants could not be loaded.": "De deelnemers konden niet worden geladen.",
+        "This application in use is not shared with other organisations": "Deze applicatie in gebruik wordt niet met andere organisaties gedeeld",
+        "Your organisation takes part in this application in use. Only the owner can change it.": "Uw organisatie neemt deel aan deze applicatie in gebruik. Alleen de eigenaar kan haar wijzigen.",
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Beheerd door {owner} voor {count} organisatie","Beheerd door {owner} voor {count} organisaties"],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Gedeeld door {count} organisatie","Gedeeld door {count} organisaties"],
+        "Shared through a cooperation": "Gedeeld via een samenwerking",
+        "[{count:shared} shared through a cooperation]": "[{count:shared} gedeeld via een samenwerking]",
+        "Run by {owner} for {count} organisation": "Beheerd door {owner} voor {count} organisatie",
+        "Run by {owner} for {count} organisations": "Beheerd door {owner} voor {count} organisaties",
+        "Shared by {count} organisation": "Gedeeld door {count} organisatie",
+        "Shared by {count} organisations": "Gedeeld door {count} organisaties"
     },
     "nplurals=2; plural=(n != 1);"
 )
