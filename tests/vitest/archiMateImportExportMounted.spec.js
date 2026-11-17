@@ -157,7 +157,12 @@ describe('ArchiMateImportExport mounted', () => {
 		expect(button(wrapper, 'Organization Export').attributes('disabled')).toBe('')
 
 		await wrapper.find('[data-testid="org-select"]').setValue('1')
-		expect(wrapper.findAll('.switch')).toHaveLength(3)
+		const switches = wrapper.findAll('.switch')
+		expect(switches).toHaveLength(4)
+		// The fourth switch carries the organisation's connections (REQ-CDX-004).
+		expect(switches[3].text()).toBe('Connections')
+		await switches[3].find('input').setValue(true)
+		expect(wrapper.vm.includeConnections).toBe(true)
 		expect(button(wrapper, 'Organization Export').attributes('disabled')).toBeUndefined()
 	})
 

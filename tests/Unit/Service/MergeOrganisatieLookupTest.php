@@ -40,6 +40,7 @@ use Psr\Log\AbstractLogger;
  * Cases for the owning organisation and the target group.
  *
  * @covers \OCA\Stackiq\Service\MergeOrganisatieService
+ * @uses   \OCA\Stackiq\Service\Organisation\OwnershipMap
  *
  * @spec openspec/specs/organisation-merge/spec.md
  */

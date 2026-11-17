@@ -382,6 +382,7 @@
                             "identifier": "test-element-1",
                             "section": "element",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-element-1",
@@ -422,6 +423,7 @@
                             "identifier": "test-element-2",
                             "section": "element",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-element-2",
@@ -472,6 +474,7 @@
                             "identifier": "test-rel-1",
                             "section": "relationship",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-rel-1",
@@ -542,6 +545,7 @@
                             "identifier": "test-view-1",
                             "section": "view",
                             "model_identifier": "test-model",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "test-view-1",
@@ -1626,6 +1630,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -1682,6 +1687,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1745,6 +1751,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1815,6 +1822,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -1876,6 +1884,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -2043,6 +2052,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -2227,6 +2237,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -2335,6 +2346,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -2379,6 +2391,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -2406,6 +2419,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -2450,6 +2464,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -2532,6 +2547,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -2586,6 +2602,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -2882,6 +2899,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -3415,6 +3433,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -5653,6 +5672,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -5709,6 +5729,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -5772,6 +5793,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -5842,6 +5864,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -5903,6 +5926,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -6070,6 +6094,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -6287,6 +6312,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -6395,6 +6421,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -6439,6 +6466,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -6466,6 +6494,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -6510,6 +6539,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -6605,6 +6635,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -6659,6 +6690,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -6994,6 +7026,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -7527,6 +7560,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -7873,6 +7907,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -7929,6 +7964,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -7992,6 +8028,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8062,6 +8099,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8123,6 +8161,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8290,6 +8329,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8820,6 +8860,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -8876,6 +8917,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -8939,6 +8981,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -9009,6 +9052,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -9070,6 +9114,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -9237,6 +9282,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -9421,6 +9467,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -9529,6 +9576,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -9573,6 +9621,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -9600,6 +9649,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -9644,6 +9694,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -9726,6 +9777,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -9780,6 +9832,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -10075,6 +10128,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -10608,6 +10662,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -10977,6 +11032,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11038,6 +11094,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11111,6 +11168,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11186,6 +11244,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -11252,6 +11311,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11459,6 +11519,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -11648,6 +11709,7 @@
                             "identifier": "id-el-1",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-1",
@@ -11756,6 +11818,7 @@
                             "identifier": "id-el-2",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-2",
@@ -11800,6 +11863,7 @@
                             "identifier": "el-3",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-3",
@@ -11827,6 +11891,7 @@
                             "identifier": "id-el-4",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-4",
@@ -11871,6 +11936,7 @@
                             "identifier": "id-el-5",
                             "section": "element",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-el-5",
@@ -11953,6 +12019,7 @@
                             "identifier": "id-rel-1",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-rel-1",
@@ -12007,6 +12074,7 @@
                             "identifier": "rel-2",
                             "section": "relationship",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-2",
@@ -12303,6 +12371,7 @@
                             "identifier": "id-view-1",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "id-view-1",
@@ -12836,6 +12905,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-model-golden",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -14968,6 +15038,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -15024,6 +15095,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15087,6 +15159,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15157,6 +15230,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "type",
@@ -15218,6 +15292,7 @@
                         "identifier",
                         "section",
                         "model_identifier",
+                        "origin",
                         "xml",
                         "name",
                         "omschrijving",
@@ -16303,6 +16378,7 @@
                             "identifier": "el-00",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-00",
@@ -16330,6 +16406,7 @@
                             "identifier": "el-01",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-01",
@@ -16357,6 +16434,7 @@
                             "identifier": "el-02",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-02",
@@ -16384,6 +16462,7 @@
                             "identifier": "el-03",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-03",
@@ -16411,6 +16490,7 @@
                             "identifier": "el-04",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-04",
@@ -16438,6 +16518,7 @@
                             "identifier": "el-05",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-05",
@@ -16465,6 +16546,7 @@
                             "identifier": "el-06",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-06",
@@ -16492,6 +16574,7 @@
                             "identifier": "el-07",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-07",
@@ -16519,6 +16602,7 @@
                             "identifier": "el-08",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-08",
@@ -16546,6 +16630,7 @@
                             "identifier": "el-09",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-09",
@@ -16573,6 +16658,7 @@
                             "identifier": "el-10",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-10",
@@ -16600,6 +16686,7 @@
                             "identifier": "el-11",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-11",
@@ -16627,6 +16714,7 @@
                             "identifier": "el-12",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-12",
@@ -16654,6 +16742,7 @@
                             "identifier": "el-13",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-13",
@@ -16681,6 +16770,7 @@
                             "identifier": "el-14",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-14",
@@ -16708,6 +16798,7 @@
                             "identifier": "el-15",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-15",
@@ -16735,6 +16826,7 @@
                             "identifier": "el-16",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-16",
@@ -16762,6 +16854,7 @@
                             "identifier": "el-17",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-17",
@@ -16789,6 +16882,7 @@
                             "identifier": "el-18",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-18",
@@ -16816,6 +16910,7 @@
                             "identifier": "el-19",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-19",
@@ -16843,6 +16938,7 @@
                             "identifier": "dup",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "dup",
@@ -16893,6 +16989,7 @@
                             "identifier": "rel-00",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-00",
@@ -16922,6 +17019,7 @@
                             "identifier": "rel-01",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-01",
@@ -16951,6 +17049,7 @@
                             "identifier": "rel-02",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-02",
@@ -16980,6 +17079,7 @@
                             "identifier": "rel-03",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-03",
@@ -17009,6 +17109,7 @@
                             "identifier": "rel-04",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-04",
@@ -17038,6 +17139,7 @@
                             "identifier": "rel-05",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-05",
@@ -17067,6 +17169,7 @@
                             "identifier": "rel-06",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-06",
@@ -17096,6 +17199,7 @@
                             "identifier": "rel-07",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-07",
@@ -17125,6 +17229,7 @@
                             "identifier": "rel-08",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-08",
@@ -17154,6 +17259,7 @@
                             "identifier": "rel-09",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-09",
@@ -17183,6 +17289,7 @@
                             "identifier": "rel-10",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-10",
@@ -17212,6 +17319,7 @@
                             "identifier": "rel-11",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-11",
@@ -17672,6 +17780,7 @@
                             "identifier": "view-0",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-0",
@@ -17697,6 +17806,7 @@
                             "identifier": "view-1",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-1",
@@ -17722,6 +17832,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -17747,6 +17858,7 @@
                             "identifier": "view-3",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-3",
@@ -17772,6 +17884,7 @@
                             "identifier": "view-4",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-4",
@@ -17797,6 +17910,7 @@
                             "identifier": "view-5",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-5",
@@ -17822,6 +17936,7 @@
                             "identifier": "view-6",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-6",
@@ -17847,6 +17962,7 @@
                             "identifier": "view-7",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-7",
@@ -17872,6 +17988,7 @@
                             "identifier": "view-noname",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-noname",
@@ -17893,6 +18010,7 @@
                             "identifier": "",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-orig",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "",
@@ -21733,6 +21851,7 @@
                             "identifier": "el-07",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-07",
@@ -21760,6 +21879,7 @@
                             "identifier": "el-08",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-08",
@@ -21787,6 +21907,7 @@
                             "identifier": "el-09",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-09",
@@ -21814,6 +21935,7 @@
                             "identifier": "el-10",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-10",
@@ -21841,6 +21963,7 @@
                             "identifier": "el-11",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-11",
@@ -21868,6 +21991,7 @@
                             "identifier": "el-12",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-12",
@@ -21895,6 +22019,7 @@
                             "identifier": "el-13",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-13",
@@ -21922,6 +22047,7 @@
                             "identifier": "el-14",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-14",
@@ -21949,6 +22075,7 @@
                             "identifier": "el-15",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-15",
@@ -21976,6 +22103,7 @@
                             "identifier": "el-16",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-16",
@@ -22003,6 +22131,7 @@
                             "identifier": "el-17",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-17",
@@ -22030,6 +22159,7 @@
                             "identifier": "el-18",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-18",
@@ -22057,6 +22187,7 @@
                             "identifier": "el-19",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-19",
@@ -22084,6 +22215,7 @@
                             "identifier": "new-0",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-0",
@@ -22111,6 +22243,7 @@
                             "identifier": "new-1",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-1",
@@ -22138,6 +22271,7 @@
                             "identifier": "new-2",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-2",
@@ -22165,6 +22299,7 @@
                             "identifier": "new-3",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-3",
@@ -22192,6 +22327,7 @@
                             "identifier": "new-4",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-4",
@@ -22219,6 +22355,7 @@
                             "identifier": "new-5",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "new-5",
@@ -22246,6 +22383,7 @@
                             "identifier": "dup",
                             "section": "element",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "dup",
@@ -22296,6 +22434,7 @@
                             "identifier": "rel-01",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-01",
@@ -22325,6 +22464,7 @@
                             "identifier": "rel-02",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-02",
@@ -22354,6 +22494,7 @@
                             "identifier": "rel-03",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-03",
@@ -22383,6 +22524,7 @@
                             "identifier": "rel-04",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-04",
@@ -22412,6 +22554,7 @@
                             "identifier": "rel-05",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-05",
@@ -22441,6 +22584,7 @@
                             "identifier": "rel-06",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-06",
@@ -22470,6 +22614,7 @@
                             "identifier": "rel-07",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-07",
@@ -22499,6 +22644,7 @@
                             "identifier": "rel-08",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-08",
@@ -22528,6 +22674,7 @@
                             "identifier": "rel-09",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-09",
@@ -22557,6 +22704,7 @@
                             "identifier": "rel-10",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-10",
@@ -22586,6 +22734,7 @@
                             "identifier": "rel-11",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-11",
@@ -22615,6 +22764,7 @@
                             "identifier": "rel-new",
                             "section": "relationship",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "rel-new",
@@ -23050,6 +23200,7 @@
                             "identifier": "view-2",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-2",
@@ -23075,6 +23226,7 @@
                             "identifier": "view-3",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-3",
@@ -23100,6 +23252,7 @@
                             "identifier": "view-4",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-4",
@@ -23125,6 +23278,7 @@
                             "identifier": "view-5",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-5",
@@ -23150,6 +23304,7 @@
                             "identifier": "view-6",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-6",
@@ -23175,6 +23330,7 @@
                             "identifier": "view-7",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-7",
@@ -23200,6 +23356,7 @@
                             "identifier": "view-noname",
                             "section": "view",
                             "model_identifier": "id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-noname",
@@ -26360,6 +26517,7 @@
                             "identifier": "el-00",
                             "section": "element",
                             "model_identifier": "big",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "el-00",
@@ -26458,6 +26616,7 @@
                             "identifier": "view-0",
                             "section": "view",
                             "model_identifier": "big",
+                            "origin": "imported",
                             "xml": {
                                 "_attributes": {
                                     "identifier": "view-0",

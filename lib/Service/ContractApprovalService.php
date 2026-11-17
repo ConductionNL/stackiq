@@ -38,6 +38,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -661,6 +664,8 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 	 */
 	private function searchContracts(ObjectServiceInterface $objectService, array $query): array|int {
 		try {
+			// System path (decision 409): a decision outcome from decidesk is matched to
+			// its contract; no field of the contract goes back to a caller.
 			return $objectService->searchObjects(query: SearchBounds::bounded(query: $query), _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -734,13 +739,14 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 			return null;
 		}
 
+		// Decision 409: an unscoped read. The submit route reaches it only after
+		// authorizeSubmit() found the caller an admin or of the owning organisation,
+		// and the owner check itself reads nothing but `_organisation`; the outcome
+		// path is a system path from decidesk.
 		try {
 			return $objectService->find(
 				id: $contractUuid,
-				_extend: [],
-				files: false,
-				register: $registerId,
-				schema: $schemaId,
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -772,10 +778,10 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $contract->getRegister(),
-			schema: $contract->getSchema(),
-			uuid: $contract->getUuid()
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $contract->getRegister(), schema: $contract->getSchema()),
+				uuid: $contract->getUuid()
+			)
 		);
 
 	}//end persistContract()

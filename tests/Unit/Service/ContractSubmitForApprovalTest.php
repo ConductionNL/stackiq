@@ -35,6 +35,7 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Cases for submitting a contract for approval.
@@ -94,7 +95,11 @@ class ContractSubmitForApprovalTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function ($object, $extend, $register, $schema, $uuid) use ($contract) {
+			function ($object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($contract) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->trace[] = ['saveObject', $object, $register, $schema, $uuid];
 				return $contract;
 			}
