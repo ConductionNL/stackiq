@@ -60,6 +60,11 @@
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
+## Round 2 notes
+
+- The Playwright spec `tests/e2e/workflows/data-model.spec.ts` now exists, with the four `@e2e` scenarios (find an own entity, the relation to Melder, the usage link, a new entity with a key). The Playwright Test boxes stay open until it has run against a live instance.
+- Task 6: the feature page and the English and Dutch strings are in place; the screenshots need a live instance and are still to be captured.
+
 ## Verification
 
 - `openspec validate architecture-data-model-and-ggm --type change --strict`
