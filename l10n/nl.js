@@ -2055,7 +2055,11 @@ OC.L10N.register(
         "Shared by {count} organisation": "Gedeeld door {count} organisatie",
         "Shared by {count} organisations": "Gedeeld door {count} organisaties",
         "nobody": "niemand",
-        "Shared with": "Gedeeld met"
+        "Shared with": "Gedeeld met",
+        "This cooperation lists no participants yet": "Deze samenwerking heeft nog geen deelnemers",
+        "Cooperation · %n participant": "Samenwerking · %n deelnemer",
+        "Cooperation · %n participants": "Samenwerking · %n deelnemers",
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Samenwerking · %n deelnemer","Samenwerking · %n deelnemers"]
     },
     "nplurals=2; plural=(n != 1);"
 )

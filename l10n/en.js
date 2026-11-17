@@ -1991,7 +1991,11 @@ OC.L10N.register(
         "Shared by {count} organisation": "Shared by {count} organisation",
         "Shared by {count} organisations": "Shared by {count} organisations",
         "nobody": "nobody",
-        "Shared with": "Shared with"
+        "Shared with": "Shared with",
+        "This cooperation lists no participants yet": "This cooperation lists no participants yet",
+        "Cooperation · %n participant": "Cooperation · %n participant",
+        "Cooperation · %n participants": "Cooperation · %n participants",
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Cooperation · %n participant","Cooperation · %n participants"]
     },
     "nplurals=2; plural=(n != 1);"
 )

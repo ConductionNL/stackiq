@@ -53,5 +53,6 @@
 - **acceptance_criteria**:
   - GIVEN a cooperation WHEN listed on Organisaties THEN its subtitle reads "Cooperation · N participants"
   - GIVEN its detail page WHEN opened THEN a Participants list links each participant organisation
-- [ ] Implement
-- [ ] Test (vitest `organisatieCardParticipants.spec.js`)
+- [x] Implement
+  - `OrganisatieCard`: a cooperation (type Collaboration) reads "Cooperation · N participants" (`n()`, each participant counted once). OrganisatieDetail: body widget `OrganisationParticipantsList` (in `src/components/organisations/`) links each participant to its page; it renders nothing for an organisation that is not a cooperation. `src/manifest.json` gets only the body widget.
+- [x] Test (vitest `organisatieCardParticipants.spec.js`)

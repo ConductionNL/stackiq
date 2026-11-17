@@ -37,6 +37,7 @@ import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import OrganisationParticipantsList from './components/organisations/OrganisationParticipantsList.vue'
 import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -217,6 +218,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// A cooperation's participant organisations, each linked
+	// (shared-usage-visible-to-participants REQ-DLG-012).
+	OrganisationParticipantsList,
 	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
 	ClaimedUsageList,
 	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
