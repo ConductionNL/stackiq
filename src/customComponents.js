@@ -28,11 +28,12 @@ import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vu
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
-import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
+import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
+import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
@@ -174,6 +175,12 @@ export default {
 	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
 	// it reads the module and its versions, which no built-in widget combines.
 	ProductRoadmap,
+
+	// Change an application into a service or system software and back
+	// (landscape-change-entry-type), a bodyWidgets section on ModuleDetail: it
+	// previews the change through stackiq's type-change route before confirming,
+	// which no built-in widget does.
+	ChangeEntryTypePanel,
 
 	// End of support of the version a usage runs and the vulnerabilities of its
 	// application, next to the risk score on the usage page

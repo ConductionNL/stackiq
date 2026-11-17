@@ -20,8 +20,8 @@
   - GIVEN a user of another organisation WHEN the endpoint is called THEN it answers 403 before the service runs
   - GIVEN an organisation and a date WHEN the endpoint is called THEN it returns application and coverage differences in the shape of design D3
   - GIVEN a scenario id WHEN the endpoint is called THEN the scenario's organisation and target date are used and its changes are read with RBAC on
-- [ ] Implement
-- [ ] Test (PHPUnit `LandscapeComparisonServiceTest`, `LandscapeComparisonControllerTest`)
+- [x] Implement
+- [x] Test (PHPUnit `LandscapeComparisonServiceTest`, `LandscapeComparisonControllerTest`)
 
 ### Task 3: Register fragment for scenarios
 - **spec_ref**: openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
