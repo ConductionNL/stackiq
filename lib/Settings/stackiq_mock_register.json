@@ -735,7 +735,8 @@
           {}
         ],
         "registeredBy": "Municipality",
-        "publicationDate": "2026-03-01T09:00:00+00:00"
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -786,7 +787,8 @@
           {}
         ],
         "registeredBy": "Application",
-        "publicationDate": "2026-03-02T09:00:00+00:00"
+        "publicationDate": "2026-03-02T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -837,7 +839,60 @@
           {}
         ],
         "registeredBy": "Collaboration",
-        "publicationDate": "2026-03-03T09:00:00+00:00"
+        "publicationDate": "2026-03-03T09:00:00+00:00",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-duplicate-1"
+        },
+        "name": "Voorbeeld name 1",
+        "shortDescription": "Voorbeeld Shortdescription 1",
+        "longDescription": "Voorbeeld markdown 0",
+        "website": "https://example.invalid/resource/0",
+        "contactPerson": {},
+        "cloudDienstverleningsmodel": [
+          "On-premises (self-managed)"
+        ],
+        "hostingJurisdiction": "NL",
+        "hostingLocation": "NL",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "licentietype": "Closed source",
+        "licence": "MIT License",
+        "referenceComponents": [
+          {}
+        ],
+        "type": "Application",
+        "logo": "Voorbeeld base64 0",
+        "diensten": [
+          {}
+        ],
+        "koppelingen": [
+          {}
+        ],
+        "compliancy": [
+          {}
+        ],
+        "standards": [
+          "Voorbeeld Standards 1"
+        ],
+        "standardsGemma": [
+          "Voorbeeld Standardsgemma 1"
+        ],
+        "standardVersions": [
+          {}
+        ],
+        "moduleVersions": [
+          {}
+        ],
+        "usages": [
+          {}
+        ],
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1279,7 +1334,8 @@
           {}
         ],
         "publicationDate": "2026-03-01T09:00:00+00:00",
-        "depublicationDate": "2026-03-01T09:00:00+00:00"
+        "depublicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1304,7 +1360,8 @@
           {}
         ],
         "publicationDate": "2026-03-02T09:00:00+00:00",
-        "depublicationDate": "2026-03-02T09:00:00+00:00"
+        "depublicationDate": "2026-03-02T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1329,7 +1386,8 @@
           {}
         ],
         "publicationDate": "2026-03-03T09:00:00+00:00",
-        "depublicationDate": "2026-03-03T09:00:00+00:00"
+        "depublicationDate": "2026-03-03T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {

@@ -24,11 +24,13 @@ require_once __DIR__ . '/decision-conclusion-event-doubles.php';
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
 use OCA\Stackiq\EventListener\AttestationCorrectionListener;
+use OCA\Stackiq\EventListener\CatalogueMergeRelinker;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ContractApprovalListener;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
@@ -98,6 +100,7 @@ final class ListenerRegistrarTest extends TestCase {
 				[ObjectUpdatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatedEvent::class, MaintenanceRecipientsListener::class],
+				[ObjectsMergedEvent::class, CatalogueMergeRelinker::class],
 				[ObjectCreatedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectDeletedEvent::class, ModuleVersionPublicationListener::class],

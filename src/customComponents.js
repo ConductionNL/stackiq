@@ -30,6 +30,7 @@ import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
+import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
@@ -192,6 +193,10 @@ export default {
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
 
+	// The Merged into banner on a merged application's page
+	// (operations-record-reconciliation D4): it shows the survivor only when
+	// `recordStatus` is Merged, which no built-in widget conditions on.
+	MergedRecordBanner,
 	// OrganisatieDetail's actions slot: Export as ArchiMate for the organisation
 	// on the page, shown when the server says the caller may export it
 	// (insight-exports-and-custom-reports, REQ-CER-003).

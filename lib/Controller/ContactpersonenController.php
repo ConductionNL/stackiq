@@ -34,6 +34,7 @@ use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersonenControllerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -1623,6 +1624,9 @@ class ContactpersonenController extends Controller implements ContactpersonenCon
 			// Initialize response with user data from Nextcloud.
 			$response = $this->buildEmptyMeResponse(userEmail: $userEmail);
 			$response['isBeheerder'] = $this->groupManager->isInGroup($userId, 'maintainer');
+			// A hint for the catalogue pages' Find duplicates; OpenRegister's
+			// candidates page checks access itself.
+			$response['mayFindDuplicates'] = (new SyncAccessPolicy(groupManager: $this->groupManager))->isAdministrator(uid: $userId);
 
 			// Try to get contactpersoon data for additional profile info.
 			$this->enrichMeWithContactPersonData(
@@ -1736,6 +1740,9 @@ class ContactpersonenController extends Controller implements ContactpersonenCon
 			// "granting or revoking organisation access must be restricted to
 			// a beheerder of that organisation" (req-004).
 			'isBeheerder' => false,
+			// A Nextcloud admin or functional administrator: may open
+			// OpenRegister's duplicate candidates (operations-record-reconciliation).
+			'mayFindDuplicates' => false,
 		];
 	}//end buildEmptyMeResponse()
 

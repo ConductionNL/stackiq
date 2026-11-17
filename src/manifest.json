@@ -400,6 +400,15 @@
 				"cardComponent": "OrganisatieCard",
 				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Draft", "Active", "Inactive"] },
+				"headerActions": [
+					{
+						"id": "find-duplicates",
+						"label": "Find duplicates",
+						"icon": "ContentDuplicate",
+						"href": "/apps/openregister/duplicates",
+						"visibleWhen": { "endpoint": "/apps/stackiq/api/me", "field": "mayFindDuplicates", "op": "eq", "value": true }
+					}
+				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
 			},
@@ -547,6 +556,7 @@
 					{ "id": "11", "widgetId": "md-compliance-documents", "gridX": 0, "gridY": 28, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "md-merged", "component": "MergedRecordBanner", "props": { "objectId": "@objectId", "objectType": "module", "detailRoute": "ModuleDetail" }, "placement": "before-body", "colSpan": 12 },
 					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-connection-map", "component": "ConnectionMapWidget", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
