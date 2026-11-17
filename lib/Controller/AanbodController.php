@@ -23,8 +23,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\PublishedAanbodInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -92,6 +94,7 @@ class AanbodController extends Controller {
 	 * @param IUserSession $userSession The user session service for getting the current user
 	 * @param AanbodServiceInterface $aanbodService The business logic service
 	 * @param LoggerInterface $logger The logger service for debugging and error reporting
+	 * @param PublishedAanbodInterface|null $publishedAanbod The published entries an anonymous caller reads; without it an anonymous caller is rejected
 	 */
 	public function __construct(
 		string $appName,
@@ -99,6 +102,7 @@ class AanbodController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly AanbodServiceInterface $aanbodService,
 		private readonly LoggerInterface $logger,
+		private readonly ?PublishedAanbodInterface $publishedAanbod = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -136,30 +140,37 @@ class AanbodController extends Controller {
 	 *
 	 * @return JSONResponse JSON response with aanbod objects array
 	 *
-	 * REQ-009 requires an authenticated caller, and the body enforces it.
-	 * The PublicPage annotation told Nextcloud's middleware to admit
-	 * anonymous requests anyway, so declared and enforced contract disagreed:
-	 * every anonymous call was admitted, routed, and only then rejected by
-	 * the controller. @NoAdminRequired is the annotation that matches —
-	 * any logged-in user, rejected at the middleware. The in-body guard
-	 * stays as deny-before-grant (REQ-001).
+	 * REQ-009 (decision 392): the controller decides explicitly what an
+	 * anonymous caller gets, before AanbodService::getAanbod() runs. An
+	 * anonymous caller reads the published modules, diensten and koppelingen
+	 * in the open-data projection (PublishedAanbod), with no organisation
+	 * resolved; everything else needs login. @PublicPage admits the anonymous
+	 * request so this branch can answer it, rate-limited like the other
+	 * anonymous open-data reads.
 	 *
 	 * @NoCSRFRequired
-	 * @NoAdminRequired
+	 * @PublicPage
 	 *
 	 * @spec openspec/specs/aanbod-listings/spec.md
-	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
+	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAanbod(): JSONResponse {
-		// REQ-009: explicit authentication guard, mirroring
-		// AangebodenGebruikController::getGebruiksWhereAfnemer() (REQ-004). Do
-		// NOT rely on AanbodService::getAanbod()'s internal
+		// REQ-009: the anonymous branch is decided here, before
+		// AanbodService::getAanbod() is ever invoked. Do NOT rely on its
 		// getCurrentOrganisation() resolving to null for an anonymous session
-		// as the sole safeguard — reject before the service is ever invoked
-		// (deny-before-grant, REQ-001).
+		// (deny-before-grant, REQ-001): an anonymous caller reads only the
+		// published entries, and is rejected when that reader is missing.
 		$listing = $this->objectListing(name: 'aanbod', idContext: []);
 		if ($this->userSession->getUser() === null) {
-			return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
+			if ($this->publishedAanbod === null) {
+				return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
+			}
+
+			return $this->listingResponder()->respond(
+				listing: $listing,
+				fetch: fn (): array => $this->publishedAanbod->page(options: $this->parseQueryOptions())
+			);
 		}
 
 		return $this->listingResponder()->respond(

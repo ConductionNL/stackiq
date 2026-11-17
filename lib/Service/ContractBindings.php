@@ -74,6 +74,7 @@ use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCA\Stackiq\Kernel\Contracts\PublicationServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
+use OCA\Stackiq\Kernel\Contracts\PublishedAanbodInterface;
 use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ReviewAggregateServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ReviewServiceInterface;
@@ -179,6 +180,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ProgressTrackerInterface::class, ProgressTracker::class);
 		$context->registerServiceAlias(PublicCatalogueRecordsInterface::class, PublicCatalogueRecords::class);
 		$context->registerServiceAlias(PublicationServiceInterface::class, PublicationService::class);
+		$context->registerServiceAlias(PublishedAanbodInterface::class, PublishedAanbod::class);
 		$context->registerServiceAlias(ReferenceComponentCoverageServiceInterface::class, ReferenceComponentCoverageService::class);
 		$context->registerServiceAlias(ReviewAggregateServiceInterface::class, ReviewAggregateService::class);
 		$context->registerServiceAlias(ReviewServiceInterface::class, ReviewService::class);
