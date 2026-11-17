@@ -95,20 +95,16 @@ class ClaimedUsageService {
 	 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 	 */
 	public function claimed(): array {
-		$supplier = $this->lookup()->activeOrganisationUuid();
-		if ($supplier === null) {
-			return ['status' => 'no_organisation', 'organisation' => null, 'results' => []];
+		$where = $this->where();
+		if ($where['status'] !== 'ok') {
+			return ['status' => $where['status'], 'organisation' => $where['supplier'], 'results' => []];
 		}
 
-		$location = $this->usageLocation();
-		if ($location === null) {
-			return ['status' => 'unavailable', 'organisation' => $supplier, 'results' => []];
-		}
-
+		$supplier = (string)$where['supplier'];
 		try {
 			$found = $this->lookup()->objectService()->searchObjectsPaginated(
 				query: [
-					'@self'    => $location,
+					'@self'    => $where['location'],
 					'provider' => $supplier,
 					'_extend'  => self::EXTEND,
 					'_limit'   => 500,
@@ -121,13 +117,9 @@ class ClaimedUsageService {
 			return ['status' => 'unavailable', 'organisation' => $supplier, 'results' => []];
 		}
 
-		$claims = [];
-		foreach ((array)($found['results'] ?? []) as $row) {
-			$claim = $this->claim(row: $row, supplier: $supplier);
-			if ($claim !== null) {
-				$claims[] = $claim;
-			}
-		}
+		$claims = array_map(fn (mixed $row): ?array => $this->claim(row: $row, supplier: $supplier), (array)($found['results'] ?? []));
+
+		$claims = array_values(array_filter($claims, static fn (?array $claim): bool => $claim !== null));
 
 		return ['status' => 'ok', 'organisation' => $supplier, 'results' => $claims];
 	}//end claimed()
@@ -150,14 +142,9 @@ class ClaimedUsageService {
 			return ['status' => 'invalid'];
 		}
 
-		$supplier = $this->lookup()->activeOrganisationUuid();
-		$location = $this->usageLocation();
-		if ($supplier === null) {
-			return ['status' => 'no_organisation'];
-		}
-
-		if ($location === null) {
-			return ['status' => 'unavailable'];
+		$where = $this->where();
+		if ($where['status'] !== 'ok') {
+			return ['status' => $where['status']];
 		}
 
 		try {
@@ -166,7 +153,42 @@ class ClaimedUsageService {
 			return ['status' => 'unavailable'];
 		}
 
-		$usage = $this->findUsage(objectService: $objectService, uuid: $uuid, location: $location);
+		return $this->answerFound(objectService: $objectService, act: ['uuid' => $uuid, 'answer' => $answer] + $where);
+	}//end answer()
+
+	/**
+	 * The active organisation and where the usages live, or why there is none.
+	 *
+	 * @return array{status: string, supplier: string|null, location?: array{register: mixed, schema: mixed}}
+	 *   status `ok` with both; `no_organisation` without an active organisation;
+	 *   `unavailable` when the usage register is not configured.
+	 */
+	private function where(): array {
+		$supplier = $this->lookup()->activeOrganisationUuid();
+		if ($supplier === null) {
+			return ['status' => 'no_organisation', 'supplier' => null];
+		}
+
+		$location = $this->usageLocation();
+		if ($location === null) {
+			return ['status' => 'unavailable', 'supplier' => $supplier];
+		}
+
+		return ['status' => 'ok', 'supplier' => $supplier, 'location' => $location];
+	}//end where()
+
+	/**
+	 * Record the answer on the usage once it is found and the supplier is its provider.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param array<string, mixed>   $act           The usage `uuid`, the `answer`, the `supplier` and the `location`.
+	 *
+	 * @return array{status: string, usage?: array<string, mixed>}
+	 */
+	private function answerFound(ObjectServiceInterface $objectService, array $act): array {
+		$uuid     = (string)$act['uuid'];
+		$supplier = (string)$act['supplier'];
+		$usage    = $this->findUsage(objectService: $objectService, uuid: $uuid, location: (array)$act['location']);
 		if ($usage === null) {
 			return ['status' => 'not_found'];
 		}
@@ -180,8 +202,8 @@ class ClaimedUsageService {
 			return ['status' => 'forbidden'];
 		}
 
-		return $this->write(objectService: $objectService, usage: $usage, answer: $answer);
-	}//end answer()
+		return $this->write(objectService: $objectService, usage: $usage, answer: (string)$act['answer']);
+	}//end answerFound()
 
 	/**
 	 * The usage, read as the system, or null when it is not found.
@@ -266,9 +288,13 @@ class ClaimedUsageService {
 	 */
 	private function claim(mixed $row, string $supplier): ?array {
 		[$data, $self] = $this->rowParts(row: $row);
-		$owner         = ($self['organisation'] ?? null);
-		$answered      = in_array(($data['providerResponse'] ?? null), self::ANSWERS, true);
-		if ($this->partyId(party: ($data['provider'] ?? null)) !== $supplier || $owner === null || $owner === $supplier || $answered === true) {
+		// Only an unanswered usage of the supplier's product that another organisation owns.
+		$refused = [
+			$this->partyId(party: ($data['provider'] ?? null)) !== $supplier,
+			in_array(($self['organisation'] ?? null), [null, $supplier], true),
+			in_array(($data['providerResponse'] ?? null), self::ANSWERS, true),
+		];
+		if (in_array(true, $refused, true) === true) {
 			return null;
 		}
 
@@ -328,15 +354,15 @@ class ClaimedUsageService {
 	 * @return string|null
 	 */
 	private function partyId(mixed $party): ?string {
-		if (is_array($party) === true && isset($party['id']) === true) {
-			return (string)$party['id'];
+		if (is_array($party) === true) {
+			$party = ($party['id'] ?? null);
 		}
 
-		if (is_string($party) === true && $party !== '') {
-			return $party;
+		if (is_scalar($party) === false || (string)$party === '') {
+			return null;
 		}
 
-		return null;
+		return (string)$party;
 	}//end partyId()
 
 	/**
@@ -348,7 +374,7 @@ class ClaimedUsageService {
 		$config   = $this->settings->getVoorzieningenConfig();
 		$register = ($config['register'] ?? null);
 		$schema   = ($config['gebruik_schema'] ?? null);
-		if ($register === null || $schema === null || $register === '' || $schema === '') {
+		if (in_array($register, [null, ''], true) === true || in_array($schema, [null, ''], true) === true) {
 			return null;
 		}
 

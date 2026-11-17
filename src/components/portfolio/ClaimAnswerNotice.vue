@@ -46,20 +46,31 @@ export default {
 			return
 		}
 		try {
-			if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
-				await objectStore.fetchSettings()
-			}
-			ensureObjectTypeOrSlug('usage')
-			const usage = await objectStore.fetchObject('usage', this.objectId)
-			const data = usage?.object || usage || {}
-			if (data.providerResponse === 'declined') {
-				this.declinedOn = claimDate(data.providerResponseAt)
-			}
+			const data = await this.loadUsage()
+			this.declinedOn = data.providerResponse === 'declined' ? claimDate(data.providerResponseAt) : null
 		} catch {
 			// No notice when the usage cannot be read; the page shows its own error.
 		}
 	},
 
-	methods: { t },
+	methods: {
+		t,
+
+		/**
+		 * The usage's data, read through the object store.
+		 *
+		 * @return {Promise<object>} The usage's fields.
+		 *
+		 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+		 */
+		async loadUsage() {
+			if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				await objectStore.fetchSettings()
+			}
+			ensureObjectTypeOrSlug('usage')
+			const usage = await objectStore.fetchObject('usage', this.objectId)
+			return usage?.object || usage || {}
+		},
+	},
 }
 </script>
