@@ -52,7 +52,8 @@
   - GIVEN a due row WHEN Keep access is chosen THEN the row shows today and the reviewer, and is no longer due
   - GIVEN a role from a mapped group WHEN the row renders THEN it names the group and offers no Remove role for it
   - GIVEN a Nextcloud admin WHEN the page renders THEN it offers an organisation picker and Disable account
-- [ ] Implement
+- [x] Implement
+      2026-11-17: the permission list is built here, since the other change has not built it yet. `ShellPermissions` gives every signed-in user `user` (the shell shows every entry when the list is empty), Nextcloud admins `admin`, and admins plus `functioneel-beheerder`/`organisatie-beheerder` members `access.review`. `DashboardController` hands it to the shell as initial state `permissions`, and `App.vue` reads it, falling back to `OC.currentUser.permissions`. PHPUnit: `ShellPermissionsTest`, `DashboardControllerContractTest::testPageProvidesTheUsersPermissionList`.
       Built: the page fragment, the menu entry under Organisations with `permission: access.review`, `AccessReviewView` (registered in `src/customComponents.js`), its icon, and the English and Dutch strings. Left: `access.review` in the shell's permission list (`DashboardController`), which `operations-sync-status-and-progress` introduces and is not built yet; until it is, the entry shows for everyone and the endpoint refuses anyone but admins and the organisation's functional administrators.
 - [ ] Test (vitest tests/vitest/accessReviewView.spec.js and Playwright tests/e2e/spec-coverage/access-review.spec.ts)
       vitest done (9 tests); the Playwright spec needs a live instance.

@@ -30,8 +30,11 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\DashboardController;
+use OCA\Stackiq\Service\ShellPermissions;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -155,4 +158,35 @@ class DashboardControllerContractTest extends TestCase {
 		$this->assertSame(['results' => []], $response->getData());
 
 	}//end testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller()
+	/**
+	 * The page hands the shell the signed-in user's permission list, so the
+	 * menu can hide Access review from a regular user.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	 */
+	public function testPageProvidesTheUsersPermissionList(): void {
+		$request = $this->createMock(IRequest::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('pieter');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->with('pieter')->willReturn(false);
+		$groupManager->method('getUserGroups')->willReturn([]);
+		$initialState = $this->createMock(IInitialState::class);
+		$initialState->expects($this->once())->method('provideInitialState')->with('permissions', ['user']);
+
+		$controller = new DashboardController(
+			'stackiq',
+			$request,
+			$session,
+			$initialState,
+			new ShellPermissions(groupManager: $groupManager)
+		);
+
+		$this->assertSame('index', $controller->page(getParameter: null)->getTemplateName());
+	}//end testPageProvidesTheUsersPermissionList()
+
 }//end class

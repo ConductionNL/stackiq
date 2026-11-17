@@ -70,6 +70,7 @@
 
 <script>
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
@@ -184,10 +185,13 @@ export default {
 
 	computed: {
 		/**
-		 * @spec exclude pure passthrough getter of injected permissions — DI getter
+		 * The signed-in user's permission list, which the menu filters
+		 * entries such as Access review with (ShellPermissions on the server).
+		 *
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
 		 */
 		permissions() {
-			return window.OC?.currentUser?.permissions ?? []
+			return loadState('stackiq', 'permissions', window.OC?.currentUser?.permissions ?? [])
 		},
 	},
 
