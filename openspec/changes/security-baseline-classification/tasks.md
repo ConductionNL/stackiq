@@ -52,6 +52,10 @@
 - [x] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts against the demo data; PHPUnit tests/Unit/Settings/BaselineClassificationSeedTest.php checks the seed)
 
+## Round 2 notes
+
+- The Playwright spec `tests/e2e/spec-coverage/baseline-classification.spec.ts` now exists, with the three `@e2e` scenarios (classify a usage, Suggest from GEMMA, the anonymous summary), on its own seeded data. The Playwright Test boxes of tasks 4 and 5 stay open until it has run against a live instance; the docs screenshots also need one.
+
 ## Verification
 
 - `openspec validate security-baseline-classification --type change --strict`
