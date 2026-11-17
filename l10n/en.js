@@ -1972,7 +1972,11 @@ OC.L10N.register(
         "The type could not be changed.": "The type could not be changed.",
         "The type was changed.": "The type was changed.",
         "This entry is an application.": "This entry is an application.",
-        "This entry is system software.": "This entry is system software."
+        "This entry is system software.": "This entry is system software.",
+        "Mark as verified": "Mark as verified",
+        "The claim is marked verified": "The claim is marked verified",
+        "Verified by {name} on {date}": "Verified by {name} on {date}",
+        "Could not mark the claim verified": "Could not mark the claim verified"
     },
     "nplurals=2; plural=(n != 1);"
 )

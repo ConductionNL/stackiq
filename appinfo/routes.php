@@ -41,6 +41,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'contractApproval#config', 'url' => '/api/contracts/approval/config', 'verb' => 'GET'],
         ['name' => 'contractApproval#submit', 'url' => '/api/contracts/{contractUuid}/approval/submit', 'verb' => 'POST'],
         ['name' => 'contractApproval#submitRenewal', 'url' => '/api/contracts/{contractUuid}/approval/renewal', 'verb' => 'POST'],
+        // A reviewer outside the supplier marks a compliance claim verified (REQ-CLR-022).
+        ['name' => 'complianceVerification#verify', 'url' => '/api/compliancy/{id}/verify', 'verb' => 'POST'],
 
         // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],

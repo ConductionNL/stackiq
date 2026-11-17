@@ -18,7 +18,8 @@
 								"standardGemma": "  ",
 								"evidence": "pdf",
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -35,7 +36,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -54,7 +56,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -74,7 +77,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -91,7 +95,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -105,7 +110,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -119,7 +125,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -145,7 +152,8 @@
 										"standardGemma": "  ",
 										"evidence": "pdf",
 										"evidenceReference": null,
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -160,7 +168,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": 5,
 										"evidenceReference": "",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -277,7 +286,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -297,7 +307,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -314,7 +325,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -328,7 +340,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -342,7 +355,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -394,7 +408,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -411,7 +426,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -425,7 +441,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -439,7 +456,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -576,7 +594,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -593,7 +612,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -607,7 +627,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -621,7 +642,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -671,7 +693,8 @@
 								"standardGemma": "  ",
 								"evidence": "pdf",
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -688,7 +711,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -707,7 +731,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -727,7 +752,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -744,7 +770,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -758,7 +785,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -772,7 +800,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -798,7 +827,8 @@
 										"standardGemma": "  ",
 										"evidence": "pdf",
 										"evidenceReference": null,
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -813,7 +843,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": 5,
 										"evidenceReference": "",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -930,7 +961,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -950,7 +982,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -967,7 +1000,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -981,7 +1015,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -995,7 +1030,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -1047,7 +1083,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "  ",
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1064,7 +1101,8 @@
 								"a": 1
 							},
 							"evidenceReference": "",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -1084,7 +1122,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1101,7 +1140,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1122,7 +1162,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1151,7 +1192,8 @@
 										"a": 1
 									},
 									"evidenceReference": "",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -1269,7 +1311,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1286,7 +1329,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1307,7 +1351,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1368,7 +1413,8 @@
 								"a": 1
 							},
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -1384,7 +1430,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1406,7 +1453,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1443,7 +1491,8 @@
 										"a": 1
 									},
 									"evidenceReference": null,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -1554,7 +1603,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1615,7 +1665,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "  ",
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1632,7 +1683,8 @@
 								"a": 1
 							},
 							"evidenceReference": "",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -1652,7 +1704,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1669,7 +1722,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1690,7 +1744,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1719,7 +1774,8 @@
 										"a": 1
 									},
 									"evidenceReference": "",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -1837,7 +1893,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1854,7 +1911,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1875,7 +1933,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -1930,7 +1989,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1947,7 +2007,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -1963,7 +2024,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": {},
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -1980,7 +2042,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -1994,7 +2057,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -2020,7 +2084,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": {},
 										"evidenceReference": null,
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -2081,7 +2146,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": 5,
 									"evidenceReference": " ",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -2185,7 +2251,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -2221,7 +2288,8 @@
 									"standardGemma": "  ",
 									"evidence": "  ",
 									"evidenceReference": " ",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -2367,7 +2435,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -2384,7 +2453,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -2400,7 +2470,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": {},
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -2417,7 +2488,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -2431,7 +2503,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -2457,7 +2530,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": {},
 										"evidenceReference": null,
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -2518,7 +2592,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": 5,
 									"evidenceReference": " ",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -2622,7 +2697,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": "",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -2640,7 +2716,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -2659,7 +2736,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -2676,7 +2754,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -2696,7 +2775,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -2719,7 +2799,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": 0,
 									"evidenceReference": "",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -2753,7 +2834,8 @@
 										"standardGemma": "",
 										"evidence": null,
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -2851,7 +2933,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -2900,7 +2983,8 @@
 								"standardGemma": 7,
 								"evidence": 5,
 								"evidenceReference": "REF-1",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -2920,7 +3004,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3056,7 +3141,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3103,7 +3189,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": "",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -3121,7 +3208,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3140,7 +3228,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3157,7 +3246,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3177,7 +3267,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3200,7 +3291,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": 0,
 									"evidenceReference": "",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -3234,7 +3326,8 @@
 										"standardGemma": "",
 										"evidence": null,
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -3332,7 +3425,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3385,7 +3479,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": "",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -3405,7 +3500,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3426,7 +3522,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3443,7 +3540,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3518,7 +3616,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": "",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -3590,7 +3689,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3611,7 +3711,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3628,7 +3729,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3691,7 +3793,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3706,7 +3809,8 @@
 							"standardGemma": "  ",
 							"evidence": 5,
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -3722,7 +3826,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3744,7 +3849,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3761,7 +3867,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -3798,7 +3905,8 @@
 										"standardGemma": "",
 										"evidence": 0,
 										"evidenceReference": 3,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -3853,7 +3961,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": [],
 										"evidenceReference": {},
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -3923,7 +4032,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -3940,7 +4050,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4001,7 +4112,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": "",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -4021,7 +4133,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4042,7 +4155,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4059,7 +4173,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4134,7 +4249,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": "",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -4206,7 +4322,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4227,7 +4344,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4244,7 +4362,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4295,7 +4414,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -4313,7 +4433,8 @@
 								"standardGemma": 7,
 								"evidence": "  ",
 								"evidenceReference": {},
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4330,7 +4451,8 @@
 								"standardGemma": 7,
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4347,7 +4469,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4366,7 +4489,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4385,7 +4509,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4410,7 +4535,8 @@
 										"standardGemma": 7,
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -4425,7 +4551,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": {},
 										"evidenceReference": " ",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -4480,7 +4607,8 @@
 										"standardGemma": 7,
 										"evidence": "  ",
 										"evidenceReference": {},
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -4555,7 +4683,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4574,7 +4703,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4633,7 +4763,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -4649,7 +4780,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4669,7 +4801,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4700,7 +4833,8 @@
 									"standardGemma": "  ",
 									"evidence": "  ",
 									"evidenceReference": 3,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -4813,7 +4947,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4872,7 +5007,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -4890,7 +5026,8 @@
 								"standardGemma": 7,
 								"evidence": "  ",
 								"evidenceReference": {},
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4907,7 +5044,8 @@
 								"standardGemma": 7,
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -4924,7 +5062,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4943,7 +5082,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4962,7 +5102,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -4987,7 +5128,8 @@
 										"standardGemma": 7,
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -5002,7 +5144,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": {},
 										"evidenceReference": " ",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -5057,7 +5200,8 @@
 										"standardGemma": 7,
 										"evidence": "  ",
 										"evidenceReference": {},
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -5132,7 +5276,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5151,7 +5296,8 @@
 								"standardGemma": 7,
 								"evidence": "",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5206,7 +5352,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -5221,7 +5368,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5237,7 +5385,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -5251,7 +5400,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5273,7 +5423,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5324,7 +5475,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": null,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -5358,7 +5510,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": 0,
 										"evidenceReference": null,
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -5427,7 +5580,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -5441,7 +5595,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5463,7 +5618,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5518,7 +5674,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -5534,7 +5691,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "  ",
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -5549,7 +5707,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5572,7 +5731,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5607,7 +5767,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": [],
 									"evidenceReference": "",
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -5637,7 +5798,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "  ",
 										"evidenceReference": "",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -5650,7 +5812,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": null,
 									"evidenceReference": null,
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -5739,7 +5902,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5798,7 +5962,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -5813,7 +5978,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5829,7 +5995,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -5843,7 +6010,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -5865,7 +6033,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -5916,7 +6085,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": null,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -5950,7 +6120,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": 0,
 										"evidenceReference": null,
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -6019,7 +6190,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6033,7 +6205,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6055,7 +6228,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -6110,7 +6284,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -6131,7 +6306,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -6150,7 +6326,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": [],
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6166,7 +6343,8 @@
 							"standardGemma": "  ",
 							"evidence": [],
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6182,7 +6360,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": "REF-1",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6196,7 +6375,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6214,7 +6394,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -6240,7 +6421,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "",
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -6275,7 +6457,8 @@
 									"standardGemma": "  ",
 									"evidence": [],
 									"evidenceReference": " ",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -6309,7 +6492,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": [],
 									"evidenceReference": 3,
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -6381,7 +6565,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": "REF-1",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6395,7 +6580,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6413,7 +6599,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -6467,7 +6654,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": "REF-1",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6481,7 +6669,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6500,7 +6689,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -6534,7 +6724,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": "  ",
 									"evidenceReference": "REF-1",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -6562,7 +6753,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": null,
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -6651,7 +6843,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -6709,7 +6902,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -6730,7 +6924,8 @@
 								"standardGemma": "",
 								"evidence": null,
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -6749,7 +6944,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": [],
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6765,7 +6961,8 @@
 							"standardGemma": "  ",
 							"evidence": [],
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6781,7 +6978,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": "REF-1",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6795,7 +6993,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -6813,7 +7012,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -6839,7 +7039,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "",
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -6874,7 +7075,8 @@
 									"standardGemma": "  ",
 									"evidence": [],
 									"evidenceReference": " ",
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -6908,7 +7110,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": [],
 									"evidenceReference": 3,
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -6980,7 +7183,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": "REF-1",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -6994,7 +7198,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": null,
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -7012,7 +7217,8 @@
 							"standardGemma": "  ",
 							"evidence": "pdf",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -7064,7 +7270,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -7079,7 +7286,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7095,7 +7303,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7117,7 +7326,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7131,7 +7341,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7149,7 +7360,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7174,7 +7386,8 @@
 										"standardGemma": "",
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -7187,7 +7400,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -7306,7 +7520,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7320,7 +7535,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7338,7 +7554,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7393,7 +7610,8 @@
 							"standardGemma": "  ",
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -7414,7 +7632,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7428,7 +7647,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7446,7 +7666,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7505,7 +7726,8 @@
 									"standardGemma": "  ",
 									"evidence": 0,
 									"evidenceReference": null,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -7592,7 +7814,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7606,7 +7829,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7624,7 +7848,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7681,7 +7906,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -7696,7 +7922,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7712,7 +7939,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7734,7 +7962,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7748,7 +7977,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7766,7 +7996,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -7791,7 +8022,8 @@
 										"standardGemma": "",
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -7804,7 +8036,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -7923,7 +8156,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7937,7 +8171,8 @@
 							"standardGemma": "",
 							"evidence": 5,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -7955,7 +8190,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -8006,7 +8242,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8020,7 +8257,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -8041,7 +8279,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8056,7 +8295,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8072,7 +8312,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8094,7 +8335,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -8106,7 +8348,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": 0,
 									"evidenceReference": "REF-1",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -8225,7 +8468,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8240,7 +8484,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8256,7 +8501,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8308,7 +8554,8 @@
 								"standardGemma": 7,
 								"evidence": 0,
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -8330,7 +8577,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8345,7 +8593,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8361,7 +8610,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8393,7 +8643,8 @@
 										"standardGemma": 7,
 										"evidence": 0,
 										"evidenceReference": "REF-1",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -8509,7 +8760,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8524,7 +8776,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8540,7 +8793,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8590,7 +8844,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8604,7 +8859,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -8625,7 +8881,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8640,7 +8897,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8656,7 +8914,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8678,7 +8937,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -8690,7 +8950,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": 0,
 									"evidenceReference": "REF-1",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -8809,7 +9070,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8824,7 +9086,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 5,
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8840,7 +9103,8 @@
 							"standardGemma": "",
 							"evidence": "",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8894,7 +9158,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": 3,
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8911,7 +9176,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -8926,7 +9192,8 @@
 							"standardGemma": 7,
 							"evidence": true,
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -8947,7 +9214,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -8961,7 +9229,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -8985,7 +9254,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "pdf",
 										"evidenceReference": "",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -9109,7 +9379,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9123,7 +9394,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -9191,7 +9463,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9205,7 +9478,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -9342,7 +9616,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9356,7 +9631,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -9422,7 +9698,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": 3,
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -9439,7 +9716,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -9454,7 +9732,8 @@
 							"standardGemma": 7,
 							"evidence": true,
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -9475,7 +9754,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9489,7 +9769,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -9513,7 +9794,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "pdf",
 										"evidenceReference": "",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -9637,7 +9919,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9651,7 +9934,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -9707,7 +9991,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -9726,7 +10011,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -9801,7 +10087,8 @@
 										"a": 1
 									},
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -9876,7 +10163,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -9935,7 +10223,8 @@
 							"standardGemma": "",
 							"evidence": 0,
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -9949,7 +10238,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": {},
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -9968,7 +10258,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -9999,7 +10290,8 @@
 									"standardGemma": "",
 									"evidence": 0,
 									"evidenceReference": "",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -10011,7 +10303,8 @@
 									"standardGemma": "  ",
 									"evidence": "  ",
 									"evidenceReference": {},
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -10120,7 +10413,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10185,7 +10479,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -10204,7 +10499,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10279,7 +10575,8 @@
 										"a": 1
 									},
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -10354,7 +10651,8 @@
 								"standardGemma": "  ",
 								"evidence": 5,
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10407,7 +10705,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10421,7 +10720,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10437,7 +10737,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10455,7 +10756,8 @@
 								"standardGemma": 7,
 								"evidence": "pdf",
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10475,7 +10777,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10502,7 +10805,8 @@
 										"standardGemma": 7,
 										"evidence": "pdf",
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -10537,7 +10841,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "pdf",
 									"evidenceReference": "",
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -10549,7 +10854,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": null,
 									"evidenceReference": null,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -10642,7 +10948,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10695,7 +11002,8 @@
 								"standardGemma": "  ",
 								"evidence": 0,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -10712,7 +11020,8 @@
 								"standardGemma": 7,
 								"evidence": "pdf",
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10732,7 +11041,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10769,7 +11079,8 @@
 										"standardGemma": "  ",
 										"evidence": 0,
 										"evidenceReference": 3,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -10804,7 +11115,8 @@
 										"standardGemma": 7,
 										"evidence": "pdf",
 										"evidenceReference": "",
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -10890,7 +11202,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -10943,7 +11256,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10957,7 +11271,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": null,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10973,7 +11288,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -10991,7 +11307,8 @@
 								"standardGemma": 7,
 								"evidence": "pdf",
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -11011,7 +11328,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -11038,7 +11356,8 @@
 										"standardGemma": 7,
 										"evidence": "pdf",
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11073,7 +11392,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "pdf",
 									"evidenceReference": "",
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -11085,7 +11405,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": null,
 									"evidenceReference": null,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -11178,7 +11499,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -11229,7 +11551,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -11245,7 +11568,8 @@
 								"standardGemma": "",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -11264,7 +11588,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -11283,7 +11608,8 @@
 								"a": 1
 							},
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -11313,7 +11639,8 @@
 										"standardGemma": "",
 										"evidence": true,
 										"evidenceReference": 3,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11368,7 +11695,8 @@
 										"a": 1
 									},
 									"evidenceReference": "",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -11384,7 +11712,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": {},
 										"evidenceReference": {},
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11497,7 +11826,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": true,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -11512,7 +11842,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -11526,7 +11857,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -11558,7 +11890,8 @@
 									"standardGemma": 7,
 									"evidence": 0,
 									"evidenceReference": 3,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -11570,7 +11903,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": 0,
 									"evidenceReference": null,
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -11624,7 +11958,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": true,
 										"evidenceReference": " ",
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11729,7 +12064,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -11745,7 +12081,8 @@
 								"standardGemma": "",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -11764,7 +12101,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -11783,7 +12121,8 @@
 								"a": 1
 							},
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -11813,7 +12152,8 @@
 										"standardGemma": "",
 										"evidence": true,
 										"evidenceReference": 3,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11868,7 +12208,8 @@
 										"a": 1
 									},
 									"evidenceReference": "",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -11884,7 +12225,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": {},
 										"evidenceReference": {},
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -11991,7 +12333,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -12007,7 +12350,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": {},
 							"evidenceReference": " ",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -12023,7 +12367,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12046,7 +12391,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12076,7 +12422,8 @@
 										"standardGemma": "",
 										"evidence": 0,
 										"evidenceReference": "",
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -12197,7 +12544,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12255,7 +12603,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -12272,7 +12621,8 @@
 								"standardGemma": "",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12307,7 +12657,8 @@
 										"standardGemma": "",
 										"evidence": true,
 										"evidenceReference": "REF-1",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -12322,7 +12673,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": 5,
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -12471,7 +12823,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -12487,7 +12840,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": {},
 							"evidenceReference": " ",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -12503,7 +12857,8 @@
 								"standardGemma": "",
 								"evidence": 0,
 								"evidenceReference": "",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12526,7 +12881,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12556,7 +12912,8 @@
 										"standardGemma": "",
 										"evidence": 0,
 										"evidenceReference": "",
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -12677,7 +13034,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12731,7 +13089,8 @@
 								"standardGemma": "  ",
 								"evidence": "pdf",
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -12746,7 +13105,8 @@
 							"standardGemma": "  ",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -12767,7 +13127,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12790,7 +13151,8 @@
 									"standardGemma": "  ",
 									"evidence": {},
 									"evidenceReference": "",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -12824,7 +13186,8 @@
 										"standardGemma": "  ",
 										"evidence": "pdf",
 										"evidenceReference": " ",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -12924,7 +13287,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -12987,7 +13351,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -13003,7 +13368,8 @@
 								"standardGemma": "",
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13018,7 +13384,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -13039,7 +13406,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13072,7 +13440,8 @@
 										"standardGemma": "",
 										"evidence": {},
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -13105,7 +13474,8 @@
 									"standardGemma": "  ",
 									"evidence": "  ",
 									"evidenceReference": " ",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -13196,7 +13566,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13261,7 +13632,8 @@
 								"standardGemma": "  ",
 								"evidence": "pdf",
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13276,7 +13648,8 @@
 							"standardGemma": "  ",
 							"evidence": {},
 							"evidenceReference": "",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -13297,7 +13670,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13320,7 +13694,8 @@
 									"standardGemma": "  ",
 									"evidence": {},
 									"evidenceReference": "",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -13354,7 +13729,8 @@
 										"standardGemma": "  ",
 										"evidence": "pdf",
 										"evidenceReference": " ",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -13454,7 +13830,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13509,7 +13886,8 @@
 								"standardGemma": "",
 								"evidence": "  ",
 								"evidenceReference": "REF-1",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13528,7 +13906,8 @@
 								"standardGemma": 7,
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13545,7 +13924,8 @@
 								"standardGemma": "",
 								"evidence": "",
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13564,7 +13944,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13585,7 +13966,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13602,7 +13984,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -13630,7 +14013,8 @@
 										"standardGemma": "",
 										"evidence": "",
 										"evidenceReference": "",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -13685,7 +14069,8 @@
 										"standardGemma": "",
 										"evidence": "  ",
 										"evidenceReference": "REF-1",
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -13702,7 +14087,8 @@
 										"standardGemma": 7,
 										"evidence": 5,
 										"evidenceReference": 3,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -13773,7 +14159,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -13794,7 +14181,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13811,7 +14199,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -13863,7 +14252,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13880,7 +14270,8 @@
 								"a": 1
 							},
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -13901,7 +14292,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -13918,7 +14310,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -13954,7 +14347,8 @@
 										"a": 1
 									},
 									"evidenceReference": " ",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -14065,7 +14459,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -14082,7 +14477,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14136,7 +14532,8 @@
 								"standardGemma": "",
 								"evidence": "  ",
 								"evidenceReference": "REF-1",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -14155,7 +14552,8 @@
 								"standardGemma": 7,
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -14172,7 +14570,8 @@
 								"standardGemma": "",
 								"evidence": "",
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -14191,7 +14590,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -14212,7 +14612,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -14229,7 +14630,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14257,7 +14659,8 @@
 										"standardGemma": "",
 										"evidence": "",
 										"evidenceReference": "",
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -14312,7 +14715,8 @@
 										"standardGemma": "",
 										"evidence": "  ",
 										"evidenceReference": "REF-1",
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -14329,7 +14733,8 @@
 										"standardGemma": 7,
 										"evidence": 5,
 										"evidenceReference": 3,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -14400,7 +14805,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -14421,7 +14827,8 @@
 								"standardGemma": "",
 								"evidence": 5,
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -14438,7 +14845,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14490,7 +14898,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -14506,7 +14915,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -14522,7 +14932,8 @@
 								"a": 1
 							},
 							"evidenceReference": "REF-1",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -14538,7 +14949,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14562,7 +14974,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "",
 									"evidenceReference": 3,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -14680,7 +15093,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -14696,7 +15110,8 @@
 								"a": 1
 							},
 							"evidenceReference": "REF-1",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -14712,7 +15127,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14772,7 +15188,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -14786,7 +15203,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -14802,7 +15220,8 @@
 								"a": 1
 							},
 							"evidenceReference": "REF-1",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -14818,7 +15237,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -14836,7 +15256,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -14868,7 +15289,8 @@
 										"a": 1
 									},
 									"evidenceReference": "REF-1",
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -14882,7 +15304,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -14939,7 +15362,8 @@
 									"standardGemma": 7,
 									"evidence": "  ",
 									"evidenceReference": {},
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -15000,7 +15424,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -15060,7 +15485,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -15076,7 +15502,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15092,7 +15519,8 @@
 								"a": 1
 							},
 							"evidenceReference": "REF-1",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -15108,7 +15536,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -15132,7 +15561,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "",
 									"evidenceReference": 3,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -15250,7 +15680,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15266,7 +15697,8 @@
 								"a": 1
 							},
 							"evidenceReference": "REF-1",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -15282,7 +15714,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -15334,7 +15767,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15348,7 +15782,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15368,7 +15803,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -15387,7 +15823,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -15417,7 +15854,8 @@
 											"a": 1
 										},
 										"evidenceReference": "",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -15474,7 +15912,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": null,
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -15548,7 +15987,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -15610,7 +16050,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -15629,7 +16070,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -15644,7 +16086,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -15706,7 +16149,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": 0,
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -15835,7 +16279,8 @@
 							"standardGemma": "  ",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15849,7 +16294,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -15869,7 +16315,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -15888,7 +16335,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -15918,7 +16366,8 @@
 											"a": 1
 										},
 										"evidenceReference": "",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -15975,7 +16424,8 @@
 									"standardGemma": "  ",
 									"evidence": true,
 									"evidenceReference": null,
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -16049,7 +16499,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16103,7 +16554,8 @@
 								"standardGemma": "",
 								"evidence": [],
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16122,7 +16574,8 @@
 								"standardGemma": "  ",
 								"evidence": true,
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16139,7 +16592,8 @@
 								"standardGemma": 7,
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16158,7 +16612,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16175,7 +16630,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16194,7 +16650,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -16218,7 +16675,8 @@
 										"standardGemma": 7,
 										"evidence": 0,
 										"evidenceReference": null,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -16255,7 +16713,8 @@
 										"standardGemma": "  ",
 										"evidence": true,
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -16352,7 +16811,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16369,7 +16829,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16388,7 +16849,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -16448,7 +16910,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16468,7 +16931,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -16504,7 +16968,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": 0,
 										"evidenceReference": {},
-										"url": 4
+										"url": 4,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -16614,7 +17079,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -16674,7 +17140,8 @@
 								"standardGemma": "",
 								"evidence": [],
 								"evidenceReference": "",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16693,7 +17160,8 @@
 								"standardGemma": "  ",
 								"evidence": true,
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16710,7 +17178,8 @@
 								"standardGemma": 7,
 								"evidence": 0,
 								"evidenceReference": null,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16729,7 +17198,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16746,7 +17216,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16765,7 +17236,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -16789,7 +17261,8 @@
 										"standardGemma": 7,
 										"evidence": 0,
 										"evidenceReference": null,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -16826,7 +17299,8 @@
 										"standardGemma": "  ",
 										"evidence": true,
 										"evidenceReference": " ",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -16923,7 +17397,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 0,
 								"evidenceReference": {},
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -16940,7 +17415,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": [],
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -16959,7 +17435,8 @@
 							"standardGemma": "",
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17013,7 +17490,8 @@
 									"a": 1
 								},
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -17035,7 +17513,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17058,7 +17537,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17075,7 +17555,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17105,7 +17586,8 @@
 											"a": 1
 										},
 										"evidenceReference": "REF-1",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -17225,7 +17707,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17248,7 +17731,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17265,7 +17749,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17317,7 +17802,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17340,7 +17826,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17357,7 +17844,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17494,7 +17982,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17517,7 +18006,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17534,7 +18024,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17584,7 +18075,8 @@
 									"a": 1
 								},
 								"evidenceReference": "REF-1",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -17606,7 +18098,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17629,7 +18122,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17646,7 +18140,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17676,7 +18171,8 @@
 											"a": 1
 										},
 										"evidenceReference": "REF-1",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -17796,7 +18292,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17819,7 +18316,8 @@
 									"a": 1
 								},
 								"evidenceReference": " ",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17836,7 +18334,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -17890,7 +18389,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -17905,7 +18405,8 @@
 							"standardGemma": "  ",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -17919,7 +18420,8 @@
 							"standardGemma": "",
 							"evidence": [],
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -17937,7 +18439,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -17956,7 +18459,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -17973,7 +18477,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -17989,7 +18494,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18011,7 +18517,8 @@
 									"standardGemma": "  ",
 									"evidence": [],
 									"evidenceReference": {},
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -18047,7 +18554,8 @@
 										"standardGemma": "  ",
 										"evidence": null,
 										"evidenceReference": {},
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -18144,7 +18652,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18161,7 +18670,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18177,7 +18687,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18233,7 +18744,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -18248,7 +18760,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": [],
 							"evidenceReference": "",
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -18265,7 +18778,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18281,7 +18795,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18311,7 +18826,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": [],
 									"evidenceReference": "",
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -18345,7 +18861,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": null,
 										"evidenceReference": null,
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -18433,7 +18950,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18449,7 +18967,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18507,7 +19026,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": " ",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -18522,7 +19042,8 @@
 							"standardGemma": "  ",
 							"evidence": [],
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18536,7 +19057,8 @@
 							"standardGemma": "",
 							"evidence": [],
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18554,7 +19076,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18573,7 +19096,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18590,7 +19114,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18606,7 +19131,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18628,7 +19154,8 @@
 									"standardGemma": "  ",
 									"evidence": [],
 									"evidenceReference": {},
-									"url": "https://x"
+									"url": "https://x",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -18664,7 +19191,8 @@
 										"standardGemma": "  ",
 										"evidence": null,
 										"evidenceReference": {},
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -18761,7 +19289,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18778,7 +19307,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": true,
 							"evidenceReference": 3,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18794,7 +19324,8 @@
 							"standardGemma": "",
 							"evidence": null,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18850,7 +19381,8 @@
 									"a": 1
 								},
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18869,7 +19401,8 @@
 								"a": 1
 							},
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -18887,7 +19420,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -18904,7 +19438,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -18982,7 +19517,8 @@
 											"a": 1
 										},
 										"evidenceReference": "REF-1",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -19053,7 +19589,8 @@
 								"a": 1
 							},
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -19071,7 +19608,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19088,7 +19626,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -19144,7 +19683,8 @@
 								"a": 1
 							},
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -19161,7 +19701,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -19193,7 +19734,8 @@
 										"a": 1
 									},
 									"evidenceReference": {},
-									"url": null
+									"url": null,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -19304,7 +19846,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -19364,7 +19907,8 @@
 									"a": 1
 								},
 								"evidenceReference": "REF-1",
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19383,7 +19927,8 @@
 								"a": 1
 							},
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -19401,7 +19946,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19418,7 +19964,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -19496,7 +20043,8 @@
 											"a": 1
 										},
 										"evidenceReference": "REF-1",
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -19567,7 +20115,8 @@
 								"a": 1
 							},
 							"evidenceReference": {},
-							"url": null
+							"url": null,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -19585,7 +20134,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19602,7 +20152,8 @@
 							"standardGemma": 7,
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -19656,7 +20207,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -19675,7 +20227,8 @@
 									"a": 1
 								},
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -19690,7 +20243,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "",
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -19706,7 +20260,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -19725,7 +20280,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19750,7 +20306,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": null,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -19782,7 +20339,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "",
 									"evidenceReference": "REF-1",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -19879,7 +20437,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19936,7 +20495,8 @@
 								"standardGemma": 7,
 								"evidence": {},
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -19956,7 +20516,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -20092,7 +20653,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -20151,7 +20713,8 @@
 									"a": 1
 								},
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -20170,7 +20733,8 @@
 									"a": 1
 								},
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -20185,7 +20749,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": "",
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -20201,7 +20766,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20220,7 +20786,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -20245,7 +20812,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": null,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -20277,7 +20845,8 @@
 									"standardGemma": "(undefined)",
 									"evidence": "",
 									"evidenceReference": "REF-1",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"s2": {
@@ -20374,7 +20943,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": null,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -20427,7 +20997,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20443,7 +21014,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20459,7 +21031,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -20591,7 +21164,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20607,7 +21181,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -20665,7 +21240,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -20681,7 +21257,8 @@
 							"standardGemma": "  ",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -20697,7 +21274,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": "pdf",
 								"evidenceReference": " ",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -20715,7 +21293,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -20745,7 +21324,8 @@
 									"standardGemma": "GEMMA",
 									"evidence": "",
 									"evidenceReference": 3,
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -20779,7 +21359,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": "pdf",
 										"evidenceReference": " ",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -20812,7 +21393,8 @@
 									"standardGemma": "  ",
 									"evidence": "  ",
 									"evidenceReference": null,
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -20877,7 +21459,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -20937,7 +21520,8 @@
 							"standardGemma": "(undefined)",
 							"evidence": [],
 							"evidenceReference": "REF-1",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20953,7 +21537,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -20969,7 +21554,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -21101,7 +21687,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "",
 							"evidenceReference": 3,
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21117,7 +21704,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": null,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -21167,7 +21755,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21183,7 +21772,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21199,7 +21789,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -21220,7 +21811,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -21237,7 +21829,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21288,7 +21881,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": {},
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -21320,7 +21914,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -21392,7 +21987,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -21409,7 +22005,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21464,7 +22061,8 @@
 							"standardGemma": "",
 							"evidence": "  ",
 							"evidenceReference": {},
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21480,7 +22078,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21498,7 +22097,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -21515,7 +22115,8 @@
 							"standardGemma": "",
 							"evidence": true,
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21599,7 +22200,8 @@
 									"standardGemma": "",
 									"evidence": true,
 									"evidenceReference": " ",
-									"url": ""
+									"url": "",
+									"verifiedBy": "Rita Reviewer"
 								}
 							}
 						}
@@ -21699,7 +22301,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": {},
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21715,7 +22318,8 @@
 							"standardGemma": 7,
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -21731,7 +22335,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": {},
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -21752,7 +22357,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -21769,7 +22375,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21820,7 +22427,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": {},
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -21852,7 +22460,8 @@
 									"standardGemma": 7,
 									"evidence": "pdf",
 									"evidenceReference": " ",
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -21924,7 +22533,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": "",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -21941,7 +22551,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "  ",
 							"evidenceReference": null,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -21992,7 +22603,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22010,7 +22622,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -22027,7 +22640,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -22045,7 +22659,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22061,7 +22676,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22078,7 +22694,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22210,7 +22827,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -22228,7 +22846,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22244,7 +22863,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22261,7 +22881,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22327,7 +22948,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22343,7 +22965,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22360,7 +22983,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22495,7 +23119,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22511,7 +23136,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22528,7 +23154,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22590,7 +23217,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": " ",
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22608,7 +23236,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -22625,7 +23254,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -22643,7 +23273,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22659,7 +23290,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22676,7 +23308,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22808,7 +23441,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": "pdf",
 							"evidenceReference": " ",
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -22826,7 +23460,8 @@
 							"standardGemma": "GEMMA",
 							"evidence": 0,
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22842,7 +23477,8 @@
 								"standardGemma": "  ",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22859,7 +23495,8 @@
 							"standardGemma": 7,
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": "https://x"
+							"url": "https://x",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -22909,7 +23546,8 @@
 							"standardGemma": "",
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -22925,7 +23563,8 @@
 								"standardGemma": "",
 								"evidence": "",
 								"evidenceReference": "REF-1",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22944,7 +23583,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "",
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -22963,7 +23603,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": " ",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -22982,7 +23623,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23003,7 +23645,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23054,7 +23697,8 @@
 									"standardGemma": "",
 									"evidence": "  ",
 									"evidenceReference": 3,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -23088,7 +23732,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": "",
 										"evidenceReference": "",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -23159,7 +23804,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23180,7 +23826,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23237,7 +23884,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23259,7 +23907,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23316,7 +23965,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": true,
 										"evidenceReference": 3,
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -23408,7 +24058,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23463,7 +24114,8 @@
 							"standardGemma": "",
 							"evidence": "  ",
 							"evidenceReference": 3,
-							"url": 4
+							"url": 4,
+							"verifiedBy": "Rita Reviewer"
 						}
 					},
 					{
@@ -23479,7 +24131,8 @@
 								"standardGemma": "",
 								"evidence": "",
 								"evidenceReference": "REF-1",
-								"url": 4
+								"url": 4,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -23498,7 +24151,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "",
 								"evidenceReference": "",
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -23517,7 +24171,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "  ",
 								"evidenceReference": " ",
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23536,7 +24191,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23557,7 +24213,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23608,7 +24265,8 @@
 									"standardGemma": "",
 									"evidence": "  ",
 									"evidenceReference": 3,
-									"url": 4
+									"url": 4,
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b1": {
@@ -23642,7 +24300,8 @@
 										"standardGemma": "GEMMA",
 										"evidence": "",
 										"evidenceReference": "",
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -23713,7 +24372,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": true,
 								"evidenceReference": 3,
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23734,7 +24394,8 @@
 									"a": 1
 								},
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23788,7 +24449,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23809,7 +24471,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23944,7 +24607,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -23965,7 +24629,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24026,7 +24691,8 @@
 								"standardGemma": "  ",
 								"evidence": {},
 								"evidenceReference": "REF-1",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -24045,7 +24711,8 @@
 								"standardGemma": "(undefined)",
 								"evidence": null,
 								"evidenceReference": 3,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -24060,7 +24727,8 @@
 							"standardGemma": 7,
 							"evidence": 0,
 							"evidenceReference": "",
-							"url": " "
+							"url": " ",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				],
@@ -24081,7 +24749,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24112,7 +24781,8 @@
 									"standardGemma": 7,
 									"evidence": 0,
 									"evidenceReference": "",
-									"url": " "
+									"url": " ",
+									"verifiedBy": "Rita Reviewer"
 								}
 							},
 							"b2": {
@@ -24146,7 +24816,8 @@
 										"standardGemma": "  ",
 										"evidence": {},
 										"evidenceReference": "REF-1",
-										"url": "https://x"
+										"url": "https://x",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -24181,7 +24852,8 @@
 										"standardGemma": "(undefined)",
 										"evidence": null,
 										"evidenceReference": 3,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -24251,7 +24923,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24313,7 +24986,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24334,7 +25008,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24469,7 +25144,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": null,
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24490,7 +25166,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": 5,
 								"evidenceReference": " ",
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24543,7 +25220,8 @@
 								"standardGemma": 7,
 								"evidence": null,
 								"evidenceReference": null,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -24560,7 +25238,8 @@
 								"standardGemma": 7,
 								"evidence": true,
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -24579,7 +25258,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24600,7 +25280,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24619,7 +25300,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -24647,7 +25329,8 @@
 										"standardGemma": 7,
 										"evidence": null,
 										"evidenceReference": null,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -24682,7 +25365,8 @@
 										"standardGemma": 7,
 										"evidence": true,
 										"evidenceReference": null,
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -24777,7 +25461,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24796,7 +25481,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -24850,7 +25536,8 @@
 								"standardGemma": 7,
 								"evidence": "pdf",
 								"evidenceReference": null,
-								"url": null
+								"url": null,
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -24870,7 +25557,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -24954,7 +25642,8 @@
 										"standardGemma": 7,
 										"evidence": "pdf",
 										"evidenceReference": null,
-										"url": null
+										"url": null,
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							}
@@ -25018,7 +25707,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -25070,7 +25760,8 @@
 								"standardGemma": 7,
 								"evidence": null,
 								"evidenceReference": null,
-								"url": " "
+								"url": " ",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -25087,7 +25778,8 @@
 								"standardGemma": 7,
 								"evidence": true,
 								"evidenceReference": null,
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					},
@@ -25106,7 +25798,8 @@
 									"a": 1
 								},
 								"evidenceReference": {},
-								"url": ""
+								"url": "",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -25127,7 +25820,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -25146,7 +25840,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]
@@ -25174,7 +25869,8 @@
 										"standardGemma": 7,
 										"evidence": null,
 										"evidenceReference": null,
-										"url": " "
+										"url": " ",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -25209,7 +25905,8 @@
 										"standardGemma": 7,
 										"evidence": true,
 										"evidenceReference": null,
-										"url": ""
+										"url": "",
+										"verifiedBy": "Rita Reviewer"
 									}
 								}
 							},
@@ -25304,7 +26001,8 @@
 								"standardGemma": "GEMMA",
 								"evidence": "pdf",
 								"evidenceReference": {},
-								"url": "https://x"
+								"url": "https://x",
+								"verifiedBy": "Rita Reviewer"
 							}
 						}
 					}
@@ -25323,7 +26021,8 @@
 							"standardGemma": 7,
 							"evidence": "",
 							"evidenceReference": {},
-							"url": ""
+							"url": "",
+							"verifiedBy": "Rita Reviewer"
 						}
 					}
 				]

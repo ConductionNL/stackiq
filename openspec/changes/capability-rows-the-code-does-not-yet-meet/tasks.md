@@ -101,8 +101,8 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy verifiedBy, verifiedAt), `src/utils/complianceMatrix.js` (verified needs verifiedBy, not evidence alone), `src/views/ComplianceMatrixView.vue`
 - **acceptance_criteria**:
   - GIVEN a claim with evidence and no reviewer WHEN the matrix renders THEN the cell reads claimed
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+- [x] Implement (`register.d/compliance-claim-verification.json`: compliancy `verifiedBy`, `verifiedAt`, `verifiedByOrganisation`, hidden on the form, version 0.0.13; `POST /api/compliancy/{id}/verify` (`ComplianceVerificationController`, `ComplianceVerificationService`): a user in admin, software-catalog-admins or functioneel-beheerder whose active organisation is not the module's provider marks an evidenced claim verified, every refusal before the write, an unknown supplier refuses; `ComplianceVerificationGuard` refuses those fields on every other create and update and clears them when the evidence changes; `complianceMatrix.js` reads verified only with evidence and `verifiedBy`; the matrix cell shows "Verified by <name> on <date>" and offers Mark as verified on a claimed cell with evidence)
+- [x] Test (PHPUnit `ComplianceVerificationTest`, `ComplianceVerificationServiceTest`, `ComplianceVerificationGuardTest`, `ComplianceVerificationControllerTest`; vitest `complianceMatrix.spec.js`; Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`, written, needs a live run)
 
 ### Task 16: List the organisations waiting in draft on the dashboard widget
 - **spec_ref**: openspec/specs/fe-organizations/spec.md
