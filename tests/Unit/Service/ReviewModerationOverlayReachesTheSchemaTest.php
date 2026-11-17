@@ -196,4 +196,53 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 
 	}//end testTheBaseRegisterIsUngatedWithoutTheFragment()
 
+	/**
+	 * A pending review is readable only by its author and the catalogue admins
+	 * (REQ-CLR-008). The author reaches it through OpenRegister's owner admit,
+	 * so every read rule but the admins' must match approved reviews only.
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md#requirement-a-pending-review-is-readable-only-by-its-author-and-the-moderators-req-clr-008
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheAdminsReadAReviewThatIsNotApproved(): void {
+		$read = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
+
+		$this->assertContains('software-catalog-admins', $read, 'the moderators must read every review');
+
+		$ungated = [];
+		foreach ($read as $rule) {
+			if ($rule === 'software-catalog-admins') {
+				continue;
+			}
+
+			if (is_array($rule) === false || ($rule['match']['status'] ?? null) !== 'approved') {
+				$ungated[] = $rule;
+			}
+		}
+
+		$this->assertSame([], $ungated, 'a group outside the admins would read pending and rejected reviews');
+
+		$groups = array_map(static fn ($rule): string => is_array($rule) ? (string)$rule['group'] : (string)$rule, $read);
+		$this->assertContains('software-catalog-users', $groups, 'catalogue users still read approved reviews');
+		$this->assertContains('public', $groups, 'anonymous readers still read approved reviews');
+
+	}//end testOnlyTheAdminsReadAReviewThatIsNotApproved()
+
+	/**
+	 * The review form does not offer the status, so its author cannot approve
+	 * their own review (REQ-CLR-008).
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md#requirement-a-pending-review-is-readable-only-by-its-author-and-the-moderators-req-clr-008
+	 *
+	 * @return void
+	 */
+	public function testTheReviewFormDoesNotOfferTheStatus(): void {
+		$status = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['properties']['status'];
+
+		$this->assertTrue(($status['hideOnForm'] ?? false), 'the author must not set the status on the form');
+		$this->assertSame('pending', $status['default']);
+
+	}//end testTheReviewFormDoesNotOfferTheStatus()
+
 }//end class

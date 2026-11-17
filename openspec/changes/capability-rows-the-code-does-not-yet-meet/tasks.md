@@ -49,8 +49,8 @@
 ### Task 7: Keep pending reviews hidden on the Reviews index, and take status off the form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md
 - **files**: `lib/Settings/register.d/catalog-ratings.json`, `src/manifest.json` (Reviews index)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/review-moderation.spec.ts`)
+- [x] Implement (`catalog-ratings.json`: every read rule but `software-catalog-admins` matches `status: approved`, so a pending or rejected review reaches only its author, through OpenRegister's owner admit, and the admins; `status` is `hideOnForm`, so the index's form no longer offers it and a new review keeps the default `pending`; the Reviews index reads through the same rules, no manifest change needed)
+- [x] Test (PHPUnit `tests/Unit/Service/ReviewModerationOverlayReachesTheSchemaTest.php`: the read rules and the hidden status; Playwright `tests/e2e/workflows/review-moderation.spec.ts`, written, needs a live run)
 
 ### Task 8: Make an approved organisation active
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md
