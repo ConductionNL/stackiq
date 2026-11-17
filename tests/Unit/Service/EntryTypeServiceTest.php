@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\EntryType\EntryReferences;
 use OCA\Stackiq\Service\EntryType\EntryTypeRefusal;
 use OCA\Stackiq\Service\EntryTypeService;
@@ -66,7 +68,8 @@ class EntryTypeFakeObjects {
 	/** @var list<array<string, mixed>> */
 	public array $searches = [];
 
-	public function find(int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+	public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+		$schema = $options?->schema;
 		if (isset($this->stored[(int)$schema][(string)$id]) === false) {
 			throw new RuntimeException('Object not found');
 		}
@@ -74,8 +77,11 @@ class EntryTypeFakeObjects {
 		return new EntryTypeFakeEntity($this->stored[(int)$schema][(string)$id]);
 	}//end find()
 
-	public function saveObject(array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, bool $silent = false, bool $_validation = true): array {
-		$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid, 'rbac' => $_rbac, 'validation' => $_validation];
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
+		$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid, 'rbac' => $_rbac, 'validation' => $options->policy->validation];
 		$this->stored[(int)$schema][(string)$uuid] = $object;
 		return $object;
 	}//end saveObject()

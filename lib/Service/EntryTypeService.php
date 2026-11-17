@@ -26,6 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Service\EntryType\EntryReferences;
 use OCA\Stackiq\Service\EntryType\EntryShape;
 use OCA\Stackiq\Service\EntryType\EntryTypeRefusal;
@@ -284,7 +288,7 @@ class EntryTypeService {
 			}
 
 			try {
-				$entity = $objects->find(id: $uuid, register: $registerId, schema: $schemaId);
+				$entity = $objects->find(id: $uuid, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
 			} catch (Throwable $e) {
 				$entity = null;
 			}
@@ -398,9 +402,10 @@ class EntryTypeService {
 		$data['type'] = self::MODULE_TYPE[$context['targetType']];
 		$context['objects']->saveObject(
 			object: $data,
-			register: $context['registerId'],
-			schema: $context['sourceSchemaId'],
-			uuid: $context['preview']['uuid']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $context['registerId'], schema: $context['sourceSchemaId']),
+				uuid: $context['preview']['uuid']
+			)
 		);
 
 		return ['uuid' => $context['preview']['uuid'], 'targetType' => $context['targetType'], 'moved' => false, 'errors' => []];
@@ -453,7 +458,7 @@ class EntryTypeService {
 
 		$this->write(objects: $objects, context: $context, data: $prepared);
 		try {
-			$stored = $objects->find(id: $uuid, register: $context['registerId'], schema: $context['sourceSchemaId']);
+			$stored = $objects->find(id: $uuid, options: new ObjectFindOptions(register: $context['registerId'], schema: $context['sourceSchemaId']));
 			$outcome = $this->moveWithOpenRegister(context: $context, object: $stored);
 		} catch (Throwable $e) {
 			$this->logger->error('EntryTypeService: the move failed', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
@@ -481,10 +486,11 @@ class EntryTypeService {
 	private function write(object $objects, array $context, array $data): void {
 		$objects->saveObject(
 			object: $data,
-			register: $context['registerId'],
-			schema: $context['sourceSchemaId'],
-			uuid: $context['preview']['uuid'],
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $context['registerId'], schema: $context['sourceSchemaId']),
+				uuid: $context['preview']['uuid'],
+				policy: new SavePolicy(validation: false)
+			)
 		);
 
 	}//end write()
