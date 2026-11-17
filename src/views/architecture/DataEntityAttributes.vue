@@ -194,28 +194,47 @@ export default {
 	},
 
 	computed: {
-		/** @return {object} The reads and the write over the AMEF register. */
+		/**
+		 * @return {object} The reads and the write over the AMEF register.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		api() {
 			return createDataEntityApi({ http: this.http, register: this.register })
 		},
 
-		/** @return {boolean} Whether the entity is the organisation's own. */
+		/**
+		 * @return {boolean} Whether the entity is the organisation's own.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		own() {
 			return isOwnEntity(this.entity)
 		},
 
-		/** @return {Array<object>} The attributes, key attributes first. */
+		/**
+		 * @return {Array<object>} The attributes, key attributes first.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		attributes() {
 			return sortedAttributes(this.entity)
 		},
 
-		/** @return {Array<{id: string, label: string}>} The data types. */
+		/**
+		 * @return {Array<{id: string, label: string}>} The data types.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		dataTypes() {
 			return ATTRIBUTE_DATA_TYPES.map((id) => ({ id, label: this.dataTypeLabel(id) }))
 		},
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		objectId() {
 			this.load()
 		},
@@ -232,6 +251,8 @@ export default {
 		 * Load the entity.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
 		 */
 		async load() {
 			this.loading = true
@@ -250,6 +271,8 @@ export default {
 		 * Start editing an own entity's attributes.
 		 *
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
 		 */
 		edit() {
 			if (!this.own) return
@@ -259,7 +282,11 @@ export default {
 			this.editing = true
 		},
 
-		/** @return {void} */
+		/**
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		addRow() {
 			this.rows.push(toRow({}))
 		},
@@ -267,12 +294,18 @@ export default {
 		/**
 		 * @param {number} index The row to remove.
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
 		 */
 		remove(index) {
 			this.rows.splice(index, 1)
 		},
 
-		/** @return {void} */
+		/**
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+		 */
 		cancel() {
 			this.editing = false
 			this.rows = []
@@ -302,6 +335,8 @@ export default {
 		/**
 		 * @param {string} type The data type.
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
 		 */
 		dataTypeLabel(type) {
 			return {

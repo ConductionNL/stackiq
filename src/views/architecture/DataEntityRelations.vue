@@ -155,13 +155,20 @@ export default {
 	},
 
 	computed: {
-		/** @return {object} The reads over the AMEF register. */
+		/**
+		 * @return {object} The reads over the AMEF register.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
+		 */
 		api() {
 			return createDataEntityApi({ http: this.http, register: this.register })
 		},
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
+		 */
 		objectId() {
 			this.load()
 		},
@@ -204,6 +211,8 @@ export default {
 		 *
 		 * @param {object} node The chosen node.
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 		 */
 		openNode(node) {
 			if (node && !node.isRoot && node.uuid) {
@@ -216,6 +225,8 @@ export default {
 		 *
 		 * @param {string} uuid The entity's uuid.
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 		 */
 		open(uuid) {
 			this.$router?.push({ name: 'GegevensobjectDetail', params: { id: uuid } })
@@ -224,6 +235,8 @@ export default {
 		/**
 		 * @param {object} row A table row.
 		 * @return {string} Both cardinalities, or a dash.
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 		 */
 		cardinalityText(row) {
 			if (!row.sourceCardinality && !row.targetCardinality) {
@@ -235,6 +248,8 @@ export default {
 		/**
 		 * @param {string} type The relation type.
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 		 */
 		typeLabel(type) {
 			return {

@@ -46,6 +46,8 @@ function resultsOf(data) {
  *
  * @param {object} relation The relation.
  * @return {boolean}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
  */
 export function isDataRelation(relation) {
 	return DATA_RELATION_TYPES.includes(relation?.type)
@@ -80,6 +82,8 @@ export function edgeLabel(relation, t) {
  * @param {Array<object>} asSource Relations whose source is the entity.
  * @param {Array<object>} asTarget Relations whose target is the entity.
  * @return {Array<object>}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
  */
 export function entityRelations(identifier, asSource, asTarget) {
 	const seen = new Set()
@@ -101,6 +105,8 @@ export function entityRelations(identifier, asSource, asTarget) {
  * @param {string} identifier The entity's ArchiMate identifier.
  * @param {Array<object>} relations The entity's relations.
  * @return {Array<string>}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
  */
 export function neighbourIdentifiers(identifier, relations) {
 	const out = []
@@ -190,6 +196,8 @@ export function sortedAttributes(entity) {
  *
  * @param {Array<object>} attributes The rows the editor holds.
  * @return {Array<object>}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function attributesToSave(attributes) {
 	const kept = attributes
@@ -216,6 +224,8 @@ export function attributesToSave(attributes) {
  *
  * @param {object|null} entity The entity.
  * @return {boolean}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function isOwnEntity(entity) {
 	return Boolean(entity) && !isImported(entity)
@@ -228,6 +238,9 @@ export function isOwnEntity(entity) {
  * @param {{get: function(string, object=): Promise<{data: object}>, put: function(string, object): Promise<{data: object}>}} options.http An axios-like client.
  * @param {string|number} options.register The AMEF register id or slug.
  * @return {object}
+ *
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function createDataEntityApi({ http, register }) {
 	const url = (schema, id = null) => generateUrl(
@@ -242,6 +255,8 @@ export function createDataEntityApi({ http, register }) {
 		 *
 		 * @param {string} id The uuid.
 		 * @return {Promise<object>}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
 		 */
 		async loadEntity(id) {
 			return (await http.get(url('element', id))).data
@@ -275,6 +290,8 @@ export function createDataEntityApi({ http, register }) {
 		 *
 		 * @param {Array<string>} identifiers The identifiers.
 		 * @return {Promise<Map<string, object>>}
+		 *
+		 * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 		 */
 		async loadElements(identifiers) {
 			const found = new Map()
