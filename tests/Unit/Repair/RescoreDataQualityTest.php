@@ -11,6 +11,7 @@ namespace OCA\Stackiq\Tests\Unit\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Repair\RescoreDataQuality;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -66,7 +67,9 @@ final class RescoreDataQualityTest extends TestCase {
 			fn (array $config): array => array_slice($this->entries[$this->currentSchema] ?? [], $config['offset'], $config['limit'])
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null) use ($saveFails): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($saveFails): ObjectEntityInterface {
+				$schema = $options->target->schema;
+				$uuid   = $options->uuid;
 				if ($saveFails === true) {
 					throw new \RuntimeException('validation failed');
 				}

@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Stackiq",
-        "version": "0.2.7-unstable.20261020120000",
+        "version": "0.2.7-unstable.20261116120000",
         "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -46,6 +46,10 @@
         {
             "name": "ask",
             "description": "A question about the catalogue, answered from the entries the caller may read"
+        },
+        {
+            "name": "attestation",
+            "description": "Confirmation rounds: owners confirm or correct their entries."
         },
         {
             "name": "cmdb-import",
@@ -154,6 +158,14 @@
         {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "view-document",
+            "description": "The view document route, POST /api/views/{viewId}/document."
+        },
+        {
+            "name": "catalog-export",
+            "description": "The filtered list export route, GET /api/catalog/{schema}/export."
         }
     ],
     "paths": {
@@ -740,6 +752,58 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "organizationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organizationUuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/archimate/export/organization/{organizationUuid}/access": {
+            "get": {
+                "operationId": "settings-org-export-access",
+                "summary": "Whether the caller may export one organisation as ArchiMate",
+                "description": "Whether the caller may export one organisation as ArchiMate. The organisation detail page's Export as ArchiMate action asks this before it shows itself; no export work runs here.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{mayExport: bool}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "mayExport": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "mayExport"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 },
                 "parameters": [
@@ -2595,6 +2659,60 @@
                         "description": "The schema.",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/catalog/{schema}/export": {
+            "get": {
+                "operationId": "catalog-export-export",
+                "summary": "Export the Applications or Services list as filtered",
+                "description": "Export the Applications (module) or Services (catalogService) list as CSV or XLSX: the objects the GEMMA facets and the search match, narrowed by the active quick filter, read with the caller's rights, in the page's columns. Query parameters: _gf_referenceComponent, _gf_standard, _gf_applicationService, _gf_domain (or the plain dimension names), search, quickFilter (JSON object), columns (JSON list of {key, label}), format (csv or xlsx). When the facet set stopped at its paging ceiling the file's last row says so. A schema whose authorization names export admits only those groups.",
+                "tags": [
+                    "catalog-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file: text/csv, or for format=xlsx an XLSX workbook (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "application/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "required": true,
+                        "description": "module or catalogService.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "catalogService"
+                            ]
                         }
                     }
                 ]
@@ -5994,6 +6112,153 @@
                 }
             }
         },
+        "/views/{viewId}/image.svg": {
+            "get": {
+                "operationId": "view-get-view-image",
+                "summary": "The view drawn as a standalone SVG file.",
+                "description": "The view drawn as a standalone SVG file, read with OpenRegister's RBAC on: a view the caller may not read answers 404, the same as one that does not exist.",
+                "tags": [
+                    "view"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The SVG file, named after the view.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "image/svg+xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "viewId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The viewId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/views/{viewId}/document": {
+            "post": {
+                "operationId": "view-document-create-view-document",
+                "summary": "Ask filinq for a Word document or a PowerPoint slide of the view.",
+                "description": "Sends the view's name, description, viewpoint, legend, date, a link to the view page and its SVG to filinq through filinq's published document contract, and answers the Files path and file id of the document filinq made in the caller's Files. 503 when the contract does not resolve; nothing is written then.",
+                "tags": [
+                    "view-document"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "format"
+                                ],
+                                "properties": {
+                                    "format": {
+                                        "type": "string",
+                                        "enum": [
+                                            "docx",
+                                            "pptx"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The document filinq filed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "fileId": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "502": {
+                        "description": "filinq refused or did not answer the request.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "viewId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The viewId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/views/{viewId}": {
             "get": {
                 "operationId": "view-get-view",
@@ -6276,6 +6541,135 @@
                         }
                     }
                 ]
+            }
+        },
+        "/attestation-rounds": {
+            "post": {
+                "operationId": "attestation-start",
+                "summary": "Start a confirmation round over an organisation's usages or products",
+                "description": "Start a round over `scopeSchema` (usage or module) of `organisation`, due `deadline`. The caller must be an admin or a maintainer of the organisation. The answer lists the entries no request could be sent for.",
+                "tags": [
+                    "attestation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "organisation",
+                                    "scopeSchema",
+                                    "deadline"
+                                ],
+                                "properties": {
+                                    "organisation": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "scopeSchema": {
+                                        "type": "string",
+                                        "enum": [
+                                            "usage",
+                                            "module"
+                                        ]
+                                    },
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The round, its request count and the unassigned entries.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/attestation-requests/{id}/confirm": {
+            "post": {
+                "operationId": "attestation-confirm",
+                "summary": "Confirm a confirmation request",
+                "description": "The request's assignee confirms the entry is current: the entry's lastConfirmedAt is set under their own rights and the request reads confirmed.",
+                "tags": [
+                    "attestation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The confirmed request.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
             }
         }
     },

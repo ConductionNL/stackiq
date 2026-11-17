@@ -26,6 +26,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\EntryConfirmationServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
@@ -107,10 +110,11 @@ class EntryConfirmationService implements EntryConfirmationServiceInterface {
 		try {
 			$objectService->saveObject(
 				object: $record,
-				extend: [],
-				register: $source['register'],
-				schema: $source['schema'],
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $source['register'], schema: $source['schema']),
+					uuid: $id,
+					extend: []
+				),
 				_rbac: true
 			);
 		} catch (\Throwable $e) {
@@ -135,8 +139,7 @@ class EntryConfirmationService implements EntryConfirmationServiceInterface {
 		try {
 			$entry = $objectService->find(
 				id: $id,
-				register: $source['register'],
-				schema: $source['schema'],
+				options: new ObjectFindOptions(register: $source['register'], schema: $source['schema']),
 				_rbac: true
 			);
 		} catch (\Throwable $e) {

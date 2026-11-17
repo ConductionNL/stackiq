@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Kernel\Contracts\ContactpersonenControllerInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +45,7 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 	 */
 	private function registeredAliases(): array {
 		$source = '';
-		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php', 'lib/Service/ContractBindings.php'] as $file) {
+		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php', 'lib/Service/ContractBindings.php', 'lib/Controller/ControllerRegistrar.php'] as $file) {
 			$source .= (string) file_get_contents(dirname(__DIR__, 3) . '/' . $file);
 		}
 
@@ -92,6 +94,16 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 		self::assertSame('CatalogueLocator', $this->registeredAliases()['ObjectTypeLocatorInterface'] ?? null);
 		self::assertContains(ObjectTypeLocatorInterface::class, class_implements(CatalogueLocator::class));
 	}//end testObjectTypeLocatorIsBoundToTheCatalogueLocator()
+
+	/**
+	 * The `/api/me` resolution the MCP tools read resolves to the contact persons controller.
+	 *
+	 * @return void
+	 */
+	public function testTheMeResolutionIsBoundToTheContactpersonenController(): void {
+		self::assertSame('ContactpersonenController', $this->registeredAliases()['ContactpersonenControllerInterface'] ?? null);
+		self::assertContains(ContactpersonenControllerInterface::class, class_implements(ContactpersonenController::class));
+	}//end testTheMeResolutionIsBoundToTheContactpersonenController()
 
 	/**
 	 * Every imported app interface has a binding.

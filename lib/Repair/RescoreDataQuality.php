@@ -29,6 +29,8 @@ namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -195,10 +197,11 @@ class RescoreDataQuality implements IRepairStep {
 		try {
 			$objects->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $entry->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $entry->getUuid(),
+					extend: []
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

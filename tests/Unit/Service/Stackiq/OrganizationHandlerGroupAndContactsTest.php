@@ -36,6 +36,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Creating an active organisation's group and turning its contact persons into contactgegevens.
@@ -312,7 +314,13 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$this->settings->method('getVoorzieningenRegisterId')->willReturn(5);
 		$this->settings->method('getSchemaIdForObjectType')->with('organization')->willReturn(6);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['beoordeling' => 'Actief', 'name' => ' Acme  B.V ', 'group' => 'acme_b.v_2'], [], 5, 6, 'org-uuid')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['beoordeling' => 'Actief', 'name' => ' Acme  B.V ', 'group' => 'acme_b.v_2'],
+				'extend' => [],
+				'register' => 5,
+				'schema' => 6,
+				'uuid' => 'org-uuid',
+			]))
 			->willReturn($this->entity('org-uuid'));
 		$organisation = $this->organisation(['beoordeling' => 'Actief', 'name' => ' Acme  B.V ']);
 
@@ -332,7 +340,13 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$this->groupManager->method('createGroup')->willReturn($group);
 		$this->settings->method('getVoorzieningenRegisterId')->willReturn(null);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['beoordeling' => 'actief', 'group' => 'organization'], [], 11, 22, 'org-uuid')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['beoordeling' => 'actief', 'group' => 'organization'],
+				'extend' => [],
+				'register' => 11,
+				'schema' => 22,
+				'uuid' => 'org-uuid',
+			]))
 			->willReturn($this->entity('org-uuid'));
 		$data = ['beoordeling' => 'actief'];
 
@@ -412,7 +426,11 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$this->objectService->method('findAll')->willReturn([]);
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null) use (&$saved): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved[] = [$object, $register, $schema, $uuid];
 				return $this->entity('cg-'.count($saved));
 			}
@@ -468,7 +486,13 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 			->with(['filters' => ['email' => 'ann@x', 'organisation' => 'org-1'], '_register' => 5, '_schema' => 9])
 			->willReturn([$this->found('cg-old', ['username' => 'ann.bos'])]);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($this->callback(static fn (array $o): bool => $o['username'] === 'ann.bos'), [], 5, 9, 'cg-old')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $o): bool => $o['username'] === 'ann.bos'),
+				'extend' => [],
+				'register' => 5,
+				'schema' => 9,
+				'uuid' => 'cg-old',
+			]))
 			->willReturn($this->entity('cg-old'));
 
 		$result = $this->handler()->processContactpersonen($this->organisation(['id' => 'org-1', 'contactpersonen' => [['email' => 'ann@x']]]));
@@ -487,7 +511,12 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$this->settings->method('getVoorzieningenRegisterId')->willReturnOnConsecutiveCalls(5, null);
 		$this->objectService->method('findAll')->willThrowException(new RuntimeException('index offline'));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($this->anything(), [], 5, 9)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->anything(),
+				'extend' => [],
+				'register' => 5,
+				'schema' => 9,
+			]))
 			->willReturn($this->entity('cg-new'));
 
 		$organisation = $this->organisation(['id' => 'org-1', 'contactpersonen' => [['email' => 'a@x'], ['email' => 'b@x']]]);
@@ -510,7 +539,12 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$this->settings->method('getVoorzieningenRegisterId')->willReturn(5);
 		$this->objectService->expects($this->never())->method('findAll');
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($this->callback(static fn (array $o): bool => $o['email'] === '' && $o['voornaam'] === 'Ann'), [], 5, 9)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $o): bool => $o['email'] === '' && $o['voornaam'] === 'Ann'),
+				'extend' => [],
+				'register' => 5,
+				'schema' => 9,
+			]))
 			->willReturn($this->entity('cg-new'));
 
 		$result = $this->handler()->processContactpersonen($this->organisation(['id' => 'org-1', 'contactpersonen' => [['voornaam' => 'Ann']]]));

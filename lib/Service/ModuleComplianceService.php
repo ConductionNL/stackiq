@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
@@ -583,10 +586,10 @@ class ModuleComplianceService implements ModuleComplianceServiceInterface {
 			// Save the updated module.
 			$savedObject = $objectService->saveObject(
 				object: $moduleData,
-				extend: [],
-				register: $registerId,
-				schema: $moduleObject->getSchema(),
-				uuid: $moduleObject->getUuid()
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $moduleObject->getSchema()),
+					uuid: $moduleObject->getUuid()
+				)
 			);
 
 			$this->logger->info(
@@ -845,8 +848,10 @@ class ModuleComplianceService implements ModuleComplianceServiceInterface {
 			// Find the module object (must specify register and schema for magic table lookup).
 			$moduleObject = $target['objectService']->find(
 				id: $moduleUuid,
-				register: (int)$target['registerId'],
-				schema: (int)$target['moduleSchemaId']
+				options: new ObjectFindOptions(
+					register: (int)$target['registerId'],
+					schema: (int)$target['moduleSchemaId']
+				)
 			);
 			if ($moduleObject === null) {
 				$this->recordModuleNotFound(moduleUuid: $moduleUuid, complianceCount: count($complianceObjects), results: $results);

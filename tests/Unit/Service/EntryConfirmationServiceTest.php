@@ -12,6 +12,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\EntryConfirmationRefused;
 use OCA\Stackiq\Service\EntryConfirmationService;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
@@ -50,8 +51,8 @@ final class EntryConfirmationServiceTest extends TestCase {
 			}
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true): ObjectEntityInterface {
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid, '_rbac' => $_rbac];
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true): ObjectEntityInterface {
+				$this->saves[] = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid, '_rbac' => $_rbac];
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);

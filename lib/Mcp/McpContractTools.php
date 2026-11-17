@@ -33,6 +33,7 @@ use RuntimeException;
 /**
  * Contract approval tools.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
  * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
  */
 class McpContractTools {
@@ -59,6 +60,8 @@ class McpContractTools {
 	 * @param array<string, mixed> $args No arguments.
 	 *
 	 * @return array<string, mixed> `{configured}`, or a refusal.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
 	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
 	 */

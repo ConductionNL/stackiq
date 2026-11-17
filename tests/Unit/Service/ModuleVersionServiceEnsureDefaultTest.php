@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests that a module always ends up with a default 1.0.0 version.
@@ -35,6 +36,7 @@ use RuntimeException;
  * @package  OCA\Stackiq\Tests\Unit\Service
  *
  * @covers \OCA\Stackiq\Service\ModuleVersionService
+ * @uses   \OCA\Stackiq\Service\SearchBounds
  */
 class ModuleVersionServiceEnsureDefaultTest extends TestCase {
 
@@ -116,21 +118,21 @@ class ModuleVersionServiceEnsureDefaultTest extends TestCase {
 		$saved = $this->createMock(ObjectEntity::class);
 		$saved->method('getUuid')->willReturn('version-uuid');
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				[
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => [
 					'module' => 'module-uuid',
 					'version' => '1.0.0',
 					'shortDescription' => 'Kort',
 					'longDescription' => '',
 					'status' => 'in use',
 				],
-				[],
-				4,
-				11,
-				null,
-				false,
-				false
-			)
+				'extend' => [],
+				'register' => 4,
+				'schema' => 11,
+				'uuid' => null,
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($saved);
 
 		$contexts = [];
@@ -162,7 +164,9 @@ class ModuleVersionServiceEnsureDefaultTest extends TestCase {
 		$saved = $this->createMock(ObjectEntity::class);
 		$saved->method('getUuid')->willReturn('v');
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($this->callback(fn (array $data): bool => $data['shortDescription'] === ''))
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(fn (array $data): bool => $data['shortDescription'] === ''),
+			]))
 			->willReturn($saved);
 
 		$names = [];

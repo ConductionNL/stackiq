@@ -186,6 +186,43 @@ class CronjobSettingsTest extends TestCase {
 	}//end testUpdateStoresAndReadsBack()
 
 	/**
+	 * A stored value that is not a JSON object is replaced: the update keeps
+	 * only the job it names, with the defaults for what it leaves out.
+	 *
+	 * @return void
+	 */
+	public function testUpdateOverAnUnreadableStoredValueStartsAfresh(): void {
+		foreach (['not json', '"a string"', '42'] as $stored) {
+			$this->store = ['cronjob_config' => $stored];
+
+			$result = $this->service()->updateCronjobConfig(['jobId' => self::JOB, 'userId' => 'admin']);
+
+			$expected = ['userId' => 'admin', 'organisationUuid' => null, 'enabled' => true];
+			$this->assertSame(['success' => true, 'message' => 'Cronjob configuration updated successfully', 'config' => $expected], $result, $stored);
+			$this->assertSame(json_encode([self::JOB => $expected], JSON_PRETTY_PRINT), $this->store['cronjob_config'], $stored);
+		}
+	}//end testUpdateOverAnUnreadableStoredValueStartsAfresh()
+
+	/**
+	 * An update keeps the other jobs already stored.
+	 *
+	 * @return void
+	 */
+	public function testUpdateKeepsOtherStoredJobs(): void {
+		$this->store = ['cronjob_config' => json_encode(['other_job' => ['enabled' => false]])];
+
+		$this->service()->updateCronjobConfig(['jobId' => self::JOB, 'enabled' => false]);
+
+		$this->assertSame(
+			[
+				'other_job' => ['enabled' => false],
+				self::JOB => ['userId' => null, 'organisationUuid' => null, 'enabled' => false],
+			],
+			json_decode($this->store['cronjob_config'], true)
+		);
+	}//end testUpdateKeepsOtherStoredJobs()
+
+	/**
 	 * A failing update answers success false and logs the error.
 	 *
 	 * @return void
