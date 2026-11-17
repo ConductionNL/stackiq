@@ -32,6 +32,7 @@ import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
+import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
@@ -39,6 +40,7 @@ import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
+import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
@@ -183,6 +185,8 @@ export default {
 	// (lifecycle-application-value-assessment): it joins the usage, its version
 	// and the vulnerabilities, which no built-in widget does.
 	UsageRiskSignals,
+	UsageClassificationPanel,
+	ModuleClassificationSummary,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,

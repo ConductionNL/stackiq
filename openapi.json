@@ -156,6 +156,10 @@
             "description": "Connection suggestions of a usage: list, accept and dismiss, for the usage's own organisation"
         },
         {
+            "name": "usage-classification",
+            "description": "The classification suggestion for a usage and the anonymous classification summary of an application."
+        },
+        {
             "name": "view",
             "description": "Controller for handling view-related API operations"
         },
@@ -166,6 +170,10 @@
         {
             "name": "catalog-export",
             "description": "The filtered list export route, GET /api/catalog/{schema}/export."
+        },
+        {
+            "name": "landscape-comparison",
+            "description": "Compares one organisation's landscape today with the plan, or a scenario, on a date"
         }
     ],
     "paths": {
@@ -6620,6 +6628,102 @@
                 ]
             }
         },
+        "/gebruik/{usageId}/classification-suggestion": {
+            "get": {
+                "operationId": "usage-classification-suggestion",
+                "summary": "The BIO levels GEMMA suggests for a usage, from its reference components; saves nothing",
+                "description": "The BIO levels GEMMA suggests for a usage, from its reference components; saves nothing.",
+                "tags": [
+                    "usage-classification"
+                ],
+                "parameters": [
+                    {
+                        "name": "usageId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answer.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/modules/{moduleId}/classification-summary": {
+            "get": {
+                "operationId": "usage-classification-summary",
+                "summary": "How many organisations classified an application, and from three on how many per level; never names one",
+                "description": "How many organisations classified an application, and from three on how many per level; never names one.",
+                "tags": [
+                    "usage-classification"
+                ],
+                "parameters": [
+                    {
+                        "name": "moduleId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The application.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answer.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/attestation-rounds": {
             "post": {
                 "operationId": "attestation-start",
@@ -6742,6 +6846,49 @@
                     },
                     "409": {
                         "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/landscape-comparison": {
+            "get": {
+                "operationId": "landscape-comparison-index",
+                "summary": "The comparison for `?organisation=` on `?date=`, or for `?scenario=`; refused before any read when the user may not read the organisation",
+                "description": "The comparison for `?organisation=` on `?date=`, or for `?scenario=`; refused before any read when the user may not read the organisation.",
+                "tags": [
+                    "landscape-comparison"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The comparison, or an error.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
