@@ -114,12 +114,18 @@ export default {
 	},
 
 	computed: {
-		/** @return {Array<string>} */
+		/**
+		 * @return {Array<string>}
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		levels() {
 			return LEVELS
 		},
 
-		/** @return {Array<object>} */
+		/**
+		 * @return {Array<object>}
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		aspects() {
 			return [
 				{ key: 'availability', label: t('stackiq', 'Availability'), level: 'availabilityLevel', reason: 'availabilityReason' },
@@ -128,19 +134,29 @@ export default {
 			]
 		},
 
-		/** @return {string} The overall level as the server will derive it. */
+		/**
+		 * @return {string} The overall level as the server will derive it.
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		overall() {
 			return highestLevel([this.form.availabilityLevel, this.form.integrityLevel, this.form.confidentialityLevel])
 		},
 
-		/** @return {boolean} Whether the form differs from what is stored. */
+		/**
+		 * @return {boolean} Whether the form differs from what is stored.
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		dirty() {
 			return FIELDS.some((field) => (this.form[field] || '') !== (this.stored[field] || ''))
 		},
 	},
 
 	watch: {
-		/** Reload for another usage. */
+		/**
+		 * Reload for another usage.
+		 *
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		objectId() {
 			this.load()
 		},

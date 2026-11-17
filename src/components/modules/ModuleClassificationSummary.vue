@@ -91,12 +91,18 @@ export default {
 	},
 
 	computed: {
-		/** @return {Array<string>} */
+		/**
+		 * @return {Array<string>}
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		levelNames() {
 			return ['BBN1', 'BBN2', 'BBN3']
 		},
 
-		/** @return {Array<object>} One row per aspect and overall. */
+		/**
+		 * @return {Array<object>} One row per aspect and overall.
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		rows() {
 			const labels = {
 				availability: t('stackiq', 'Availability'),
@@ -109,7 +115,11 @@ export default {
 	},
 
 	watch: {
-		/** Reload for another application. */
+		/**
+		 * Reload for another application.
+		 *
+		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 */
 		objectId() {
 			this.load()
 		},

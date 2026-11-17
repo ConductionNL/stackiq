@@ -5,12 +5,13 @@
  *
  * The overall BBN level of a usage, derived from its three BIO aspects.
  *
- * @category Service
- * @package  OCA\Stackiq\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/stackiq
+ * @category  Service
+ * @package   OCA\Stackiq\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V. <info@conduction.nl>
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
