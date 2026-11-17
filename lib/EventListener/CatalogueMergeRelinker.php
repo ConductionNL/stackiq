@@ -103,29 +103,26 @@ class CatalogueMergeRelinker implements IEventListener {
 			return;
 		}
 
-		$this->relink(objects: $objects, schema: $schema, event: $event);
+		$this->relink(run: ['objects' => $objects, 'event' => $event], schema: $schema);
 	}//end handle()
 
 	/**
 	 * Re-point every reference to the merged records, then mark them merged.
 	 * A failure is logged; OpenRegister's merge itself already stands.
 	 *
-	 * @param ObjectServiceInterface $objects The object service.
-	 * @param string                 $schema  The merged schema.
-	 * @param ObjectsMergedEvent     $event   The merge.
+	 * @param array{objects: ObjectServiceInterface, event: ObjectsMergedEvent} $run    The object service and the merge.
+	 * @param string $schema The merged schema.
 	 *
 	 * @return void
 	 */
-	private function relink(ObjectServiceInterface $objects, string $schema, ObjectsMergedEvent $event): void {
-		$losers = self::losers(event: $event);
+	private function relink(array $run, string $schema): void {
+		$event = $run['event'];
 		try {
 			foreach (CatalogueReferenceMap::referencesTo(schema: $schema) as $reference) {
-				$this->relinkReference(objects: $objects, reference: $reference, losers: $losers, event: $event);
+				$this->relinkReference(run: $run, reference: $reference);
 			}
 
-			foreach ($losers as $loser) {
-				$this->markMerged(objects: $objects, schema: $schema, loserUuid: $loser, survivorUuid: $event->getSurvivorUuid());
-			}
+			$this->markMerged(run: $run, schema: $schema);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'CatalogueMergeRelinker: could not re-point the references of merge ' . $event->getMergeOperationId() . ': ' . $e->getMessage(),
@@ -160,14 +157,12 @@ class CatalogueMergeRelinker implements IEventListener {
 	/**
 	 * Re-point one reference on every object of its schema that holds a merged record.
 	 *
-	 * @param ObjectServiceInterface                           $objects   The object service.
+	 * @param array{objects: ObjectServiceInterface, event: ObjectsMergedEvent} $run       The object service and the merge.
 	 * @param array{schema: string, field: string, list: bool} $reference The reference.
-	 * @param array<int, string>                               $losers    The merged records.
-	 * @param ObjectsMergedEvent                               $event     The merge.
 	 *
 	 * @return void
 	 */
-	private function relinkReference(ObjectServiceInterface $objects, array $reference, array $losers, ObjectsMergedEvent $event): void {
+	private function relinkReference(array $run, array $reference): void {
 		$register = $this->settings->getRegisterIdForObjectType(objectType: $reference['schema']);
 		$schema = $this->settings->getSchemaIdForObjectType(objectType: $reference['schema']);
 		if ($register === null || $schema === null) {
@@ -176,18 +171,14 @@ class CatalogueMergeRelinker implements IEventListener {
 
 		$offset = 0;
 		do {
-			$entities = $objects->findAll(
+			$entities = $run['objects']->findAll(
 				config: ['_register' => $register, '_schema' => $schema, 'limit' => self::PAGE_SIZE, 'offset' => $offset],
 				_rbac: false,
 				_multitenancy: false
 			);
 			$this->relinkPage(
-				objects: $objects,
-				entities: $entities,
-				ids: ['register' => $register, 'schema' => $schema],
-				reference: $reference,
-				losers: $losers,
-				event: $event
+				run: $run,
+				page: ['entities' => $entities, 'register' => $register, 'schema' => $schema, 'reference' => $reference]
 			);
 			$offset += self::PAGE_SIZE;
 		} while (count($entities) === self::PAGE_SIZE);
@@ -197,33 +188,26 @@ class CatalogueMergeRelinker implements IEventListener {
 	 * Re-point one reference on each object of one page that holds a merged record.
 	 * Only the reference field changes, so the walk's order and paging hold.
 	 *
-	 * @param ObjectServiceInterface                           $objects   The object service.
-	 * @param array<int, ObjectEntityInterface>                $entities  The page.
-	 * @param array{register: int|string, schema: int|string}  $ids       The register and schema.
-	 * @param array{schema: string, field: string, list: bool} $reference The reference.
-	 * @param array<int, string>                               $losers    The merged records.
-	 * @param ObjectsMergedEvent                               $event     The merge.
+	 * @param array{objects: ObjectServiceInterface, event: ObjectsMergedEvent} $run  The object service and the merge.
+	 * @param array<string, mixed> $page The page: `entities` (ObjectEntityInterface[]),
+	 *                                   `register`, `schema` and `reference`.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
-	private function relinkPage(
-		ObjectServiceInterface $objects,
-		array $entities,
-		array $ids,
-		array $reference,
-		array $losers,
-		ObjectsMergedEvent $event
-	): void {
-		$register = $ids['register'];
-		$schema = $ids['schema'];
-		foreach ($entities as $entity) {
+	private function relinkPage(array $run, array $page): void {
+		$objects   = $run['objects'];
+		$event     = $run['event'];
+		$register  = $page['register'];
+		$schema    = $page['schema'];
+		$reference = $page['reference'];
+		$merge     = ['losers' => self::losers(event: $event), 'survivor' => $event->getSurvivorUuid()];
+		foreach ($page['entities'] as $entity) {
 			$data = self::repointed(
 				data: $entity->getObject(),
 				reference: $reference,
-				losers: $losers,
-				survivor: $event->getSurvivorUuid()
+				merge: $merge
 			);
 			if ($data === null) {
 				continue;
@@ -238,7 +222,7 @@ class CatalogueMergeRelinker implements IEventListener {
 				_rbac: false,
 				_multitenancy: false
 			);
-			$this->audit(reference: $reference, objectUuid: (string)$entity->getUuid(), event: $event);
+			$this->audit(event: $event, moved: ['reference' => $reference, 'object' => (string)$entity->getUuid()]);
 		}
 	}//end relinkPage()
 
@@ -249,19 +233,18 @@ class CatalogueMergeRelinker implements IEventListener {
 	 *
 	 * @param array<string, mixed>                             $data      The object's data.
 	 * @param array{schema: string, field: string, list: bool} $reference The reference.
-	 * @param array<int, string>                               $losers    The merged records.
-	 * @param string                                           $survivor  The survivor.
+	 * @param array{losers: array<int, string>, survivor: string} $merge The merged records and the survivor.
 	 *
 	 * @return array<string, mixed>|null
 	 *
 	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
-	public static function repointed(array $data, array $reference, array $losers, string $survivor): ?array {
+	public static function repointed(array $data, array $reference, array $merge): ?array {
 		$value = ($data[$reference['field']] ?? null);
 		if ($reference['list'] === true) {
-			$value = self::repointedList(value: $value, losers: $losers, survivor: $survivor);
+			$value = self::repointedList(value: $value, merge: $merge);
 		} else {
-			$value = self::repointedScalar(value: $value, losers: $losers, survivor: $survivor);
+			$value = self::repointedScalar(value: $value, merge: $merge);
 		}
 
 		if ($value === null) {
@@ -276,37 +259,35 @@ class CatalogueMergeRelinker implements IEventListener {
 	 * A list with the merged records replaced by the survivor, held once; null
 	 * when the list holds none of them.
 	 *
-	 * @param mixed              $value    The stored list.
-	 * @param array<int, string> $losers   The merged records.
-	 * @param string             $survivor The survivor.
+	 * @param mixed                                               $value The stored list.
+	 * @param array{losers: array<int, string>, survivor: string} $merge The merged records and the survivor.
 	 *
 	 * @return array<int, mixed>|null
 	 */
-	private static function repointedList(mixed $value, array $losers, string $survivor): ?array {
-		if (is_array($value) === false || self::holdsAny(list: $value, losers: $losers) === false) {
+	private static function repointedList(mixed $value, array $merge): ?array {
+		if (is_array($value) === false || self::holdsAny(list: $value, losers: $merge['losers']) === false) {
 			return null;
 		}
 
 		$replaced = array_map(
-			static fn (mixed $entry): mixed => self::replacement(entry: $entry, losers: $losers, survivor: $survivor),
+			static fn (mixed $entry): mixed => self::replacement(entry: $entry, merge: $merge),
 			$value
 		);
 
-		return self::survivorOnce(list: $replaced, survivor: $survivor);
+		return self::survivorOnce(list: $replaced, survivor: $merge['survivor']);
 	}//end repointedList()
 
 	/**
 	 * The survivor for a merged record, else the entry itself.
 	 *
-	 * @param mixed              $entry    A list entry.
-	 * @param array<int, string> $losers   The merged records.
-	 * @param string             $survivor The survivor.
+	 * @param mixed                                               $entry A list entry.
+	 * @param array{losers: array<int, string>, survivor: string} $merge The merged records and the survivor.
 	 *
 	 * @return mixed
 	 */
-	private static function replacement(mixed $entry, array $losers, string $survivor): mixed {
-		if (in_array($entry, $losers, true) === true) {
-			return $survivor;
+	private static function replacement(mixed $entry, array $merge): mixed {
+		if (in_array($entry, $merge['losers'], true) === true) {
+			return $merge['survivor'];
 		}
 
 		return $entry;
@@ -356,50 +337,49 @@ class CatalogueMergeRelinker implements IEventListener {
 	/**
 	 * The survivor when the value is a merged record, else null.
 	 *
-	 * @param mixed              $value    The stored value.
-	 * @param array<int, string> $losers   The merged records.
-	 * @param string             $survivor The survivor.
+	 * @param mixed                                               $value The stored value.
+	 * @param array{losers: array<int, string>, survivor: string} $merge The merged records and the survivor.
 	 *
 	 * @return string|null
 	 */
-	private static function repointedScalar(mixed $value, array $losers, string $survivor): ?string {
-		if (in_array($value, $losers, true) === false) {
+	private static function repointedScalar(mixed $value, array $merge): ?string {
+		if (in_array($value, $merge['losers'], true) === false) {
 			return null;
 		}
 
-		return $survivor;
+		return $merge['survivor'];
 	}//end repointedScalar()
 
 	/**
-	 * Record on a merged record which record it was merged into.
+	 * Record on each merged record which record it was merged into.
 	 *
-	 * @param ObjectServiceInterface $objects      The object service.
-	 * @param string                 $schema       The merged schema.
-	 * @param string                 $loserUuid    The merged record.
-	 * @param string                 $survivorUuid The survivor.
+	 * @param array{objects: ObjectServiceInterface, event: ObjectsMergedEvent} $run    The object service and the merge.
+	 * @param string $schema The merged schema.
 	 *
 	 * @return void
 	 */
-	private function markMerged(ObjectServiceInterface $objects, string $schema, string $loserUuid, string $survivorUuid): void {
-		$loser = $this->findQuietly(objects: $objects, uuid: $loserUuid);
-		if ($loser === null) {
-			return;
-		}
-
-		$data = $loser->getObject();
-		$data['mergedInto'] = $survivorUuid;
-		$objects->saveObject(
-			object: $data,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(
-					register: $this->settings->getRegisterIdForObjectType(objectType: $schema),
-					schema: $this->settings->getSchemaIdForObjectType(objectType: $schema)
-				),
-				uuid: $loserUuid
-			),
-			_rbac: false,
-			_multitenancy: false
+	private function markMerged(array $run, string $schema): void {
+		$objects      = $run['objects'];
+		$survivorUuid = $run['event']->getSurvivorUuid();
+		$target       = new ObjectFindTarget(
+			register: $this->settings->getRegisterIdForObjectType(objectType: $schema),
+			schema: $this->settings->getSchemaIdForObjectType(objectType: $schema)
 		);
+		foreach (self::losers(event: $run['event']) as $loserUuid) {
+			$loser = $this->findQuietly(objects: $objects, uuid: $loserUuid);
+			if ($loser === null) {
+				continue;
+			}
+
+			$data = $loser->getObject();
+			$data['mergedInto'] = $survivorUuid;
+			$objects->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: $target, uuid: $loserUuid),
+				_rbac: false,
+				_multitenancy: false
+			);
+		}
 	}//end markMerged()
 
 	/**
@@ -445,13 +425,15 @@ class CatalogueMergeRelinker implements IEventListener {
 	/**
 	 * Write one moved reference to the audit log.
 	 *
-	 * @param array{schema: string, field: string, list: bool} $reference  The reference.
-	 * @param string                                           $objectUuid The object whose reference moved.
-	 * @param ObjectsMergedEvent                               $event      The merge.
+	 * @param ObjectsMergedEvent $event The merge.
+	 * @param array<string, mixed> $moved The reference (`reference`) and the
+	 *                                    object whose reference moved (`object`).
 	 *
 	 * @return void
 	 */
-	private function audit(array $reference, string $objectUuid, ObjectsMergedEvent $event): void {
+	private function audit(ObjectsMergedEvent $event, array $moved): void {
+		$reference  = $moved['reference'];
+		$objectUuid = $moved['object'];
 		$this->logger->info(
 			'CatalogueMerge audit: reference moved to the survivor',
 			[

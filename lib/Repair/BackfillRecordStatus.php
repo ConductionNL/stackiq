@@ -153,10 +153,11 @@ class BackfillRecordStatus implements IRepairStep {
 			return $result;
 		}
 
+		$walk   = ['objects' => $objects, 'register' => $register, 'schema' => $schemaId];
 		$offset = 0;
 		do {
-			$page = $this->page(objects: $objects, ids: ['register' => $register, 'schema' => $schemaId], offset: $offset);
-			$result = $this->markPage(objects: $objects, ids: ['register' => $register, 'schema' => $schemaId], page: $page, result: $result);
+			$page = $this->page(walk: $walk, offset: $offset);
+			$result = $this->markPage(walk: $walk, page: $page, result: $result);
 			$offset += self::PAGE_SIZE;
 		} while (count($page) === self::PAGE_SIZE);
 
@@ -166,15 +167,14 @@ class BackfillRecordStatus implements IRepairStep {
 	/**
 	 * One page of a schema's rows; none when the read fails.
 	 *
-	 * @param ObjectServiceInterface              $objects The object service.
-	 * @param array{register: int, schema: int}   $ids     The register and schema.
-	 * @param int                                 $offset  The first row.
+	 * @param array{objects: ObjectServiceInterface, register: int, schema: int} $walk   The object service, register and schema.
+	 * @param int                                                                $offset The first row.
 	 *
 	 * @return array<int, mixed>
 	 */
-	private function page(ObjectServiceInterface $objects, array $ids, int $offset): array {
+	private function page(array $walk, int $offset): array {
 		try {
-			return (array)$objects->setRegister($ids['register'])->setSchema($ids['schema'])->findAll(
+			return (array)$walk['objects']->setRegister($walk['register'])->setSchema($walk['schema'])->findAll(
 				config: ['limit' => self::PAGE_SIZE, 'offset' => $offset],
 				_rbac: false,
 				_multitenancy: false
@@ -187,14 +187,15 @@ class BackfillRecordStatus implements IRepairStep {
 	/**
 	 * Mark each row of a page that has no status.
 	 *
-	 * @param ObjectServiceInterface            $objects The object service.
-	 * @param array{register: int, schema: int} $ids     The register and schema.
-	 * @param array<int, mixed>                 $page    The rows.
-	 * @param array{written: int, failed: int}  $result  The running totals.
+	 * @param array{objects: ObjectServiceInterface, register: int, schema: int} $walk   The object service, register and schema.
+	 * @param array<int, mixed>                                                  $page   The rows.
+	 * @param array{written: int, failed: int}                                   $result The running totals.
 	 *
 	 * @return array{written: int, failed: int}
 	 */
-	private function markPage(ObjectServiceInterface $objects, array $ids, array $page, array $result): array {
+	private function markPage(array $walk, array $page, array $result): array {
+		$objects = $walk['objects'];
+		$target  = new ObjectFindTarget(register: $walk['register'], schema: $walk['schema']);
 		foreach ($page as $row) {
 			$data = self::marked(row: $row);
 			if ($data === null) {
@@ -205,7 +206,7 @@ class BackfillRecordStatus implements IRepairStep {
 				$objects->saveObject(
 					object: $data,
 					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $ids['register'], schema: $ids['schema']),
+						target: $target,
 						uuid: $row->getUuid(),
 						policy: new SavePolicy(silent: true)
 					),

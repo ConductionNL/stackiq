@@ -294,10 +294,18 @@ class CatalogueMergeRelinkerTest extends TestCase {
 		$scalar = ['schema' => 'usage', 'field' => 'module', 'list' => false];
 		$list = ['schema' => 'suite', 'field' => 'applications', 'list' => true];
 
-		$this->assertSame(['module' => 's', 'x' => 1], CatalogueMergeRelinker::repointed(data: ['module' => 'l1', 'x' => 1], reference: $scalar, losers: ['l1', 'l2'], survivor: 's'));
-		$this->assertNull(CatalogueMergeRelinker::repointed(data: ['module' => 'other'], reference: $scalar, losers: ['l1'], survivor: 's'));
-		$this->assertNull(CatalogueMergeRelinker::repointed(data: [], reference: $scalar, losers: ['l1'], survivor: 's'));
-		$this->assertSame(['applications' => ['s', 'b']], CatalogueMergeRelinker::repointed(data: ['applications' => ['l1', 'l2', 'b', 's']], reference: $list, losers: ['l1', 'l2'], survivor: 's'));
-		$this->assertNull(CatalogueMergeRelinker::repointed(data: ['applications' => 'l1'], reference: $list, losers: ['l1'], survivor: 's'));
+		$this->assertSame(['module' => 's', 'x' => 1], CatalogueMergeRelinker::repointed(
+			data: ['module' => 'l1', 'x' => 1],
+			reference: $scalar,
+			merge: ['losers' => ['l1', 'l2'], 'survivor' => 's']
+		));
+		$this->assertNull(CatalogueMergeRelinker::repointed(data: ['module' => 'other'], reference: $scalar, merge: ['losers' => ['l1'], 'survivor' => 's']));
+		$this->assertNull(CatalogueMergeRelinker::repointed(data: [], reference: $scalar, merge: ['losers' => ['l1'], 'survivor' => 's']));
+		$this->assertSame(['applications' => ['s', 'b']], CatalogueMergeRelinker::repointed(
+			data: ['applications' => ['l1', 'l2', 'b', 's']],
+			reference: $list,
+			merge: ['losers' => ['l1', 'l2'], 'survivor' => 's']
+		));
+		$this->assertNull(CatalogueMergeRelinker::repointed(data: ['applications' => 'l1'], reference: $list, merge: ['losers' => ['l1'], 'survivor' => 's']));
 	}//end testRepointedRewritesOnlyTheMergedRecords()
 }//end class
