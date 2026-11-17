@@ -44,6 +44,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for the user-account operations of ContactpersoonService.
@@ -363,7 +365,15 @@ class ContactpersoonServiceUserAccountTest extends TestCase {
 		$user = $this->addUser('anna@example.nl');
 		$this->objectService->expects($this->exactly(2))
 			->method('find')
-			->with('cp-1', [], false, 'stackiq', 'contactPerson', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'cp-1',
+					'_extend' => [],
+					'files' => false,
+					'register' => 'stackiq',
+					'schema' => 'contactPerson',
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]))
 			->willReturn($this->entity(['username' => 'anna@example.nl']));
 		$switched = [];
 		$user->method('setEnabled')->willReturnCallback(
@@ -453,7 +463,11 @@ class ContactpersoonServiceUserAccountTest extends TestCase {
 
 		$found = [];
 		$this->objectService->method('findSilent')->willReturnCallback(
-			function (string|int $id, array $_extend, bool $files, $register, $schema) use (&$found): ObjectEntityInterface {
+			function (string|int $id, ?ObjectFindOptions $options = null) use (&$found): ObjectEntityInterface {
+				$_extend = $options?->extend;
+				$files = $options?->files;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$found[] = [$id, $register, $schema];
 				return match ($id) {
 					'with-user' => $this->entity(['username' => 'anna@example.nl']),
@@ -500,7 +514,13 @@ class ContactpersoonServiceUserAccountTest extends TestCase {
 		$this->settings->method('getVoorzieningenConfig')->willThrowException(new \RuntimeException('no config'));
 		$this->objectService->expects($this->once())
 			->method('findSilent')
-			->with('cp-1', [], false, 2, 25)
+			->with(...LegacyObjectArgs::with(method: 'findSilent', expected: [
+					'id' => 'cp-1',
+					'_extend' => [],
+					'files' => false,
+					'register' => 2,
+					'schema' => 25,
+				]))
 			->willReturn($this->entity([]));
 
 		$info = $this->service()->getBulkUserInfo(['cp-1']);
