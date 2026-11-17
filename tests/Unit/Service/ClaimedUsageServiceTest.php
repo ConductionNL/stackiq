@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
@@ -202,8 +203,8 @@ class ClaimedUsageServiceTest extends TestCase {
 
 		$saved = null;
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid, bool $rbac, bool $multitenancy) use (&$saved, $usage) {
-				$saved = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid, '_rbac' => $rbac, '_multitenancy' => $multitenancy];
+			function (array $object, ObjectSaveOptions $options, bool $rbac, bool $multitenancy) use (&$saved, $usage) {
+				$saved = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid, '_rbac' => $rbac, '_multitenancy' => $multitenancy];
 				return $usage;
 			}
 		);

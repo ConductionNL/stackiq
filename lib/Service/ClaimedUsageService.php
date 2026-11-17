@@ -32,6 +32,9 @@ use DateTimeInterface;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
@@ -193,8 +196,7 @@ class ClaimedUsageService {
 		try {
 			return $objectService->find(
 				id: $uuid,
-				register: $location['register'],
-				schema: $location['schema'],
+				options: new ObjectFindOptions(register: $location['register'], schema: $location['schema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -225,9 +227,10 @@ class ClaimedUsageService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $data,
-				register: $usage->getRegister(),
-				schema: $usage->getSchema(),
-				uuid: $usage->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $usage->getRegister(), schema: $usage->getSchema()),
+					uuid: $usage->getUuid()
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
