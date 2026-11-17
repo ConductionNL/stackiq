@@ -39,6 +39,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Adding a contact person's user to its organisation, the maintainer role and
@@ -217,7 +218,13 @@ class ContactPersonHandlerOrganisationMembershipTest extends TestCase {
 	public function testShouldAddDependsOnTheOrganisationUsers(): void {
 		$this->configured();
 		$this->objectService->expects($this->exactly(count: 3))->method('find')
-			->with(self::ORG, [], false, 4, 5)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => self::ORG,
+				'_extend' => [],
+				'files' => false,
+				'register' => 4,
+				'schema' => 5,
+			]))
 			->willReturnOnConsecutiveCalls(
 				$this->organisation(data: ['users' => ['piet']]),
 				$this->organisation(data: ['users' => ['piet', 'jan']]),
@@ -293,7 +300,13 @@ class ContactPersonHandlerOrganisationMembershipTest extends TestCase {
 		$this->configured();
 		$this->objectService->method('find')->willReturn($this->organisation(data: ['name' => 'Gemeente', 'users' => ['piet']]));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['name' => 'Gemeente', 'users' => ['piet', 'jan']], [], 4, 5, self::ORG)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Gemeente', 'users' => ['piet', 'jan']],
+				'extend' => [],
+				'register' => 4,
+				'schema' => 5,
+				'uuid' => self::ORG,
+			]))
 			->willReturn($this->organisation(data: []));
 
 		$this->assertTrue(
@@ -312,7 +325,13 @@ class ContactPersonHandlerOrganisationMembershipTest extends TestCase {
 		$this->configured();
 		$this->objectService->method('find')->willReturn($this->organisation(data: ['users' => 'broken']));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['users' => ['jan']], [], 4, 5, self::ORG)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['users' => ['jan']],
+				'extend' => [],
+				'register' => 4,
+				'schema' => 5,
+				'uuid' => self::ORG,
+			]))
 			->willReturn($this->organisation(data: []));
 
 		$this->assertTrue(
@@ -370,7 +389,13 @@ class ContactPersonHandlerOrganisationMembershipTest extends TestCase {
 			$this->organisation(data: ['users' => []])
 		);
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['users' => ['jan']], [], 4, 5, self::ORG)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['users' => ['jan']],
+				'extend' => [],
+				'register' => 4,
+				'schema' => 5,
+				'uuid' => self::ORG,
+			]))
 			->willReturn($this->organisation(data: []));
 		$contact = $this->contact(data: ['username' => 'jan', 'organisation' => self::ORG]);
 
@@ -468,7 +493,13 @@ class ContactPersonHandlerOrganisationMembershipTest extends TestCase {
 		$this->configured();
 		$this->objectService->method('find')->willReturn($this->organisation(data: ['users' => []]));
 		$this->objectService->expects($this->exactly(count: 3))->method('saveObject')
-			->with(['users' => ['jan']], [], 4, 5, self::ORG)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['users' => ['jan']],
+				'extend' => [],
+				'register' => 4,
+				'schema' => 5,
+				'uuid' => self::ORG,
+			]))
 			->willReturn($this->organisation(data: []));
 		$this->userManager->expects($this->never())->method('createUser');
 		$contact = $this->contact(data: ['username' => 'jan', 'organisation' => self::ORG]);

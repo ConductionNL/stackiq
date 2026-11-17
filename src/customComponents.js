@@ -17,13 +17,22 @@
 //   - openspec/changes/stackiq-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
+import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
+import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
+import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -38,15 +47,20 @@ import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import DataQualityReportView from './views/organisaties/DataQualityReport.vue'
 import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
+import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { createMoveHandlers } from './services/moveToOrganisation.js'
+import { navigationStore } from './store/store.js'
 
 export default {
 	// Header-action handler: the Integrations page's Add integration
@@ -62,10 +76,39 @@ export default {
 		assign: (url) => window.location.assign(url),
 	}),
 
+	// Confirmation rounds (landscape-owner-attestation D5): Start round opens
+	// StartAttestationRoundDialog; Confirm and Open entry are the row actions of
+	// My confirmation requests. Confirm POSTs the request's confirm endpoint and
+	// refetches the list.
+	...createAttestationHandlers({
+		setDialog: (name, properties) =>
+			navigationStore.setDialog(name, properties),
+		post: (url) => axios.post(url),
+		generateUrl,
+		assign: (url) => window.location.assign(url),
+		refresh: () => emit('cn:page:refresh', {}),
+		notifyError: (message) =>
+			showError(message || t('stackiq', 'The request could not be confirmed')),
+	}),
+
+	// Bulk-action handlers: Move to organisation on the Applications,
+	// Services, Applications in use, Connections and Contracts lists
+	// (landscape-move-between-organisations D3). FUNCTIONS, because the
+	// action opens the app's own MoveToOrganisationDialog with the selection,
+	// which a bulk action's `open-modal` does not reach (CnPageRenderer has
+	// no listener for the index page's `open-modal` event).
+	...createMoveHandlers((name, properties) => navigationStore.setDialog(name, properties)),
+
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
 	OrganisatieCard,
+
+	// A declared sidebar tab for one integration leaf (adopt-integration-leaves
+	// 3.1). A detail page that lists its own sidebar tabs turns off the object
+	// sidebar's registry mode, so the leaves the schema declares in
+	// `linkedTypes` would not show; this widget renders the leaf's own tab.
+	IntegrationLeafTab,
 
 	// The steps of a business process as a read-only flow on CnGraphCanvas, and
 	// the applications that support a step with the hidden ones counted
@@ -123,6 +166,11 @@ export default {
 	// (landscape-application-page): two hops, so not an object-list widget.
 	ApplicationContractsPanel,
 
+	// The connections of an application as a map, with SVG, PNG and CSV
+	// downloads (connections-diagram-and-graph-export D1, D3): a one-hop graph
+	// over two queries, which no object-list widget draws.
+	ConnectionMapWidget,
+
 	ContractApprovalPanel,
 
 	// Licences in use against licences bought (contracts-licence-seats).
@@ -154,6 +202,15 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// The Merged into banner on a merged application's page
+	// (operations-record-reconciliation D4): it shows the survivor only when
+	// `recordStatus` is Merged, which no built-in widget conditions on.
+	MergedRecordBanner,
+	// OrganisatieDetail's actions slot: Export as ArchiMate for the organisation
+	// on the page, shown when the server says the caller may export it
+	// (insight-exports-and-custom-reports, REQ-CER-003).
+	OrganisationExportAction,
 
 	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
 	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),
@@ -202,6 +259,9 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// The Custom reports page (insight-exports-and-custom-reports, REQ-CER-004):
+	// the caller's OpenRegister export profiles over the catalogue register.
+	CustomReportsView,
 	// --- Lib gap: the organisation-scoped data quality report. ---
 	// GET /api/data-quality evaluates the usage schema's declared quality
 	// rules over one organisation's usages, bounded like the portfolio report.
@@ -229,6 +289,11 @@ export default {
 	// declarative type:index page would.
 	// @spec openspec/specs/suite-wizard/spec.md
 	SuitesIndexView,
+	// --- The Connections page's Add opens the guided entry wizard. ---
+	// Rendered in the declarative index page's actions slot
+	// (`actionsComponent`), so the page keeps its columns and filters.
+	// @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+	ConnectionWizardAction,
 	// --- Ratings & reviews (stackiq#375). ---
 	// Approved-only aggregate (average + count) + a bounded approved-review
 	// list, computed server-side by ReviewService, plus the "Write a review"
@@ -238,4 +303,10 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
+	// The library's roadmap and store pages are one page type each; this puts
+	// both under one page as two tabs, so the footer Store entry and the
+	// roadmap are one place. Both halves stay the library components.
+	// @spec openspec/changes/features-roadmap-page/specs/features-roadmap/spec.md#requirement-the-uitbreidingen-tab-lists-the-extensions-from-the-store-req-frm-002
+	FeaturesRoadmapTabs,
 }

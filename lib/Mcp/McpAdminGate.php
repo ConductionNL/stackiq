@@ -35,6 +35,7 @@ use Throwable;
 /**
  * Caller and administrator checks for MCP tools.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
  * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
  */
 class McpAdminGate {

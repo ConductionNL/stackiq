@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -41,6 +42,8 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -88,6 +91,7 @@ class GetMeTestOrganisation extends Organisation {
  * @spec openspec/specs/contactpersonen-api/spec.md
  */
 #[CoversClass(ContactpersonenController::class)]
+#[UsesClass(SyncAccessPolicy::class)]
 class ContactpersonenControllerGetMeTest extends TestCase {
 
 	/**
@@ -215,7 +219,12 @@ class ContactpersonenControllerGetMeTest extends TestCase {
 	 */
 	public function testEmptyProfileFallsBackToUserId(): void {
 		$this->signIn(uid: 'alice', email: null);
-		$this->groupManager->expects($this->once())->method('isInGroup')->with('alice', 'maintainer')->willReturn(true);
+		$this->groupManager->method('isInGroup')->willReturnMap(
+			[
+				['alice', 'maintainer', true],
+				['alice', 'functioneel-beheerder', false],
+			]
+		);
 		$this->objectService->expects($this->once())->method('searchObjectsPaginated')
 			->with(['username' => 'alice', '_limit' => 1, '_schema' => 'contactPerson'])
 			->willReturn(['results' => []]);
@@ -234,6 +243,7 @@ class ContactpersonenControllerGetMeTest extends TestCase {
 				'role' => '',
 				'organisations' => ['active' => null, 'all' => []],
 				'isBeheerder' => true,
+				'mayFindDuplicates' => false,
 			],
 			$response->getData()
 		);
@@ -256,7 +266,12 @@ class ContactpersonenControllerGetMeTest extends TestCase {
 			]
 		);
 		$this->organisationService->method('getUserOrganisations')->willReturn([]);
-		$this->groupManager->method('isInGroup')->with('alice', 'maintainer')->willReturn(false);
+		$this->groupManager->method('isInGroup')->willReturnMap(
+			[
+				['alice', 'maintainer', false],
+				['alice', 'functioneel-beheerder', false],
+			]
+		);
 
 		$data = $this->controller()->getMe()->getData();
 
@@ -267,6 +282,50 @@ class ContactpersonenControllerGetMeTest extends TestCase {
 		$this->assertSame('alice@nc.example', $data['email']);
 		$this->assertFalse($data['isBeheerder']);
 	}//end testDutchContactFieldsFillProfile()
+
+	/**
+	 * Who may find duplicates: a Nextcloud admin or a functional
+	 * administrator, nobody else.
+	 *
+	 * @return array<string, array{0: bool, 1: bool, 2: bool}>
+	 */
+	public static function duplicateFinders(): array {
+		return [
+			'Nextcloud admin'          => [true, false, true],
+			'functional administrator' => [false, true, true],
+			'both'                     => [true, true, true],
+			'neither'                  => [false, false, false],
+		];
+	}//end duplicateFinders()
+
+	/**
+	 * The mayFindDuplicates flag follows the admin and functional
+	 * administrator rule, apart from the maintainer flag.
+	 *
+	 * @param bool $isAdmin           Whether the user is a Nextcloud admin.
+	 * @param bool $isFunctionalAdmin Whether the user is in functioneel-beheerder.
+	 * @param bool $expected          The flag.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('duplicateFinders')]
+	public function testMayFindDuplicatesFollowsTheAdministratorRule(bool $isAdmin, bool $isFunctionalAdmin, bool $expected): void {
+		$this->signIn(uid: 'erin', email: 'erin@nc.example');
+		$this->objectService->method('searchObjectsPaginated')->willReturn(['results' => []]);
+		$this->organisationService->method('getUserOrganisations')->willReturn([]);
+		$this->groupManager->method('isAdmin')->with('erin')->willReturn($isAdmin);
+		$this->groupManager->method('isInGroup')->willReturnMap(
+			[
+				['erin', 'maintainer', false],
+				['erin', 'functioneel-beheerder', $isFunctionalAdmin],
+			]
+		);
+
+		$data = $this->controller()->getMe()->getData();
+
+		$this->assertSame($expected, $data['mayFindDuplicates']);
+		$this->assertFalse($data['isBeheerder']);
+	}//end testMayFindDuplicatesFollowsTheAdministratorRule()
 
 	/**
 	 * English contact-person fields are used when the Dutch ones are absent.

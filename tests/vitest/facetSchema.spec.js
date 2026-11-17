@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -90,7 +91,7 @@ describe('buildFacetDimensionSchema', () => {
 
 	it('declares in the view the same five dimensions, Supplier included (REQ-SFC-002)', async () => {
 		const { readFileSync } = await import('fs')
-		const view = readFileSync(new URL('../../src/views/FacetedCatalogIndexView.vue', import.meta.url), 'utf8')
+		const view = readFileSync(`${process.cwd()}/src/views/FacetedCatalogIndexView.vue`, 'utf8')
 		const block = view.match(/const DIMENSION_LABELS = \{([\s\S]*?)\n\}/)[1]
 		expect([...block.matchAll(/^\t(\w+):/gm)].map((m) => m[1])).toEqual(Object.keys(DIMENSION_LABELS))
 		expect(block).toContain("supplier: () => t('stackiq', 'Supplier')")

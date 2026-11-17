@@ -38,6 +38,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for the koppelingen and gebruik lookup by uuid.
@@ -228,6 +229,7 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', $args[0], $args[5] ?? null, $args[6] ?? null];
 				if (isset($this->plan['findThrows']) === true) {
 					throw new \RuntimeException('find failed');
