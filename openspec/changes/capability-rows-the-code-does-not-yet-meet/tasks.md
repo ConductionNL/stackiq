@@ -61,8 +61,8 @@
 ### Task 9: Resolve the standard version picker on a connection
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalogue-connection-pages/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (connection.standardVersions), `src/manifest.d/connections.json`
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/connections.spec.ts`)
+- [x] Implement (`register.d/standard-version-pickers.json`: `connection.standardVersions` items carry `x-external-register: vng-gemma` and `x-label-field: name`, so the form's picker lists the GEMMA standard versions (still filtered on `gemmaType=standaardversie`) from the register that holds them; KoppelingDetail's kp-data shows `standardVersions`)
+- [x] Test (PHPUnit `tests/Unit/Settings/StandardVersionPickersTest.php`; the Playwright scenario in `tests/e2e/workflows/connections.spec.ts` needs a live run)
 
 ### Task 10: Test the built behaviour the matrix rows claim
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/proposal.md
@@ -125,8 +125,8 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy standard version relation register), `src/manifest.json` (ModuleDetail declare a standard)
 - **acceptance_criteria**:
   - GIVEN an application page WHEN a user declares support for a standard version THEN the version resolves and the record shows on the compliance matrix
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+- [x] Implement (`register.d/standard-version-pickers.json`: `compliancy.standardVersion` reads the vng-gemma register the same way; ModuleDetail's Compliance claims list offers "Declare a standard" (create on, with standard version, URL and evidence reference, the module set by the list's filter), so the record shows on the compliance matrix as claimed until a reviewer verifies it, task 15)
+- [x] Test (PHPUnit `tests/Unit/Settings/StandardVersionPickersTest.php`; Playwright `tests/e2e/workflows/compliance-matrix.spec.ts` covers the matrix half, needs a live run)
 
 ### Task 19: Usages made on stackiq's own forms carry the supplier
 - **spec_ref**: openspec/specs/application-page/spec.md

@@ -1976,7 +1976,8 @@ OC.L10N.register(
         "Mark as verified": "Mark as verified",
         "The claim is marked verified": "The claim is marked verified",
         "Verified by {name} on {date}": "Verified by {name} on {date}",
-        "Could not mark the claim verified": "Could not mark the claim verified"
+        "Could not mark the claim verified": "Could not mark the claim verified",
+        "Declare a standard": "Declare a standard"
     },
     "nplurals=2; plural=(n != 1);"
 )
