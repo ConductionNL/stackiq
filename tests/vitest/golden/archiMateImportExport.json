@@ -19,6 +19,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -99,6 +100,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -169,6 +171,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -251,6 +254,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -333,6 +337,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -415,6 +420,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -499,6 +505,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -578,6 +585,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -655,6 +663,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -730,6 +739,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -807,6 +817,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -869,6 +880,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -931,6 +943,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -990,6 +1003,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -1019,6 +1033,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -1037,7 +1052,7 @@
 			],
 			[
 				"fetch",
-				"/index.php/apps/stackiq/api/archimate/export/organization/org%201%2Fa?modules=true&deelnames=true&usage=false",
+				"/index.php/apps/stackiq/api/archimate/export/organization/org%201%2Fa?modules=true&deelnames=true&usage=false&connections=false",
 				{
 					"method": "GET",
 					"headers": {
@@ -1095,6 +1110,7 @@
 			"includeModules": true,
 			"includeDeelnames": true,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Org One",
@@ -1113,7 +1129,7 @@
 			],
 			[
 				"fetch",
-				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=false&deelnames=false&usage=false",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=false&deelnames=false&usage=false&connections=false",
 				{
 					"method": "GET",
 					"headers": {
@@ -1169,6 +1185,7 @@
 			"includeModules": false,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -1187,7 +1204,7 @@
 			],
 			[
 				"fetch",
-				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false&connections=false",
 				{
 					"method": "GET",
 					"headers": {
@@ -1230,6 +1247,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",
@@ -1248,7 +1266,7 @@
 			],
 			[
 				"fetch",
-				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false&connections=false",
 				{
 					"method": "GET",
 					"headers": {
@@ -1291,6 +1309,7 @@
 			"includeModules": true,
 			"includeDeelnames": false,
 			"includeGebruik": false,
+			"includeConnections": false,
 			"organizationOptions": [
 				{
 					"label": "Generic",

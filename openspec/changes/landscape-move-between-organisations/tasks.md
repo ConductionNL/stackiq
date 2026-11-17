@@ -24,15 +24,15 @@
 - **files**: `src/dialogs/MoveToOrganisationDialog.vue`, `src/manifest.json` and `src/manifest.d/*.json` (mass and header actions), `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN three selected usages WHEN the admin picks Move to organisation THEN the dialog lists the three and their connections that stay behind
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/move-to-organisation.spec.ts`)
+- [x] Implement (`src/dialogs/MoveToOrganisationDialog.vue`, opened by the Move to organisation bulk action on Applications, Services, Applications in use, Connections and Contracts through the handlers in `src/services/moveToOrganisation.js`; and by the Move to organisation header action on the Application, Contract, Connection and Application-in-use detail pages, an `open-modal` action on the registered `MoveToOrganisationLauncher`, which takes the record id from the route because a detail page's header actions reach no named app handler and do not resolve `@objectId` in modal props. Services has no detail page.)
+- [ ] Test (Playwright `tests/e2e/workflows/move-to-organisation.spec.ts`; vitest `moveToOrganisation.spec.js`, `moveToOrganisationDialog.spec.js` and `moveToOrganisationLauncher.spec.js` cover the handlers, the request, the dry-run lists and the detail-page action; the Playwright spec needs a running instance)
 
 ### Task 4: Documentation
 - **spec_ref**: openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
 - **files**: `docs/features/move-to-organisation.md`, `docs/images/move-to-organisation.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Move to organisation THEN who may move, the dry run and what stays are explained with a screenshot
-- [ ] Implement
+- [ ] Implement (page `docs/features/move-to-organisation.md` written; the screenshot `docs/images/move-to-organisation.png` needs a running instance and is left)
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification

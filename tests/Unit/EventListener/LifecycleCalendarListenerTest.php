@@ -152,4 +152,23 @@ final class LifecycleCalendarListenerTest extends TestCase {
 
 		$this->listener->handle(new ObjectCreatedEvent($this->object('3', '11')));
 	}//end testAFailingSyncIsLoggedNotThrown()
+
+	/**
+	 * Without a configured register and schema nothing is synced, not even an object with an empty register and schema.
+	 *
+	 * @return void
+	 */
+	public function testAnUnconfiguredObjectTypeMatchesNothing(): void {
+		$settings = $this->createMock(ObjectTypeLocatorInterface::class);
+		$settings->method('getSchemaIdForObjectType')->willReturn(null);
+		$settings->method('getRegisterIdForObjectType')->willReturn(null);
+		$listener = new LifecycleCalendarListener(calendar: $this->calendar, settings: $settings, logger: $this->logger);
+
+		$this->calendar->expects($this->never())->method('syncContract');
+		$this->calendar->expects($this->never())->method('syncModuleVersion');
+		$this->logger->expects($this->never())->method('warning');
+
+		$listener->handle(new ObjectCreatedEvent($this->object('', '')));
+		$listener->handle(new ObjectUpdatedEvent($this->object('', ''), $this->object('', '')));
+	}//end testAnUnconfiguredObjectTypeMatchesNothing()
 }//end class

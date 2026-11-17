@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A contactpersoon with a usable e-mail address gets an account only when its
@@ -112,7 +113,8 @@ class ContactpersoonProcessTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->objectService->method('saveObject')->willReturnCallback(
 			function (...$args): ObjectEntityInterface {
-				$this->saves[] = array_combine(self::SAVE_PARAMETERS, array_pad($args, count(self::SAVE_PARAMETERS), null));
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
+				$this->saves[] = array_combine(self::SAVE_PARAMETERS, array_pad(array_slice($args, 0, count(self::SAVE_PARAMETERS)), count(self::SAVE_PARAMETERS), null));
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);
@@ -247,7 +249,15 @@ class ContactpersoonProcessTest extends TestCase {
 		$orgObject = $this->createMock(ObjectEntityInterface::class);
 		$orgObject->method('getObject')->willReturn(['status' => 'Actief']);
 		$this->objectService->expects($this->once())->method('find')
-			->with('org-3', [], false, 'voorzieningen', 'organisatie', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'org-3',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'voorzieningen',
+				'schema' => 'organisatie',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($orgObject);
 		$sync = new class($this->organisation(active: true)) {
 			/**
