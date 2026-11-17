@@ -57,6 +57,7 @@
       Built: the page fragment, the menu entry under Organisations with `permission: access.review`, `AccessReviewView` (registered in `src/customComponents.js`), its icon, and the English and Dutch strings. Left: `access.review` in the shell's permission list (`DashboardController`), which `operations-sync-status-and-progress` introduces and is not built yet; until it is, the entry shows for everyone and the endpoint refuses anyone but admins and the organisation's functional administrators.
 - [ ] Test (vitest tests/vitest/accessReviewView.spec.js and Playwright tests/e2e/spec-coverage/access-review.spec.ts)
       vitest done (9 tests); the Playwright spec needs a live instance.
+      2026-11-17, written: `tests/e2e/spec-coverage/access-review.spec.ts` (two never-reviewed colleagues listed as due, Keep access makes a row current by the reviewer, Remove role takes Gebruik-beheerder from the row, the contact person and the group, a regular user's menu has no Access review). Not run against a live instance yet.
 
 ### Task 6: Seed review dates and document both features
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
@@ -67,6 +68,7 @@
 - [ ] Implement
       Built: `accessReviewedAt` on the first two demo contact persons as `-P7D` and `-P14M`, resolved against the import date by `RelativeDemoDates` in `DemoDataService` (the third has none), and `docs/features/role-mapping-and-access-review.md`. Left: the screenshots, which the Playwright specs capture on a live instance; the demo contact persons have no accounts, so whether the page shows the three rows needs that live check too.
 - [ ] Test (Playwright tests/e2e/spec-coverage/role-mapping.spec.ts and tests/e2e/spec-coverage/access-review.spec.ts against the demo data)
+      2026-11-17, written: `tests/e2e/spec-coverage/role-mapping.spec.ts` (an admin maps Gebruik-beheerder onto a seeded Inkoop group and its member lands in `gebruik-beheerder`; only the role mapping is restored afterwards). The access-review spec seeds its own rows rather than reading the demo data, because the demo contact persons have no accounts. Not run live yet.
 
 ## Verification
 
