@@ -229,6 +229,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
 
         // Aanbod API endpoints for managing offers (gebruik, dienst, module, koppeling)
         ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
+        // Usages other organisations claim of the active organisation's products (supplier-accepts-claimed-usage).
+        ['name' => 'claimedUsage#index', 'url' => '/api/aanbod/claimed', 'verb' => 'GET'],
+        ['name' => 'claimedUsage#accept', 'url' => '/api/aanbod/claimed/{uuid}/accept', 'verb' => 'PUT'],
+        ['name' => 'claimedUsage#decline', 'url' => '/api/aanbod/claimed/{uuid}/decline', 'verb' => 'PUT'],
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
         // Derived connection suggestions of a usage (connections-derived-dependencies REQ-DCN-001..003).
@@ -270,6 +274,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // landscape-move-between-organisations: move chosen entries to another organisation, keeping their identity.
         ['name' => 'ownershipTransfer#plan', 'url' => '/api/ownership-transfers/plan', 'verb' => 'POST'],
         ['name' => 'ownershipTransfer#execute', 'url' => '/api/ownership-transfers/execute', 'verb' => 'POST'],
+
+        // ENTRY TYPE CHANGE — an application becomes a service or system software and
+        // back without a new uuid. The caller's own rights on both schemas are checked
+        // in EntryTypeService before OpenRegister moves the object.
+        // @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+        ['name' => 'entryType#preview', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'GET'],
+        ['name' => 'entryType#change', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'POST'],
 
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,
@@ -345,6 +356,9 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
+        // security-baseline-classification REQ-BCL-003/004: the GEMMA suggestion and the anonymous summary.
+        ['name' => 'usageClassification#suggestion', 'url' => '/api/gebruik/{usageId}/classification-suggestion', 'verb' => 'GET'],
+        ['name' => 'usageClassification#summary', 'url' => '/api/modules/{moduleId}/classification-summary', 'verb' => 'GET'],
 
         // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
         // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
@@ -355,6 +369,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
+        // @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+        ['name' => 'landscapeComparison#index', 'url' => '/api/landscape-comparison', 'verb' => 'GET'],
         // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
         ['name' => 'attestation#start', 'url' => '/api/attestation-rounds', 'verb' => 'POST'],
         // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry

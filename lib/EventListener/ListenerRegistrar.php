@@ -83,6 +83,10 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
+		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
+		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 
@@ -93,6 +97,9 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
 
+		// An application cannot be part of itself or of one of its components (landscape-application-components).
+		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
 		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
 		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);

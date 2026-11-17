@@ -38,10 +38,12 @@ use OCA\Stackiq\EventListener\LifecycleCalendarListener;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
+use OCA\Stackiq\EventListener\ModuleComponentListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\StackiqEventListener;
 use OCA\Stackiq\EventListener\TestEventListener;
+use OCA\Stackiq\EventListener\UsageClassificationSubscriber;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\User\Events\UserLoggedInEvent;
@@ -92,10 +94,14 @@ final class ListenerRegistrarTest extends TestCase {
 				[UserLoggedInEvent::class, TestEventListener::class],
 				[ObjectCreatedEvent::class, ModuleComplianceSubscriber::class],
 				[ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class],
+				[ObjectCreatedEvent::class, UsageClassificationSubscriber::class],
+				[ObjectUpdatedEvent::class, UsageClassificationSubscriber::class],
 				[ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatingEvent::class, AnonymousRegistrationListener::class],
 				[ObjectCreatingEvent::class, ContactPersonOrganisationListener::class],
 				[ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class],
+				[ObjectCreatingEvent::class, ModuleComponentListener::class],
+				[ObjectUpdatingEvent::class, ModuleComponentListener::class],
 				[ObjectCreatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class],

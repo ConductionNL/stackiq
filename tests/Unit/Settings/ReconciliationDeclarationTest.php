@@ -34,6 +34,14 @@ use ReflectionMethod;
  * The reconciliation declarations survive the fragment merge.
  */
 class ReconciliationDeclarationTest extends TestCase {
+
+	/**
+	 * Fragments of changes built after this one, which may raise a schema version past it.
+	 *
+	 * @var array<int, string>
+	 */
+	private const LATER_CHANGES = ['landscape-change-entry-type.json'];
+
 	/**
 	 * The register with every fragment merged over it, the way the import
 	 * reads it, keeping the highest version of each schema.
@@ -98,7 +106,10 @@ class ReconciliationDeclarationTest extends TestCase {
 
 	/**
 	 * Both schema versions are above the monolith's and every fragment's, so
-	 * the import does not skip the new properties.
+	 * the import does not skip the new properties. A fragment of a LATER change
+	 * may go higher still (landscape-change-entry-type's module 0.3.15): the
+	 * merged register then carries that higher version, which reaches existing
+	 * installs too, so the merged version only has to be at least this one.
 	 *
 	 * @return void
 	 */
@@ -113,11 +124,16 @@ class ReconciliationDeclarationTest extends TestCase {
 					continue;
 				}
 
+				if (in_array(basename($source), self::LATER_CHANGES, true) === true) {
+					continue;
+				}
+
 				$other = json_decode((string)file_get_contents($source), true)['components']['schemas'][$slug]['version'] ?? '0';
 				$this->assertTrue(version_compare($ours, (string)$other, '>'), $slug.' '.$ours.' must be above '.$other.' in '.basename($source));
 			}
 
-			$this->assertSame($ours, self::mergedRegister()['components']['schemas'][$slug]['version']);
+			$merged = (string)self::mergedRegister()['components']['schemas'][$slug]['version'];
+			$this->assertTrue(version_compare($merged, $ours, '>='), $slug.' merged '.$merged.' must be at least '.$ours);
 		}
 	}//end testBothSchemaVersionsGoUp()
 }//end class
