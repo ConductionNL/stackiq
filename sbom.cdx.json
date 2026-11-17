@@ -7196,8 +7196,8 @@
       "type": "library",
       "name": "editor",
       "group": "@toast-ui",
-      "version": "3.2.2",
-      "bom-ref": "stackiq@1.0.0|@toast-ui/editor@3.2.2",
+      "version": "3.2.3",
+      "bom-ref": "stackiq@1.0.0|@toast-ui/editor@3.2.3",
       "licenses": [
         {
           "license": {
@@ -7205,15 +7205,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40toast-ui/editor@3.2.2",
+      "purl": "pkg:npm/%40toast-ui/editor@3.2.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@toast-ui/editor/-/editor-3.2.2.tgz",
+          "url": "https://registry.npmjs.org/@toast-ui/editor/-/editor-3.2.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "0125fb2c58cdd9961026bc269146a33ecec346bf45b0cd7e450f3609f4ced18e595e8ac19355594b80b60e9c629f1f64979e55e05f3f036876405e10303b516c"
+              "content": "85c0503174a53e4f2fdf78d7c61bce8b055a7af47fc7b2a0a69c8786b0cd7bfe22bca27c26fc0725126e2b9587fce8a47dd48bcd9410a32eccdc77ae047b1abe"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
