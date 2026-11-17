@@ -271,6 +271,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'ownershipTransfer#plan', 'url' => '/api/ownership-transfers/plan', 'verb' => 'POST'],
         ['name' => 'ownershipTransfer#execute', 'url' => '/api/ownership-transfers/execute', 'verb' => 'POST'],
 
+        // ENTRY TYPE CHANGE — an application becomes a service or system software and
+        // back without a new uuid. The caller's own rights on both schemas are checked
+        // in EntryTypeService before OpenRegister moves the object.
+        // @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+        ['name' => 'entryType#preview', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'GET'],
+        ['name' => 'entryType#change', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'POST'],
+
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,
         // no-admin-idor safe). Delegates the actual membership mutation to
@@ -358,6 +365,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
+        // @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+        ['name' => 'landscapeComparison#index', 'url' => '/api/landscape-comparison', 'verb' => 'GET'],
         // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
         ['name' => 'attestation#start', 'url' => '/api/attestation-rounds', 'verb' => 'POST'],
         // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry

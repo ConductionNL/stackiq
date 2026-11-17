@@ -59,6 +59,7 @@ final class CatalogueReferenceMap {
 			// Landscape-application-components: a component's parent and an application's components.
 			['schema' => 'module', 'field' => 'partOf', 'list' => false],
 			['schema' => 'module', 'field' => 'components', 'list' => true],
+			['schema' => 'applicationInterface', 'field' => 'module', 'list' => false],
 		],
 		'catalogService' => [
 			['schema' => 'usage', 'field' => 'diensten', 'list' => true],
