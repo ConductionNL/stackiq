@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -324,20 +325,13 @@ class FederationServiceTest extends TestCase {
 	}//end testLocalFederationAllowlist()
 
 	/**
-	 * pullPeer fetches the peer catalog via OpenCatalogi's DirectoryService and
-	 * merges new entries as read-only, source-attributed local mirrors.
+	 * pullPeer fetches the peer's own published catalogue and merges new entries
+	 * as read-only, source-attributed local mirrors.
 	 *
 	 * @return void
 	 */
 	public function testPullPeerMergesNewEntries(): void {
-		$directory = new class {
-			public function getDirectory(array $query = []): array {
-				return [
-					'organisation' => 'Gemeente Peer',
-					'results' => [['id' => 'p-1', 'name' => 'Peer Service']],
-				];
-			}
-		};
+		$fetch = ['ok' => true, 'reason' => 'ok', 'organisation' => 'Gemeente Peer', 'entries' => [['id' => 'p-1', 'name' => 'Peer Service']]];
 
 		$saved = [];
 		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
@@ -349,7 +343,7 @@ class FederationServiceTest extends TestCase {
 			}
 		);
 
-		$service = $this->makePullService($directory, $objectService, ['https://peer.example']);
+		$service = $this->makePullService($fetch, $objectService, ['https://peer.example']);
 		$result = $service->pullPeer('https://peer.example');
 
 		$this->assertTrue($result['ok']);
@@ -376,11 +370,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPullPeerIsIdempotentAndLeavesLocalEntriesAlone(): void {
-		$directory = new class {
-			public function getDirectory(array $query = []): array {
-				return ['organisation' => 'Gemeente Peer', 'results' => [['id' => 'p-1', 'name' => 'Same']]];
-			}
-		};
+		$fetch = ['ok' => true, 'reason' => 'ok', 'organisation' => 'Gemeente Peer', 'entries' => [['id' => 'p-1', 'name' => 'Same']]];
 
 		// Existing local mirror of this peer, identical payload.
 		$existingMirror = [
@@ -410,7 +400,7 @@ class FederationServiceTest extends TestCase {
 			}
 		);
 
-		$service = $this->makePullService($directory, $objectService, ['https://peer.example']);
+		$service = $this->makePullService($fetch, $objectService, ['https://peer.example']);
 		$result = $service->pullPeer('https://peer.example');
 
 		$this->assertTrue($result['ok']);
@@ -427,12 +417,8 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPullPeerMarksStaleAfterFailureThreshold(): void {
-		// DirectoryService throws → fetch fails.
-		$directory = new class {
-			public function getDirectory(array $query = []): array {
-				throw new \RuntimeException('peer unreachable');
-			}
-		};
+		// The peer does not answer → fetch fails.
+		$fetch = ['ok' => false, 'reason' => PeerCatalogClient::NOT_REACHABLE, 'organisation' => null, 'entries' => []];
 
 		$staledMirror = null;
 		$existingMirror = [
@@ -466,7 +452,7 @@ class FederationServiceTest extends TestCase {
 		$config->method('getStaleAfterFailures')->willReturn(3);
 		$config->method('getPeerFailures')->willReturn(2);
 
-		$service = $this->makePullServiceWithConfig($directory, $objectService, $config);
+		$service = $this->makePullServiceWithConfig($fetch, $objectService, $config);
 		$result = $service->pullPeer('https://peer.example');
 
 		$this->assertFalse($result['ok']);
@@ -488,17 +474,18 @@ class FederationServiceTest extends TestCase {
 	}//end testPullPeerBlockedBySsrfGuard()
 
 	/**
-	 * Build a FederationService wired for a pull: container resolves the OC
-	 * DirectoryService + OR ObjectService; SettingsService resolves the mirror
-	 * register/schema; federation enabled with the given peers.
+	 * Build a FederationService wired for a pull: the peer catalogue client
+	 * answers with the given fetch, the container resolves the OR ObjectService;
+	 * SettingsService resolves the mirror register/schema; federation enabled
+	 * with the given peers.
 	 *
-	 * @param object|null $directory The fake OC DirectoryService (null = none).
+	 * @param array<string,mixed>|null $fetch What the peer catalogue client answers (null = no client).
 	 * @param object|null $objectService The OR ObjectService mock (null = none).
 	 * @param array<int,string> $peers The subscribed peers.
 	 *
 	 * @return FederationService The wired service.
 	 */
-	private function makePullService(?object $directory, ?object $objectService, array $peers): FederationService {
+	private function makePullService(?array $fetch, ?object $objectService, array $peers): FederationService {
 		$config = $this->createMock(FederationConfig::class);
 		$config->method('isEnabled')->willReturn(true);
 		$config->method('getPeers')->willReturn($peers);
@@ -506,29 +493,26 @@ class FederationServiceTest extends TestCase {
 		$config->method('getStaleAfterFailures')->willReturn(3);
 		$config->method('getPeerFailures')->willReturn(0);
 
-		return $this->makePullServiceWithConfig($directory, $objectService, $config);
+		return $this->makePullServiceWithConfig($fetch, $objectService, $config);
 	}//end makePullService()
 
 	/**
 	 * Build a FederationService for a pull with a caller-supplied config mock.
 	 *
-	 * @param object|null $directory The fake OC DirectoryService.
+	 * @param array<string,mixed>|null $fetch What the peer catalogue client answers (null = no client).
 	 * @param object|null $objectService The OR ObjectService mock.
 	 * @param FederationConfig|MockObject $config The federation config.
 	 *
 	 * @return FederationService The wired service.
 	 */
-	private function makePullServiceWithConfig(?object $directory, ?object $objectService, $config): FederationService {
+	private function makePullServiceWithConfig(?array $fetch, ?object $objectService, $config): FederationService {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['stackiq', 'opencatalogi']);
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($directory, $objectService) {
-				if ($id === 'OCA\\OpenCatalogi\\Service\\DirectoryService' && $directory !== null) {
-					return $directory;
-				}
+			function (string $id) use ($objectService) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService' && $objectService !== null) {
 					return $objectService;
 				}
@@ -545,6 +529,20 @@ class FederationServiceTest extends TestCase {
 			eval('namespace OCA\\OpenCatalogi\\Service; class DirectoryService {}');
 		}
 
-		return new FederationService($container, $appManager, $config, new FederationMerger(), $settings, $logger);
+		$peers = null;
+		if ($fetch !== null) {
+			$peers = $this->createMock(PeerCatalogClient::class);
+			$peers->method('fetch')->with('https://peer.example', false)->willReturn($fetch);
+		}
+
+		return new FederationService(
+			container: $container,
+			appManager: $appManager,
+			config: $config,
+			merger: new FederationMerger(),
+			settingsService: $settings,
+			logger: $logger,
+			peerClient: $peers
+		);
 	}//end makePullServiceWithConfig()
 }//end class

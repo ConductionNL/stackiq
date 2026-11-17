@@ -201,6 +201,146 @@ class FederationConfig implements FederationConfigInterface {
 	}//end setPeerFailures()
 
 	/**
+	 * The most entries one pull reads from a peer (default 5000).
+	 *
+	 * @return int The cap.
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 */
+	public function getMaxEntries(): int {
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_max_entries', 5000);
+		if ($value > 0) {
+			return $value;
+		}
+
+		return 5000;
+	}//end getMaxEntries()
+
+	/**
+	 * What the pulls of a peer met: the peer's catalogue name, when it last
+	 * pulled cleanly, how many entries it mirrors and the last error.
+	 *
+	 * @param string $peerUrl The peer base URL.
+	 *
+	 * @return array{name:?string, lastPulledAt:?string, objectCount:int, lastError:?string}
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function getPeerPull(string $peerUrl): array {
+		$entry = ($this->peerPulls()[$peerUrl] ?? []);
+		if (is_array($entry) === false) {
+			$entry = [];
+		}
+
+		return [
+			'name' => $this->stringOrNull(value: ($entry['name'] ?? null)),
+			'lastPulledAt' => $this->stringOrNull(value: ($entry['lastPulledAt'] ?? null)),
+			'objectCount' => (int)($entry['objectCount'] ?? 0),
+			'lastError' => $this->stringOrNull(value: ($entry['lastError'] ?? null)),
+		];
+	}//end getPeerPull()
+
+	/**
+	 * Record a clean pull: the catalogue name, the moment and the number of
+	 * entries; the last error is cleared.
+	 *
+	 * @param string      $peerUrl     The peer base URL.
+	 * @param string|null $name        The peer's catalogue name, null to keep the one recorded.
+	 * @param string      $pulledAt    When the pull finished.
+	 * @param int         $objectCount How many entries the peer published.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function recordPeerPulled(string $peerUrl, ?string $name, string $pulledAt, int $objectCount): void {
+		$current = $this->getPeerPull(peerUrl: $peerUrl);
+		$this->writePeerPull(
+			peerUrl: $peerUrl,
+			entry: [
+				'name' => ($name ?? $current['name']),
+				'lastPulledAt' => $pulledAt,
+				'objectCount' => $objectCount,
+				'lastError' => null,
+			]
+		);
+	}//end recordPeerPulled()
+
+	/**
+	 * Record why a pull of a peer failed; what the last clean pull recorded stays.
+	 *
+	 * @param string $peerUrl The peer base URL.
+	 * @param string $error   Why the pull failed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function recordPeerError(string $peerUrl, string $error): void {
+		$entry = $this->getPeerPull(peerUrl: $peerUrl);
+		$entry['lastError'] = $error;
+		$this->writePeerPull(peerUrl: $peerUrl, entry: $entry);
+	}//end recordPeerError()
+
+	/**
+	 * Forget what the pulls of a peer recorded (the peer was removed).
+	 *
+	 * @param string $peerUrl The peer base URL.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function forgetPeerPull(string $peerUrl): void {
+		$pulls = $this->peerPulls();
+		unset($pulls[$peerUrl]);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'federation_peer_pulls', json_encode($pulls));
+	}//end forgetPeerPull()
+
+	/**
+	 * Store one peer's pull record.
+	 *
+	 * @param string              $peerUrl The peer base URL.
+	 * @param array<string,mixed> $entry   The record.
+	 *
+	 * @return void
+	 */
+	private function writePeerPull(string $peerUrl, array $entry): void {
+		$pulls = $this->peerPulls();
+		$pulls[$peerUrl] = $entry;
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'federation_peer_pulls', json_encode($pulls));
+	}//end writePeerPull()
+
+	/**
+	 * Every peer's pull record, by peer URL.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function peerPulls(): array {
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peer_pulls', '{}'), true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return $decoded;
+	}//end peerPulls()
+
+	/**
+	 * A non-empty string, or null.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string|null
+	 */
+	private function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === true && $value !== '') {
+			return $value;
+		}
+
+		return null;
+	}//end stringOrNull()
+
+	/**
 	 * The config-gated local-federation host allowlist (comma-separated).
 	 *
 	 * Mirrors `opencatalogi/local_federation_hosts`: private/loopback peer

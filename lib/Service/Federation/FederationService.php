@@ -3,9 +3,10 @@
 /**
  * Federation Service.
  *
- * Cross-instance catalog federation by DELEGATING to OpenCatalogi's proven
- * federation stack (DirectoryService / BroadcastService) — never a bespoke
- * wire protocol (design constraint). stackiq contributes only its
+ * Cross-instance catalog federation on OpenCatalogi: discovery and announce
+ * go through its DirectoryService / BroadcastService, and a pull reads the
+ * peer's own public OpenCatalogi listing over HTTP (PeerCatalogClient), so no
+ * bespoke wire protocol is spoken (design constraint). stackiq contributes only its
  * schema mapping, the merge/provenance semantics, the sync schedule, and the
  * admin controls. When OpenCatalogi is not installed, every entry point
  * degrades to a clean disabled state with a clear message — it never errors.
@@ -69,8 +70,10 @@ class FederationService implements FederationServiceInterface {
 	 * @param ObjectTypeLocatorInterface|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
+	 * @param PeerCatalogClient|null $peerClient Reads a peer's own published catalogue over HTTP.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -80,6 +83,7 @@ class FederationService implements FederationServiceInterface {
 		private readonly ?ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
+		private readonly ?PeerCatalogClient $peerClient = null,
 	) {
 	}//end __construct()
 
@@ -107,11 +111,17 @@ class FederationService implements FederationServiceInterface {
 	 * stale threshold, and whether its host passes the SSRF allowlist guard. The
 	 * top-level `staleAfter` is the threshold those streaks are compared against.
 	 *
+	 * Each peer also carries what its pulls met (federation-pull-fetches-the-peer
+	 * REQ-FED-011): the peer's catalogue name, the last clean pull, the number
+	 * of entries it mirrors and the last error.
+	 *
 	 * @return array{available:bool, enabled:bool, directoryUrl:string,
 	 *               peers:array<int,array{url:string, failures:int, stale:bool,
-	 *               allowed:bool}>, staleAfter:int, message:string}
+	 *               allowed:bool, name:?string, lastPulledAt:?string, objectCount:int,
+	 *               lastError:?string}>, staleAfter:int, message:string}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function getStatus(): array {
 		$available = $this->isAvailable();
@@ -119,11 +129,16 @@ class FederationService implements FederationServiceInterface {
 		$peers = [];
 		foreach ($this->config->getPeers() as $peerUrl) {
 			$failures = $this->config->getPeerFailures($peerUrl);
+			$pull = $this->config->getPeerPull(peerUrl: $peerUrl);
 			$peers[] = [
 				'url' => $peerUrl,
 				'failures' => $failures,
 				'stale' => ($failures >= $staleAfter),
 				'allowed' => $this->isPeerHostAllowed(url: $peerUrl),
+				'name' => ($pull['name'] ?? null),
+				'lastPulledAt' => ($pull['lastPulledAt'] ?? null),
+				'objectCount' => (int)($pull['objectCount'] ?? 0),
+				'lastError' => ($pull['lastError'] ?? null),
 			];
 		}
 
@@ -202,6 +217,7 @@ class FederationService implements FederationServiceInterface {
 
 		$this->config->setPeers($filtered);
 		$this->config->setPeerFailures($peerUrl, 0);
+		$this->config->forgetPeerPull(peerUrl: $peerUrl);
 		$this->connectionReports?->federationPeersChanged(status: $this->getStatus());
 		return ['ok' => true, 'reason' => 'peer removed'];
 	}//end removePeer()
@@ -339,9 +355,10 @@ class FederationService implements FederationServiceInterface {
 	/**
 	 * Pull one peer's published catalog and reconcile it into local mirrors.
 	 *
-	 * Steps: (1) SSRF-guard the peer host; (2) fetch the peer's published
-	 * entries through OpenCatalogi's DirectoryService (never a bespoke HTTP
-	 * client); (3) load the locally-stored mirrors of THIS peer; (4) compute a
+	 * Steps: (1) SSRF-guard the peer host; (2) fetch the peer's own published
+	 * entries from its public OpenCatalogi listing over HTTP
+	 * ({@see PeerCatalogClient}, federation-pull-fetches-the-peer REQ-FED-010);
+	 * (3) load the locally-stored mirrors of THIS peer; (4) compute a
 	 * create/update/withdraw plan via {@see FederationMerger}; (5) apply it via
 	 * the OpenRegister ObjectService abstraction (ADR-022). On a failed fetch the
 	 * peer's consecutive-failure count increments and, past the threshold, its
@@ -353,16 +370,19 @@ class FederationService implements FederationServiceInterface {
 	 * @return array{ok:bool, reason:string, created:int, updated:int, withdrawn:int, stale:bool}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function pullPeer(string $peerUrl): array {
 		$empty = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 
 		if ($this->isPeerHostAllowed(url: $peerUrl) === false) {
+			$this->config->recordPeerError(peerUrl: $peerUrl, error: PeerCatalogClient::BLOCKED);
 			return ['ok' => false, 'reason' => 'peer host blocked by SSRF guard'] + $empty;
 		}
 
 		$fetch = $this->fetchPeerCatalog(peerUrl: $peerUrl);
 		if ($fetch['ok'] === false) {
+			$this->config->recordPeerError(peerUrl: $peerUrl, error: $fetch['reason']);
 			return $this->recordPullFailure(peerUrl: $peerUrl, reason: $fetch['reason']) + ['ok' => false, 'reason' => $fetch['reason']];
 		}
 
@@ -406,6 +426,12 @@ class FederationService implements FederationServiceInterface {
 		// Successful pull clears the failure streak and un-stales surviving mirrors.
 		$this->config->setPeerFailures($peerUrl, 0);
 		$this->clearStaleMirrors(objectService: $objectService, target: $target, peerUrl: $peerUrl);
+		$this->config->recordPeerPulled(
+			peerUrl: $peerUrl,
+			name: $fetch['organisation'],
+			pulledAt: $peer['syncedAt'],
+			objectCount: count($fetch['entries'])
+		);
 
 		return [
 			'ok' => true,
@@ -418,41 +444,28 @@ class FederationService implements FederationServiceInterface {
 	}//end pullPeer()
 
 	/**
-	 * Fetch a peer's published catalog entries via OpenCatalogi's DirectoryService.
+	 * Fetch a peer's own published catalogue entries over HTTP.
 	 *
-	 * Delegates the wire to OpenCatalogi — stackiq never speaks a bespoke
-	 * federation protocol. Only published entries are returned (the peer's own
-	 * `publicatiedatum<=$now` public RBAC gate governs that surface).
+	 * The peer's public OpenCatalogi listing is read at the peer's own address
+	 * ({@see PeerCatalogClient}), never this instance's directory: what is
+	 * mirrored is what that peer publishes. A peer on the local-federation
+	 * allowlist may resolve to a local address; any other may not.
 	 *
 	 * @param string $peerUrl The peer base URL.
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>}
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function fetchPeerCatalog(string $peerUrl): array {
-		try {
-			$directory = $this->container->get('OCA\\OpenCatalogi\\Service\\DirectoryService');
-			// OpenCatalogi exposes a peer's published catalog through getDirectory
-			// / a peer-scoped fetch; we pass the peer URL so OC performs the
-			// SSRF-aware HTTP call and returns the published publications.
-			$listing = $directory->getDirectory(['url' => $peerUrl]);
-		} catch (\Throwable $e) {
-			$this->logger->error('[Federation] peer fetch failed', ['peer' => $peerUrl, 'error' => $e->getMessage()]);
-			return ['ok' => false, 'reason' => $e->getMessage(), 'organisation' => null, 'entries' => []];
+		if ($this->peerClient === null) {
+			return ['ok' => false, 'reason' => 'peer catalogue client unavailable', 'organisation' => null, 'entries' => []];
 		}
 
-		$entries = [];
-		if (is_array($listing['results'] ?? null) === true) {
-			$entries = $listing['results'];
-		} elseif (is_array($listing) === true) {
-			$entries = $listing;
-		}
+		$host = parse_url($peerUrl, PHP_URL_HOST);
+		$allowLocal = is_string($host) === true && in_array($host, $this->config->getLocalFederationHosts(), true) === true;
 
-		$organisation = null;
-		if (is_string($listing['organisation'] ?? null) === true) {
-			$organisation = $listing['organisation'];
-		}
-
-		return ['ok' => true, 'reason' => 'ok', 'organisation' => $organisation, 'entries' => array_values($entries)];
+		return $this->peerClient->fetch(peerUrl: $peerUrl, allowLocal: $allowLocal);
 	}//end fetchPeerCatalog()
 
 	/**

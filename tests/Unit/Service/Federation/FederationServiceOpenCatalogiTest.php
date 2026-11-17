@@ -24,6 +24,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -86,7 +87,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	 *
 	 * @return FederationService
 	 */
-	private function service(?ConnectionReportService $reports = null): FederationService {
+	private function service(?ConnectionReportService $reports = null, ?PeerCatalogClient $peers = null): FederationService {
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => (string)($this->store[$key] ?? $default)
@@ -125,7 +126,8 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 			merger: new FederationMerger(),
 			settingsService: null,
 			logger: $this->logger,
-			connectionReports: $reports
+			connectionReports: $reports,
+			peerClient: $peers
 		);
 	}//end service()
 
@@ -311,22 +313,29 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	 */
 	public function testPullAllPeersPullsEveryConfiguredPeer(): void {
 		$this->store['federation_peers'] = json_encode(['http://192.168.0.10', 'https://peer.example.org']);
-		$directory = $this->directory(listing: new RuntimeException('timeout'));
-		$this->services['OCA\\OpenCatalogi\\Service\\DirectoryService'] = $directory;
+		$fetched = [];
+		$peers   = $this->createMock(originalClassName: PeerCatalogClient::class);
+		$peers->method('fetch')->willReturnCallback(
+			function (string $peerUrl, bool $allowLocal = false) use (&$fetched): array {
+				$fetched[] = $peerUrl;
+				return ['ok' => false, 'reason' => PeerCatalogClient::NOT_REACHABLE, 'organisation' => null, 'entries' => []];
+			}
+		);
 		$empty    = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 		$expected = [
 			'ok' => true,
 			'reason' => 'ok',
 			'peers' => [
 				['peer' => 'http://192.168.0.10', 'ok' => false, 'reason' => 'peer host blocked by SSRF guard'] + $empty,
-				['peer' => 'https://peer.example.org'] + $empty + ['ok' => false, 'reason' => 'timeout'],
+				['peer' => 'https://peer.example.org'] + $empty + ['ok' => false, 'reason' => 'not reachable'],
 			],
 		];
 		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('federationPulled')->with($expected);
 
-		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports)->pullAllPeers());
-		$this->assertSame(expected: [['url' => 'https://peer.example.org']], actual: $directory->queries);
+		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports, peers: $peers)->pullAllPeers());
+		// The blocked peer is never fetched; the reachable-looking one is fetched once.
+		$this->assertSame(expected: ['https://peer.example.org'], actual: $fetched);
 		$this->assertSame(expected: json_encode(['https://peer.example.org' => 1]), actual: $this->store['federation_peer_failures']);
 	}//end testPullAllPeersPullsEveryConfiguredPeer()
 

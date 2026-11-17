@@ -36,6 +36,7 @@ use OCA\Stackiq\Service\FacetService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\IntakeService;
 use OCA\Stackiq\Service\MergeOrganisatieService;
@@ -698,7 +699,11 @@ final class ServiceFactories {
 					// The integriq connection report (adopt-connection-registry). Passed by
 					// name: this factory is hand-built, so the constructor default of null
 					// would otherwise switch every federation report off without a sound.
-					connectionReports: $container->get(ConnectionReportService::class)
+					connectionReports: $container->get(ConnectionReportService::class),
+					// The peer's own published catalogue, read over HTTP
+					// (federation-pull-fetches-the-peer). Passed by name for the same
+					// reason: without it every pull answers that no client is there.
+					peerClient: $container->get(PeerCatalogClient::class)
 				);
 			}
 		);
