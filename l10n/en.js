@@ -1616,7 +1616,23 @@ OC.L10N.register(
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
         "The view could not be loaded.": "The view could not be loaded.",
-        "This view holds no elements.": "This view holds no elements."
+        "This view holds no elements.": "This view holds no elements.",
+        "{count} × {schema} ({field})": "{count} × {schema} ({field})",
+        "Blocking the change": "Blocking the change",
+        "Carried over": "Carried over",
+        "Change type": "Change type",
+        "Dropped": "Dropped",
+        "Entry type": "Entry type",
+        "New type": "New type",
+        "No filled field is dropped.": "No filled field is dropped.",
+        "Other entries still point at this one, so its type cannot change.": "Other entries still point at this one, so its type cannot change.",
+        "System software": "System software",
+        "The change could not be previewed.": "The change could not be previewed.",
+        "The entry keeps its identity: its history, files and notes stay with it.": "The entry keeps its identity: its history, files and notes stay with it.",
+        "The type could not be changed.": "The type could not be changed.",
+        "The type was changed.": "The type was changed.",
+        "This entry is an application.": "This entry is an application.",
+        "This entry is system software.": "This entry is system software."
     },
     "nplurals=2; plural=(n != 1);"
 )
