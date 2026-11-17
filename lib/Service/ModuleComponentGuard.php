@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
@@ -125,8 +126,10 @@ class ModuleComponentGuard {
 
 			$entity = $objects->find(
 				id: $moduleUuid,
-				register: $this->locator->getRegisterIdForObjectType('module'),
-				schema: $this->locator->getSchemaIdForObjectType('module'),
+				options: new ObjectFindOptions(
+					register: $this->locator->getRegisterIdForObjectType('module'),
+					schema: $this->locator->getSchemaIdForObjectType('module')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

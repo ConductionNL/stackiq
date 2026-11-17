@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\ModuleComponentGuard;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use PHPUnit\Framework\TestCase;
@@ -53,8 +54,8 @@ class ModuleComponentGuardTest extends TestCase {
 	private function guard(array $parents, bool $fails = false): ModuleComponentGuard {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true) use ($parents, $fails): ?ObjectEntityInterface {
-				$this->assertSame([7, 42, false, false], [$register, $schema, $_rbac, $_multitenancy]);
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($parents, $fails): ?ObjectEntityInterface {
+				$this->assertSame([7, 42, false, false], [$options?->register, $options?->schema, $_rbac, $_multitenancy]);
 				$this->reads[] = (string)$id;
 				if ($fails === true) {
 					throw new RuntimeException('database gone');
