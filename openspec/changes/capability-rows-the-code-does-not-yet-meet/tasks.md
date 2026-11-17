@@ -55,8 +55,8 @@
 ### Task 8: Make an approved organisation active
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md
 - **files**: `lib/Service/ModerationService.php`
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ModerationServiceTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ModerationServiceTest.php`)
 
 ### Task 9: Resolve the standard version picker on a connection
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalogue-connection-pages/spec.md
