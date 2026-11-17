@@ -48,8 +48,8 @@ Starts after `architecture-views-editor` has landed the read-only GEMMA view pag
   - GIVEN a shared entry WHEN `processNodesForInjection()` nests it THEN fillColor is 210,225,255 and lineColor 40,80,170
   - GIVEN a shared element WHEN it is generated THEN it carries the property `Gedeeld door` with the partner name
   - GIVEN the export without deelnames WHEN it runs THEN the output equals today's for own applications
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/ArchiMateExportSharedUsageStyleTest.php)
+- [x] Implement (`buildRefCompApps()` carries kind and partner, owned wins over shared; `applicationNodeStyle()`; `Gedeeld door` property definition and values; restores the lost negation in the node-list normalisation so applications are nested at all)
+- [x] Test (PHPUnit tests/Unit/Service/ArchiMateExportSharedUsageStyleTest.php)
 
 ### Task 5: Seed and document
 - **spec_ref**: openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-002-a-shared-application-must-be-drawn-apart-from-an-own-application-without-relying-on-colour

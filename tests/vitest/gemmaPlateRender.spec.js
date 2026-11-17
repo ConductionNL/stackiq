@@ -30,11 +30,14 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
 	CnStatsBlock: { props: ['title', 'count', 'countLabel'], template: '<div class="stat">{{ title }}={{ count }}<span v-if="countLabel"> ({{ countLabel }})</span></div>' },
 	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+	// The coverage map below the plate (REQ-RCC-003) has its own spec, coverageViewMap.spec.js.
+	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 
 const { default: GemmaPlate } = await import('../../src/views/organisaties/GemmaPlate.vue')
 
 const stubs = {
+	CoverageViewMap: { props: ['components'], template: '<div class="coverage-map" :data-count="components.length" />' },
 	NcButton: {
 		props: ['href', 'variant', 'pressed'],
 		emits: ['click'],
@@ -98,6 +101,14 @@ describe('GemmaPlate rendering', () => {
 		const wrapper = await mountWith(async () => ({ data: { ...coverage, components: [] } }))
 
 		expect(wrapper.find('[data-testid="gemma-plate-no-model"]').text()).toBe('No GEMMA model')
+	})
+
+	it('hands the coverage to the map on a GEMMA view, and draws no map without a model', async () => {
+		const loaded = await mountWith(async () => ({ data: coverage }))
+		expect(loaded.find('.coverage-map').attributes('data-count')).toBe('3')
+
+		const empty = await mountWith(async () => ({ data: { ...coverage, components: [] } }))
+		expect(empty.find('.coverage-map').exists()).toBe(false)
 	})
 
 	it('renders the summary, warnings, download link and grouped components', async () => {

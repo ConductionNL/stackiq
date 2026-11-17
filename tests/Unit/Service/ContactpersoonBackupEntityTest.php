@@ -35,6 +35,7 @@ use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A contact person of an active organisation without an entity triggers the backup creation.
@@ -113,6 +114,7 @@ class ContactpersoonBackupEntityTest extends TestCase {
 			 * @return object
 			 */
 			public function find(...$args): object {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->organisation;
 			}
 		};

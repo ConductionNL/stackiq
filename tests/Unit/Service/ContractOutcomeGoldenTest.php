@@ -32,11 +32,14 @@ use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden cases for matching and projecting a concluded decision outcome.
  *
  * @covers \OCA\Stackiq\Service\ContractApprovalService
+ * @uses   \OCA\Stackiq\Service\SearchBounds
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  */
@@ -162,13 +165,21 @@ class ContractOutcomeGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $_extend, $files, $register, $schema, $_rbac, $_multitenancy) {
+			function ($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) {
+				$_extend = $options?->extend;
+				$files = $options?->files;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->trace[] = ['find', $id, $register, $schema, $_rbac, $_multitenancy];
 				return $this->plan['found'];
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function ($object, $extend, $register, $schema, $uuid) {
+			function ($object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->trace[] = ['saveObject', $object, $register, $schema, $uuid];
 				return self::contract(data: $object, uuid: $uuid);
 			}
