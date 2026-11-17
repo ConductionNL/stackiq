@@ -55,6 +55,7 @@
 - [x] Implement
   - `src/manifest.d/operations-sync-status-and-progress.json` (page `SyncStatus`, menu entry `SyncStatusMenu` with `permission: sync.view`), relocated under Organisations in `src/menu-layout.json`; `src/views/sync/SyncStatusView.vue` registered in `src/customComponents.js`; `DashboardController::page()` provides initial state `permissions` (`user`, `admin`, `sync.view`) and `src/App.vue` reads it; English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`.
 - [ ] Test (vitest tests/vitest/syncStatusView.spec.js and Playwright tests/e2e/spec-coverage/sync-status.spec.ts)
+  - 17 Nov: `tests/e2e/spec-coverage/sync-status.spec.ts` written (3 tests: the admin's page, the three-second polling that stops when the run ends, a regular user without the entries and refused with 403); vitest passes; the Playwright run needs a live instance.
   - Done: `tests/vitest/syncStatusView.spec.js` (schedule and last run, polling every three seconds and stopping, refusal) and `tests/Unit/Controller/DashboardControllerPermissionsTest.php`. Owed: the Playwright spec, which needs a live instance.
 
 ### Task 6: Document the Synchronisation page
