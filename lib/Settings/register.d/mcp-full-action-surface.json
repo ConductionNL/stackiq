@@ -1,0 +1,418 @@
+{
+  "components": {
+    "schemas": {
+      "module": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search applications and system software in the software catalogue by name, type (Application / System software), supplier, licence type (Closed source / Open source) or hosting jurisdiction (NL / EU / US / Elsewhere). Use it to find which applications an organisation could adopt, or which applications a supplier offers.",
+                "scope": "read",
+                "filters": [
+                  "name",
+                  "type",
+                  "provider",
+                  "licentietype",
+                  "hostingJurisdiction"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one application by id, including its licensing, hosting jurisdiction, standards compliance and linked service offerings.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "moduleVersion": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search application versions by their application, lifecycle status (in development / in use / end of support / withdrawn) or end-of-support date. Use it to find which version of an application is current or when its support ends.",
+                "scope": "read",
+                "filters": [
+                  "module",
+                  "status",
+                  "dateEndSupport"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one application version by id, including its support dates and linked usage records.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "catalogService": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search service offerings by name or supplying organisation. A service is something a supplier delivers on one or more applications.",
+                "scope": "read",
+                "filters": [
+                  "name",
+                  "provider"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one service offering by id, including its supplier, linked applications and connections, and publication window.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "organization": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search organisations in the catalogue (municipalities, suppliers, collaborations, communities) by name, type, lifecycle status (Draft / Active / Inactive / merged) or registration status (pending / active / rejected).",
+                "scope": "read",
+                "filters": [
+                  "name",
+                  "type",
+                  "status",
+                  "registrationStatus"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one organisation by id, including its type, lifecycle status and registration state.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "contactPerson": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Find the contact persons of an organisation, or by role. Use it to answer 'who do I contact about organisation X'.",
+                "scope": "read",
+                "filters": [
+                  "organization",
+                  "role"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one contact person by id: their role and organisation.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "connection": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search connections between applications by technique (file transfer, digikoppeling, api, ...), lifecycle status, integration type (external / internal) or supplier. Use it to find how two systems exchange data.",
+                "scope": "read",
+                "filters": [
+                  "type",
+                  "status",
+                  "integrationType",
+                  "provider"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one connection by id: the connected applications, the exchange direction and the supported standard versions.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "compliancy": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search standards-compliance records by application or GEMMA standard version, to check which applications support a given standard.",
+                "scope": "read",
+                "filters": [
+                  "module",
+                  "standardGemma"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one compliance record by id: the evidence and reference for an application and standard pair.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "usage": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search usage records: which organisation (consumer) uses which application from which supplier, at what stage (Acquisition / Planned / In production / To be phased out / Phased out) and with which TIME classification (Tolerate / Invest / Migrate / Eliminate).",
+                "scope": "read",
+                "filters": [
+                  "consumer",
+                  "provider",
+                  "status",
+                  "module",
+                  "timeClassification"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one usage record by id, including its timeline and linked application and contract.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "catalogContract": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search contracts by status (Active / Expired / In negotiation), contract type (SLA / Licence / Maintenance), the service or usage they cover, or end date. Use it for questions such as 'which contracts expire this quarter?'.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "contractType",
+                  "service",
+                  "usage",
+                  "endDate"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one contract by id, including cost, term dates and its approval outcome. A contract only becomes Active through an approved decision; use stackiq.submitContractApproval or stackiq.submitContractRenewal to ask for one.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "suite": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search application suites (bundles of applications offered together) by name.",
+                "scope": "read",
+                "filters": [
+                  "name"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one suite by id, including the applications it bundles.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "vulnerability": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search known vulnerabilities by name, CVE code, CVSS score or the applications they affect.",
+                "scope": "read",
+                "filters": [
+                  "name",
+                  "cveCode",
+                  "cvssScore",
+                  "modules"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one vulnerability by id: its CVE code, CVSS score, description and affected applications.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "create": {
+                "description": "Log a new vulnerability: name, cveCode, cvssScore (0.0 to 10.0) and the ids of the affected applications in modules (find them with stackiq.module.search).",
+                "scope": "create",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "update": {
+                "description": "Update a logged vulnerability, for example its CVSS score or the applications it affects.",
+                "scope": "update",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "software-review": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search reviews (assessments) of applications by moderation status (pending / approved / rejected), rating (1 to 10), reviewed application or usage. To write a review use stackiq.submitReview, which puts it up for moderation.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "rating",
+                  "modules",
+                  "usage"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one review by id: its rating, text, author and moderation status.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "bioMeasure": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search BIO (Baseline Informatiebeveiliging Overheid) measures by code (for example 5.1.1), name or BBN level.",
+                "scope": "read",
+                "filters": [
+                  "code",
+                  "name",
+                  "bbnLevel"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one BIO measure by id: its code, name, description and BBN levels.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "sbomComponent": {
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search the software components (SBOM entries) of application versions by name, application version, package URL (pkg:...) or the CVE ids linked to them.",
+                "scope": "read",
+                "filters": [
+                  "name",
+                  "moduleVersion",
+                  "purl",
+                  "vexCveIds"
+                ],
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "get": {
+                "description": "Get one SBOM component by id: its name, version, package URL, licence and linked CVE ids.",
+                "scope": "read",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

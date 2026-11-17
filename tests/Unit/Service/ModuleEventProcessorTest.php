@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Which organisation events reach the organisation sync, and how failures are contained.
@@ -282,6 +283,7 @@ class ModuleEventProcessorTest extends TestCase {
 			 * @return object
 			 */
 			public function find(...$args): object {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->call = $args;
 				return $this->answer;
 			}

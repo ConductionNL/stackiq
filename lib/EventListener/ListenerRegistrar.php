@@ -24,6 +24,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
@@ -95,12 +96,18 @@ final class ListenerRegistrar {
 		// An application cannot be part of itself or of one of its components (landscape-application-components).
 		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
+		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
+		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
 
 		// A module version is public only while its application is (publication-field-rules).
+		// operations-record-reconciliation D3: after OpenRegister merges two
+		// applications or services, the catalogue's references follow the survivor.
+		$context->registerEventListener(ObjectsMergedEvent::class, CatalogueMergeRelinker::class);
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);
@@ -108,6 +115,9 @@ final class ListenerRegistrar {
 		// One calendar event per contract end date and module end of support (adopt-integration-leaves).
 		$context->registerEventListener(ObjectCreatedEvent::class, LifecycleCalendarListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, LifecycleCalendarListener::class);
+
+		// An owner's own edit of an entry answers their confirmation request (landscape-owner-attestation).
+		$context->registerEventListener(ObjectUpdatedEvent::class, AttestationCorrectionListener::class);
 
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);

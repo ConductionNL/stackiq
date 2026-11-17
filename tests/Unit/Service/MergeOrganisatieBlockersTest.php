@@ -37,6 +37,7 @@ use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Cases for the merge blockers and the field re-pointing.
@@ -161,7 +162,11 @@ class MergeOrganisatieBlockersTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend=[], $register=null, $schema=null, ?string $uuid=null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->trace[] = ['saveObject', $uuid, $object];
 				return self::entity(data: $object, uuid: (string) $uuid);
 			}
@@ -271,7 +276,15 @@ class MergeOrganisatieBlockersTest extends TestCase {
 
 		$this->assertSame(['sourceUuid', 'targetUuid', 'counts', 'blockers'], array_keys($preview));
 		$this->assertSame(0, array_sum($preview['counts']));
-		$this->assertSame(['groupMembers', 'usage', 'contactPerson', 'aanbod', 'module', 'catalogService', 'catalogContract', 'compliancy', 'moduleOwnership', 'catalogServiceOwnership'], array_keys($preview['counts']));
+		$this->assertSame(
+			[
+				'groupMembers', 'usage', 'contactPerson', 'aanbod', 'module', 'catalogService',
+				// operations-record-reconciliation REQ-RRC-005: every other organisation reference.
+				'usageProvider', 'organizationDeelnames', 'organizationParticipants', 'catalogContractSupplier', 'modelOrganizations', 'aiSystemProvider', 'scenarioOrganisation', 'complianceDocumentPublisher', 'complianceDocumentSharedWithOrganisations',
+				'catalogContract', 'compliancy', 'moduleOwnership', 'catalogServiceOwnership',
+			],
+			array_keys($preview['counts'])
+		);
 		$this->assertSame(['find', 'org-a'], $this->trace[0]);
 		$this->assertSame(['find', 'org-b'], $this->trace[2]);
 		$this->assertSame(

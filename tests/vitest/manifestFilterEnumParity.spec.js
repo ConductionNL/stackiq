@@ -50,31 +50,66 @@ const SCHEMAS = register?.components?.schemas ?? {}
 function staleFilterValues(man, schemas) {
 	const problems = []
 	for (const page of man?.pages ?? []) {
-		const filter = page?.config?.filter
-		const slug = page?.config?.schema
-		if (!filter || typeof filter !== 'object' || !slug) continue
-
-		const properties = schemas?.[slug]?.properties
-		if (!properties) {
-			problems.push(
-				`page "${page.id}" filters on schema "${slug}", which the register does not declare`,
-			)
-			continue
+		for (const { filter, where } of filtersOf(page)) {
+			problems.push(...staleValuesOf(page, filter, where, schemas))
 		}
+	}
+	return problems
+}
 
-		for (const [property, raw] of Object.entries(filter)) {
-			const declared = properties?.[property]?.enum
-			if (!Array.isArray(declared) || declared.length === 0) continue
+/**
+ * Every filter a page applies: its `config.filter` and the filter of each
+ * quick filter (contracts-expiry-and-owner: quick filters get the same guard,
+ * because a quick filter on a value no row holds is the same silent empty
+ * list).
+ *
+ * @param {object} page A manifest page.
+ * @return {Array<{filter: object, where: string}>} The filters and where each sits.
+ */
+function filtersOf(page) {
+	const filters = []
+	if (page?.config?.filter && typeof page.config.filter === 'object') {
+		filters.push({ filter: page.config.filter, where: 'filters' })
+	}
+	for (const quick of page?.config?.quickFilters ?? []) {
+		if (quick?.filter && typeof quick.filter === 'object' && Object.keys(quick.filter).length > 0) {
+			filters.push({ filter: quick.filter, where: `quick filter "${quick.label}" filters` })
+		}
+	}
+	return filters
+}
 
-			for (const value of Array.isArray(raw) ? raw : [raw]) {
-				if (typeof value !== 'string') continue
-				if (value.startsWith('@') || value.startsWith(':')) continue
-				if (declared.includes(value)) continue
-				problems.push(
-					`page "${page.id}" filters ${slug}.${property} on "${value}", `
-						+ `which is not in its enum [${declared.join(', ')}]`,
-				)
-			}
+/**
+ * The values of one filter that are not in their property's enum.
+ *
+ * @param {object} page    The manifest page.
+ * @param {object} filter  The filter.
+ * @param {string} where   How the problem line names the filter.
+ * @param {object} schemas The register's `components.schemas` map.
+ * @return {Array<string>} One line per violation.
+ */
+function staleValuesOf(page, filter, where, schemas) {
+	const slug = page?.config?.schema
+	if (!slug) return []
+
+	const properties = schemas?.[slug]?.properties
+	if (!properties) {
+		return [`page "${page.id}" filters on schema "${slug}", which the register does not declare`]
+	}
+
+	const problems = []
+	for (const [property, raw] of Object.entries(filter)) {
+		const declared = properties?.[property]?.enum
+		if (!Array.isArray(declared) || declared.length === 0) continue
+
+		for (const value of Array.isArray(raw) ? raw : [raw]) {
+			if (typeof value !== 'string') continue
+			if (value.startsWith('@') || value.startsWith(':')) continue
+			if (declared.includes(value)) continue
+			problems.push(
+				`page "${page.id}" ${where} ${slug}.${property} on "${value}", `
+					+ `which is not in its enum [${declared.join(', ')}]`,
+			)
 		}
 	}
 	return problems
@@ -115,5 +150,34 @@ describe('manifest filters address values the schema enums actually declare', ()
 		const found = staleFilterValues(stale, SCHEMAS)
 		expect(found).toHaveLength(3)
 		expect(found[0]).toContain('Concept')
+	})
+
+	it('POSITIVE CONTROL: the checker reports a quick filter on a value the enum lacks', () => {
+		const stale = {
+			pages: [
+				{
+					id: 'Contracten',
+					config: {
+						schema: 'catalogContract',
+						quickFilters: [
+							{ label: 'All', filter: {} },
+							{ label: 'Verlopen', filter: { status: 'Verlopen' } },
+							{ label: 'Expiring', filter: { status: 'Expiring' } },
+						],
+					},
+				},
+			],
+		}
+		expect(staleFilterValues(stale, SCHEMAS)).toEqual([
+			'page "Contracten" quick filter "Verlopen" filters catalogContract.status on "Verlopen", '
+				+ 'which is not in its enum [Active, Expiring, Expired, In negotiation]',
+		])
+	})
+
+	it('the Contracts page offers All, Active, Expiring, Expired and In negotiation, and shows the responsible user', () => {
+		const page = manifest.pages.find((p) => p.id === 'Contracten')
+		expect(page.config.quickFilters.map((q) => q.label)).toEqual(['All', 'Active', 'Expiring', 'Expired', 'In negotiation'])
+		expect(page.config.quickFilters.map((q) => q.filter.status ?? null)).toEqual([null, 'Active', 'Expiring', 'Expired', 'In negotiation'])
+		expect(page.config.columns).toContain('responsibleUser')
 	})
 })

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\Stackiq\Kernel\Contracts\ContactPersonEmailInterface;
 use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 
 /**
@@ -31,7 +32,7 @@ use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
  *
  * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
  */
-class ContactPersonEmail {
+class ContactPersonEmail implements ContactPersonEmailInterface {
 
 	/**
 	 * Constructor.
