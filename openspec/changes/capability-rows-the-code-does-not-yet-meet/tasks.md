@@ -74,8 +74,8 @@
 ### Task 11: Open a vulnerability on its own page with the exposed organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
 - **files**: `src/views/KwetsbaarhedenView.vue` (row opens KwetsbaarheidDetail, not the generic modal), `src/manifest.json` (VulnerabilityExposurePanel)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/vulnerabilities.spec.ts`)
+- [x] Implement (`KwetsbaarhedenView.openDetail` routes a row to KwetsbaarheidDetail, whose data widget shows severity, affected applications and versions and whose Exposure tab (`VulnerabilityExposurePanel`, already on the page) lists the organisations and their in-production usages; the record modal stays only as the fallback without a router)
+- [x] Test (vitest `kwetsbaarhedenViewRender.spec.js`; Playwright `tests/e2e/workflows/vulnerabilities.spec.ts`, written, needs a live run)
 
 ### Task 12: A public sign-up form for new organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md
