@@ -75,14 +75,13 @@ final class UsageClassification {
 	 *
 	 * @param array<string, mixed> $usage    The usage as saved.
 	 * @param array<string, mixed> $previous The usage before the save; empty on create.
-	 * @param string               $userId   The user who saved, for classifiedBy.
-	 * @param string               $now      The save time, ISO 8601, for classifiedAt.
+	 * @param array{classifiedAt: string, classifiedBy: string} $stamp The save time (ISO 8601) and the user who saved, written when an aspect changed.
 	 *
 	 * @return array<string, string|null>
 	 *
 	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
 	 */
-	public static function patch(array $usage, array $previous, string $userId, string $now): array {
+	public static function patch(array $usage, array $previous, array $stamp): array {
 		$patch   = [];
 		$derived = self::derivedLevel(usage: $usage);
 		if (($usage['bbnLevel'] ?? null) !== $derived) {
@@ -91,8 +90,8 @@ final class UsageClassification {
 
 		foreach (self::ASPECTS as $aspect) {
 			if (self::value(raw: ($usage[$aspect] ?? null)) !== self::value(raw: ($previous[$aspect] ?? null))) {
-				$patch['classifiedAt'] = $now;
-				$patch['classifiedBy'] = $userId;
+				$patch['classifiedAt'] = $stamp['classifiedAt'];
+				$patch['classifiedBy'] = $stamp['classifiedBy'];
 				break;
 			}
 		}

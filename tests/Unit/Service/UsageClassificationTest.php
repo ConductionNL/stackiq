@@ -44,21 +44,20 @@ final class UsageClassificationTest extends TestCase {
 			UsageClassification::patch(
 				usage: ['availabilityLevel' => 'BBN1', 'integrityLevel' => 'BBN2', 'confidentialityLevel' => 'BBN3'],
 				previous: [],
-				userId: 'ciso',
-				now: self::NOW
+				stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'ciso']
 			)
 		);
 	}
 
 	public function testAnUnclassifiedUsageNeedsNoWrite(): void {
-		$this->assertSame([], UsageClassification::patch(usage: ['name' => 'Zaaksysteem'], previous: [], userId: 'u', now: self::NOW));
-		$this->assertSame([], UsageClassification::patch(usage: ['bbnLevel' => null], previous: [], userId: 'u', now: self::NOW));
+		$this->assertSame([], UsageClassification::patch(usage: ['name' => 'Zaaksysteem'], previous: [], stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u']));
+		$this->assertSame([], UsageClassification::patch(usage: ['bbnLevel' => null], previous: [], stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u']));
 	}
 
 	public function testAnUnchangedSaveWritesNothing(): void {
 		$saved = ['availabilityLevel' => 'BBN2', 'integrityLevel' => 'BBN2', 'confidentialityLevel' => 'BBN3', 'bbnLevel' => 'BBN3', 'name' => 'renamed'];
 
-		$this->assertSame([], UsageClassification::patch(usage: $saved, previous: $saved, userId: 'u', now: self::NOW), 'the subscriber\'s own write-back changes nothing');
+		$this->assertSame([], UsageClassification::patch(usage: $saved, previous: $saved, stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u']), 'the subscriber\'s own write-back changes nothing');
 	}
 
 	public function testClearingEveryAspectEmptiesTheLevelAndStamps(): void {
@@ -66,17 +65,17 @@ final class UsageClassificationTest extends TestCase {
 
 		$this->assertSame(
 			['bbnLevel' => null, 'classifiedAt' => self::NOW, 'classifiedBy' => 'u'],
-			UsageClassification::patch(usage: ['availabilityLevel' => '', 'bbnLevel' => 'BBN2'], previous: $previous, userId: 'u', now: self::NOW)
+			UsageClassification::patch(usage: ['availabilityLevel' => '', 'bbnLevel' => 'BBN2'], previous: $previous, stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u'])
 		);
 	}
 
 	public function testAHandSetLevelIsPutBackWithoutAStamp(): void {
 		$previous = ['integrityLevel' => 'BBN1', 'bbnLevel' => 'BBN1'];
 
-		$this->assertSame(['bbnLevel' => 'BBN1'], UsageClassification::patch(usage: ['integrityLevel' => 'BBN1', 'bbnLevel' => 'BBN3'], previous: $previous, userId: 'u', now: self::NOW));
+		$this->assertSame(['bbnLevel' => 'BBN1'], UsageClassification::patch(usage: ['integrityLevel' => 'BBN1', 'bbnLevel' => 'BBN3'], previous: $previous, stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u']));
 	}
 
 	public function testAnEmptyStringAndAMissingValueAreTheSame(): void {
-		$this->assertSame([], UsageClassification::patch(usage: ['availabilityLevel' => ''], previous: [], userId: 'u', now: self::NOW));
+		$this->assertSame([], UsageClassification::patch(usage: ['availabilityLevel' => ''], previous: [], stamp: ['classifiedAt' => self::NOW, 'classifiedBy' => 'u']));
 	}
 }

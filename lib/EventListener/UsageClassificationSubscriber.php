@@ -83,8 +83,7 @@ class UsageClassificationSubscriber implements IEventListener {
 		$patch = UsageClassification::patch(
 			usage: $usage,
 			previous: $previous,
-			userId: $this->userId(),
-			now: gmdate('Y-m-d\TH:i:s\Z')
+			stamp: ['classifiedAt' => gmdate('Y-m-d\TH:i:s\Z'), 'classifiedBy' => $this->userId()]
 		);
 		if ($patch === []) {
 			return;

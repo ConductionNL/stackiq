@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\UsageClassificationController;
 use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
+use OCA\Stackiq\Service\ClassificationSummaryAccess;
 use OCA\Stackiq\Service\UsageClassificationService;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -33,6 +34,9 @@ use Psr\Log\NullLogger;
 
 /**
  * Tests for UsageClassificationController.
+ *
+ * @covers \OCA\Stackiq\Controller\UsageClassificationController
+ * @uses   \OCA\Stackiq\Service\ClassificationSummaryAccess
  */
 class UsageClassificationControllerTest extends TestCase {
 
@@ -82,9 +86,12 @@ class UsageClassificationControllerTest extends TestCase {
 			appName: 'stackiq',
 			request: $this->createMock(IRequest::class),
 			classification: $this->service,
-			lookup: $lookup,
-			userSession: $session,
-			groupManager: $groupManager,
+			access: new ClassificationSummaryAccess(
+				classification: $this->service,
+				lookup: $lookup,
+				userSession: $session,
+				groupManager: $groupManager
+			),
 			logger: new NullLogger()
 		);
 	}//end controller()
