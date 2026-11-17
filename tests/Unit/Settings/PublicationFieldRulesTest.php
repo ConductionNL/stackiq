@@ -140,7 +140,7 @@ class PublicationFieldRulesTest extends TestCase {
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
 	/**
-	 * A version is public under the same two conditions as its module, and signed-in users read every version.
+	 * A version is public under the same condition as its module, its publication date, and signed-in users read every version.
 	 *
 	 * @return void
 	 */
@@ -150,12 +150,11 @@ class PublicationFieldRulesTest extends TestCase {
 		$version = $schemas['moduleVersion']['authorization']['read'];
 
 		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $module);
-		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module);
+		$this->assertNotContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module, 'an unpublished supplier module is not public');
 		$this->assertSame(
 			[
 				'authenticated',
 				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier'], 'crossOrganisation' => true],
 			],
 			$version
 		);

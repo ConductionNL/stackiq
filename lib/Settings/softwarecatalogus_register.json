@@ -7097,13 +7097,6 @@
               "match": {
                 "_organisation": "$organisation"
               }
-            },
-            {
-              "group": "public",
-              "match": {
-                "registeredBy": "Supplier"
-              },
-              "crossOrganisation": true
             }
           ]
         },

@@ -141,8 +141,8 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module public read rule: publication date at or before now, drop the registeredBy Supplier branch)
 - **acceptance_criteria**:
   - GIVEN a supplier's module without a publication date WHEN an anonymous reader asks for it THEN it is not returned
-- [ ] Implement
-- [ ] Test (Newman open-data collection)
+- [x] Implement (the module's `{group: public, match: {registeredBy: Supplier}}` read rule is gone, and so is its mirror `moduleRegisteredBy` on moduleVersion (`register.d/publication-field-rules.json`) and in `ModuleVersionPublicationService::isPublicNow()`; the public rule left is the publication date at or before now)
+- [x] Test (PHPUnit `PublishGateRbacTest::testAnUnpublishedSupplierModuleIsNotPublic`; Newman folder `11. Open data: anonymous module reads` in `tests/integration/stackiq.postman_collection.json`, written, needs a live run)
 
 ### Task 21: Switch federation on in the exchange settings and show the registration status
 - **spec_ref**: openspec/specs/federated-catalog-sync/spec.md

@@ -504,7 +504,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 			['module' => 'm-1', 'error' => 'index offline']
 		);
 
-		$result = $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$result = $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier', 'publicationDate' => '2026-01-01T00:00:00+00:00']));
 
 		$this->assertSame(['written' => ModuleVersionPublicationService::VERSION_LIMIT, 'failed' => 1], $result);
 		$this->assertSame(

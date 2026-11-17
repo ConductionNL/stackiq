@@ -163,4 +163,33 @@ class PublishGateRbacTest extends TestCase {
 			$this->assertSame('date-time', $props['publicationDate']['format']);
 		}
 	}//end testPublishGateFieldsPresent()
+
+	/**
+	 * Every public read rule on module waits for the publication date: an
+	 * unpublished supplier module is not returned to an anonymous reader
+	 * (capability-rows-the-code-does-not-yet-meet task 20).
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-20-anonymous-readers-get-only-published-applications
+	 *
+	 * @return void
+	 */
+	public function testAnUnpublishedSupplierModuleIsNotPublic(): void {
+		$read   = $this->register['components']['schemas']['module']['authorization']['read'];
+		$public = array_values(array_filter($read, static fn ($rule): bool => is_array($rule) === true && ($rule['group'] ?? null) === 'public'));
+
+		$this->assertNotEmpty($public, 'published modules stay public');
+		foreach ($public as $rule) {
+			$this->assertFalse(
+				$this->publicCanRead($rule['match'] ?? [], ['registeredBy' => 'Supplier', 'publicationDate' => null]),
+				'a public read rule returns an unpublished supplier module: ' . json_encode($rule)
+			);
+		}
+
+		$this->assertTrue(
+			$this->publicCanRead($public[0]['match'], ['registeredBy' => 'Supplier', 'publicationDate' => date('c', time() - 3600)]),
+			'a published supplier module is public'
+		);
+
+	}//end testAnUnpublishedSupplierModuleIsNotPublic()
+
 }//end class
