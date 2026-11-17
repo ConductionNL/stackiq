@@ -66,6 +66,7 @@ class EntryTypeController extends Controller {
 	 * @return JSONResponse The preview, or 401/404/422.
 	 *
 	 * @NoAdminRequired
+	 * @no-admin-idor-exempt EntryTypeService::locate() reads the entry with RBAC on; an entry the caller may not read is a 404
 	 *
 	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 	 */

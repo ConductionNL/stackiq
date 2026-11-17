@@ -288,7 +288,7 @@ class EntryTypeService {
 			}
 
 			try {
-				$entity = $objects->find(id: $uuid, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
+				$entity = $objects->find(id: $uuid, options: new ObjectFindOptions(register: $registerId, schema: $schemaId), _rbac: true);
 			} catch (Throwable $e) {
 				$entity = null;
 			}
