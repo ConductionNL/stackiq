@@ -869,6 +869,7 @@ export default {
 		 *
 		 * @param {...*} args - as `translate()` takes them.
 		 * @return {string}
+		 * @spec openspec/changes/i18n-wrap-hardcoded-object-modal-strings/specs/fe-object-modals/spec.md#requirement-object-action-modal-text-must-be-translatable
 		 */
 		t(...args) {
 			return t(...args)
@@ -879,6 +880,7 @@ export default {
 		 *
 		 * @param {...*} args - as `translatePlural()` takes them.
 		 * @return {string}
+		 * @spec openspec/changes/i18n-wrap-hardcoded-object-modal-strings/specs/fe-object-modals/spec.md#requirement-object-action-modal-text-must-be-translatable
 		 */
 		n(...args) {
 			return n(...args)
