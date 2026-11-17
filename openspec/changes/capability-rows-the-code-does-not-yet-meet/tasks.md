@@ -16,16 +16,16 @@
 - **acceptance_criteria**:
   - GIVEN a usage of an application WHEN a vulnerability is reported for it THEN the usage's application owner is a recipient
   - GIVEN the subject templates WHEN checked THEN every placeholder names a schema property
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/VulnerabilityNotificationRuleTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/VulnerabilityNotificationRuleTest.php`)
 
 ### Task 3: Tell the users of an application about its new version
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/softwarecatalog-notifications/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module-version-published recipients)
 - **acceptance_criteria**:
   - GIVEN a usage of an application WHEN a version of it is published THEN the usage's application owner is a recipient
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/VersionNotificationRuleTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/VersionNotificationRuleTest.php`)
 
 ### Task 4: Record the module versions a vulnerability affects
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
