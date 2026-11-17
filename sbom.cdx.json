@@ -105,10 +105,10 @@
   },
   "components": [
     {
-      "bom-ref": "adbario/php-dot-notation-3.5.0.0",
+      "bom-ref": "adbario/php-dot-notation-3.6.0.0",
       "type": "library",
       "name": "php-dot-notation",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "group": "adbario",
       "description": "PHP dot notation access to arrays",
       "author": "Riku Särkinen",
@@ -119,17 +119,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/adbario/php-dot-notation@3.5.0",
+      "purl": "pkg:composer/adbario/php-dot-notation@3.6.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/adbario/php-dot-notation/zipball/aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0",
-          "comment": "dist reference: aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "url": "https://api.github.com/repos/adbario/php-dot-notation/zipball/b59a609293b22fdb8a7d9fcb4b9b283176463d40",
+          "comment": "dist reference: b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "type": "vcs",
           "url": "https://github.com/adbario/php-dot-notation.git",
-          "comment": "source reference: aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "comment": "source reference: b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "type": "website",
@@ -143,18 +143,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/adbario/php-dot-notation/tree/3.5.0",
+          "url": "https://github.com/adbario/php-dot-notation/tree/3.6.0",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "value": "b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "value": "b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "name": "cdx:composer:package:type",
@@ -797,10 +797,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/event-dispatcher-contracts-3.7.1.0",
+      "bom-ref": "symfony/event-dispatcher-contracts-3.8.1.0",
       "type": "library",
       "name": "event-dispatcher-contracts",
-      "version": "v3.7.1",
+      "version": "v3.8.1",
       "group": "symfony",
       "description": "Generic abstractions related to dispatching event",
       "author": "Nicolas Grekas, Symfony Community",
@@ -811,17 +811,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/event-dispatcher-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/event-dispatcher-contracts@v3.8.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/c7de7a00ffb67842132da02ea92988a39ccd9f4e",
-          "comment": "dist reference: c7de7a00ffb67842132da02ea92988a39ccd9f4e"
+          "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/658e29751424da3ef4758c60f769e59d1b2981eb",
+          "comment": "dist reference: 658e29751424da3ef4758c60f769e59d1b2981eb"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/event-dispatcher-contracts.git",
-          "comment": "source reference: c7de7a00ffb67842132da02ea92988a39ccd9f4e"
+          "comment": "source reference: 658e29751424da3ef4758c60f769e59d1b2981eb"
         },
         {
           "type": "website",
@@ -830,18 +830,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/event-dispatcher-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/event-dispatcher-contracts/tree/v3.8.1",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "c7de7a00ffb67842132da02ea92988a39ccd9f4e"
+          "value": "658e29751424da3ef4758c60f769e59d1b2981eb"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "c7de7a00ffb67842132da02ea92988a39ccd9f4e"
+          "value": "658e29751424da3ef4758c60f769e59d1b2981eb"
         },
         {
           "name": "cdx:composer:package:type",
@@ -903,10 +903,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/http-client-contracts-3.7.1.0",
+      "bom-ref": "symfony/http-client-contracts-3.8.1.0",
       "type": "library",
       "name": "http-client-contracts",
-      "version": "v3.7.1",
+      "version": "v3.8.1",
       "group": "symfony",
       "description": "Generic abstractions related to HTTP clients",
       "author": "Nicolas Grekas, Symfony Community",
@@ -917,17 +917,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/http-client-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/http-client-contracts@v3.8.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/41fc42d276aeff21192465331ebbab7d83a743c0",
-          "comment": "dist reference: 41fc42d276aeff21192465331ebbab7d83a743c0"
+          "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/f9f94260f787446c6fd430b2ae1969fe41ae1ba8",
+          "comment": "dist reference: f9f94260f787446c6fd430b2ae1969fe41ae1ba8"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/http-client-contracts.git",
-          "comment": "source reference: 41fc42d276aeff21192465331ebbab7d83a743c0"
+          "comment": "source reference: f9f94260f787446c6fd430b2ae1969fe41ae1ba8"
         },
         {
           "type": "website",
@@ -936,18 +936,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/http-client-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/http-client-contracts/tree/v3.8.1",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "41fc42d276aeff21192465331ebbab7d83a743c0"
+          "value": "f9f94260f787446c6fd430b2ae1969fe41ae1ba8"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "41fc42d276aeff21192465331ebbab7d83a743c0"
+          "value": "f9f94260f787446c6fd430b2ae1969fe41ae1ba8"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1592,10 +1592,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/service-contracts-3.7.1.0",
+      "bom-ref": "symfony/service-contracts-3.8.1.0",
       "type": "library",
       "name": "service-contracts",
-      "version": "v3.7.1",
+      "version": "v3.8.1",
       "group": "symfony",
       "description": "Generic abstractions related to writing services",
       "author": "Nicolas Grekas, Symfony Community",
@@ -1606,17 +1606,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/service-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/service-contracts@v3.8.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/service-contracts/zipball/c0a284bab1ed8aa0417e3d69250ab437739563a0",
-          "comment": "dist reference: c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "url": "https://api.github.com/repos/symfony/service-contracts/zipball/052852a96fd5e5ebdb617dba22031e41a3300fb5",
+          "comment": "dist reference: 052852a96fd5e5ebdb617dba22031e41a3300fb5"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/service-contracts.git",
-          "comment": "source reference: c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "comment": "source reference: 052852a96fd5e5ebdb617dba22031e41a3300fb5"
         },
         {
           "type": "website",
@@ -1625,18 +1625,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/service-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/service-contracts/tree/v3.8.1",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "value": "052852a96fd5e5ebdb617dba22031e41a3300fb5"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "value": "052852a96fd5e5ebdb617dba22031e41a3300fb5"
         },
         {
           "name": "cdx:composer:package:type",
@@ -2898,6 +2898,42 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@conduction/nextcloud-vue"
         }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "dialogs",
+          "group": "@nextcloud",
+          "version": "7.6.0",
+          "bom-ref": "stackiq@1.0.0|@conduction/nextcloud-vue@2.181.0|@nextcloud/dialogs@7.6.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "AGPL-3.0-or-later"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40nextcloud/dialogs@7.6.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@nextcloud/dialogs/-/dialogs-7.6.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "b3a3d90cd8a82be8966d59bf636bad96958308aaa5c5f874a1468e9224166b166af23e5442c875888d5b2809e109116535cff22a68f510e5413114361031a435"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@conduction/nextcloud-vue/node_modules/@nextcloud/dialogs"
+            }
+          ]
+        }
       ]
     },
     {
@@ -3470,8 +3506,8 @@
       "type": "library",
       "name": "config-array",
       "group": "@eslint",
-      "version": "0.23.5",
-      "bom-ref": "stackiq@1.0.0|@eslint/config-array@0.23.5",
+      "version": "0.23.6",
+      "bom-ref": "stackiq@1.0.0|@eslint/config-array@0.23.6",
       "licenses": [
         {
           "license": {
@@ -3479,15 +3515,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40eslint/config-array@0.23.5",
+      "purl": "pkg:npm/%40eslint/config-array@0.23.6",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@eslint/config-array/-/config-array-0.23.5.tgz",
+          "url": "https://registry.npmjs.org/@eslint/config-array/-/config-array-0.23.6.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "63790a2ef0b576f4ce4fea0696a350d572ea2ba0f51d4d985cf739d8d98094965b30c583cc66173223d127c4d80f7f66b83fce4e395998d27889beddbd2acc04"
+              "content": "5ab4c7ee78a823d40f6383591a7b32c2679cb3025d81eab804233beaaa24f558234cedbd66053352f72e24b54f61540ce2e0db68f054d0cdf747d0c8c48f17df"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -3501,6 +3537,45 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@eslint/config-array"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "minimatch",
+          "version": "11.0.8",
+          "bom-ref": "stackiq@1.0.0|@eslint/config-array@0.23.6|minimatch@11.0.8",
+          "licenses": [
+            {
+              "license": {
+                "id": "BlueOak-1.0.0"
+              }
+            }
+          ],
+          "purl": "pkg:npm/minimatch@11.0.8",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.8.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "9c542e6124d5ac6bf2b15069b39221fb405d9d814dfc28f70bcd7aafafa9ef22be147ad52c61383b837d005c3292b94d96f3361d8b7e45a775522ae8ea1f3c22"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@eslint/config-array/node_modules/minimatch"
+            }
+          ]
         }
       ]
     },
@@ -4849,8 +4924,8 @@
       "type": "library",
       "name": "dialogs",
       "group": "@nextcloud",
-      "version": "7.6.0",
-      "bom-ref": "stackiq@1.0.0|@nextcloud/dialogs@7.6.0",
+      "version": "8.0.0",
+      "bom-ref": "stackiq@1.0.0|@nextcloud/dialogs@8.0.0",
       "licenses": [
         {
           "license": {
@@ -4858,15 +4933,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40nextcloud/dialogs@7.6.0",
+      "purl": "pkg:npm/%40nextcloud/dialogs@8.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@nextcloud/dialogs/-/dialogs-7.6.0.tgz",
+          "url": "https://registry.npmjs.org/@nextcloud/dialogs/-/dialogs-8.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "b3a3d90cd8a82be8966d59bf636bad96958308aaa5c5f874a1468e9224166b166af23e5442c875888d5b2809e109116535cff22a68f510e5413114361031a435"
+              "content": "f2e379f5728e324ecc54287437175df21bd9999431955211bfcb351ab842e7e51bd210fac89ffc5f2aee179e25ae4986981aa1d38f3f8bf64447ddefc1f4690e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -4876,6 +4951,41 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@nextcloud/dialogs"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "p-queue",
+          "version": "10.0.0",
+          "bom-ref": "stackiq@1.0.0|@nextcloud/dialogs@8.0.0|p-queue@10.0.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/p-queue@10.0.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/p-queue/-/p-queue-10.0.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "3f6c2b0ab8b76e118b3e8de45fba985576e8ff91af6950135340e93b6e026de4f9dd8e33df9b7c2545a4bb4e044695c7518079acf322dd39161377e6260c79ac"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@nextcloud/dialogs/node_modules/p-queue"
+            }
+          ]
         }
       ]
     },
@@ -5711,10 +5821,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-android-arm64"
         }
@@ -5749,10 +5855,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-arm64"
@@ -5789,10 +5891,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-x64"
         }
@@ -5827,10 +5925,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-freebsd-x64"
@@ -5867,10 +5961,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-glibc"
         }
@@ -5905,10 +5995,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-musl"
@@ -5945,10 +6031,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-glibc"
         }
@@ -5983,10 +6065,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-musl"
@@ -6023,10 +6101,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-glibc"
         }
@@ -6061,10 +6135,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-musl"
@@ -6101,10 +6171,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-arm64"
         }
@@ -6139,10 +6205,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-x64"
@@ -7134,8 +7196,8 @@
       "type": "library",
       "name": "editor",
       "group": "@toast-ui",
-      "version": "3.2.2",
-      "bom-ref": "stackiq@1.0.0|@toast-ui/editor@3.2.2",
+      "version": "3.2.3",
+      "bom-ref": "stackiq@1.0.0|@toast-ui/editor@3.2.3",
       "licenses": [
         {
           "license": {
@@ -7143,15 +7205,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40toast-ui/editor@3.2.2",
+      "purl": "pkg:npm/%40toast-ui/editor@3.2.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@toast-ui/editor/-/editor-3.2.2.tgz",
+          "url": "https://registry.npmjs.org/@toast-ui/editor/-/editor-3.2.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "0125fb2c58cdd9961026bc269146a33ecec346bf45b0cd7e450f3609f4ced18e595e8ac19355594b80b60e9c629f1f64979e55e05f3f036876405e10303b516c"
+              "content": "85c0503174a53e4f2fdf78d7c61bce8b055a7af47fc7b2a0a69c8786b0cd7bfe22bca27c26fc0725126e2b9587fce8a47dd48bcd9410a32eccdc77ae047b1abe"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -15250,8 +15312,8 @@
     {
       "type": "library",
       "name": "eslint",
-      "version": "10.14.0",
-      "bom-ref": "stackiq@1.0.0|eslint@10.14.0",
+      "version": "10.15.0",
+      "bom-ref": "stackiq@1.0.0|eslint@10.15.0",
       "licenses": [
         {
           "license": {
@@ -15259,15 +15321,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/eslint@10.14.0",
+      "purl": "pkg:npm/eslint@10.15.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/eslint/-/eslint-10.14.0.tgz",
+          "url": "https://registry.npmjs.org/eslint/-/eslint-10.15.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "4f4a4db3191bf482a6b508e1a4adddee758ea45bfe607b8c6d326749532841b945d289ef5df12baeda785758c7b6c40f6a7edd29a1950f4ab55825e7ccc177d4"
+              "content": "fb95a0e29fb37b7b06d5612b62050eff71f521021f141ca6554034168fd74de04e2d2e9440851e929489f2c751927eceef08e1f386f9e70feba2a6af1f669272"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -15288,7 +15350,7 @@
           "type": "library",
           "name": "ajv",
           "version": "6.15.0",
-          "bom-ref": "stackiq@1.0.0|eslint@10.14.0|ajv@6.15.0",
+          "bom-ref": "stackiq@1.0.0|eslint@10.15.0|ajv@6.15.0",
           "licenses": [
             {
               "license": {
@@ -15325,7 +15387,7 @@
           "type": "library",
           "name": "escape-string-regexp",
           "version": "4.0.0",
-          "bom-ref": "stackiq@1.0.0|eslint@10.14.0|escape-string-regexp@4.0.0",
+          "bom-ref": "stackiq@1.0.0|eslint@10.15.0|escape-string-regexp@4.0.0",
           "licenses": [
             {
               "license": {
@@ -15362,7 +15424,7 @@
           "type": "library",
           "name": "eslint-visitor-keys",
           "version": "5.0.1",
-          "bom-ref": "stackiq@1.0.0|eslint@10.14.0|eslint-visitor-keys@5.0.1",
+          "bom-ref": "stackiq@1.0.0|eslint@10.15.0|eslint-visitor-keys@5.0.1",
           "licenses": [
             {
               "license": {
@@ -15397,9 +15459,46 @@
         },
         {
           "type": "library",
+          "name": "minimatch",
+          "version": "11.0.8",
+          "bom-ref": "stackiq@1.0.0|eslint@10.15.0|minimatch@11.0.8",
+          "licenses": [
+            {
+              "license": {
+                "id": "BlueOak-1.0.0"
+              }
+            }
+          ],
+          "purl": "pkg:npm/minimatch@11.0.8",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.8.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "9c542e6124d5ac6bf2b15069b39221fb405d9d814dfc28f70bcd7aafafa9ef22be147ad52c61383b837d005c3292b94d96f3361d8b7e45a775522ae8ea1f3c22"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/eslint/node_modules/minimatch"
+            }
+          ]
+        },
+        {
+          "type": "library",
           "name": "json-schema-traverse",
           "version": "0.4.1",
-          "bom-ref": "stackiq@1.0.0|eslint@10.14.0|json-schema-traverse@0.4.1",
+          "bom-ref": "stackiq@1.0.0|eslint@10.15.0|json-schema-traverse@0.4.1",
           "licenses": [
             {
               "license": {
@@ -31063,8 +31162,8 @@
     {
       "type": "library",
       "name": "vue-router",
-      "version": "4.6.4",
-      "bom-ref": "stackiq@1.0.0|vue-router@4.6.4",
+      "version": "4.6.5",
+      "bom-ref": "stackiq@1.0.0|vue-router@4.6.5",
       "licenses": [
         {
           "license": {
@@ -31072,15 +31171,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/vue-router@4.6.4",
+      "purl": "pkg:npm/vue-router@4.6.5",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/vue-router/-/vue-router-4.6.4.tgz",
+          "url": "https://registry.npmjs.org/vue-router/-/vue-router-4.6.5.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "1f3f6ae6c6b7dd885dba0970cfa83db244fc3813e28bee1b167f3cc3a27e27831f128e0a451a6688d1bf8471e475b44594b04eab137ccbc81fd856f431352056"
+              "content": "1c1a06aa2c690767a3d64235ecda2d74e6ad51d288b22df27ce439be1c0085ca0793dd3e26dc2d232ecc11e3aa74f8b5fa7a66415304bb917e1efc3edd3538f3"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -31098,7 +31197,7 @@
           "name": "devtools-api",
           "group": "@vue",
           "version": "6.6.4",
-          "bom-ref": "stackiq@1.0.0|vue-router@4.6.4|@vue/devtools-api@6.6.4",
+          "bom-ref": "stackiq@1.0.0|vue-router@4.6.5|@vue/devtools-api@6.6.4",
           "licenses": [
             {
               "license": {
@@ -32037,7 +32136,7 @@
   ],
   "dependencies": [
     {
-      "ref": "adbario/php-dot-notation-3.5.0.0"
+      "ref": "adbario/php-dot-notation-3.6.0.0"
     },
     {
       "ref": "async-aws/core-1.29.2.0",
@@ -32046,8 +32145,8 @@
         "psr/log-3.0.2.0",
         "symfony/deprecation-contracts-3.8.1.0",
         "symfony/http-client-6.4.34.0",
-        "symfony/http-client-contracts-3.7.1.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/http-client-contracts-3.8.1.0",
+        "symfony/service-contracts-3.8.1.0"
       ]
     },
     {
@@ -32097,11 +32196,11 @@
     {
       "ref": "symfony/event-dispatcher-6.4.43.0",
       "dependsOn": [
-        "symfony/event-dispatcher-contracts-3.7.1.0"
+        "symfony/event-dispatcher-contracts-3.8.1.0"
       ]
     },
     {
-      "ref": "symfony/event-dispatcher-contracts-3.7.1.0",
+      "ref": "symfony/event-dispatcher-contracts-3.8.1.0",
       "dependsOn": [
         "psr/event-dispatcher-1.0.0.0"
       ]
@@ -32111,13 +32210,13 @@
       "dependsOn": [
         "psr/log-3.0.2.0",
         "symfony/deprecation-contracts-3.8.1.0",
-        "symfony/http-client-contracts-3.7.1.0",
+        "symfony/http-client-contracts-3.8.1.0",
         "symfony/polyfill-php83-1.33.0.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/service-contracts-3.8.1.0"
       ]
     },
     {
-      "ref": "symfony/http-client-contracts-3.7.1.0"
+      "ref": "symfony/http-client-contracts-3.8.1.0"
     },
     {
       "ref": "symfony/mailer-6.4.40.0",
@@ -32127,7 +32226,7 @@
         "psr/log-3.0.2.0",
         "symfony/event-dispatcher-6.4.43.0",
         "symfony/mime-7.4.22.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/service-contracts-3.8.1.0"
       ]
     },
     {
@@ -32182,7 +32281,7 @@
       ]
     },
     {
-      "ref": "symfony/service-contracts-3.7.1.0",
+      "ref": "symfony/service-contracts-3.8.1.0",
       "dependsOn": [
         "psr/container-2.0.2.0",
         "symfony/deprecation-contracts-3.8.1.0"
@@ -32199,7 +32298,7 @@
     {
       "ref": "conductionnl/stackiq-1.0.0.0",
       "dependsOn": [
-        "adbario/php-dot-notation-3.5.0.0",
+        "adbario/php-dot-notation-3.6.0.0",
         "react/event-loop-1.6.0.0",
         "react/promise-3.3.0.0",
         "symfony/amazon-mailer-6.4.43.0",

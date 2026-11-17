@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.2.1",
-    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
+    "version": "1.3.1",
+    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it. 1.3.0 adds one demo application with two components (landscape-application-components). 1.3.1 adds three demo technology components, a host, a virtual machine and a database (operations-technology-components)."
   },
   "x-openregister": {
     "type": "mock",
@@ -1587,7 +1587,11 @@
         "technicalFit": 2,
         "riskScore": 3,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -2494,6 +2498,50 @@
       },
       {
         "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaaksysteem"
+        },
+        "name": "Voorbeeld Zaaksysteem",
+        "shortDescription": "Voorbeeld zaaksysteem met twee componenten (landscape-application-components)",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaakportaal"
+        },
+        "name": "Voorbeeld Zaakportaal",
+        "shortDescription": "Het portaal waarin inwoners hun zaken volgen; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaken-api"
+        },
+        "name": "Voorbeeld Zaken-API",
+        "shortDescription": "De API waarmee andere applicaties zaken lezen en schrijven; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
           "register": "vng-gemma",
           "schema": "moduleVersion",
           "slug": "moduleversion-moduleversion-1-1"
@@ -3173,7 +3221,11 @@
         "technicalFit": 1,
         "riskScore": 5,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -3999,6 +4051,56 @@
         "publisher": {},
         "audience": "named",
         "sharedWithOrganisations": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-host-1"
+        },
+        "name": "Host 01",
+        "class": "Physical server",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "manufacturer": "Dell",
+        "model": "PowerEdge R750",
+        "location": "Stadhuis",
+        "endOfSupport": "2029-12-31"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-vm-1"
+        },
+        "name": "App server 01",
+        "class": "Virtual machine",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "runsOn": [
+          "@ref:technology-host-1"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-db-1"
+        },
+        "name": "Database 01",
+        "class": "Database",
+        "archimateType": "System software",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "software": "@ref:moduleversion-moduleversion-3-3",
+        "endOfSupport": "2026-03-03",
+        "eolSource": "Voorbeeld Eolsource 3",
+        "eolUpdatedOn": "2026-03-03T09:00:00+00:00",
+        "runsOn": [
+          "@ref:technology-vm-1"
+        ]
       }
     ]
   }

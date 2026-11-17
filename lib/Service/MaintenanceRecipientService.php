@@ -282,10 +282,14 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 		// A failed read is thrown, not taken as "nobody to notify": the job tries
 		// again, while an empty list would be recorded as resolved for good.
 		$people = $objectService->searchObjects(
-			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-			_rbac: false,
-			_multitenancy: false,
-			ids: $contactIds
+			...array_merge(
+				[
+					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+					'_rbac' => false,
+					'_multitenancy' => false,
+				],
+				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
+			)
 		);
 
 		$userIds = [];

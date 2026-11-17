@@ -99,6 +99,9 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
 
+		// An application cannot be part of itself or of one of its components (landscape-application-components).
+		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
 		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
 		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);

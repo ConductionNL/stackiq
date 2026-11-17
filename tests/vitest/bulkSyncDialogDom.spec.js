@@ -105,7 +105,7 @@ describe('BulkSyncDialog mounted', () => {
 
 		await wrapper.find('button.primary').trigger('click')
 
-		expect(wrapper.find('button.primary').text()).toBe('Syncing...')
+		expect(wrapper.find('button.primary').text()).toBe('Syncing…')
 		expect(wrapper.find('button.primary').attributes('disabled')).toBeDefined()
 		expect(wrapper.find('.progress-info').text()).toContain('Processed: 0 /')
 		expect(wrapper.find('.progress-info').text()).toContain('12')
