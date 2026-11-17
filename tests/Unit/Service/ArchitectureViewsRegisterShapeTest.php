@@ -86,11 +86,12 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 
 		$this->assertSame(['draft', 'in review', 'published', 'retired'], $view['properties']['status']['enum']);
 		$this->assertSame('draft', $view['properties']['status']['default']);
-		$this->assertSame(['imported', 'drawn'], $view['properties']['origin']['enum']);
+		// `assistant` is added by the assistant-drafted-views fragment (architecture-assistant-drafted-views).
+		$this->assertSame(['imported', 'drawn', 'assistant'], $view['properties']['origin']['enum']);
 		$this->assertTrue($view['properties']['tags']['facetable']);
 
 		foreach (['element', 'relation'] as $slug) {
-			$this->assertSame(['imported', 'drawn'], $schemas[$slug]['properties']['origin']['enum'], $slug);
+			$this->assertSame(['imported', 'drawn', 'assistant'], $schemas[$slug]['properties']['origin']['enum'], $slug);
 			$this->assertNotContains('origin', $schemas[$slug]['required'], $slug);
 		}
 	}//end testViewElementAndRelationGainTheirFields()
@@ -181,4 +182,46 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 			$this->assertTrue(version_compare($merged[$slug]['version'], $base[$slug]['version'], '>'), $slug);
 		}
 	}//end testTheChangedSchemasCarryBumpedVersions()
+	/**
+	 * A drafted view records who it was drafted for and when, the three schemas move past
+	 * the views editor's versions, and the seed holds one drafted view over elements and a
+	 * relation it names (architecture-assistant-drafted-views task 1).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+	 */
+	public function testADraftedViewCarriesItsMarkAndTheSeedHoldsOne(): void {
+		$merged = self::merged();
+		$view = $merged['components']['schemas']['view'];
+		$this->assertSame('string', $view['properties']['draftedFor']['type']);
+		$this->assertSame('date-time', $view['properties']['draftedAt']['format']);
+		$this->assertNotContains('draftedFor', $view['required']);
+
+		$editor = self::read(self::SETTINGS . '/register.d/architecture-views.json')['components']['schemas'];
+		foreach (['view', 'element', 'relation'] as $slug) {
+			$this->assertTrue(version_compare($merged['components']['schemas'][$slug]['version'], $editor[$slug]['version'], '>'), $slug);
+		}
+
+		$seeded = [];
+		foreach ($merged['components']['objects'] as $object) {
+			if (($object['@self']['register'] ?? null) === 'vng-gemma') {
+				$seeded[$object['@self']['schema']][] = $object;
+			}
+		}
+
+		$this->assertCount(1, $seeded['view']);
+		$drafted = $seeded['view'][0];
+		$this->assertSame(['assistant', 'draft', 'admin'], [$drafted['origin'], $drafted['status'], $drafted['draftedFor']]);
+		$identifiers = array_column(array_merge($seeded['element'], $seeded['relation']), 'identifier');
+		foreach ($drafted['nodes'] as $node) {
+			$this->assertContains($node['elementRef'], $identifiers);
+			$this->assertArrayNotHasKey('x', $node, 'a drafted view is laid out on first open');
+		}
+
+		$this->assertContains($drafted['connections'][0]['modelRelationshipId'], $identifiers);
+		foreach (array_merge($seeded['element'], $seeded['relation']) as $object) {
+			$this->assertSame('assistant', $object['origin']);
+		}
+	}//end testADraftedViewCarriesItsMarkAndTheSeedHoldsOne()
 }//end class

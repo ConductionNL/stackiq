@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Mcp;
 
 use OCA\Stackiq\Mcp\McpContractTools;
+use OCA\Stackiq\Mcp\McpDraftTools;
 use OCA\Stackiq\Mcp\McpReadTools;
 use OCA\Stackiq\Mcp\McpWriteTools;
 use OCA\Stackiq\Mcp\StackiqToolProvider;
@@ -46,6 +47,7 @@ class McpToolCatalogueTest extends TestCase {
 		'getView',
 		'previewOrganisationMerge',
 		'getEolSyncStatus',
+		'searchArchitectureElements',
 	];
 
 	/**
@@ -69,6 +71,7 @@ class McpToolCatalogueTest extends TestCase {
 		'mergeOrganisations'     => ['update', 'instance'],
 		'importSbom'             => ['create', 'instance'],
 		'triggerEolSync'         => ['update', 'external'],
+		'draftView'              => ['create', 'instance'],
 	];
 
 	/**
@@ -146,11 +149,14 @@ class McpToolCatalogueTest extends TestCase {
 		$contract = $this->createMock(McpContractTools::class);
 		$read     = $this->createMock(McpReadTools::class);
 		$write    = $this->createMock(McpWriteTools::class);
+		$draft    = $this->createMock(McpDraftTools::class);
 		$args     = ['probe' => 'x'];
 		$handlers = [
-			'getContractApprovalConfig' => $contract,
-			'submitContractApproval'    => $contract,
-			'submitContractRenewal'     => $contract,
+			'getContractApprovalConfig'  => $contract,
+			'submitContractApproval'     => $contract,
+			'submitContractRenewal'      => $contract,
+			'searchArchitectureElements' => $draft,
+			'draftView'                  => $draft,
 		];
 		foreach (self::READS as $name) {
 			$handlers[$name] = ($handlers[$name] ?? $read);
@@ -164,7 +170,7 @@ class McpToolCatalogueTest extends TestCase {
 			$handler->expects($this->once())->method($name)->with($args)->willReturn(['tool' => $name]);
 		}
 
-		$provider = new StackiqToolProvider($contract, $read, $write);
+		$provider = new StackiqToolProvider($contract, $read, $write, $draft);
 		foreach (array_keys($handlers) as $name) {
 			$this->assertSame(['tool' => $name], $provider->invokeTool('stackiq.'.$name, $args), $name);
 		}
