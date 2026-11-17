@@ -175,4 +175,25 @@ final class RescoreDataQualityTest extends TestCase {
 	public function testTheStepNamesItself(): void {
 		self::assertSame('Give every application and usage a data quality score', $this->step()->getName());
 	}//end testTheStepNamesItself()
+	/**
+	 * The step runs on upgrade, after InitializeSettings imported the rules and
+	 * the score fields; a fresh install has no unscored rows, so it is not an
+	 * install step.
+	 *
+	 * @return void
+	 */
+	public function testItIsRegisteredOnUpgradeAfterTheRegisterImport(): void {
+		// Read the bytes, not the path: Nextcloud's external entity loader makes
+		// simplexml_load_file() return false for a valid file in CI.
+		$info = simplexml_load_string((string) file_get_contents(__DIR__ . '/../../../appinfo/info.xml'));
+		$this->assertNotFalse($info);
+
+		$upgrade = array_map('strval', iterator_to_array($info->{'repair-steps'}->{'post-migration'}->step, false));
+		$rescore = array_search(RescoreDataQuality::class, $upgrade, true);
+		$this->assertIsInt($rescore);
+		$this->assertGreaterThan(array_search('OCA\Stackiq\Repair\InitializeSettings', $upgrade, true), $rescore);
+
+		$install = array_map('strval', iterator_to_array($info->{'repair-steps'}->install->step, false));
+		$this->assertNotContains(RescoreDataQuality::class, $install);
+	}//end testItIsRegisteredOnUpgradeAfterTheRegisterImport()
 }//end class
