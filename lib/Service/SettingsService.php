@@ -1497,6 +1497,29 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 	}//end persistRegisterVerificationStatus()
 
 	/**
+	 * The user groups the app needs, by id, with what each is for (matching the role-based system).
+	 */
+	private const REQUIRED_USER_GROUPS = [
+		// Role-based user groups (exact match with ContactPersoon roles).
+		'aanbod-beheerder' => 'Manages software offerings and catalog content',
+		'gebruik-beheerder' => 'Manages software usage and procurement',
+		'gebruik-raadpleger' => 'Views software usage and procurement data',
+		'functioneel-beheerder' => 'Manages functional aspects of the system',
+		'vng-raadpleger' => 'Views VNG-related information',
+		'organisatie-beheerder' => 'Manages organization data and settings',
+
+		// Plural form for organization contacts.
+		'organisaties-beheerder' => 'Organization administrators (plural)',
+
+		// Special groups (available for manual assignment).
+		'ambtenaar' => 'Civil servants - available for manual assignment (no automatic assignment)',
+		'software-catalog-users' => 'General software catalog users',
+
+		// Super user groups.
+		'software-catalog-admins' => 'Software catalog system administrators',
+	];
+
+	/**
 	 * Creates and configures required user groups for the software catalog
 	 *
 	 * This is the public method that creates user groups and returns status information.
@@ -1519,26 +1542,7 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 			// Get the group manager.
 			$groupManager = $this->groupManager;
 
-			// Define the required groups (matching role-based system).
-			$requiredGroups = [
-				// Role-based user groups (exact match with ContactPersoon roles).
-				'aanbod-beheerder' => 'Manages software offerings and catalog content',
-				'gebruik-beheerder' => 'Manages software usage and procurement',
-				'gebruik-raadpleger' => 'Views software usage and procurement data',
-				'functioneel-beheerder' => 'Manages functional aspects of the system',
-				'vng-raadpleger' => 'Views VNG-related information',
-				'organisatie-beheerder' => 'Manages organization data and settings',
-
-				// Plural form for organization contacts.
-				'organisaties-beheerder' => 'Organization administrators (plural)',
-
-				// Special groups (available for manual assignment).
-				'ambtenaar' => 'Civil servants - available for manual assignment (no automatic assignment)',
-				'software-catalog-users' => 'General software catalog users',
-
-				// Super user groups.
-				'software-catalog-admins' => 'Software catalog system administrators',
-			];
+			$requiredGroups = self::REQUIRED_USER_GROUPS;
 
 			foreach ($requiredGroups as $groupId => $description) {
 				$this->logger->debug("SettingsService: Processing group: {$groupId}");
@@ -1563,24 +1567,7 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 
 			$result['total'] = count($requiredGroups);
 
-			// Update the configuration with only truly generic groups (not role-specific).
-			// Role-specific groups are now assigned based on organization type.
-			$this->roleGroupSettings->setGenericUserGroups(
-				groups: [
-					'software-catalog-users',
-				]
-			);
-
-			// No automatic organization admin groups - can be configured via settings.
-			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
-
-			$this->roleGroupSettings->setSuperUserGroups(
-				groups: [
-					// Keep existing admin group.
-					'admin',
-					'software-catalog-admins',
-				]
-			);
+			$this->applyDefaultRoleGroups();
 
 			$createdCount = count($result['created']);
 			$existingCount = count($result['existing']);
@@ -1621,6 +1608,33 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 	}//end createAndConfigureUserGroups()
 
 	/**
+	 * Store the default role groups: only the generic catalogue users group,
+	 * no automatic organisation admin groups, and the admin groups as super users.
+	 *
+	 * Role-specific groups are assigned based on organization type, not as generic groups.
+	 *
+	 * @return void
+	 */
+	private function applyDefaultRoleGroups(): void {
+		$this->roleGroupSettings->setGenericUserGroups(
+			groups: [
+				'software-catalog-users',
+			]
+		);
+
+		// No automatic organization admin groups - can be configured via settings.
+		$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
+
+		$this->roleGroupSettings->setSuperUserGroups(
+			groups: [
+				// Keep existing admin group.
+				'admin',
+				'software-catalog-admins',
+			]
+		);
+	}//end applyDefaultRoleGroups()
+
+	/**
 	 * Creates required user groups for the software catalog
 	 *
 	 * This method creates the default user groups needed for proper operation:
@@ -1639,26 +1653,7 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 			// Get the group manager.
 			$groupManager = $this->groupManager;
 
-			// Define the required groups (matching role-based system).
-			$requiredGroups = [
-				// Role-based user groups (exact match with ContactPersoon roles).
-				'aanbod-beheerder' => 'Manages software offerings and catalog content',
-				'gebruik-beheerder' => 'Manages software usage and procurement',
-				'gebruik-raadpleger' => 'Views software usage and procurement data',
-				'functioneel-beheerder' => 'Manages functional aspects of the system',
-				'vng-raadpleger' => 'Views VNG-related information',
-				'organisatie-beheerder' => 'Manages organization data and settings',
-
-				// Plural form for organization contacts.
-				'organisaties-beheerder' => 'Organization administrators (plural)',
-
-				// Special groups (available for manual assignment).
-				'ambtenaar' => 'Civil servants - available for manual assignment (no automatic assignment)',
-				'software-catalog-users' => 'General software catalog users',
-
-				// Super user groups.
-				'software-catalog-admins' => 'Software catalog system administrators',
-			];
+			$requiredGroups = self::REQUIRED_USER_GROUPS;
 
 			$createdGroups = [];
 			$existingGroups = [];
@@ -1683,24 +1678,7 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 				}
 			}
 
-			// Update the configuration with only truly generic groups (not role-specific).
-			// Role-specific groups are now assigned based on organization type, not as generic groups.
-			$this->roleGroupSettings->setGenericUserGroups(
-				groups: [
-					'software-catalog-users',
-				]
-			);
-
-			// No automatic organization admin groups - can be configured via settings.
-			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
-
-			$this->roleGroupSettings->setSuperUserGroups(
-				groups: [
-					// Keep existing admin group.
-					'admin',
-					'software-catalog-admins',
-				]
-			);
+			$this->applyDefaultRoleGroups();
 
 			$this->logger->info(
 				'User group creation completed',
@@ -2876,6 +2854,8 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 		'sector' => 'sector_schema',
 		'sbomComponent' => 'sbomComponent_schema',
 		'maintenanceWindow' => 'maintenanceWindow_schema',
+		'attestationRound' => 'attestationRound_schema',
+		'attestationRequest' => 'attestationRequest_schema',
 	];
 
 	/**

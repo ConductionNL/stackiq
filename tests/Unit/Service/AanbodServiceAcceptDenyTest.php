@@ -44,6 +44,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
  *
  * @covers \OCA\Stackiq\Service\AanbodService
  * @uses   \OCA\Stackiq\Service\OpenRegisterLookup
+ * @uses   \OCA\Stackiq\Service\Support\RegisteredByFromOrganisation
  */
 class AanbodServiceAcceptDenyTest extends TestCase {
 

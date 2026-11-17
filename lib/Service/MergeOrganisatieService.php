@@ -106,6 +106,23 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	private const TOMBSTONE_STATUS = 'merged';
 
 	/**
+	 * Relation types re-pointed via a business-level object field (scalar
+	 * and/or list), from the shared catalogue reference map
+	 * (operations-record-reconciliation D4).
+	 *
+	 * The optional `schema` key names the OpenRegister schema when it differs
+	 * from the count key (`aanbod` lives on the `connection` schema);
+	 * `walkRelations()` falls back to the key via `?? $type`.
+	 *
+	 * @return array<string, array{field: string, arrayField: string|null, schema?: string}>
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 */
+	private static function fieldRelationTypes(): array {
+		return CatalogueReferenceMap::organisationRelationTypes();
+	}//end fieldRelationTypes()
+
+	/**
 	 * The message of each merge request blocker, by blocker type.
 	 *
 	 * @var array<string, string>
@@ -284,7 +301,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		$operationId = $this->progressTracker->startOperation(
 			operationType: 'org_merge',
 			options: [
-				'total_items' => count(OwnershipMap::FIELD_RELATION_TYPES) + count(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES),
+				'total_items' => count(self::fieldRelationTypes()) + count(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES),
 				'statistics' => [],
 			],
 			ownerUid: $run->actorUid
@@ -328,7 +345,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 */
 	private function mergeStatus(MergeRun $run): string {
 		$relationSum = 0;
-		foreach (array_merge(array_keys(OwnershipMap::FIELD_RELATION_TYPES), array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
+		foreach (array_merge(array_keys(self::fieldRelationTypes()), array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
 			$relationSum += ($run->counts[$type] ?? 0);
 		}
 
@@ -388,7 +405,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	private function walkRelations(MergeRun $run): array {
 		$counts = $this->emptyCounts();
 
-		foreach (OwnershipMap::FIELD_RELATION_TYPES as $type => $mapping) {
+		foreach (self::fieldRelationTypes() as $type => $mapping) {
 			$repoint = $run->fieldRepoint(objectType: ($mapping['schema'] ?? $type), mapping: $mapping);
 			$counts[$type] = $this->repointByField(run: $run, repoint: $repoint);
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
@@ -923,7 +940,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 */
 	private function emptyCounts(): array {
 		$counts = ['groupMembers' => 0];
-		foreach (array_keys(OwnershipMap::FIELD_RELATION_TYPES) as $type) {
+		foreach (array_keys(self::fieldRelationTypes()) as $type) {
 			$counts[$type] = 0;
 		}
 
