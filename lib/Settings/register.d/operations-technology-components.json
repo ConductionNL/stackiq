@@ -1,0 +1,26 @@
+{
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.6.0",
+        "properties": {
+          "runsOn": {
+            "type": "array",
+            "title": "Runs on",
+            "description": "The organisation's technology components this application in use runs on.",
+            "visible": true,
+            "facetable": false,
+            "order": 40,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/technologyComponent"
+            }
+          }
+        }
+      }
+    }
+  }
+}

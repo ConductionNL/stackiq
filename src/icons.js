@@ -72,6 +72,7 @@ import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
 import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import Send from 'vue-material-design-icons/Send.vue'
+import Server from 'vue-material-design-icons/Server.vue'
 import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
@@ -81,6 +82,7 @@ import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
+import TagOutline from 'vue-material-design-icons/TagOutline.vue'
 import TransitConnectionVariant from 'vue-material-design-icons/TransitConnectionVariant.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
@@ -148,6 +150,7 @@ export default {
 	RobotOutline,
 	ScaleBalance,
 	Send,
+	Server,
 	ShieldAlert,
 	ShieldAlertOutline,
 	ShieldCheckOutline,
@@ -157,6 +160,7 @@ export default {
 	SourceBranch,
 	Star,
 	StoreOutline,
+	TagOutline,
 	TransitConnectionVariant,
 	ViewDashboardOutline,
 	ViewGridOutline,
