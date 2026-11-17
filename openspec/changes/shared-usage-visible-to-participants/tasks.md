@@ -9,8 +9,9 @@
   - GIVEN the usage schema authorization WHEN read THEN `read` has entries for gebruik-beheerder and gebruik-raadpleger matching `participants` contains `$organisation`, and `update` and `delete` do not
   - GIVEN the connection schema WHEN read THEN `read` lets a participant of a usage that lists the connection read it (an OpenRegister relation match on `usage.koppelingen`; if OpenRegister cannot express it, a stackiq `participantConnections` lookup in task 2 serves it instead)
   - GIVEN an installed instance WHEN the app upgrades THEN the register import applies the new rules (repair step or register version bump)
-- [ ] Implement
-- [ ] Test (PHPUnit `UsageParticipantReadRuleTest`)
+- [x] Implement
+  - `lib/Settings/register.d/shared-usage-visible-to-participants.json` (design D5: a fragment, not the monolith) restates the merged usage `read` list and adds `gebruik-beheerder` and `gebruik-raadpleger` matching `participants` `$contains` `$organisation`, cross-organisation; `update` and `delete` are untouched. Usage version 1.6.2. The connection half is not expressible as a rule on the connection schema (it would have to match through `usage.koppelingen`), so it falls to task 2's lookup, as the criterion allows. Three existing register tests that pinned the merged version or the read count now say why the count and version moved.
+- [x] Test (PHPUnit `UsageParticipantReadRuleTest`)
 
 ### Task 2: Participant reads on the API
 - **spec_ref**: openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010

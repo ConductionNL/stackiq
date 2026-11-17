@@ -93,8 +93,9 @@ final class BaselineClassificationDeclarationTest extends TestCase {
 
 		$this->assertTrue(version_compare($this->merged()['components']['schemas']['usage']['version'], $base['components']['schemas']['usage']['version'], '>'));
 		// The loader keeps the highest fragment version: operations-technology-components
-		// raises usage to 1.6.1 on top of this change's 1.5.12, and carries both sets of properties.
-		$this->assertSame('1.6.1', $this->merged()['components']['schemas']['usage']['version']);
+		// raises usage to 1.6.1 on top of this change's 1.5.12, and shared-usage-visible-to-participants
+		// to 1.6.2; the merged schema carries every set of properties.
+		$this->assertSame('1.6.2', $this->merged()['components']['schemas']['usage']['version']);
 	}
 
 	public function testTheFormLabelsAreDutchOnADutchInstance(): void {
