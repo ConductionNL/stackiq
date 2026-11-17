@@ -152,6 +152,10 @@
             "description": "Connection suggestions of a usage: list, accept and dismiss, for the usage's own organisation"
         },
         {
+            "name": "usage-classification",
+            "description": "The classification suggestion for a usage and the anonymous classification summary of an application."
+        },
+        {
             "name": "view",
             "description": "Controller for handling view-related API operations"
         },
