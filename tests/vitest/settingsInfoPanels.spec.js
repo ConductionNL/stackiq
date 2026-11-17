@@ -41,6 +41,7 @@
  * @spec openspec/specs/fe-shell-navigation/spec.md
  */
 
+import { translate, translatePlural } from '@nextcloud/l10n'
 import { compile } from '@vue/compiler-dom'
 import { parse } from '@vue/compiler-sfc'
 import { readdirSync, readFileSync } from 'fs'
@@ -150,6 +151,14 @@ const sectionFiles = readdirSync(SECTIONS_DIR)
  */
 const STATEFUL_PANELS = new Set(['CmdbImport.vue'])
 
+/**
+ * What a static panel may use: the translate functions every section has,
+ * since static documentation is still translated text. No section state.
+ *
+ * @type {object}
+ */
+const STATIC_CONTEXT = { methods: { t: translate, n: translatePlural } }
+
 describe('settings section info panels', () => {
 	it('finds the info panels it is supposed to be guarding', () => {
 		// A positive control: if the extraction silently stopped matching, every
@@ -172,7 +181,7 @@ describe('settings section info panels', () => {
 				setActivePinia(createPinia())
 				const component = STATEFUL_PANELS.has(file)
 					? (await import(path.join(SECTIONS_DIR, file))).default
-					: {}
+					: STATIC_CONTEXT
 				for (const markup of blocks) {
 					const { error, text } = renderFragment(markup, component)
 					expect(error).toBeNull()

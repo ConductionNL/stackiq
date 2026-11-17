@@ -146,7 +146,7 @@ describe('ArchiMateImportExport mounted', () => {
 		await wrapper.vm.$nextTick()
 		const block = wrapper.find('.import-progress')
 		expect([block.text().includes('Saving objects'), block.text().includes('480 of 1200'), block.find('[data-testid="bar"]').attributes('value')]).toEqual([true, true, '40'])
-		expect(button(wrapper, 'Importing...').attributes('disabled')).toBe('')
+		expect(button(wrapper, 'Importing…').attributes('disabled')).toBe('')
 	})
 
 	it('reveals the include switches only when an organisation is chosen and gates the org export', async () => {
