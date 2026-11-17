@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\EolMatcherService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
@@ -391,7 +392,9 @@ class EolSyncServiceTest extends TestCase {
 
 		$saved = [];
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], mixed $register = null, mixed $schema = null, ?string $uuid = null) use (&$saved) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved) {
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved[] = ['schema' => $schema, 'uuid' => $uuid, 'object' => $object];
 				return $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
 			}

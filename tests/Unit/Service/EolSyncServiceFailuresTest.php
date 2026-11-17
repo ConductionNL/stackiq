@@ -33,6 +33,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A run that cannot reach OpenRegister degrades; a run that fails on one
@@ -239,6 +240,7 @@ final class EolSyncServiceFailuresTest extends TestCase {
 		$saved = [];
 		$objectService->method('saveObject')->willReturnCallback(
 			function (array $object, ...$rest) use (&$saved): \OCA\OpenRegister\Db\ObjectEntity {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				if ($object['id'] === 'mv-saved-fails') {
 					throw new RuntimeException('locked');
 				}

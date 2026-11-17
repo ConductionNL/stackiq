@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 ### Added
+- MCP action surface (mcp-full-action-surface), for hermiq agents: 28 derived
+  read tools (search and get on 14 catalogue schemas), create and update on
+  `vulnerability`, and 27 curated tools in the `stackiq` provider. The curated
+  tools cover the caller's profile, offers and usages, portfolio report,
+  moderation, reviews, SBOM import and status, architecture views,
+  organisation merge (with a preview), publication and the end-of-life sync.
+  Every tool runs the guard its REST route runs; organisation membership
+  grant and revoke are not tools yet.
 - Integration leaves (adopt-integration-leaves): contact persons and
   organisations link their Nextcloud contact (`contacts`), contracts and module
   versions get a `calendar` tab, software reviews a `deck` tab, modules and

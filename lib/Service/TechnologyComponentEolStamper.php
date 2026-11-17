@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -149,9 +151,10 @@ class TechnologyComponentEolStamper {
 		try {
 			$objectService->saveObject(
 				object: $component,
-				register: $ids['register'],
-				schema: $ids['schema'],
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $ids['register'], schema: $ids['schema']),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

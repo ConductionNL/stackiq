@@ -28,8 +28,13 @@ namespace OCA\Stackiq\Service;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Support\RegisteredByFromOrganisation;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -534,7 +539,7 @@ class AanbodService implements AanbodServiceInterface {
 		$aanbodData['@self'] = $selfData;
 
 		// Update registeredBy based on the accepting organisation's type.
-		$aanbodData = $this->updateRegisteredBy(
+		$aanbodData = (new RegisteredByFromOrganisation(settingsService: $this->settingsService, logger: $this->logger))->apply(
 			objectService: $objectService,
 			objectData: $aanbodData,
 			organisationUuid: $currentOrg
@@ -547,9 +552,13 @@ class AanbodService implements AanbodServiceInterface {
 		// $aanbodData already carries every unchanged field forward.
 		$updatedAanbod = $objectService->saveObject(
 			object: $aanbodData,
-			register: $existingAanbod->getRegister(),
-			schema: $existingAanbod->getSchema(),
-			uuid: $aanbodId,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $existingAanbod->getRegister(),
+						schema: $existingAanbod->getSchema()
+					),
+				uuid: $aanbodId
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -611,7 +620,7 @@ class AanbodService implements AanbodServiceInterface {
 		$objectService->setSchema(schema: $existingAanbod->getSchema());
 
 		$objectService->deleteObject(
-			uuid: $aanbodId,
+			new ObjectDeletion(uuid: $aanbodId),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -688,8 +697,7 @@ class AanbodService implements AanbodServiceInterface {
 			try {
 				$object = $objectService->find(
 					id: $aanbodId,
-					register: $registerId,
-					schema: $schemaId,
+					options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -780,80 +788,4 @@ class AanbodService implements AanbodServiceInterface {
 
 		return $baseQuery;
 	}//end addQueryFilters()
-
-	/**
-	 * Mapping from organisatie.type to registeredBy value.
-	 */
-	private const TYPE_MAP = [
-		'Municipality' => 'Municipality',
-		'Supplier' => 'Supplier',
-		'Collaboration' => 'Collaboration',
-		'Community' => 'Community',
-	];
-
-	/**
-	 * Update registeredBy on object data based on the organisation's type.
-	 *
-	 * Looks up the organisation object by UUID, reads its type, and maps it
-	 * to the appropriate registeredBy value using TYPE_MAP.
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param array $objectData The object data to update
-	 * @param string $organisationUuid The UUID of the organisation to look up
-	 *
-	 * @return array The updated object data
-	 */
-	private function updateRegisteredBy(
-		ObjectServiceInterface $objectService,
-		array $objectData,
-		string $organisationUuid,
-	): array {
-		try {
-			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			if ($organisationSchemaId === null || $registerId === null) {
-				return $objectData;
-			}
-
-			$organisationObject = $objectService->find(
-				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId,
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			if ($organisationObject === null) {
-				return $objectData;
-			}
-
-			$organisationData = $organisationObject->getObject();
-			$orgType = $organisationData['type'] ?? null;
-
-			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['registeredBy'] = self::TYPE_MAP[$orgType];
-
-				$this->logger->info(
-					'Updated registeredBy during transfer',
-					[
-						'organisationUuid' => $organisationUuid,
-						'orgType' => $orgType,
-						'registeredBy' => self::TYPE_MAP[$orgType],
-					]
-				);
-			}
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'Failed to update registeredBy during transfer',
-				[
-					'organisationUuid' => $organisationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-		}//end try
-
-		return $objectData;
-	}//end updateGeregistreerdDoor()
 }//end class

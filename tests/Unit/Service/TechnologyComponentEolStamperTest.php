@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\TechnologyComponentEolStamper;
 use PHPUnit\Framework\TestCase;
@@ -94,7 +95,9 @@ class TechnologyComponentEolStamperTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjects')->willReturn([$entity, ['id' => 'db-2', 'software' => 'mv-1']]);
 		$saved = [];
-		$objects->method('saveObject')->willReturnCallback(function (array $object, ?array $extend = [], mixed $register = null, mixed $schema = null, ?string $uuid = null) use (&$saved) {
+		$objects->method('saveObject')->willReturnCallback(function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved) {
+			$schema = $options->target->schema;
+			$uuid = $options->uuid;
 			if ($uuid === 'db-2') {
 				throw new RuntimeException('locked');
 			}

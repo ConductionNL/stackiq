@@ -20,6 +20,7 @@ vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => `/index.php${path}` }))
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)),
+	translatePlural: (app, one, other, count) => (count === 1 ? one : other).replace('%n', String(count)),
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
 vi.mock('../../src/store/store.js', () => ({
@@ -154,5 +155,34 @@ describe('PortfolioReport rendering', () => {
 		await flushPromises()
 
 		expect(http.get).toHaveBeenCalledWith('/index.php/apps/stackiq/api/portfolio-report', { params: { organisation: 'org-1' } })
+	})
+
+	it('lists overlapping components with their applications and marks the rows (REQ-RCC-004)', async () => {
+		const overlapping = {
+			...report,
+			overlap: 2,
+			rows: [
+				row({ moduleName: 'Zaken Een', overlapsWith: [{ componentId: 'rc-zaak', component: 'Zaaksysteem', modules: ['Zaken Twee'] }] }),
+				row({ moduleName: 'Zaken Twee', overlapsWith: [{ componentId: 'rc-zaak', component: 'Zaaksysteem', modules: ['Zaken Een'] }] }),
+				row({ moduleName: 'Archief', overlapsWith: [] }),
+			],
+		}
+		const wrapper = await loaded(async () => ({ data: overlapping }))
+
+		const section = wrapper.find('[data-testid="pr-overlap"]')
+		expect(section.find('.pr-hint').text()).toBe('2 applications in use share a reference component with another one.')
+		expect(section.findAll('[data-testid="pr-overlap-row"]').map((r) => r.findAll('td').map((c) => c.text()))).toEqual([
+			['Zaaksysteem', 'Zaken Een, Zaken Twee'],
+		])
+		const marks = wrapper.findAll('[data-testid="pr-row-overlap"]')
+		expect(marks).toHaveLength(2)
+		expect(marks[0].attributes('title')).toBe('Zaaksysteem: Zaken Twee')
+	})
+
+	it('shows no overlap section without overlap', async () => {
+		const wrapper = await loaded(async () => ({ data: report }))
+
+		expect(wrapper.find('[data-testid="pr-overlap"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="pr-row-overlap"]').exists()).toBe(false)
 	})
 })

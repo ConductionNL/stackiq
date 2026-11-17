@@ -33,7 +33,7 @@ final class ReferenceComponentCoverageDerivationGoldenTest extends TestCase {
 	 */
 	public function testDeriveMatchesTheGolden(): void {
 		$components = [
-			['id' => 'zrc', 'name' => 'Zaakregistratiecomponent', 'grouping' => 'Mid-office', 'documentation' => 'Zaken'],
+			['id' => 'zrc', 'identifier' => 'id-zrc', 'name' => 'Zaakregistratiecomponent', 'grouping' => 'Mid-office', 'documentation' => 'Zaken'],
 			['@self' => ['id' => 'fin'], 'name' => 'Financiële component', 'grouping' => 'Back-office'],
 			['id' => 'doc', 'name' => 'Documentbeheercomponent', 'grouping' => 'Mid-office'],
 			['id' => 'kb', 'name' => 'Kennisbankcomponent', 'grouping' => 'Front-office'],

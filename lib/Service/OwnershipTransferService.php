@@ -34,6 +34,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\OwnershipTransferServiceInterface;
 use OCA\Stackiq\Service\Organisation\OwnershipMap;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
@@ -298,7 +301,7 @@ class OwnershipTransferService implements OwnershipTransferServiceInterface {
 		}
 
 		try {
-			return $objectService->find(id: $id, register: $registerId, schema: $schemaId);
+			return $objectService->find(id: $id, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -321,7 +324,10 @@ class OwnershipTransferService implements OwnershipTransferServiceInterface {
 			return;
 		}
 
-		$objectService->saveObject(object: $data, extend: [], register: $registerId, schema: $schemaId, uuid: $id);
+		$objectService->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId), uuid: $id)
+		);
 	}//end save()
 
 	/**
