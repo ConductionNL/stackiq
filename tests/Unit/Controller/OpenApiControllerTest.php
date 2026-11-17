@@ -94,6 +94,28 @@ class OpenApiControllerTest extends TestCase {
 	}//end testMissingDocumentIsNotFound()
 
 	/**
+	 * A document that is not JSON, or has no info object, is treated as not installed.
+	 *
+	 * @return void
+	 */
+	public function testMalformedDocumentIsNotFound(): void {
+		$dir = sys_get_temp_dir().'/openapi-'.uniqid();
+		mkdir($dir);
+		$statuses = [];
+		foreach (['not json', '{"openapi":"3.0.3","info":"1.0"}', '["info"]'] as $content) {
+			file_put_contents($dir.'/openapi.json', $content);
+			$response = $this->controller(appPath: $dir)->show();
+			$statuses[] = [$response->getStatus(), $response->getData()];
+		}
+
+		unlink($dir.'/openapi.json');
+		rmdir($dir);
+
+		$notInstalled = [404, ['error' => 'The OpenAPI document is not installed']];
+		$this->assertSame(expected: [$notInstalled, $notInstalled, $notInstalled], actual: $statuses);
+	}//end testMalformedDocumentIsNotFound()
+
+	/**
 	 * The headers a response set, read without the server container that
 	 * Response::getHeaders() needs.
 	 *
