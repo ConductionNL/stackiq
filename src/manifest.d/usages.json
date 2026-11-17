@@ -94,6 +94,7 @@
 				"bodyWidgets": [
 					{ "id": "gb-claim-answer", "component": "ClaimAnswerNotice", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
 					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
+					{ "id": "gb-runs-on", "component": "UsageRunsOnPanel", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
 					{ "id": "gb-classification", "component": "UsageClassificationPanel", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
 				],
 				"sidebar": {

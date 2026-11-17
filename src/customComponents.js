@@ -43,6 +43,7 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
@@ -189,6 +190,12 @@ export default {
 	UsageRiskSignals,
 	UsageClassificationPanel,
 	ModuleClassificationSummary,
+
+	// The technology components an application in use runs on, with each one's
+	// end of support and the worst support state one level down
+	// (operations-technology-components D5): a state derived per row is not
+	// something a built-in object list shows.
+	UsageRunsOnPanel,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
