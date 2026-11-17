@@ -1972,7 +1972,10 @@ OC.L10N.register(
         "The type could not be changed.": "The type could not be changed.",
         "The type was changed.": "The type was changed.",
         "This entry is an application.": "This entry is an application.",
-        "This entry is system software.": "This entry is system software."
+        "This entry is system software.": "This entry is system software.",
+        "Show products": "Show products",
+        "No product": "No product",
+        "Products ({count}): {names}": "Products ({count}): {names}"
     },
     "nplurals=2; plural=(n != 1);"
 )
