@@ -33,14 +33,17 @@ import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAct
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
+import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
@@ -198,6 +201,12 @@ export default {
 	UsageClassificationPanel,
 	ModuleClassificationSummary,
 
+	// The technology components an application in use runs on, with each one's
+	// end of support and the worst support state one level down
+	// (operations-technology-components D5): a state derived per row is not
+	// something a built-in object list shows.
+	UsageRunsOnPanel,
+
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
 	// which no built-in widget does.
@@ -213,6 +222,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
+	ClaimedUsageList,
+	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
+	ClaimAnswerNotice,
 
 	// The Merged into banner on a merged application's page
 	// (operations-record-reconciliation D4): it shows the survivor only when

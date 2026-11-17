@@ -56,6 +56,9 @@ final class CatalogueReferenceMap {
 			['schema' => 'maintenanceWindow', 'field' => 'module', 'list' => false],
 			['schema' => 'scenarioChange', 'field' => 'module', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'module', 'list' => false],
+			// Landscape-application-components: a component's parent and an application's components.
+			['schema' => 'module', 'field' => 'partOf', 'list' => false],
+			['schema' => 'module', 'field' => 'components', 'list' => true],
 			['schema' => 'applicationInterface', 'field' => 'module', 'list' => false],
 		],
 		'catalogService' => [
@@ -82,6 +85,7 @@ final class CatalogueReferenceMap {
 			['schema' => 'scenario', 'field' => 'organisation', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'publisher', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'sharedWithOrganisations', 'list' => true],
+			['schema' => 'technologyComponent', 'field' => 'organization', 'list' => false],
 		],
 	];
 
