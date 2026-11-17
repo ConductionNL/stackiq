@@ -8,8 +8,9 @@
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN it is imported THEN the stackiq register lists applicationInterface and its table exists
   - GIVEN a connection WHEN its interface field is set THEN it holds an API of the connection's application B
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ApplicationInterfaceFragmentTest.php`: the merged register carries the schema, the register list entry and the lifecycle on enum values)
+- [x] Implement
+  - `lib/Settings/register.d/application-interfaces.json` adds `applicationInterface` to the stackiq register (list and table configuration), with the module's read rules and a lifecycle on the status values, and `connection.interface` (connection 0.3.6). Two demo APIs in `stackiq_mock_register.json`. Two sentinel tests that assumed a fragment only overlays a monolith schema now also accept a fragment that declares and registers a new one.
+- [x] Test (PHPUnit `tests/Unit/Settings/ApplicationInterfaceFragmentTest.php`: the merged register carries the schema, the register list entry and the lifecycle on enum values)
 
 ### Task 2: APIs pages and the application page section
 - **spec_ref**: openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-002-the-application-page-lists-its-apis
@@ -17,7 +18,8 @@
 - **acceptance_criteria**:
   - GIVEN an application with two APIs WHEN its page opens THEN the APIs section lists both
   - GIVEN the APIs list WHEN the user filters on style REST THEN only REST APIs remain
-- [ ] Implement
+- [x] Implement
+  - `src/manifest.d/application-interfaces.json` (APIs list and API detail, menu child under Applications), `md-apis` on `ModuleDetail` with Add API, the `Api` icon in `src/icons.js`, en and nl strings. The Playwright spec needs a live instance and is not added in this pass.
 - [ ] Test (Playwright `tests/e2e/workflows/application-interfaces.spec.ts`)
 
 ### Task 3: Documentation
@@ -26,6 +28,7 @@
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens APIs THEN it explains how to record an API and link a connection to it, with a screenshot
 - [ ] Implement
+  - `docs/features/application-interfaces.md` is written; the screenshot needs a live instance, so the task stays open.
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification

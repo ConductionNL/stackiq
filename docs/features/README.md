@@ -15,12 +15,16 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Applications on GEMMA views](shared-usage-on-views.md) | Show your own and partners' shared applications inside the components of a GEMMA view |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
+| [Application Components](application-components.md) | Record the applications an application is made of, and list them on its page |
+| [Change Entry Type](change-entry-type.md) | Turn an application into a service or system software and back, keeping its identity |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
 | [Contract Management](#contract-management) | Track license and service agreements |
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
+| [Security classification (BIO)](baseline-classification.md) | Classify each application in use on availability, integrity and confidentiality, with a GEMMA suggestion and an anonymous comparison |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |

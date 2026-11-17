@@ -1,0 +1,15 @@
+{
+  "_comment": "landscape-change-entry-type: a module shows its type (Application or System software) on the form, so the entry's type can be read where it is changed. Module 0.3.15 is above every other source's module version, so existing installs import it.",
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.15",
+        "properties": {
+          "type": {
+            "visible": true
+          }
+        }
+      }
+    }
+  }
+}

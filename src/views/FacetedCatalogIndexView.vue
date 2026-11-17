@@ -83,6 +83,16 @@ generic route-query-to-filter passthrough never sees it (see the
 					{{ view.name }}
 				</NcActionButton>
 			</NcActions>
+			<NcButton
+				v-if="mayFindDuplicates"
+				variant="tertiary"
+				:href="duplicateCandidatesHref"
+				data-testid="find-duplicates">
+				<template #icon>
+					<ContentDuplicate :size="20" />
+				</template>
+				{{ t('stackiq', 'Find duplicates') }}
+			</NcButton>
 			<NcActions :aria-label="t('stackiq', 'Export')" :menuName="t('stackiq', 'Export')">
 				<template #icon>
 					<Download :size="20" />
@@ -141,10 +151,15 @@ generic route-query-to-filter passthrough never sees it (see the
 					:bulkActions="bulkActions"
 					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
+					:showAdd="addWizard === ''"
 					@search="onListSearch"
 					@rowClick="openDetail"
 					@view="openDetail"
-					@quickFilterChange="onQuickFilterChange" />
+					@quickFilterChange="onQuickFilterChange">
+					<template v-if="addWizard !== ''" #header-actions>
+						<EntryWizardAction :kind="addWizard" />
+					</template>
+				</CnIndexPage>
 			</div>
 		</div>
 
@@ -161,7 +176,9 @@ import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcActionButton, NcActionCaption, NcActions } from '@nextcloud/vue'
+import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud/vue'
+import { defineAsyncComponent } from 'vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FileDelimitedOutline from 'vue-material-design-icons/FileDelimitedOutline.vue'
@@ -174,6 +191,7 @@ import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { catalogExportUrl } from '../utils/catalogExportUrl.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
+import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -219,8 +237,12 @@ export default {
 		NcActions,
 		NcActionButton,
 		NcActionCaption,
+		NcButton,
+		ContentDuplicate,
 		CnFacetSidebar,
 		CnIndexPage,
+		// Loaded when a page asks for it: the wizard reads the object store.
+		EntryWizardAction: defineAsyncComponent(() => import('../components/entryWizard/EntryWizardAction.vue')),
 		SaveFacetViewModal,
 		ContentSaveOutline,
 		Download,
@@ -236,6 +258,17 @@ export default {
 		 * Empty keeps rows where they are (the Services list has no detail page).
 		 */
 		detailRoute: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * The guided entry wizard the page's Add opens (manifest `config.addWizard`),
+		 * a kind of src/utils/entryWizard.js such as `module`. Empty keeps the list's own Add.
+		 *
+		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 */
+		addWizard: {
 			type: String,
 			default: '',
 		},
@@ -367,6 +400,8 @@ export default {
 			searchDebounceTimer: null,
 			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 			listRemount: 0,
+			mayFindDuplicates: false,
+			duplicateCandidatesHref: duplicateCandidatesUrl(generateUrl),
 		}
 	},
 
@@ -500,6 +535,7 @@ export default {
 	mounted() {
 		this.refetch()
 		this.facetStore.fetchSavedViews(this.schema)
+		this.loadMayFindDuplicates()
 	},
 
 	beforeUnmount() {
@@ -507,6 +543,27 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Whether the user may open OpenRegister's duplicate candidates: a
+		 * Nextcloud admin or a functional administrator (`/api/me`). Anyone
+		 * else, or a failed lookup, does not see Find duplicates; the
+		 * candidates page checks access itself.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		async loadMayFindDuplicates() {
+			try {
+				const response = await fetch(generateUrl('/apps/stackiq/api/me'), {
+					headers: { requesttoken: globalThis.OC?.requestToken ?? '' },
+				})
+				const data = response.ok ? await response.json() : null
+				this.mayFindDuplicates = data?.mayFindDuplicates === true
+			} catch {
+				this.mayFindDuplicates = false
+			}
+		},
+
 		/**
 		 * Remember which quick-filter tab is active (single-select mode emits the
 		 * tab index; multi-select emits an array, which never selects the

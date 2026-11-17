@@ -24,6 +24,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
@@ -82,6 +83,10 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
+		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
+		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 
@@ -91,12 +96,22 @@ final class ListenerRegistrar {
 		// A contact person only from someone who may add members to its organisation.
 		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
+
+		// An application cannot be part of itself or of one of its components (landscape-application-components).
+		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
+		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
+		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
 
 		// A module version is public only while its application is (publication-field-rules).
+		// operations-record-reconciliation D3: after OpenRegister merges two
+		// applications or services, the catalogue's references follow the survivor.
+		$context->registerEventListener(ObjectsMergedEvent::class, CatalogueMergeRelinker::class);
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);

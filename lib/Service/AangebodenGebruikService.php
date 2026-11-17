@@ -494,8 +494,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			return $request['objectService']->searchObjectsPaginated(
 				query: $searchQuery,
 				_rbac: false,
-				_multitenancy: false,
-				deleted: false
+				_multitenancy: false
 			);
 		}//end if
 
@@ -507,11 +506,10 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 		$this->logger->debug('Executing koppelingen-gebruik by suite/module UUID', ['uuid' => $uuid, 'query' => $searchQuery]);
 
 		return $request['objectService']->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false,
-			uses: $uuid
+			...array_merge(
+				['query' => $searchQuery, '_rbac' => false, '_multitenancy' => false],
+				SearchSelection::uses(service: $request['objectService'], method: 'searchObjectsPaginated', uses: $uuid, older: ['deleted' => false])
+			)
 		);
 	}//end searchKoppelingen()
 
@@ -641,9 +639,8 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 				// Disable RBAC to access all objects.
 				_rbac: false,
 				// Disable multitenancy to access objects from all organisations.
-				_multitenancy: false,
-				// Exclude deleted objects.
-				deleted: false
+				// Deleted objects are excluded by default.
+				_multitenancy: false
 			);
 
 			$this->logger->debug(
@@ -732,16 +729,14 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 			// Execute search following PublicationsController.php used() method pattern.
 			// Use database source and uses parameter for relationship filtering.
+			// RBAC and multitenancy off to reach any object of any organisation.
+			// Deleted objects are excluded by default; uses finds the objects
+			// that have this UUID in their relations array.
 			$searchResult = $objectService->searchObjectsPaginated(
-				query: $query,
-				_rbac: false,
-				// Disable RBAC to access any object.
-				_multitenancy: false,
-				// Disable multitenancy to access objects from any organisation.
-				deleted: false,
-				// Exclude deleted objects.
-				uses: $suiteId
-				// Find objects that have this UUID in their relations array.
+				...array_merge(
+					['query' => $query, '_rbac' => false, '_multitenancy' => false],
+					SearchSelection::uses(service: $objectService, method: 'searchObjectsPaginated', uses: $suiteId, older: ['deleted' => false])
+				)
 			);
 
 			$this->logger->debug(
