@@ -684,7 +684,8 @@
 					}
 				],
 				"copy": {
-					"include": ["relationRows", "incoming", "files"]
+					"include": ["relationRows", "incoming", "files"],
+					"overrides": { "publicationDate": null, "depublicationDate": null }
 				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
@@ -767,7 +768,8 @@
 					}
 				],
 				"copy": {
-					"include": ["relationRows", "incoming", "files"]
+					"include": ["relationRows", "incoming", "files"],
+					"overrides": { "publicationDate": null, "depublicationDate": null }
 				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
