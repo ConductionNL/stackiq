@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\RoleGrantSync;
 use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -423,7 +424,10 @@ class GroupHandler {
 			return null;
 		}
 
-		$organizationObject = $objectService->find(id: $organisationUuid, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
+		$organizationObject = $objectService->find(
+			id: $organisationUuid,
+			options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
+		);
 		if ($organizationObject === null) {
 			return null;
 		}

@@ -21,6 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
@@ -823,22 +826,13 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 				$group->addUser($user);
 				$this->_logger->info(
 					'Added user to group',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 			}
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to add user to group: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-					'exception' => $e,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type) + ['exception' => $e]
 			);
 		}//end try
 	}//end addUserToGroup()
@@ -859,11 +853,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			if ($group === null) {
 				$this->_logger->warning(
 					'Group does not exist, skipping user assignment',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 				return;
 			}
@@ -871,11 +861,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			if ($group->inGroup($user) === true) {
 				$this->_logger->debug(
 					'User already in group',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 				return;
 			}
@@ -883,24 +869,28 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			$group->addUser($user);
 			$this->_logger->info(
 				'Added user to existing group',
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to add user to group with check: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-					'exception' => $e,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type) + ['exception' => $e]
 			);
 		}//end try
 	}//end addUserToGroupWithCheck()
+
+	/**
+	 * The log context of a group assignment: who, which group and why.
+	 *
+	 * @param \OCP\IUser $user      The user.
+	 * @param string     $groupName The group name.
+	 * @param string     $type      The type of group assignment.
+	 *
+	 * @return array{username: string, groupName: string, type: string}
+	 */
+	private function groupLogContext(\OCP\IUser $user, string $groupName, string $type): array {
+		return ['username' => $user->getUID(), 'groupName' => $groupName, 'type' => $type];
+	}//end groupLogContext()
 
 	/**
 	 * Updates user groups when contact person data changes
@@ -1037,7 +1027,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find(id: $organizationId, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
+			$organizationObject = $objectService->find(
+				id: $organizationId,
+				options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
+			);
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1296,25 +1289,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function handleNewContact(object $contactObject): void {
-		try {
-			$this->_logger->info(
-				'Handling new contact',
-				[
-					'objectId' => $contactObject->getId(),
-				]
-			);
-
-			// Process the contact to ensure proper user structure.
-			$this->processContactpersoon(contactPersonObject: $contactObject);
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to handle new contact: ' . $e->getMessage(),
-				[
-					'objectId' => $contactObject->getId(),
-					'exception' => $e,
-				]
-			);
-		}
+		$this->processLogged(contactObject: $contactObject, event: 'new contact');
 	}//end handleNewContact()
 
 	/**
@@ -1326,26 +1301,25 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function handleContactUpdate(object $contactObject): void {
-		try {
-			$this->_logger->info(
-				'Handling contact update',
-				[
-					'objectId' => $contactObject->getId(),
-				]
-			);
+		$this->processLogged(contactObject: $contactObject, event: 'contact update');
+	}//end handleContactUpdate()
 
-			// Process the updated contact.
+	/**
+	 * Process a created or updated contact, logging the event; never throws.
+	 *
+	 * @param object $contactObject The contact object
+	 * @param string $event         What happened to it, for the log ('new contact', 'contact update').
+	 *
+	 * @return void
+	 */
+	private function processLogged(object $contactObject, string $event): void {
+		try {
+			$this->_logger->info('Handling ' . $event, ['objectId' => $contactObject->getId()]);
 			$this->processContactpersoon(contactPersonObject: $contactObject);
 		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to handle contact update: ' . $e->getMessage(),
-				[
-					'objectId' => $contactObject->getId(),
-					'exception' => $e,
-				]
-			);
+			$this->_logger->error('Failed to handle ' . $event . ': ' . $e->getMessage(), ['objectId' => $contactObject->getId(), 'exception' => $e]);
 		}
-	}//end handleContactUpdate()
+	}//end processLogged()
 
 	/**
 	 * Handles contact deletion
@@ -1593,8 +1567,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			// Find by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationId,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1708,10 +1681,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 
 					$organizationObject = $objectService->find(
 						id: $organizationId,
-						_extend: [],
-						files: false,
-						register: $registerId,
-						schema: $organisationSchemaId
+						options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -1925,41 +1895,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserInactive(string $username): bool {
-		try {
-			$user = $this->_userManager->get($username);
-
-			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set inactive',
-					[
-						'username' => $username,
-					]
-				);
-
-				return false;
-			}
-
-			$user->setEnabled(false);
-
-			$this->_logger->info(
-				'Set user account to inactive',
-				[
-					'username' => $username,
-				]
-			);
-
-			return true;
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user inactive: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
-			return false;
-		}//end try
+		return $this->setUserEnabled(username: $username, enabled: false);
 	}//end setUserInactive()
 
 	/**
@@ -1971,42 +1907,38 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserActive(string $username): bool {
+		return $this->setUserEnabled(username: $username, enabled: true);
+	}//end setUserActive()
+
+	/**
+	 * Enable or disable a user account, logging the outcome; never throws.
+	 *
+	 * @param string $username The username.
+	 * @param bool   $enabled  True to set the account active, false for inactive.
+	 *
+	 * @return bool True if successful
+	 */
+	private function setUserEnabled(string $username, bool $enabled): bool {
+		$state = 'inactive';
+		if ($enabled === true) {
+			$state = 'active';
+		}
+
 		try {
 			$user = $this->_userManager->get($username);
-
 			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set active',
-					[
-						'username' => $username,
-					]
-				);
-
+				$this->_logger->warning('User not found when trying to set ' . $state, ['username' => $username]);
 				return false;
 			}
 
-			$user->setEnabled(true);
-
-			$this->_logger->info(
-				'Set user account to active',
-				[
-					'username' => $username,
-				]
-			);
-
+			$user->setEnabled($enabled);
+			$this->_logger->info('Set user account to ' . $state, ['username' => $username]);
 			return true;
 		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user active: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
+			$this->_logger->error('Failed to set user ' . $state . ': ' . $e->getMessage(), ['username' => $username, 'exception' => $e]);
 			return false;
 		}//end try
-	}//end setUserActive()
+	}//end setUserEnabled()
 
 	/**
 	 * Handles contactpersoon updates, particularly role changes
@@ -2157,10 +2089,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			try {
 				$organizationObject = $objectService->find(
 					id: $organizationUuid,
-					_extend: [],
-					files: false,
-					register: $registerId,
-					schema: $organisationSchemaId
+					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 				);
 				$organizationData = $organizationObject->getObject();
 
@@ -2247,10 +2176,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			try {
 				$organizationObject = $objectService->find(
 					id: $organizationUuid,
-					_extend: [],
-					files: false,
-					register: $registerId,
-					schema: $organisationSchemaId
+					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 				);
 				$organizationData = $organizationObject->getObject();
 
@@ -2267,10 +2193,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 					// Update the organization object.
 					$updatedOrganization = $objectService->saveObject(
 						$organizationData,
-						[],
-						$registerId,
-						$organisationSchemaId,
-						$organizationUuid
+						new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $registerId, schema: $organisationSchemaId),
+							uuid: $organizationUuid
+						)
 					);
 
 					$this->_logger->info(
@@ -2553,8 +2479,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			// Find the organization object by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationUuid,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);

@@ -21,6 +21,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -144,10 +146,11 @@ class RoleGrantSeeder {
 			}
 
 			$target['objectService']->patchObject(
-				objectId: $id,
-				data: ['roles' => array_merge($current, $missing)],
-				register: $target['register'],
-				schema: $target['schema'],
+				patch: new ObjectPatch(
+					objectId: $id,
+					data: ['roles' => array_merge($current, $missing)],
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema'])
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

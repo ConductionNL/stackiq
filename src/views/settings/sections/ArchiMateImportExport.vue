@@ -624,6 +624,11 @@
 								:disabled="exportingOrg">
 								Gebruik
 							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								v-model="includeConnections"
+								:disabled="exportingOrg">
+								{{ t('stackiq', 'Connections') }}
+							</NcCheckboxRadioSwitch>
 						</div>
 					</div>
 
@@ -836,6 +841,7 @@ export default {
 			includeModules: true,
 			includeDeelnames: false,
 			includeGebruik: false,
+			includeConnections: false,
 			organizationOptions: [{ label: 'Generic', value: null }],
 		}
 	},
@@ -1162,6 +1168,7 @@ export default {
 				params.set('modules', String(this.includeModules))
 				params.set('deelnames', String(this.includeDeelnames))
 				params.set('usage', String(this.includeGebruik))
+				params.set('connections', String(this.includeConnections))
 
 				const url = `/index.php/apps/stackiq/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
 

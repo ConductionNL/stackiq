@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
@@ -157,8 +160,7 @@ class ModuleRegistrationService implements ModuleRegistrationServiceInterface {
 		try {
 			$organisationObject = $objectService->find(
 				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId
+				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId)
 			);
 		} catch (\Exception $e) {
 			$this->logger->debug(
@@ -258,9 +260,13 @@ class ModuleRegistrationService implements ModuleRegistrationServiceInterface {
 
 		$objectService->saveObject(
 			object: $moduleData,
-			register: $moduleObject->getRegister(),
-			schema: $moduleObject->getSchema(),
-			uuid: $moduleObject->getUuid(),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $moduleObject->getRegister(),
+						schema: $moduleObject->getSchema()
+					),
+				uuid: $moduleObject->getUuid()
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

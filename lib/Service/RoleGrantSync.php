@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -352,10 +353,7 @@ class RoleGrantSync {
 
 		$entity = $objectService->find(
 			id: $organisation,
-			_extend: [],
-			files: false,
-			register: $registerId,
-			schema: $schemaId,
+			options: new ObjectFindOptions(register: $registerId, schema: $schemaId, extend: [], files: false),
 			_rbac: false,
 			_multitenancy: false
 		);

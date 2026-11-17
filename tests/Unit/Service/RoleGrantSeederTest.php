@@ -20,6 +20,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Service\RoleGrantSeeder;
 use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -130,8 +131,10 @@ final class RoleGrantSeederTest extends TestCase {
 			}
 		);
 		$objectService->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data, $register, $schema, bool $_rbac, bool $_multitenancy): ObjectEntityInterface {
-				$this->assertSame([1, 3, false, false], [$register, $schema, $_rbac, $_multitenancy]);
+			function (ObjectPatch $patch, bool $_rbac, bool $_multitenancy): ObjectEntityInterface {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$this->assertSame([1, 3, false, false], [$patch->target->register, $patch->target->schema, $_rbac, $_multitenancy]);
 				if (in_array(substr($objectId, 3), $this->failingPatches, true) === true) {
 					throw new RuntimeException('write refused');
 				}

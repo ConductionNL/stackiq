@@ -24,6 +24,9 @@ namespace OCA\Stackiq\Controller;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Service\RoleGrantSync;
 use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -539,10 +542,11 @@ class AccessReviewController extends Controller {
 	 */
 	private function patchContactPerson(ReviewedContactPerson $subject, array $data): void {
 		$this->objectService()->patchObject(
-			objectId: $subject->id,
-			data: $data,
-			register: $this->contactPersonRegister(),
-			schema: $this->contactPersonSchema(),
+			patch: new ObjectPatch(
+				objectId: $subject->id,
+				data: $data,
+				target: new ObjectFindTarget(register: $this->contactPersonRegister(), schema: $this->contactPersonSchema())
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -562,10 +566,7 @@ class AccessReviewController extends Controller {
 
 		$entity = $this->objectService()->find(
 			id: $contactPersonId,
-			_extend: [],
-			files: false,
-			register: $this->contactPersonRegister(),
-			schema: $this->contactPersonSchema(),
+			options: new ObjectFindOptions(register: $this->contactPersonRegister(), schema: $this->contactPersonSchema(), extend: [], files: false),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -592,10 +593,7 @@ class AccessReviewController extends Controller {
 
 		$entity = $this->objectService()->find(
 			id: $organisationUuid,
-			_extend: [],
-			files: false,
-			register: $registerId,
-			schema: $schemaId,
+			options: new ObjectFindOptions(register: $registerId, schema: $schemaId, extend: [], files: false),
 			_rbac: false,
 			_multitenancy: false
 		);

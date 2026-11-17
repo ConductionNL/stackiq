@@ -23,6 +23,7 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Controller\AccessReviewController;
 use OCA\Stackiq\Service\RoleGrantSync;
 use OCA\Stackiq\Service\RoleGroupMap;
@@ -222,8 +223,10 @@ final class AccessReviewControllerTest extends TestCase {
 			}
 		);
 		$this->objectService->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
-				$this->patches[] = ['id' => $objectId, 'data' => $data, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac];
+			function (ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$this->patches[] = ['id' => $objectId, 'data' => $data, 'register' => $patch->target->register, 'schema' => $patch->target->schema, 'rbac' => $_rbac];
 				$this->contactPersons[$objectId] = array_merge($this->contactPersons[$objectId], $data);
 				return $this->entity(id: $objectId, data: $this->contactPersons[$objectId]);
 			}
