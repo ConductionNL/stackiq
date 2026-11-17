@@ -237,6 +237,10 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
@@ -354,6 +358,10 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
 		</install>
