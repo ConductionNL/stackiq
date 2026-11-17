@@ -109,16 +109,16 @@
 - **files**: `src/views/widgets/ConceptOrganisatiesWidget.vue` (filter on status `Draft`, accept writes `Active`)
 - **acceptance_criteria**:
   - GIVEN an organisation with status Draft WHEN the dashboard opens THEN the widget lists it, and accepting it saves status Active
-- [ ] Implement
-- [ ] Test (Vitest on the widget)
+- [x] Implement (already on development: `src/utils/organisationStatus.js` filters on Draft and accepts with Active; `tests/vitest/cmdbOverviewAndConceptWidget.spec.js`)
+- [x] Test (Vitest on the widget)
 
 ### Task 17: Re-point the remaining relations on an organisation merge
 - **spec_ref**: openspec/specs/organisation-merge/spec.md
 - **files**: `lib/Service/MergeOrganisatieService.php` (FIELD_RELATION_TYPES: usage provider, organisation memberships and participants, model organisations), the dry-run counts
 - **acceptance_criteria**:
   - GIVEN a merge WHEN it completes THEN no usage, organisation membership or model still points at the merged-away organisation, and the preview counted each
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/MergeOrganisatieServiceTest.php`)
+- [x] Implement (already on development: `CatalogueReferenceMap::REFERENCES['organization']` walks usage provider, organisation deelnames and participants and model organizations; `MergeOrganisatieServiceTest` counts each in the dry run)
+- [x] Test (PHPUnit `tests/Unit/Service/MergeOrganisatieServiceTest.php`)
 
 ### Task 18: Resolve the standard version picker on a compliance record, and offer it from the application page
 - **spec_ref**: openspec/specs/module-compliance-assessment/spec.md
