@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * Demo date placeholders resolved against the import day
+ * (contracts-expiry-and-owner task 6: a seeded contract that keeps reading Expiring).
+ *
+ * @category Test
+ * @package  OCA\Stackiq\Tests\Unit\Service
+ * @author   Conduction Development Team <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Tests\Unit\Service;
+
+use DateTimeImmutable;
+use OCA\Stackiq\Service\RelativeDemoDates;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * `{{today±N[d|m|y]}}` becomes a Y-m-d date; everything else is left alone.
+ *
+ * @covers \OCA\Stackiq\Service\RelativeDemoDates
+ */
+class RelativeDemoDatesTest extends TestCase {
+
+	/**
+	 * Resolve one object's fields against 14 Nov 2026, 15:30.
+	 *
+	 * @param array<string, mixed> $object The demo object.
+	 *
+	 * @return array<string, mixed> The resolved object.
+	 */
+	private function resolveObject(array $object): array {
+		$data = (new RelativeDemoDates())->resolve(
+			data: ['components' => ['objects' => [$object]]],
+			today: new DateTimeImmutable('2026-11-14 15:30:00')
+		);
+
+		return $data['components']['objects'][0];
+	}//end resolveObject()
+
+	/**
+	 * Days, months and years, forward and back, and today itself.
+	 *
+	 * @return void
+	 */
+	public function testEachUnitAndDirectionResolvesAgainstTheImportDay(): void {
+		$this->assertSame(
+			[
+				'today' => '2026-11-14',
+				'soon' => '2026-12-29',
+				'past' => '2026-11-13',
+				'months' => '2027-02-14',
+				'years' => '2024-11-14',
+			],
+			$this->resolveObject(
+				[
+					'today' => '{{today}}',
+					'soon' => '{{today+45d}}',
+					'past' => '{{today-1d}}',
+					'months' => '{{today+3m}}',
+					'years' => '{{today-2y}}',
+				]
+			)
+		);
+	}//end testEachUnitAndDirectionResolvesAgainstTheImportDay()
+
+	/**
+	 * Placeholders inside nested objects and lists are resolved too.
+	 *
+	 * @return void
+	 */
+	public function testNestedValuesAreResolved(): void {
+		$this->assertSame(
+			['window' => ['from' => '2026-11-14', 'dates' => ['2026-11-24', 'x']]],
+			$this->resolveObject(['window' => ['from' => '{{today}}', 'dates' => ['{{today+10d}}', 'x']]])
+		);
+	}//end testNestedValuesAreResolved()
+
+	/**
+	 * A string that only contains a placeholder, an unknown unit or another
+	 * type is not a placeholder.
+	 *
+	 * @return void
+	 */
+	public function testAnythingButAWholePlaceholderIsLeftAsItIs(): void {
+		$object = [
+			'embedded' => 'ends {{today+45d}}',
+			'unit' => '{{today+45w}}',
+			'nodigits' => '{{today+d}}',
+			'other' => '{{tomorrow}}',
+			'date' => '2026-03-01',
+			'number' => 45,
+			'empty' => null,
+			'flag' => true,
+		];
+
+		$this->assertSame($object, $this->resolveObject($object));
+	}//end testAnythingButAWholePlaceholderIsLeftAsItIs()
+
+	/**
+	 * Only demo objects are walked: definitions keep their text, and a
+	 * descriptor without an objects list is returned unchanged.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheObjectsListIsResolved(): void {
+		$dates = new RelativeDemoDates();
+		$today = new DateTimeImmutable('2026-11-14');
+		$data = [
+			'components' => [
+				'schemas' => ['catalogContract' => ['description' => '{{today}}']],
+				'objects' => [['endDate' => '{{today}}']],
+			],
+		];
+
+		$resolved = $dates->resolve(data: $data, today: $today);
+
+		$this->assertSame('{{today}}', $resolved['components']['schemas']['catalogContract']['description']);
+		$this->assertSame('2026-11-14', $resolved['components']['objects'][0]['endDate']);
+		$this->assertSame(['components' => ['objects' => 'x']], $dates->resolve(data: ['components' => ['objects' => 'x']], today: $today));
+		$this->assertSame(['info' => []], $dates->resolve(data: ['info' => []], today: $today));
+	}//end testOnlyTheObjectsListIsResolved()
+}//end class

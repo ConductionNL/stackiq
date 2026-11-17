@@ -31,6 +31,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Support\RegisteredByFromOrganisation;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -1002,7 +1003,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			$gebruikData['@self'] = $selfData;
 
 			// Update registeredBy based on the accepting organisation's type.
-			$gebruikData = $this->updateRegisteredBy(
+			$gebruikData = (new RegisteredByFromOrganisation(settingsService: $this->settingsService, logger: $this->logger))->apply(
 				objectService: $objectService,
 				objectData: $gebruikData,
 				organisationUuid: $currentOrg
@@ -1226,81 +1227,6 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 		throw new Exception(ucfirst($labelForLogs) . ' configuration not found. Please configure the schemas in the admin panel.');
 	}//end resolveVoorzieningenSchemaConfig()
-
-	/**
-	 * Mapping from organisatie.type to registeredBy value
-	 */
-	private const TYPE_MAP = [
-		'Municipality' => 'Municipality',
-		'Supplier' => 'Supplier',
-		'Collaboration' => 'Collaboration',
-		'Community' => 'Community',
-	];
-
-	/**
-	 * Update registeredBy on object data based on the organisation's type
-	 *
-	 * Looks up the organisation object by UUID, reads its type, and maps it
-	 * to the appropriate registeredBy value using TYPE_MAP.
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param array $objectData The object data to update
-	 * @param string $organisationUuid The UUID of the organisation to look up
-	 *
-	 * @return array The updated object data
-	 */
-	private function updateRegisteredBy(
-		ObjectServiceInterface $objectService,
-		array $objectData,
-		string $organisationUuid,
-	): array {
-		try {
-			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			if ($organisationSchemaId === null || $registerId === null) {
-				return $objectData;
-			}
-
-			$organisationObject = $objectService->find(
-				id: $organisationUuid,
-				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId),
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			if ($organisationObject === null) {
-				return $objectData;
-			}
-
-			$organisationData = $organisationObject->getObject();
-			$orgType = $organisationData['type'] ?? null;
-
-			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['registeredBy'] = self::TYPE_MAP[$orgType];
-
-				$this->logger->info(
-					'Updated registeredBy during transfer',
-					[
-						'organisationUuid' => $organisationUuid,
-						'orgType' => $orgType,
-						'registeredBy' => self::TYPE_MAP[$orgType],
-					]
-				);
-			}
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'Failed to update registeredBy during transfer',
-				[
-					'organisationUuid' => $organisationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-		}//end try
-
-		return $objectData;
-	}//end updateGeregistreerdDoor()
 
 	/**
 	 * Add query filters from options to the base query

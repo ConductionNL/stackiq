@@ -428,16 +428,13 @@ describe('selection, errors and columns', () => {
 	})
 })
 
-describe('merge and mappings', () => {
-	it('merges two objects and reads the mappings', async () => {
-		fetchSpy.mockResolvedValueOnce(reply({ merged: true })).mockResolvedValueOnce(reply([{ id: 'm' }]))
+describe('mappings', () => {
+	it('reads the mappings, and has no merge action of its own', async () => {
+		fetchSpy.mockResolvedValueOnce(reply([{ id: 'm' }]))
 		const store = makeStore()
-		expect(await store.mergeObjects({ register: 'r', schema: 's', sourceObjectId: 'a', target: 'b', object: {}, fileAction: 'move', relationAction: 'keep' })).toEqual({ data: { merged: true } })
-		expect(fetchSpy.mock.calls[0][0]).toBe(`${OR}/r/s/a/merge`)
-		expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({ target: 'b', object: {}, fileAction: 'move', relationAction: 'keep' })
+		expect(store.mergeObjects).toBeUndefined()
 		expect(await store.getMappings()).toEqual({ data: [{ id: 'm' }] })
 		fetchSpy.mockResolvedValue(reply({}, { ok: false, statusText: 'Bad' }))
-		await expect(store.mergeObjects({})).rejects.toThrow('Failed to merge objects: Bad')
 		await expect(store.getMappings()).rejects.toThrow('Failed to fetch mappings')
 	})
 })

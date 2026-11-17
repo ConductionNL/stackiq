@@ -180,4 +180,33 @@ class McpGatesTest extends TestCase {
 		$this->assertSame('forbidden', $refusal['error']);
 		$this->assertStringContainsString('manage access', $refusal['message']);
 	}//end testTheSbomImportGate()
+	/**
+	 * An entry whose data is not an object has no owner: an administrator passes, an aanbod-beheerder is refused.
+	 *
+	 * @return void
+	 */
+	public function testAnEntryWithoutObjectDataHasNoOwner(): void {
+		$this->assertNull($this->publicationGate(uid: 'root', groups: ['admin'], data: [])->authorise(objectType: 'module', uuid: self::ENTRY));
+
+		$this->setUp();
+		$this->publications->method('isPublishableType')->willReturn(true);
+		$this->publications->method('resolveEntry')->willReturn(['data' => 'not an object']);
+		$gate = new McpPublicationGate($this->caller(uid: 'ann', groups: ['aanbod-beheerder'], org: 'org-a'), $this->publications, $this->groupManager, $this->config);
+		$refusal = $gate->authorise(objectType: 'module', uuid: self::ENTRY);
+
+		$this->assertSame(['forbidden', 'You do not have permission to publish this entry.'], [$refusal['error'], $refusal['message']]);
+	}//end testAnEntryWithoutObjectDataHasNoOwner()
+
+	/**
+	 * An anonymous caller cannot import an SBOM, and the application is never looked up.
+	 *
+	 * @return void
+	 */
+	public function testAnAnonymousCallerCannotImportAnSbom(): void {
+		$this->sbom->expects($this->never())->method('resolveParentModuleUuid');
+
+		$refusal = (new McpSbomGate($this->caller(uid: null), $this->sbom, $this->groupManager))->authoriseImport(moduleVersionUuid: self::ENTRY);
+
+		$this->assertSame(['unauthenticated', 'This tool needs a signed-in user.'], [$refusal['error'], $refusal['message']]);
+	}//end testAnAnonymousCallerCannotImportAnSbom()
 }//end class

@@ -63,7 +63,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -163,6 +164,7 @@
                             "id": "found-schema-gebruik"
                         }
                     ],
+                    [],
                     [],
                     [],
                     []
@@ -287,7 +289,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -360,6 +363,7 @@
                     [],
                     [],
                     [],
+                    [],
                     []
                 ]
             ]
@@ -369,7 +373,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -490,7 +495,8 @@
                     [],
                     {
                         "format": "x"
-                    }
+                    },
+                    []
                 ]
             ]
         ]
@@ -499,7 +505,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -651,7 +658,8 @@
                     ],
                     {
                         "deelnames": true
-                    }
+                    },
+                    []
                 ]
             ]
         ]
@@ -660,7 +668,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -759,7 +768,8 @@
                     [],
                     {
                         "deelnames": true
-                    }
+                    },
+                    []
                 ]
             ]
         ]
@@ -768,7 +778,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Gemeente_Test.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -916,7 +927,8 @@
                     [],
                     {
                         "deelnames": true
-                    }
+                    },
+                    []
                 ]
             ]
         ]
@@ -925,7 +937,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Self_Naam.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Self_Naam.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -1042,6 +1055,7 @@
                         }
                     ],
                     [],
+                    [],
                     []
                 ]
             ]
@@ -1051,7 +1065,8 @@
         "result": {
             "success": true,
             "xml": "<model/>",
-            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Unknown.xml"
+            "file_name": "DD-MM-YYYY_Stackiq_AMEFF_export_Unknown.xml",
+            "connections_skipped": 0
         },
         "calls": [
             [
@@ -1167,6 +1182,7 @@
                             "id": "found-schema-module"
                         }
                     ],
+                    [],
                     [],
                     []
                 ]
@@ -1292,6 +1308,7 @@
                             "id": "found-schema-module"
                         }
                     ],
+                    [],
                     [],
                     []
                 ]

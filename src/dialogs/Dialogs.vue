@@ -4,6 +4,8 @@
 -->
 <template>
 	<div>
+		<StartAttestationRoundDialog
+			v-if="navigationStore.dialog === 'startAttestationRound'" />
 		<!-- Object Dialogs -->
 		<DeleteObject v-if="navigationStore.dialog === 'deleteObject'" />
 		<DownloadObject v-if="navigationStore.dialog === 'downloadObject'" />
@@ -33,6 +35,7 @@ import MassPublishObjects from '../modals/object/MassPublishObjects.vue'
 import MassUnlockObjects from '../modals/object/MassUnlockObjects.vue'
 import MassValidateObjects from '../modals/object/MassValidateObjects.vue'
 import MoveToOrganisationDialog from './MoveToOrganisationDialog.vue'
+import StartAttestationRoundDialog from './StartAttestationRoundDialog.vue'
 import { navigationStore } from '../store/store.js'
 
 export default {
@@ -48,6 +51,7 @@ export default {
 		MassUnlockObjects,
 		MassValidateObjects,
 		MoveToOrganisationDialog,
+		StartAttestationRoundDialog,
 	},
 
 	/**

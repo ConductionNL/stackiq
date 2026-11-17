@@ -228,14 +228,16 @@ describe('ArchiMateImportExport error details and controls', () => {
 		const wrapper = await mountSection()
 		await wrapper.find('[data-testid="org-select"]').setValue('1')
 		const switches = wrapper.findAll('.switch input')
-		expect(switches.map((s) => s.element.checked)).toEqual([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik])
+		expect(switches.map((s) => s.element.checked)).toEqual([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik, wrapper.vm.includeConnections])
 
 		for (const s of switches) {
 			await s.setValue(false)
 		}
-		expect([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik]).toEqual([false, false, false])
+		expect([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik, wrapper.vm.includeConnections]).toEqual([false, false, false, false])
 		await switches[1].setValue(true)
-		expect([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik]).toEqual([false, true, false])
+		expect([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik, wrapper.vm.includeConnections]).toEqual([false, true, false, false])
+		await switches[3].setValue(true)
+		expect([wrapper.vm.includeModules, wrapper.vm.includeDeelnames, wrapper.vm.includeGebruik, wrapper.vm.includeConnections]).toEqual([false, true, false, true])
 	})
 
 	it('formats durations as milliseconds, seconds or minutes', async () => {

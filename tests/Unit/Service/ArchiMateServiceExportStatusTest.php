@@ -226,7 +226,8 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 				[['n' => 1]],
 				[['n' => 2]],
 				[['n' => 3]],
-				['deelnames' => true]
+				['deelnames' => true],
+				[]
 			)
 			->willReturn('<org/>');
 
@@ -237,6 +238,8 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 				'success' => true,
 				'xml' => '<org/>',
 				'file_name' => date('d-m-Y') . '_Stackiq_AMEFF_export_Gemeente_Test.xml',
+				// Without the connections option nothing is skipped (REQ-CDX-004).
+				'connections_skipped' => 0,
 			],
 			$result
 		);
@@ -250,6 +253,55 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 		);
 
 	}//end testOrganisationExportCollectsDataAndNamesFile()
+
+	/**
+	 * With the connections option the export reads only the connections the
+	 * exported organisation owns, never the whole register (REQ-CDX-004).
+	 *
+	 * @return void
+	 */
+	public function testOrganisationExportReadsOnlyTheOrganisationsConnections(): void {
+		$voorz = ['register' => 5, 'organisatie_schema' => 6, 'gebruik_schema' => 7, 'module_schema' => 9, 'koppeling_schema' => 11];
+		$this->settings->method('getVoorzieningenConfig')->willReturn($voorz);
+
+		$organisation = $this->createMock(ObjectEntity::class);
+		$organisation->method('jsonSerialize')->willReturn(['name' => 'Gemeente Test']);
+		$this->objectService->method('find')->willReturn($organisation);
+
+		$queries = [];
+		$this->objectService->method('searchObjects')->willReturnCallback(
+			function (array $query, bool $_rbac = true, bool $_multitenancy = true) use (&$queries): array {
+				$queries[] = $query;
+				return [['n' => count($queries)]];
+			}
+		);
+
+		$this->exportService->expects($this->once())->method('exportOrganizationArchiMateXml')
+			->with(
+				$this->objectService,
+				8,
+				$this->isType('array'),
+				'Gemeente Test',
+				'org-uuid',
+				[['n' => 1]],
+				[['n' => 2]],
+				[],
+				['connections' => true],
+				[['n' => 3]]
+			)
+			->willReturn('<org/>');
+		$this->exportService->method('lastSkippedConnections')->willReturn(2);
+
+		$result = $this->service->exportOrgArchiMate('org-uuid', ['connections' => true]);
+
+		$this->assertSame(2, $result['connections_skipped']);
+		$this->assertSame(
+			['@self' => ['register' => 5, 'schema' => 11, 'organisation' => 'org-uuid'], '_limit' => 10000],
+			$queries[2]
+		);
+		$this->assertCount(3, $queries);
+
+	}//end testOrganisationExportReadsOnlyTheOrganisationsConnections()
 
 	/**
 	 * An unknown organisation is reported without exporting; the register and
