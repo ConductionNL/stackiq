@@ -349,6 +349,9 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
+        // security-baseline-classification REQ-BCL-003/004: the GEMMA suggestion and the anonymous summary.
+        ['name' => 'usageClassification#suggestion', 'url' => '/api/gebruik/{usageId}/classification-suggestion', 'verb' => 'GET'],
+        ['name' => 'usageClassification#summary', 'url' => '/api/modules/{moduleId}/classification-summary', 'verb' => 'GET'],
 
         // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
         // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
