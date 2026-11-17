@@ -1,0 +1,109 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-views-editor: the Views index over the AMEF `view` schema (GEMMA imports and drawn views alike), with quick filters on owner and origin and the schema facets (tags, status, origin) in its sidebar. A row opens the ViewEditor page (config.rowRoute), the canvas editor on CnGraphCanvas: imported views open read-only with Copy to edit, drawn views take OpenRegister's object lock before editing. New view goes to the editor with id `new` instead of the generic Add form, because a view written by the form would carry no origin and so count as GEMMA content. ViewCompare compares two saved versions, or a version and the current view. An Architecture group holds Standards and Views (menu-layout.json relocates both), so the top-level entry count stays the same (ADR-097).",
+	"menu": [
+		{
+			"id": "Architecture",
+			"label": "Architecture",
+			"icon": "ViewGridOutline",
+			"order": 50
+		},
+		{
+			"id": "Views",
+			"label": "Views",
+			"icon": "Sitemap",
+			"route": "Views",
+			"order": 51
+		}
+	],
+	"pages": [
+		{
+			"id": "Views",
+			"route": "/views",
+			"type": "index",
+			"title": "Views",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "view",
+				"columns": [
+					"name",
+					"viewpoint",
+					"status",
+					"tags",
+					"origin"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Mine",
+						"filter": {
+							"_owner": "@me"
+						},
+						"icon": "AccountBoxOutline"
+					},
+					{
+						"label": "Drawn",
+						"filter": {
+							"origin": "drawn"
+						},
+						"icon": "FileDocumentEdit"
+					},
+					{
+						"label": "Imported",
+						"filter": {
+							"origin": "imported"
+						},
+						"icon": "ArchiveOutline"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl",
+				"rowRoute": "ViewEditor",
+				"showAdd": false,
+				"headerActions": [
+					{
+						"id": "new-view",
+						"label": "New view",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "ViewEditor",
+						"params": {
+							"id": "new"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "ViewEditor",
+			"route": "/views/:id",
+			"type": "custom",
+			"title": "View",
+			"component": "ArchitectureViewEditor",
+			"_note": "Custom, because no page type or widget is an authoring canvas: ArchitectureViewEditor draws one view on CnGraphCanvas, places existing and new ArchiMate elements, draws connections backed by relation objects, takes OpenRegister's object lock before edit mode, and opens imported GEMMA views read-only with Copy to edit (architecture-views-editor D2 to D5, D10). `new` as the id asks for a name and creates a drawn draft.",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "view"
+			}
+		},
+		{
+			"id": "ViewCompare",
+			"route": "/views/:id/compare",
+			"type": "custom",
+			"title": "Compare versions",
+			"component": "ViewVersionCompare",
+			"_note": "Custom, because no page type compares two snapshots: ViewVersionCompare draws two saved view-version snapshots, or one and the current view, on read-only CnGraphCanvas sides with added, removed and changed items marked in the success, error and warning colours, and lists the same changes as text (architecture-views-editor D6).",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "view"
+			}
+		}
+	]
+}

@@ -32,6 +32,9 @@ namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -303,12 +306,13 @@ class ClearDisallowedDependentValues implements IRepairStep {
 			// The whole object goes back: a save replaces it. Silent: a data fix, not an edit.
 			$objects->saveObject(
 				object: $data,
-				register: $register,
-				schema: $schema,
-				uuid: $object->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $object->getUuid(),
+					policy: new SavePolicy(silent: true)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				silent: true
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			return ['cleared' => 0, 'failed' => 1];

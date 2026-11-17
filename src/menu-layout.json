@@ -5,7 +5,9 @@
 	"relocations": {
 		"SyncStatusMenu": "Organisaties",
 		"Komplianties": "ReportsCompliance",
-		"ComplianceMatrix": "ReportsCompliance"
+		"ComplianceMatrix": "ReportsCompliance",
+		"Standaarden": "Architecture",
+		"Views": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []
