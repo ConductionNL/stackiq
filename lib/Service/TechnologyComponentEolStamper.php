@@ -67,60 +67,77 @@ class TechnologyComponentEolStamper {
 	 */
 	public function stamp(ObjectServiceInterface $objectService, array $stampedVersion): int {
 		$versionUuid = (string) ($stampedVersion['id'] ?? '');
-		$registerId  = $this->settingsService->getRegisterIdForObjectType('technologyComponent');
-		$schemaId    = $this->settingsService->getSchemaIdForObjectType('technologyComponent');
-		if ($versionUuid === '' || $registerId === null || $schemaId === null) {
+		$ids         = $this->componentIds();
+		if ($versionUuid === '' || $ids === null) {
 			return 0;
 		}
 
-		$stamp = [
-			'endOfSupport' => substr((string) ($stampedVersion['dateEndSupport'] ?? ''), 0, 10),
-			'eolSource' => (string) ($stampedVersion['eolSource'] ?? ''),
-			'eolUpdatedOn' => (string) ($stampedVersion['eolUpdatedOn'] ?? ''),
-		];
-
+		$stamp   = self::stampOf(stampedVersion: $stampedVersion);
 		$stamped = 0;
-		$ids     = ['register' => $registerId, 'schema' => $schemaId];
-		foreach ($this->components(objectService: $objectService, ids: $ids, versionUuid: $versionUuid) as $component) {
-			$uuid = (string) ($component['id'] ?? '');
-			if ($uuid === '') {
-				continue;
+		$query   = [
+			'@self' => $ids,
+			'software' => $versionUuid,
+			'_limit' => self::LIMIT,
+		];
+		foreach ($this->components(objectService: $objectService, query: $query) as $component) {
+			$write = ['ids' => $ids, 'component' => array_merge($component, $stamp)];
+			if ($this->save(objectService: $objectService, write: $write) === true) {
+				$stamped++;
 			}
-
-			if ($this->save(objectService: $objectService, ids: $ids, component: array_merge($component, $stamp), uuid: $uuid) === false) {
-				continue;
-			}
-
-			$stamped++;
 		}
 
 		return $stamped;
 	}//end stamp()
 
 	/**
-	 * The components whose `software` is the version, read as the system.
+	 * The technologyComponent register and schema, or null when either is not configured.
 	 *
-	 * @param ObjectServiceInterface   $objectService The OpenRegister object service.
-	 * @param array{register: int, schema: int} $ids  The technologyComponent register and schema.
-	 * @param string                   $versionUuid   The version.
+	 * @return array{register: int, schema: int}|null
+	 */
+	private function componentIds(): ?array {
+		$registerId = $this->settingsService->getRegisterIdForObjectType('technologyComponent');
+		$schemaId   = $this->settingsService->getSchemaIdForObjectType('technologyComponent');
+		if ($registerId === null || $schemaId === null) {
+			return null;
+		}
+
+		return ['register' => $registerId, 'schema' => $schemaId];
+	}//end componentIds()
+
+	/**
+	 * The fields a stamped version puts on each of its components.
+	 *
+	 * @param array $stampedVersion The stamped `moduleVersion`.
+	 *
+	 * @return array{endOfSupport: string, eolSource: string, eolUpdatedOn: string}
+	 */
+	private static function stampOf(array $stampedVersion): array {
+		return [
+			'endOfSupport' => substr((string) ($stampedVersion['dateEndSupport'] ?? ''), 0, 10),
+			'eolSource' => (string) ($stampedVersion['eolSource'] ?? ''),
+			'eolUpdatedOn' => (string) ($stampedVersion['eolUpdatedOn'] ?? ''),
+		];
+	}//end stampOf()
+
+	/**
+	 * The components whose `software` is the version, read as the system; a row without an id is left out.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array                  $query         The search: `@self` register and schema, `software` the version, `_limit`.
 	 *
 	 * @return list<array<string, mixed>>
 	 */
-	private function components(ObjectServiceInterface $objectService, array $ids, string $versionUuid): array {
+	private function components(ObjectServiceInterface $objectService, array $query): array {
 		try {
 			$rows = $objectService->searchObjects(
-				query: [
-					'@self' => ['register' => $ids['register'], 'schema' => $ids['schema']],
-					'software' => $versionUuid,
-					'_limit' => self::LIMIT,
-				],
+				query: $query,
 				_rbac: false,
 				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[TechnologyComponentEolStamper] Failed to read the components of a version — left untouched',
-				['version' => $versionUuid, 'error' => $e->getMessage()]
+				['version' => $query['software'], 'error' => $e->getMessage()]
 			);
 			return [];
 		}
@@ -131,7 +148,10 @@ class TechnologyComponentEolStamper {
 
 		$components = [];
 		foreach ($rows as $row) {
-			$components[] = $this->normalise(row: $row);
+			$component = $this->normalise(row: $row);
+			if ((string) ($component['id'] ?? '') !== '') {
+				$components[] = $component;
+			}
 		}
 
 		return $components;
@@ -140,14 +160,16 @@ class TechnologyComponentEolStamper {
 	/**
 	 * Save one stamped component, PUT-semantic, as the system.
 	 *
-	 * @param ObjectServiceInterface   $objectService The OpenRegister object service.
-	 * @param array{register: int, schema: int} $ids  The technologyComponent register and schema.
-	 * @param array<string, mixed>     $component     The complete component with its stamp.
-	 * @param string                   $uuid          The component.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array                  $write         `ids`: the technologyComponent register and schema;
+	 *                                              `component`: the complete component with its stamp and `id`.
 	 *
 	 * @return bool Whether it was saved.
 	 */
-	private function save(ObjectServiceInterface $objectService, array $ids, array $component, string $uuid): bool {
+	private function save(ObjectServiceInterface $objectService, array $write): bool {
+		$ids       = $write['ids'];
+		$component = $write['component'];
+		$uuid      = (string) $component['id'];
 		try {
 			$objectService->saveObject(
 				object: $component,
@@ -178,12 +200,7 @@ class TechnologyComponentEolStamper {
 	 */
 	private function normalise(mixed $row): array {
 		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-			$data = (array) $row->getObject();
-			if (method_exists($row, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = (string) $row->getUuid();
-			}
-
-			return $data;
+			return self::entityData(row: $row);
 		}
 
 		$data = (array) $row;
@@ -193,4 +210,20 @@ class TechnologyComponentEolStamper {
 
 		return $data;
 	}//end normalise()
+
+	/**
+	 * An entity row's data, with its uuid as `id` when the data has none.
+	 *
+	 * @param object $row The entity, which has getObject().
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function entityData(object $row): array {
+		$data = (array) $row->getObject();
+		if (method_exists($row, 'getUuid') === true && empty($data['id']) === true) {
+			$data['id'] = (string) $row->getUuid();
+		}
+
+		return $data;
+	}//end entityData()
 }//end class

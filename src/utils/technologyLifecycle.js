@@ -67,16 +67,24 @@ function isoDay(date) {
 export function supportState(component, today = new Date()) {
 	const end = dayOf(component?.endOfSupport)
 	const now = dayOf(today instanceof Date ? isoDay(today) : today)
+	return stateBetween(end, now)
+}
+
+/**
+ * The support state for an end of support and a day, both as UTC midnights.
+ *
+ * @param {number|null} end The end of support, null when unknown.
+ * @param {number|null} now The day to judge on, null when unreadable.
+ * @return {'supported'|'ending'|'ended'|'unknown'}
+ */
+function stateBetween(end, now) {
 	if (end === null || now === null) {
 		return 'unknown'
 	}
 	if (end < now) {
 		return 'ended'
 	}
-	if (end - now <= ENDING_WITHIN_DAYS * DAY_MS) {
-		return 'ending'
-	}
-	return 'supported'
+	return end - now <= ENDING_WITHIN_DAYS * DAY_MS ? 'ending' : 'supported'
 }
 
 /**
@@ -99,13 +107,69 @@ export function worse(left, right) {
  * @return {string|null}
  */
 function idOf(reference) {
-	if (typeof reference === 'string' && reference !== '') {
-		return reference
+	if (typeof reference === 'string') {
+		return reference !== '' ? reference : null
 	}
-	if (reference && typeof reference === 'object') {
-		return reference.id || reference.uuid || reference['@self']?.id || null
+	return isObject(reference) ? idInObject(reference) : null
+}
+
+/**
+ * The id an object reference carries: its `id`, `uuid` or `@self.id`.
+ *
+ * @param {object} reference The reference.
+ * @return {string|null}
+ */
+function idInObject(reference) {
+	return reference.id || reference.uuid || reference['@self']?.id || null
+}
+
+/**
+ * Whether a value is a non-null object.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean}
+ */
+function isObject(value) {
+	return Boolean(value) && typeof value === 'object'
+}
+
+/**
+ * A value as a list: itself when it is an array, else empty.
+ *
+ * @param {unknown} value The value.
+ * @return {Array}
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
+
+/**
+ * A reference resolved against the known components: the known component,
+ * else the reference itself when it is an object, else null.
+ *
+ * @param {Object<string, object>} componentsById Every known component by id.
+ * @param {unknown} reference The reference.
+ * @return {{id: string|null, component: object|null}}
+ */
+function resolveIn(componentsById, reference) {
+	const id = idOf(reference)
+	const known = id !== null ? componentsById[id] : undefined
+	if (known) {
+		return { id, component: known }
 	}
-	return null
+	return { id, component: isObject(reference) ? reference : null }
+}
+
+/**
+ * One exposure row of a resolved component.
+ *
+ * @param {{id: string|null, component: object|null}} resolved The resolved component.
+ * @param {{today: string|Date, through: string|null}} context The day to judge on and the component it is reached through.
+ * @return {{id: string|null, name: string, state: string, through: string|null}}
+ */
+function rowOf(resolved, context) {
+	const { id, component } = resolved
+	return { id, name: component?.name ?? id ?? '', state: supportState(component, context.today), through: context.through }
 }
 
 /**
@@ -120,22 +184,23 @@ function idOf(reference) {
  * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export function exposure(runsOn, componentsById = {}, today = new Date()) {
-	const rows = []
-	const resolve = (reference) => {
-		const id = idOf(reference)
-		const known = id !== null ? componentsById[id] : undefined
-		if (known) {
-			return { id, component: known }
-		}
-		return { id, component: reference && typeof reference === 'object' ? reference : null }
-	}
+	return exposureOf(runsOn, { componentsById, today })
+}
 
-	for (const reference of Array.isArray(runsOn) ? runsOn : []) {
-		const { id, component } = resolve(reference)
-		rows.push({ id, name: component?.name ?? id ?? '', state: supportState(component, today), through: null })
-		for (const lower of Array.isArray(component?.runsOn) ? component.runsOn : []) {
-			const below = resolve(lower)
-			rows.push({ id: below.id, name: below.component?.name ?? below.id ?? '', state: supportState(below.component, today), through: id })
+/**
+ * The exposure of `runsOn` against the known components on a day (see exposure()).
+ *
+ * @param {Array<object|string>} runsOn The usage's `runsOn`: components or their ids.
+ * @param {{componentsById: Object<string, object>, today: string|Date}} context The known components and the day.
+ * @return {{state: string, components: Array<{id: string|null, name: string, state: string, through: string|null}>}}
+ */
+function exposureOf(runsOn, context) {
+	const rows = []
+	for (const reference of listOf(runsOn)) {
+		const upper = resolveIn(context.componentsById, reference)
+		rows.push(rowOf(upper, { today: context.today, through: null }))
+		for (const lower of listOf(upper.component?.runsOn)) {
+			rows.push(rowOf(resolveIn(context.componentsById, lower), { today: context.today, through: upper.id }))
 		}
 	}
 
@@ -171,38 +236,76 @@ function dataOf(value) {
  * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export async function loadUsageExposure(usageId, fetchObject, today = new Date()) {
-	const usage = dataOf(await fetchObject('usage', usageId))
-	const runsOn = Array.isArray(usage?.runsOn) ? usage.runsOn : []
-	const componentsById = {}
-	const load = async (reference) => {
-		const id = idOf(reference)
-		if (id === null || componentsById[id]) {
-			return componentsById[id] ?? null
-		}
-		try {
-			const component = dataOf(await fetchObject('technologyComponent', id))
-			if (component) {
-				componentsById[id] = component
-			}
-		} catch {
-			// An unreadable component stays a reference and reads unknown.
-		}
-		return componentsById[id] ?? null
-	}
+	return loadExposure(usageId, { fetchObject, today })
+}
+
+/**
+ * Load the exposure of one application in use (see loadUsageExposure()).
+ *
+ * @param {string} usageId The usage id.
+ * @param {{fetchObject: function(string, string): Promise<object|null>, today: string|Date}} context The loader and the day.
+ * @return {Promise<{state: string, components: Array<{id: string|null, name: string, state: string, through: string|null, endOfSupport: string|null}>}>}
+ */
+async function loadExposure(usageId, context) {
+	const usage = dataOf(await context.fetchObject('usage', usageId))
+	const runsOn = listOf(usage?.runsOn)
+	const loader = { fetchObject: context.fetchObject, componentsById: {} }
 
 	for (const reference of runsOn) {
-		const component = await load(reference)
-		for (const lower of Array.isArray(component?.runsOn) ? component.runsOn : []) {
-			await load(lower)
+		const component = await loadComponent(reference, loader)
+		for (const lower of listOf(component?.runsOn)) {
+			await loadComponent(lower, loader)
 		}
 	}
 
-	const result = exposure(runsOn, componentsById, today)
+	const result = exposureOf(runsOn, { componentsById: loader.componentsById, today: context.today })
 	return {
 		state: result.state,
-		components: result.components.map((row) => ({
-			...row,
-			endOfSupport: (row.id !== null ? componentsById[row.id]?.endOfSupport : null) || null,
-		})),
+		components: result.components.map((row) => withEndOfSupport(row, loader.componentsById)),
+	}
+}
+
+/**
+ * A row with the end of support of its loaded component, or null.
+ *
+ * @param {{id: string|null}} row The exposure row.
+ * @param {Object<string, object>} componentsById The loaded components by id.
+ * @return {object}
+ */
+function withEndOfSupport(row, componentsById) {
+	return { ...row, endOfSupport: (row.id !== null ? componentsById[row.id]?.endOfSupport : null) || null }
+}
+
+/**
+ * Load one referenced component once into `loader.componentsById`.
+ *
+ * @param {unknown} reference The reference.
+ * @param {{fetchObject: function(string, string): Promise<object|null>, componentsById: Object<string, object>}} loader The loader and what it loaded.
+ * @return {Promise<object|null>} The component, or null when it cannot be loaded.
+ */
+async function loadComponent(reference, loader) {
+	const id = idOf(reference)
+	if (id !== null && !loader.componentsById[id]) {
+		await fetchInto(id, loader)
+	}
+	return loader.componentsById[id] ?? null
+}
+
+/**
+ * Fetch one component into `loader.componentsById`. An unreadable component
+ * stays a reference and reads unknown.
+ *
+ * @param {string} id The component id.
+ * @param {{fetchObject: function(string, string): Promise<object|null>, componentsById: Object<string, object>}} loader The loader and what it loaded.
+ * @return {Promise<void>}
+ */
+async function fetchInto(id, loader) {
+	try {
+		const component = dataOf(await loader.fetchObject('technologyComponent', id))
+		if (component) {
+			loader.componentsById[id] = component
+		}
+	} catch {
+		// An unreadable component stays a reference and reads unknown.
 	}
 }
