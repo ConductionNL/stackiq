@@ -56,6 +56,7 @@ final class CatalogueReferenceMap {
 			['schema' => 'maintenanceWindow', 'field' => 'module', 'list' => false],
 			['schema' => 'scenarioChange', 'field' => 'module', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'module', 'list' => false],
+			['schema' => 'applicationInterface', 'field' => 'module', 'list' => false],
 		],
 		'catalogService' => [
 			['schema' => 'usage', 'field' => 'diensten', 'list' => true],
