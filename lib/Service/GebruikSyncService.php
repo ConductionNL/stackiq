@@ -31,6 +31,8 @@ use DateTime;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Log\LoggerInterface;
@@ -707,9 +709,10 @@ class GebruikSyncService implements GebruikSyncServiceInterface {
 			// Update the object.
 			$this->objectService->saveObject(
 				object: $updatedData,
-				register: (int)$register,
-				schema: (int)$gebruikSchema,
-				uuid: $gebruikObject->getUuid()
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: (int)$register, schema: (int)$gebruikSchema),
+					uuid: $gebruikObject->getUuid()
+				)
 			);
 
 			$this->logger->info(

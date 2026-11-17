@@ -31,6 +31,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The result, the OpenRegister calls, the export call and the log lines of
@@ -207,6 +208,7 @@ class ArchiMateOrgExportGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$arguments) {
+				$arguments = LegacyObjectArgs::positional(method: 'find', args: $arguments);
 				$this->trace[] = ['objects.find', $arguments];
 				if (isset($this->plan['findThrows']) === true) {
 					throw new \RuntimeException('find down');

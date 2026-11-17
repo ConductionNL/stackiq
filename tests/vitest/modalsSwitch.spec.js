@@ -42,7 +42,6 @@ async function marker(name) {
 }
 
 vi.mock('../../src/modals/object/LockObject.vue', () => marker('LockObject'))
-vi.mock('../../src/modals/object/MergeObject.vue', () => marker('MergeObject'))
 vi.mock('../../src/modals/object/MigrationObject.vue', () => marker('MigrationObject'))
 vi.mock('../../src/modals/object/ObjectModal.vue', () => marker('ObjectModal'))
 vi.mock('../../src/modals/object/UploadObject.vue', () => marker('UploadObject'))
@@ -78,7 +77,7 @@ describe('Modals', () => {
 		expect(await rendered('uploadOrganisatie')).toEqual(['UploadObject:'])
 		expect(await rendered('lockOrganisatie')).toEqual(['LockObject:'])
 		expect(await rendered('migrationOrganisatie')).toEqual(['MigrationObject:'])
-		expect(await rendered('mergeOrganisatie')).toEqual(['MergeObject:'])
+		expect(await rendered('mergeOrganisatie')).toEqual([])
 		expect(await rendered('viewContactpersoon')).toEqual(['ViewObject:'])
 	})
 
