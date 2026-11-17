@@ -180,4 +180,85 @@ class BackfillRecordStatusTest extends TestCase {
 		$this->assertNull(BackfillRecordStatus::marked(row: ['recordStatus' => null]));
 		$this->assertSame(['recordStatus' => 'Active'], BackfillRecordStatus::marked(row: $this->row(uuid: 'x', data: [])));
 	}//end testOnlyObjectEntitiesAreMarked()
+
+	/**
+	 * Without OpenRegister there is nothing to mark: the step says so and is not marked done.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterNothingIsMarked(): void {
+		$settings = $this->createMock(RegisterConfigReaderInterface::class);
+		$settings->expects($this->never())->method('getObjectService');
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['files', 'stackiq']);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueBool')->willReturn(false);
+		$config->expects($this->never())->method('setValueBool');
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->once())->method('info')->with('OpenRegister not installed, so there are no records to mark.');
+
+		(new BackfillRecordStatus(appManager: $apps, settings: $settings, appConfig: $config))->run($output);
+	}//end testWithoutOpenRegisterNothingIsMarked()
+
+	/**
+	 * A schema whose id does not resolve is skipped; the other schema is still marked.
+	 *
+	 * @return void
+	 */
+	public function testASchemaWithoutAnIdIsSkipped(): void {
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('setRegister')->willReturnSelf();
+		// Only the schema that resolves is read. Recorded rather than expected:
+		// the step reads inside a catch-all, which would swallow a failed expectation.
+		$schemasRead = [];
+		$objects->method('setSchema')->willReturnCallback(
+			function (mixed $id) use (&$schemasRead, $objects): ObjectServiceInterface {
+				$schemasRead[] = $id;
+				return $objects;
+			}
+		);
+		$objects->method('findAll')->willReturn([$this->row(uuid: 's1', data: ['name' => 'C'])]);
+		$objects->method('saveObject')->willReturnCallback(
+			function (array $object, ObjectSaveOptions $options): ObjectEntityInterface {
+				$this->saved[] = [(int)$options->target->schema, (string)$options->uuid, $object];
+				return $this->createMock(ObjectEntityInterface::class);
+			}
+		);
+		$settings = $this->createMock(RegisterConfigReaderInterface::class);
+		$settings->method('getObjectService')->willReturn($objects);
+		$settings->method('getRegisterIdForObjectType')->willReturn(100);
+		$settings->method('getSchemaIdForObjectType')->willReturnCallback(static fn (string $type): ?int => ['catalogService' => 8][$type] ?? null);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['openregister']);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueBool')->willReturn(false);
+
+		(new BackfillRecordStatus(appManager: $apps, settings: $settings, appConfig: $config))->run($this->createMock(IOutput::class));
+
+		$this->assertSame([8], $schemasRead);
+		$this->assertSame([[8, 's1', ['name' => 'C', 'recordStatus' => 'Active']]], $this->saved);
+	}//end testASchemaWithoutAnIdIsSkipped()
+
+	/**
+	 * A page that cannot be read marks nothing and does not stop the step.
+	 *
+	 * @return void
+	 */
+	public function testAPageThatCannotBeReadMarksNothing(): void {
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('setRegister')->willReturnSelf();
+		$objects->method('setSchema')->willReturnSelf();
+		$objects->expects($this->exactly(2))->method('findAll')->willThrowException(new RuntimeException('register offline'));
+		$objects->expects($this->never())->method('saveObject');
+		$settings = $this->createMock(RegisterConfigReaderInterface::class);
+		$settings->method('getObjectService')->willReturn($objects);
+		$settings->method('getRegisterIdForObjectType')->willReturn(100);
+		$settings->method('getSchemaIdForObjectType')->willReturn(7);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['openregister']);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueBool')->willReturn(false);
+
+		(new BackfillRecordStatus(appManager: $apps, settings: $settings, appConfig: $config))->run($this->createMock(IOutput::class));
+	}//end testAPageThatCannotBeReadMarksNothing()
 }//end class
