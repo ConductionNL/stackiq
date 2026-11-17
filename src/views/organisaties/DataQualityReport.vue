@@ -155,6 +155,7 @@ import { NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
+import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
 
 /**
  * @class DataQualityReport
@@ -269,6 +270,16 @@ export default {
 				}
 			},
 		},
+	},
+
+	/**
+	 * Load the organisations the picker offers.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	 */
+	async mounted() {
+		await loadObjectTypeCollection('organization')
 	},
 
 	methods: {
