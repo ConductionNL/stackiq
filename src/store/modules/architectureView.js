@@ -269,7 +269,8 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 		delete fields['@self']
 		return update(SCHEMAS.view, uuidOf(view), {
 			...fields,
-			origin: 'drawn',
+			// An assistant's draft keeps its mark when a person edits it (architecture-assistant-drafted-views D3).
+			origin: view.origin === 'assistant' ? 'assistant' : 'drawn',
 			nodes: viewNodes,
 			connections: viewRelationships,
 			xml: { ...(view.xml ?? {}), viewNodes, viewRelationships },

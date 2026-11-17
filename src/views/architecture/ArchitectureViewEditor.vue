@@ -55,6 +55,9 @@
 			<NcNoteCard v-else-if="lockedByOther" type="warning" data-testid="view-editor-lock-notice">
 				{{ t('stackiq', '{user} is editing this view. It is read-only until they are done.', { user: lockHolder }) }}
 			</NcNoteCard>
+			<NcNoteCard v-if="drafted" type="info" data-testid="view-editor-draft-notice">
+				{{ draftedNotice }}
+			</NcNoteCard>
 			<NcNoteCard v-if="message" :type="message.type">
 				{{ message.text }}
 			</NcNoteCard>
@@ -140,7 +143,7 @@ import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextFi
 import { computed, reactive, ref } from 'vue'
 import { createArchitectureViewStore, ELEMENT_TYPES, isImported, RELATION_TYPES, uuidOf } from '../../store/modules/architectureView.js'
 import { applyEdgeChanges, applyNodeChanges, connect, layerOf, placeElement, removeNode } from '../../utils/viewEditorCanvas.js'
-import { toCanvas } from '../../utils/viewGraph.js'
+import { layoutUnplacedNodes, toCanvas } from '../../utils/viewGraph.js'
 
 /**
  * Draws and edits one architecture view on the shared graph canvas.
@@ -242,7 +245,25 @@ export default {
 
 		/** @return {string} The origin, in words. */
 		originLabel() {
+			if (this.drafted) {
+				return t('stackiq', 'Drafted by an assistant')
+			}
 			return this.imported ? t('stackiq', 'Imported') : t('stackiq', 'Drawn')
+		},
+
+		/**
+		 * @return {boolean} Whether an assistant drafted the view; it keeps the mark after a person's save.
+		 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+		 */
+		drafted() {
+			return this.view?.origin === 'assistant'
+		},
+
+		/** @return {string} Who the view was drafted for and when, in words. */
+		draftedNotice() {
+			const at = this.view?.draftedAt ? new Date(this.view.draftedAt) : null
+			const date = at && !Number.isNaN(at.getTime()) ? at.toLocaleDateString() : ''
+			return t('stackiq', 'Drafted by an assistant for {user} on {date}. Review it before you submit it.', { user: this.view?.draftedFor || t('stackiq', 'an unknown user'), date })
 		},
 
 		/** @return {Array<{id: string, label: string}>} The palette's element types. */
@@ -321,8 +342,11 @@ export default {
 				this.lockStore.objects.view[uuidOf(view)] = fresh
 			}
 			const xml = view.xml ?? {}
-			this.canvas = toCanvas(xml.viewNodes ?? view.nodes ?? [], xml.viewRelationships ?? view.connections ?? [])
-			this.dirty = false
+			const relationships = xml.viewRelationships ?? view.connections ?? []
+			// A drafted view arrives without positions and is laid out here; the first save stores the points.
+			const { viewNodes, laidOut } = layoutUnplacedNodes(xml.viewNodes ?? view.nodes ?? [], relationships)
+			this.canvas = toCanvas(viewNodes, relationships)
+			this.dirty = laidOut && !isImported(view)
 		},
 
 		/**

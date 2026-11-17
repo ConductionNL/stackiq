@@ -2068,6 +2068,9 @@
         "The type could not be changed.": "Het type kon niet worden gewijzigd.",
         "The type was changed.": "Het type is gewijzigd.",
         "This entry is an application.": "Deze registratie is een applicatie.",
-        "This entry is system software.": "Deze registratie is systeemsoftware."
+        "This entry is system software.": "Deze registratie is systeemsoftware.",
+        "Drafted by an assistant": "Opgesteld door een assistent",
+        "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Opgesteld door een assistent voor {user} op {date}. Controleer hem voordat je hem indient.",
+        "an unknown user": "een onbekende gebruiker"
     }
 }

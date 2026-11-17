@@ -37,6 +37,17 @@ A view from the GEMMA import opens read-only, because the next import would over
 
 In the editor, type a **Version label** and click **Save version** to keep a numbered copy of the saved view. Click **Compare versions** to compare two versions, or a version with the current view: both are drawn side by side, with added items marked in green, removed items in red and changed items in yellow, and the same changes listed as text below.
 
+## Views drafted by an assistant
+
+An assistant in Hermiq can draft a view for you from a description, such as "draw how our case system talks to document management". It uses two stackiq tools:
+
+- **stackiq.searchArchitectureElements** finds the GEMMA elements and the drawn elements that fit, so the draft reuses them instead of inventing new ones.
+- **stackiq.draftView** writes the view in status draft. It reuses an element of the same type and exact name, and a relation of the same type between the same two elements. A draft holds at most 60 elements and 120 relations.
+
+Both tools run with your own rights: an assistant cannot draft a view you could not create yourself, and it only finds elements you can see. Hermiq asks you to approve a draft before the tool runs.
+
+A drafted view opens in the editor with the notice "Drafted by an assistant for *user* on *date*" and the origin **Drafted by an assistant**. Its elements are laid out automatically the first time it opens; click **Save** to keep that layout, move elements first if you like. The view, and every element and relation the assistant created, keep the origin `assistant` after you edit them, so the **origin** filter on the Views list finds them. Review the draft before you submit it.
+
 ## Who sees what
 
-GEMMA views, elements and relations are public. Views, elements and relations drawn in stackiq are only read by signed-in users of the organisation that drew them, and they stay out of the shared views list (`/api/views`) and of the full ArchiMate export.
+GEMMA views, elements and relations are public. Views, elements and relations drawn in stackiq are only read by signed-in users of the organisation that drew them, and they stay out of the shared views list (`/api/views`) and of the full ArchiMate export. Drafted views are treated the same way.

@@ -1972,7 +1972,10 @@ OC.L10N.register(
         "The type could not be changed.": "The type could not be changed.",
         "The type was changed.": "The type was changed.",
         "This entry is an application.": "This entry is an application.",
-        "This entry is system software.": "This entry is system software."
+        "This entry is system software.": "This entry is system software.",
+        "Drafted by an assistant": "Drafted by an assistant",
+        "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Drafted by an assistant for {user} on {date}. Review it before you submit it.",
+        "an unknown user": "an unknown user"
     },
     "nplurals=2; plural=(n != 1);"
 )
