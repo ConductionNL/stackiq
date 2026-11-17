@@ -85,6 +85,8 @@ export function supportState(component, today = new Date()) {
  * @param {string} left A state.
  * @param {string} right Another.
  * @return {string}
+ *
+ * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export function worse(left, right) {
 	return STATES.indexOf(right) > STATES.indexOf(left) ? right : left
