@@ -52,7 +52,7 @@
     "@nextcloud/password-confirmation": "^6.1.0",
     "@nextcloud/router": "^3.1.0",
     "@nextcloud/vue": "^9.9.0",
-    "@toast-ui/editor": "^3.2.0",
+    "@toast-ui/editor": "^3.2.3",
     "@vueuse/core": "^15.0.0",
     "babel-loader": "^10.1.1",
     "css-loader": "~7.1.1",
