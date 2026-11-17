@@ -151,10 +151,15 @@ generic route-query-to-filter passthrough never sees it (see the
 					:bulkActions="bulkActions"
 					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
+					:showAdd="addWizard === ''"
 					@search="onListSearch"
 					@rowClick="openDetail"
 					@view="openDetail"
-					@quickFilterChange="onQuickFilterChange" />
+					@quickFilterChange="onQuickFilterChange">
+					<template v-if="addWizard !== ''" #header-actions>
+						<EntryWizardAction :kind="addWizard" />
+					</template>
+				</CnIndexPage>
 			</div>
 		</div>
 
@@ -172,6 +177,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud/vue'
+import { defineAsyncComponent } from 'vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -235,6 +241,8 @@ export default {
 		ContentDuplicate,
 		CnFacetSidebar,
 		CnIndexPage,
+		// Loaded when a page asks for it: the wizard reads the object store.
+		EntryWizardAction: defineAsyncComponent(() => import('../components/entryWizard/EntryWizardAction.vue')),
 		SaveFacetViewModal,
 		ContentSaveOutline,
 		Download,
@@ -250,6 +258,17 @@ export default {
 		 * Empty keeps rows where they are (the Services list has no detail page).
 		 */
 		detailRoute: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * The guided entry wizard the page's Add opens (manifest `config.addWizard`),
+		 * a kind of src/utils/entryWizard.js such as `module`. Empty keeps the list's own Add.
+		 *
+		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 */
+		addWizard: {
 			type: String,
 			default: '',
 		},

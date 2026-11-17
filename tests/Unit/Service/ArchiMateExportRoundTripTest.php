@@ -33,6 +33,7 @@ use SimpleXMLElement;
  * @covers \OCA\Stackiq\Service\ArchiMateExportService
  * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttribute
  * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttributeRun
+ * @uses \OCA\Stackiq\Service\ViewOrigin
  */
 final class ArchiMateExportRoundTripTest extends TestCase {
 

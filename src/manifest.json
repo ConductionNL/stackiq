@@ -682,6 +682,7 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
 				"detailRoute": "ModuleDetail",
+				"addWizard": "module",
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [
@@ -757,6 +758,7 @@
 				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
+				"addWizard": "catalogService",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [

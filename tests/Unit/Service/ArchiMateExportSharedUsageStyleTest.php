@@ -29,6 +29,9 @@ use Psr\Log\NullLogger;
  * keeps the own-only export as it was.
  *
  * @covers \OCA\Stackiq\Service\ArchiMateExportService
+ * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttribute
+ * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttributeRun
+ * @uses \OCA\Stackiq\Service\ViewOrigin
  *
  * @spec openspec/changes/architecture-shared-usage-on-views
  */

@@ -28,6 +28,7 @@ import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vu
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
@@ -278,6 +279,11 @@ export default {
 	// declarative type:index page would.
 	// @spec openspec/specs/suite-wizard/spec.md
 	SuitesIndexView,
+	// --- The Connections page's Add opens the guided entry wizard. ---
+	// Rendered in the declarative index page's actions slot
+	// (`actionsComponent`), so the page keeps its columns and filters.
+	// @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+	ConnectionWizardAction,
 	// --- Ratings & reviews (stackiq#375). ---
 	// Approved-only aggregate (average + count) + a bounded approved-review
 	// list, computed server-side by ReviewService, plus the "Write a review"
