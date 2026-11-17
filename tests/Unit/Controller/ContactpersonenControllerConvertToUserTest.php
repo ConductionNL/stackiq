@@ -434,6 +434,75 @@ class ContactpersonenControllerConvertToUserTest extends TestCase {
 	}//end testBulkUserInfoWithoutIdsIsABadRequest()
 
 	/**
+	 * Run getBulkUserInfo() with the given request body on php://input.
+	 *
+	 * The controller reads the body with file_get_contents('php://input'),
+	 * which is empty under the CLI. A stream wrapper serves the body for the
+	 * one call and the built-in wrapper is restored afterwards.
+	 *
+	 * @param string $body The raw request body.
+	 *
+	 * @return \OCP\AppFramework\Http\JSONResponse
+	 */
+	private function bulkUserInfoWithBody(string $body): \OCP\AppFramework\Http\JSONResponse {
+		BulkUserInfoInputStream::$body = $body;
+		stream_wrapper_unregister('php');
+		stream_wrapper_register('php', BulkUserInfoInputStream::class);
+		try {
+			return $this->controller->getBulkUserInfo();
+		} finally {
+			stream_wrapper_restore('php');
+		}
+	}//end bulkUserInfoWithBody()
+
+	/**
+	 * An administrator gets the user info the service returns for the ids in the body.
+	 *
+	 * @return void
+	 */
+	public function testBulkUserInfoAnswersWithTheServicesInfo(): void {
+		$this->signIn(admin: true);
+		$this->contactSvc->expects($this->once())->method('getBulkUserInfo')->with(['cp-1', 'cp-2'])
+			->willReturn(['cp-1' => ['hasUser' => true], 'cp-2' => ['hasUser' => false]]);
+
+		$response = $this->bulkUserInfoWithBody(body: '{"contactpersoonIds":["cp-1","cp-2"]}');
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(['success' => true, 'userInfo' => ['cp-1' => ['hasUser' => true], 'cp-2' => ['hasUser' => false]]], $response->getData());
+	}//end testBulkUserInfoAnswersWithTheServicesInfo()
+
+	/**
+	 * More than 100 ids in one request are refused before the service is asked.
+	 *
+	 * @return void
+	 */
+	public function testBulkUserInfoRefusesMoreThanAHundredIds(): void {
+		$this->signIn(admin: true);
+		$this->contactSvc->expects($this->never())->method('getBulkUserInfo');
+
+		$ids = array_map(static fn (int $i): string => 'cp-' . $i, range(1, 101));
+		$response = $this->bulkUserInfoWithBody(body: (string)json_encode(['contactpersoonIds' => $ids]));
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame(['success' => false, 'message' => 'Too many contactpersoon IDs: maximum 100 allowed per request'], $response->getData());
+	}//end testBulkUserInfoRefusesMoreThanAHundredIds()
+
+	/**
+	 * A failing service answers 500 with the reason.
+	 *
+	 * @return void
+	 */
+	public function testBulkUserInfoReportsAFailingService(): void {
+		$this->signIn(admin: true);
+		$this->contactSvc->method('getBulkUserInfo')->willThrowException(new RuntimeException('directory down'));
+
+		$response = $this->bulkUserInfoWithBody(body: '{"contactpersoonIds":["cp-1"]}');
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame(['success' => false, 'message' => 'Failed to get bulk user info: directory down'], $response->getData());
+	}//end testBulkUserInfoReportsAFailingService()
+
+	/**
 	 * A group double.
 	 *
 	 * @param string $gid The group id.
@@ -446,4 +515,77 @@ class ContactpersonenControllerConvertToUserTest extends TestCase {
 		return $group;
 	}//end group()
 
+}//end class
+
+/**
+ * A php:// stream that serves a fixed body, standing in for php://input in a CLI test.
+ */
+final class BulkUserInfoInputStream {
+
+	/**
+	 * The body every opened stream serves.
+	 *
+	 * @var string
+	 */
+	public static string $body = '';
+
+	/**
+	 * The stream context PHP assigns.
+	 *
+	 * @var resource|null
+	 */
+	public $context;
+
+	/**
+	 * Read offset.
+	 *
+	 * @var int
+	 */
+	private int $position = 0;
+
+	/**
+	 * Open the stream.
+	 *
+	 * @param string      $path       The path.
+	 * @param string      $mode       The mode.
+	 * @param int         $options    The options.
+	 * @param string|null $openedPath The opened path.
+	 *
+	 * @return bool
+	 */
+	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool {
+		$this->position = 0;
+		return true;
+	}//end stream_open()
+
+	/**
+	 * Read bytes.
+	 *
+	 * @param int $count How many.
+	 *
+	 * @return string
+	 */
+	public function stream_read(int $count): string {
+		$chunk = substr(self::$body, $this->position, $count);
+		$this->position += strlen($chunk);
+		return $chunk;
+	}//end stream_read()
+
+	/**
+	 * Whether everything was read.
+	 *
+	 * @return bool
+	 */
+	public function stream_eof(): bool {
+		return $this->position >= strlen(self::$body);
+	}//end stream_eof()
+
+	/**
+	 * The stream's stat.
+	 *
+	 * @return array<int|string, int>
+	 */
+	public function stream_stat(): array {
+		return ['size' => strlen(self::$body)];
+	}//end stream_stat()
 }//end class
