@@ -129,8 +129,9 @@ class TechnologyComponentEolStamper {
 	 */
 	private function components(ObjectServiceInterface $objectService, array $query): array {
 		try {
+			// The caller sets `_limit`; SearchBounds keeps it and bounds a query without one.
 			$rows = $objectService->searchObjects(
-				query: $query,
+				query: SearchBounds::bounded(query: $query),
 				_rbac: false,
 				_multitenancy: false
 			);
