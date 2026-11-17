@@ -130,7 +130,8 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 		self::assertSame('#/components/schemas/applicationInterface', $interface['$ref']);
 		self::assertFalse($interface['required']);
 		self::assertSame(['module' => '@object.moduleB'], $interface['x-relation-filter']);
-		self::assertSame('0.3.6', $connection['version']);
+		// shared-usage-visible-to-participants-connections.json moves it to 0.3.7 (sharedWithOrganisations).
+		self::assertTrue(version_compare($connection['version'], '0.3.6', '>='));
 		self::assertArrayHasKey('moduleB', $connection['properties'], 'The merge keeps the connection\'s own fields.');
 	}//end testAConnectionCanNameTheApiItCalls()
 

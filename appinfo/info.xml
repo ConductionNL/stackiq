@@ -237,6 +237,9 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import adds connection.sharedWithOrganisations: fills it for
+			     usages shared before it existed, so their participants can read the connections. -->
+			<step>OCA\Stackiq\Repair\BackfillConnectionSharing</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>

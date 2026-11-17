@@ -42,9 +42,9 @@
 - **acceptance_criteria**:
   - GIVEN the Koppelingen page WHEN it renders THEN a "Shared with" column lists the participants of the usages that hold each connection, or "nobody"
   - GIVEN a participant WHEN it opens a shared connection THEN KoppelingDetail opens without edit actions
-- [ ] Implement
-  - Done: column "Shared with" on Koppelingen (cell widget `sharedWith`, one `GET /api/gebruik/shared-connections` per page load, names resolved, "nobody" when no shared usage holds it, empty when the lookup is refused), and `permissions: true` on KoppelingDetail so Edit follows the record's update right.
-  - Left: a participant still cannot open or list a shared connection, because the connection schema has no read rule for it (task 1: not expressible through `usage.koppelingen`). It needs either an OpenRegister rule that matches through a relation, or a stackiq read of the connection by id that checks `/api/gebruik/shared-connections` first.
+- [x] Implement
+  - Column "Shared with" on Koppelingen (cell widget `sharedWith`, one `GET /api/gebruik/shared-connections` per page load, names resolved, "nobody" when no shared usage holds it, empty when the lookup is refused), and `permissions: true` on KoppelingDetail so Edit follows the record's update right.
+  - A participant lists and opens a shared connection: OpenRegister cannot match a rule through `usage.koppelingen`, so the connection carries a derived `sharedWithOrganisations` (the participants of every usage with participants that lists it). `ConnectionShareSubscriber` recomputes it on every usage create, update and delete (`ConnectionShareSync`, RBAC off, only that field written), `BackfillConnectionSharing` fills it for usages shared before it existed (after the register import), and `register.d/shared-usage-visible-to-participants-connections.json` (connection 0.3.7) adds read rules for gebruik-beheerder and gebruik-raadpleger matching `sharedWithOrganisations` `$contains` `$organisation`. Update and delete get no participant rule, so the detail opens read only. Whether OpenRegister's `koppelingen` filter matches a usage listing the connection needs a check on a live instance.
 - [x] Test (vitest `sharedWithCell.spec.js`)
 
 ### Task 5: Cooperation participants on Organisations (board SkOrganisaties)

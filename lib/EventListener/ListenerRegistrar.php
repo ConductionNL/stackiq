@@ -86,6 +86,10 @@ final class ListenerRegistrar {
 		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
 		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+		// A shared usage's participants may read the connections it lists (shared-usage-visible-to-participants).
+		$context->registerEventListener(ObjectCreatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectDeletedEvent::class, ConnectionShareSubscriber::class);
 
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);

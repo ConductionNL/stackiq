@@ -1,5 +1,5 @@
 {
-  "$comment": "shared-usage-visible-to-participants (REQ-DLG-010): a usage manager or reader of an organisation listed in usage.participants may READ that usage. Update and delete stay with the owner's rules. The read list restates the merged one (publication-field-rules.json) because a fragment's list replaces the list before it, then adds the two participant entries. Reading the connections such a usage lists cannot be expressed as an OpenRegister rule on the connection schema (it would match through usage.koppelingen), so the participant's connections are served by a stackiq lookup instead.",
+  "$comment": "shared-usage-visible-to-participants (REQ-DLG-010): a usage manager or reader of an organisation listed in usage.participants may READ that usage. Update and delete stay with the owner's rules. The read list restates the merged one (publication-field-rules.json) because a fragment's list replaces the list before it, then adds the two participant entries. Reading the connections such a usage lists cannot match through usage.koppelingen, so the connection schema matches a derived sharedWithOrganisations field instead (shared-usage-visible-to-participants-connections.json).",
   "components": {
     "schemas": {
       "usage": {
