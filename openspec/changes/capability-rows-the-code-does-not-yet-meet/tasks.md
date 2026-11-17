@@ -94,7 +94,7 @@
 - **files**: `tests/Unit/Controller/ViewControllerTest.php` (new)
 - **acceptance_criteria**:
   - REQ-CLR-020 and REQ-CLR-021 each have a test that passes against the current code
-- [ ] Test
+- [x] Test (PHPUnit `tests/Unit/Controller/ViewControllerTest.php`: REQ-CLR-021, the list with id and name and a view without enrichment parameters returned as imported; `tests/Unit/Settings/HostingModelFieldsTest.php`: REQ-CLR-020, Hosting offers IaaS and PaaS next to on-premises and SaaS and is filterable, hosting location and jurisdiction record NL)
 
 ### Task 15: A reviewer outside the supplier marks a compliance claim verified
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md
