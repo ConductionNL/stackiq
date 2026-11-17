@@ -92,7 +92,7 @@ final class BaselineClassificationDeclarationTest extends TestCase {
 		$base = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
 
 		$this->assertTrue(version_compare($this->merged()['components']['schemas']['usage']['version'], $base['components']['schemas']['usage']['version'], '>'));
-		$this->assertSame('1.5.11', $this->merged()['components']['schemas']['usage']['version']);
+		$this->assertSame('1.5.12', $this->merged()['components']['schemas']['usage']['version']);
 	}
 
 	public function testTheFormLabelsAreDutchOnADutchInstance(): void {
