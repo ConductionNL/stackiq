@@ -65,7 +65,8 @@ class UsageClassificationServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->never())->method('saveObject');
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null): ?ObjectEntityInterface {
+			function (int|string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null): ?ObjectEntityInterface {
+				$schema = $options?->schema;
 				if (isset($this->objects[$schema][$id]) === false) {
 					throw new \Exception('Object not found');
 				}

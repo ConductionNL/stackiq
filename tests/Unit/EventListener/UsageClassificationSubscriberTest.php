@@ -58,8 +58,8 @@ final class UsageClassificationSubscriberTest extends TestCase {
 	private function subscriber(): UsageClassificationSubscriber {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function ($object, $extend=[], $register=null, $schema=null, $uuid=null) {
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+			function (array $object, \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options) {
+				$this->saves[] = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid];
 				return $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
 			}
 		);

@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\OpenRegisterLookup;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\UsageClassification;
@@ -91,10 +93,11 @@ class UsageClassificationSubscriber implements IEventListener {
 		try {
 			$this->container->get(OpenRegisterLookup::class)->objectService()->saveObject(
 				object: array_merge($usage, $patch),
-				extend: [],
-				register: $object->getRegister(),
-				schema: $object->getSchema(),
-				uuid: $object->getUuid()
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $object->getRegister(), schema: $object->getSchema()),
+					uuid: $object->getUuid(),
+					extend: []
+				)
 			);
 		} catch (\Throwable $exception) {
 			$this->container->get(LoggerInterface::class)->error(

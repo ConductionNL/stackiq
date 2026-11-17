@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use RuntimeException;
 
@@ -299,8 +300,10 @@ class UsageClassificationService {
 		try {
 			$object = $objects->find(
 				id: $id,
-				register: $this->config->getRegisterIdForObjectType($type),
-				schema: $this->config->getSchemaIdForObjectType($type)
+				options: new ObjectFindOptions(
+					register: $this->config->getRegisterIdForObjectType($type),
+					schema: $this->config->getSchemaIdForObjectType($type)
+				)
 			);
 		} catch (\Throwable) {
 			// Not found, or not readable by the caller: the same answer.
