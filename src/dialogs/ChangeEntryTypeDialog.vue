@@ -140,6 +140,12 @@ export default {
 			return targetsOf(this.currentType).map((value) => ({ value, label: labels[value] }))
 		},
 
+		/**
+		 * The filled fields the change drops, as rows with their values.
+		 *
+		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @return {Array<object>} The rows.
+		 */
 		dropped() {
 			return droppedRows(this.preview?.dropped)
 		},
@@ -161,6 +167,12 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * On opening, select the first target the entry may change into.
+			 *
+			 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+			 * @param {boolean} open Whether the dialog is open.
+			 */
 			handler(open) {
 				if (open) {
 					this.select(this.targetOptions[0]?.value || null)

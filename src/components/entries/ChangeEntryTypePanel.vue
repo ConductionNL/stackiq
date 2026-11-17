@@ -67,6 +67,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The sentence naming the entry's current type.
+		 *
+		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @return {string} The label.
+		 */
 		currentLabel() {
 			return this.currentType === 'systemSoftware'
 				? t('stackiq', 'This entry is system software.')
