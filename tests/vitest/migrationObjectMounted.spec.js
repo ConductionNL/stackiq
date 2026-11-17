@@ -35,6 +35,7 @@ const { default: MigrationObject } =
 
 const API = '/index.php/apps/openregister/api'
 const t = (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m))
+const n = (app, one, many, count, vars = {}) => t(app, count === 1 ? one : many, vars)
 
 /**
  * A stub rendering its slots, with its name, label and disabled state readable.
@@ -97,7 +98,7 @@ let migrateResponse
  * @return {Promise<object>} The wrapper.
  */
 async function mountDialog() {
-	const wrapper = mount(MigrationObject, { global: { stubs, mocks: { t } } })
+	const wrapper = mount(MigrationObject, { global: { stubs, mocks: { t, n } } })
 	await flushPromises()
 	return wrapper
 }
