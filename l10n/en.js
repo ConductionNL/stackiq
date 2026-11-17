@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1503,6 +1499,13 @@ OC.L10N.register(
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "Add component": "Add component",
+        "This application has no components": "This application has no components",
+        "Whole applications": "Whole applications",
+        "All, including components": "All, including components",
+        "Part of": "Part of",
+        "The application this one is a component of, such as the case system a portal belongs to.": "The application this one is a component of, such as the case system a portal belongs to.",
+        "The applications that are a component of this one.": "The applications that are a component of this one.",
         "AI systems supplied": "AI systems supplied",
         "Contracts as supplier": "Contracts as supplier",
         "Models": "Models",
