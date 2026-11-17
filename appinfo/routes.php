@@ -356,6 +356,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
+        // @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+        ['name' => 'gebruik#getSharedConnections', 'url' => '/api/gebruik/shared-connections', 'verb' => 'GET'],
         // security-baseline-classification REQ-BCL-003/004: the GEMMA suggestion and the anonymous summary.
         ['name' => 'usageClassification#suggestion', 'url' => '/api/gebruik/{usageId}/classification-suggestion', 'verb' => 'GET'],
         ['name' => 'usageClassification#summary', 'url' => '/api/modules/{moduleId}/classification-summary', 'verb' => 'GET'],

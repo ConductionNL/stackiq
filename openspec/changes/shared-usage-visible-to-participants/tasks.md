@@ -19,8 +19,11 @@
 - **acceptance_criteria**:
   - GIVEN a participant WHEN calling `GET /api/gebruik` THEN own and shared usages are returned, each shared one with `_shared: {cooperation, participantCount}`
   - GIVEN a participant WHEN calling PUT or DELETE on a shared usage THEN it is refused with 403 before any write
-- [ ] Implement
-- [ ] Test (PHPUnit `GebruikControllerParticipantTest`)
+- [x] Implement
+  - `GET /api/gebruik`: a gebruik-beheerder's first page (no own `consumer` filter) gets the usages shared with its organisation added by `SharedUsageScope::merge`, each with `_shared: {cooperation, participantCount}` (cooperation is the owning organisation; the count is the owner plus every participant, each once). `GebruikService::getSharedGebruiken` forces `participants` to the caller's organisation, drops consumer and paging, and re-checks every record, so an ignored filter cannot leak another organisation's usage. The existing scope table (admin, ambtenaar, vendor, own consumer) is unchanged.
+  - `GET /api/gebruik/shared-connections` (gebruik-beheerder or gebruik-raadpleger with an organisation): each connection of a shared usage the organisation owns or takes part in, with `sharedWith` and `usages`. This is the connection lookup task 1 leaves to this task, and it feeds task 4's column.
+  - PUT and DELETE: stackiq has no usage write endpoint; writes go to OpenRegister, whose `update` and `delete` rules on the usage schema have no participant entry (task 1, pinned by `UsageParticipantReadRuleTest`), so OpenRegister refuses them before any write.
+- [x] Test (PHPUnit `GebruikControllerParticipantTest`, `SharedUsageScopeTest`, `GebruikServiceSharedTest`)
 
 ### Task 3: Applications in use and usage detail (boards SkInGebruik, SkGebruikDetail)
 - **spec_ref**: openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
