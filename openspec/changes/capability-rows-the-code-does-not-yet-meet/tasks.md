@@ -30,8 +30,8 @@
 ### Task 4: Record the module versions a vulnerability affects
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (vulnerability.moduleVersions), `src/manifest.json` (vulnerability and module version pages)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/vulnerability-versions.spec.ts`)
+- [x] Implement (`register.d/vulnerability-affected-versions.json`: `vulnerability.moduleVersions`, related module versions next to `modules`, version 1.0.23, shown by KwetsbaarheidDetail's data widget; ModuleversieDetail lists the vulnerabilities recorded against the version (`mv-vulnerabilities`, filter `moduleVersions` = the version))
+- [x] Test (PHPUnit `tests/Unit/Settings/VulnerabilityAffectedVersionsTest.php`; Playwright `tests/e2e/workflows/vulnerability-versions.spec.ts`, written, needs a live run)
 
 ### Task 5: Link AI systems to business processes
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/ai-system-inventory/spec.md
