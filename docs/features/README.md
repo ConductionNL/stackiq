@@ -15,11 +15,13 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Data model](data-model.md) | The GGM data entities and your own, their relations and attributes, and the applications that hold their data |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
+| [Change Entry Type](change-entry-type.md) | Turn an application into a service or system software and back, keeping its identity |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
 | [Contract Management](#contract-management) | Track license and service agreements |
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
+| [Security classification (BIO)](baseline-classification.md) | Classify each application in use on availability, integrity and confidentiality, with a GEMMA suggestion and an anonymous comparison |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
