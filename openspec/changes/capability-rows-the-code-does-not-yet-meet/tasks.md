@@ -133,8 +133,8 @@
 - **files**: usage create and edit (set the hidden provider from the module's provider), a repair step for existing usages
 - **acceptance_criteria**:
   - GIVEN a municipality adds a usage on the usage form WHEN the supplier opens its application page THEN the supplier sees that organisation in the usages list
-- [ ] Implement
-- [ ] Test (PHPUnit on the usage provider, Playwright `tests/e2e/workflows/usages.spec.ts`)
+- [x] Implement (`UsageProviderListener` on every usage create and update sets `provider` to the supplier of the module it names, in the same write, so a usage made on the usage form, which hides the field, reaches its supplier through the usage read rule on `provider`; a module without a supplier leaves the provider as it is. `BackfillUsageProvider` after the register import sets it on existing usages. `UsageProviderSync` reads the module with RBAC off, once per request)
+- [x] Test (PHPUnit `UsageProviderSyncTest`, `UsageProviderListenerTest`, `BackfillUsageProviderTest`; Playwright scenario added to `tests/e2e/workflows/usages.spec.ts`, needs a live run)
 
 ### Task 20: Anonymous readers get only published applications
 - **spec_ref**: openspec/specs/open-data-publishing/spec.md
