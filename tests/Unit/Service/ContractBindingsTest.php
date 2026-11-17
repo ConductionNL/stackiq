@@ -59,7 +59,7 @@ class ContractBindingsTest extends TestCase {
 	}//end aliases()
 
 	/**
-	 * Fifty-nine contracts are bound, none of them twice.
+	 * Sixty-two contracts are bound, none of them twice.
 	 *
 	 * @return void
 	 */

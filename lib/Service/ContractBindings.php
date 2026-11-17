@@ -57,6 +57,7 @@ use OCA\Stackiq\Kernel\Contracts\GemmaStandardLinkerInterface;
 use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\LandscapeComparisonServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\LifecycleCalendarServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
@@ -162,6 +163,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(IntakeServiceInterface::class, IntakeService::class);
 		$context->registerServiceAlias(ItsmExchangeServiceInterface::class, ItsmExchangeService::class);
 		$context->registerServiceAlias(ItsmFileImportServiceInterface::class, ItsmFileImportService::class);
+		$context->registerServiceAlias(LandscapeComparisonServiceInterface::class, LandscapeComparisonService::class);
 		$context->registerServiceAlias(LifecycleCalendarServiceInterface::class, LifecycleCalendarService::class);
 		$context->registerServiceAlias(MaintenanceRecipientServiceInterface::class, MaintenanceRecipientService::class);
 		$context->registerServiceAlias(MergeOrganisatieServiceInterface::class, MergeOrganisatieService::class);

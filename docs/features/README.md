@@ -14,6 +14,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
+| [Change Entry Type](change-entry-type.md) | Turn an application into a service or system software and back, keeping its identity |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
 | [Contract Management](#contract-management) | Track license and service agreements |
