@@ -43,8 +43,8 @@
 ### Task 6: Offer the reference components on the application form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/reference-component-placement/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module.referenceComponents not hideOnForm, picker register), `src/manifest.json` (ModuleDetail md-data)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/reference-component-placement.spec.ts`)
+- [x] Implement (`lib/Settings/register.d/reference-component-placement.json`: `referenceComponents` is no longer `hideOnForm`, and its items carry `x-external-register: vng-gemma` and `x-label-field: name`, so the form's picker reads the GEMMA elements, filtered to reference components, from the register that holds them; ModuleDetail's md-data shows the field)
+- [x] Test (PHPUnit `tests/Unit/Settings/ReferenceComponentPlacementTest.php`; Playwright `tests/e2e/workflows/reference-component-placement.spec.ts`, written, needs a live run. The GEMMA plate draws applications from usages' `usedForReferenceComponents`, not from this field: the plate half of the scenario is not built here)
 
 ### Task 7: Keep pending reviews hidden on the Reviews index, and take status off the form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md
