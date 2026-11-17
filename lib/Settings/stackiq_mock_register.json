@@ -3,7 +3,7 @@
   "info": {
     "title": "stackiq demo data",
     "version": "1.3.1",
-    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
+    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it. 1.3.0 adds one demo application with two components (landscape-application-components). 1.3.1 adds three demo technology components, a host, a virtual machine and a database (operations-technology-components)."
   },
   "x-openregister": {
     "type": "mock",
@@ -2493,6 +2493,50 @@
         ],
         "registeredBy": "Collaboration",
         "publicationDate": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaaksysteem"
+        },
+        "name": "Voorbeeld Zaaksysteem",
+        "shortDescription": "Voorbeeld zaaksysteem met twee componenten (landscape-application-components)",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaakportaal"
+        },
+        "name": "Voorbeeld Zaakportaal",
+        "shortDescription": "Het portaal waarin inwoners hun zaken volgen; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaken-api"
+        },
+        "name": "Voorbeeld Zaken-API",
+        "shortDescription": "De API waarmee andere applicaties zaken lezen en schrijven; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
       },
       {
         "@self": {
