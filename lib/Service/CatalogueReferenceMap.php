@@ -85,6 +85,7 @@ final class CatalogueReferenceMap {
 			['schema' => 'scenario', 'field' => 'organisation', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'publisher', 'list' => false],
 			['schema' => 'complianceDocument', 'field' => 'sharedWithOrganisations', 'list' => true],
+			['schema' => 'technologyComponent', 'field' => 'organization', 'list' => false],
 		],
 	];
 

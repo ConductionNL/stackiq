@@ -65,6 +65,9 @@ spl_autoload_register(function (string $class): void {
 		// OpenRegister's MCP provider interface (mcp-full-action-surface).
 		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
 		'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\' => __DIR__ . '/Stubs/Kernel/Contracts/Value/',
+		// Copies of OpenRegister's search contracts (SearchOptions, ObjectSelection). After
+		// the longer Contracts\Value\ prefix: the first matching prefix wins.
+		'OCA\\OpenRegister\\Kernel\\Contracts\\' => __DIR__ . '/Stubs/OpenRegister/Kernel/Contracts/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {

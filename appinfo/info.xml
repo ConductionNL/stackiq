@@ -50,7 +50,7 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.7-unstable.20261117030000</version>
+    <version>0.2.7-unstable.20261117100000</version>
     <!-- @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
@@ -246,12 +246,6 @@ Vrij en open source onder de EUPL-licentie.
 				the property, so no row is left without one.
 			-->
 			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
-			<!--
-				landscape-completeness-score: after InitializeSettings imported the
-				data quality rules, save each module and usage that has no score yet
-				so OpenRegister scores it. Skips scored entries; done once nothing failed.
-			-->
-			<step>OCA\Stackiq\Repair\RescoreDataQuality</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,

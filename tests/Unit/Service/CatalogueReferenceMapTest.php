@@ -131,6 +131,7 @@ class CatalogueReferenceMapTest extends TestCase {
 				'scenarioOrganisation' => ['field' => 'organisation', 'arrayField' => null, 'schema' => 'scenario'],
 				'complianceDocumentPublisher' => ['field' => 'publisher', 'arrayField' => null, 'schema' => 'complianceDocument'],
 				'complianceDocumentSharedWithOrganisations' => ['field' => '', 'arrayField' => 'sharedWithOrganisations', 'schema' => 'complianceDocument'],
+				'technologyComponentOrganization' => ['field' => 'organization', 'arrayField' => null, 'schema' => 'technologyComponent'],
 			],
 			array_slice($types, 5, null, true)
 		);
