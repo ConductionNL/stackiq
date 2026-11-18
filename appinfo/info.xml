@@ -247,6 +247,13 @@ Vrij en open source onder de EUPL-licentie.
 			-->
 			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
 			<!--
+				landscape-completeness-score: every module and usage saved before
+				the data quality rules existed is saved once so OpenRegister scores
+				it. After InitializeSettings, which imports the rules and the score
+				fields. Upgrade-only: a fresh install has no unscored rows.
+			-->
+			<step>OCA\Stackiq\Repair\RescoreDataQuality</step>
+			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
 				not by register: element/relation/view hold the GEMMA/GGM import and
