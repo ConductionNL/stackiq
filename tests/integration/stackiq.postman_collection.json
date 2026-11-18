@@ -3166,6 +3166,287 @@
    ]
   },
   {
+   "name": "11. Open data: anonymous module reads (open-data-publishing)",
+   "description": "openspec/specs/open-data-publishing and capability-rows-the-code-does-not-yet-meet task 20: an anonymous reader gets a module only once its publication date is at or before now. Being registered by a supplier no longer makes a module public.",
+   "item": [
+    {
+     "name": "create a supplier module without a publication date (setup: 2xx, captures id)",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}"
+      },
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\"name\": \"Newman unpublished supplier module {{$timestamp}}\", \"registeredBy\": \"Supplier\"}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));",
+         "const b = pm.response.json();",
+         "const id = b.id || b.uuid || (b['@self'] && b['@self'].id);",
+         "pm.expect(id).to.be.a('string');",
+         "pm.collectionVariables.set('openDataModuleId', id);",
+         "pm.test('it carries no publication date', () => pm.expect(b.publicationDate || null).to.eql(null));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read the unpublished module NO AUTH (authz: not returned)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{openDataModuleId}}"
+      },
+      "auth": {
+       "type": "noauth"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('not returned to an anonymous reader', () => pm.expect([401, 403, 404]).to.include(pm.response.code));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "list modules NO AUTH (authz: the unpublished module is not listed)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}?_limit=500"
+      },
+      "auth": {
+       "type": "noauth"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "const ids = pm.response.code === 200 ? (pm.response.json().results || []).map((r) => r.id || r.uuid || (r['@self'] && r['@self'].id)) : [];",
+         "pm.test('the unpublished supplier module is not listed', () => pm.expect(ids).to.not.include(pm.collectionVariables.get('openDataModuleId')));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "publish the module (setup: publication date in the past)",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{openDataModuleId}}"
+      },
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\"publicationDate\": \"{{openDataPublishedAt}}\"}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "exec": [
+         "pm.collectionVariables.set('openDataPublishedAt', new Date(Date.now() - 86400000).toISOString());"
+        ],
+        "type": "text/javascript"
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read the published module NO AUTH (happy: 200)",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{openDataModuleId}}"
+      },
+      "auth": {
+       "type": "noauth"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('a published module is readable anonymously', () => pm.response.to.have.status(200));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete the open data module (cleanup: 200/204)",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{openDataModuleId}}"
+      },
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted', () => pm.expect([200, 204]).to.include(pm.response.code));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
    "name": "99. Teardown",
    "item": [
     {

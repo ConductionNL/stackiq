@@ -2094,7 +2094,14 @@ OC.L10N.register(
         "The type could not be changed.": "Het type kon niet worden gewijzigd.",
         "The type was changed.": "Het type is gewijzigd.",
         "This entry is an application.": "Deze registratie is een applicatie.",
-        "This entry is system software.": "Deze registratie is systeemsoftware."
+        "This entry is system software.": "Deze registratie is systeemsoftware.",
+        "Mark as verified": "Markeren als geverifieerd",
+        "The claim is marked verified": "De claim is als geverifieerd gemarkeerd",
+        "Verified by {name} on {date}": "Geverifieerd door {name} op {date}",
+        "Could not mark the claim verified": "De claim kon niet als geverifieerd worden gemarkeerd",
+        "Declare a standard": "Standaard opgeven",
+        "CVSS score": "CVSS-score",
+        "No vulnerabilities recorded against this version": "Geen kwetsbaarheden geregistreerd voor deze versie"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -237,6 +237,9 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- Usages added on the usage form before the provider followed the application:
+			     set it, so the supplier sees them on its application page. -->
+			<step>OCA\Stackiq\Repair\BackfillUsageProvider</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>

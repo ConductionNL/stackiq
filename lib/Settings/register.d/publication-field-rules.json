@@ -1,5 +1,5 @@
 {
-  "$comment": "publication-field-rules: what of stackiq stays private when lane oc-pub publishes the landscape through OpenCatalogi. Property read rules keep contacts, owners, costs, service desk references and internal assessments for signed-in users; anonymous readers never get them. usage becomes public only from its publicationDate. moduleVersion follows its application's publication through two mirrored fields. A fragment REPLACES an authorization list, so usage carries all its existing read rules plus the public one; usage.interneAnnotation and organization.contactpersonen keep the rules they already have.",
+  "$comment": "publication-field-rules: what of stackiq stays private when lane oc-pub publishes the landscape through OpenCatalogi. Property read rules keep contacts, owners, costs, service desk references and internal assessments for signed-in users; anonymous readers never get them. usage becomes public only from its publicationDate. moduleVersion follows its application's publication through its mirrored modulePublicationDate (being registered by a supplier no longer makes either public). A fragment REPLACES an authorization list, so usage carries all its existing read rules plus the public one; usage.interneAnnotation and organization.contactpersonen keep the rules they already have.",
   "components": {
     "schemas": {
       "module": {
@@ -115,13 +115,6 @@
                 "modulePublicationDate": {
                   "$lte": "$now"
                 }
-              },
-              "crossOrganisation": true
-            },
-            {
-              "group": "public",
-              "match": {
-                "moduleRegisteredBy": "Supplier"
               },
               "crossOrganisation": true
             }

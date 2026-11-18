@@ -1,0 +1,42 @@
+{
+  "$comment": "capability-rows-the-code-does-not-yet-meet task 15 (REQ-CLR-022): a compliance claim reads verified only after a reviewer of another organisation than the supplier marks it (POST /api/compliancy/{id}/verify). These fields are written by that action only; ComplianceVerificationGuard refuses them on every other write and clears them when the evidence changes.",
+  "components": {
+    "schemas": {
+      "compliancy": {
+        "slug": "compliancy",
+        "version": "0.0.13",
+        "properties": {
+          "verifiedBy": {
+            "description": "The reviewer who checked the evidence and marked the claim verified.",
+            "type": "string",
+            "title": "Verified by",
+            "visible": true,
+            "hideOnForm": true,
+            "readOnly": true,
+            "facetable": false
+          },
+          "verifiedAt": {
+            "description": "When the reviewer marked the claim verified.",
+            "type": "string",
+            "format": "date-time",
+            "title": "Verified on",
+            "visible": true,
+            "hideOnForm": true,
+            "readOnly": true,
+            "facetable": false
+          },
+          "verifiedByOrganisation": {
+            "description": "The organisation of the reviewer; never the supplier's.",
+            "type": "string",
+            "format": "uuid",
+            "title": "Verified by organisation",
+            "visible": false,
+            "hideOnForm": true,
+            "readOnly": true,
+            "facetable": false
+          }
+        }
+      }
+    }
+  }
+}

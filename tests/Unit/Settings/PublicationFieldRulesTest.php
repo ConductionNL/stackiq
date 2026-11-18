@@ -140,7 +140,7 @@ class PublicationFieldRulesTest extends TestCase {
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
 	/**
-	 * A version is public under the same two conditions as its module, and signed-in users read every version.
+	 * A version is public under the same condition as its module, its publication date, and signed-in users read every version.
 	 *
 	 * @return void
 	 */
@@ -150,12 +150,11 @@ class PublicationFieldRulesTest extends TestCase {
 		$version = $schemas['moduleVersion']['authorization']['read'];
 
 		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $module);
-		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module);
+		$this->assertNotContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module, 'an unpublished supplier module is not public');
 		$this->assertSame(
 			[
 				'authenticated',
 				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier'], 'crossOrganisation' => true],
 			],
 			$version
 		);
@@ -179,6 +178,6 @@ class PublicationFieldRulesTest extends TestCase {
 		$this->assertTrue(version_compare($schemas['usage']['version'], '1.5.8', '>='), 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
 		// Application-interfaces.json (connections-api-catalogue) adds connection.interface at 0.3.6.
 		$this->assertSame('0.3.6', $schemas['connection']['version']);
-		$this->assertSame(expected: '0.1.7', actual: $schemas['moduleVersion']['version']);
+		$this->assertSame(expected: '0.1.8', actual: $schemas['moduleVersion']['version']);
 	}//end testAFragmentNeverLowersAVersion()
 }//end class
