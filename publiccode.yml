@@ -3,8 +3,8 @@ publiccodeYmlVersion: "0.4"
 name: Stackiq
 url: "https://github.com/ConductionNL/stackiq"
 landingURL: "https://stackiq.conduction.nl"
-softwareVersion: "0.2.2"
-releaseDate: "2026-05-26"
+softwareVersion: "0.2.0"
+releaseDate: "2026-09-06"
 developmentStatus: stable
 softwareType: "standalone/other"
 logo: img/app-store.svg
