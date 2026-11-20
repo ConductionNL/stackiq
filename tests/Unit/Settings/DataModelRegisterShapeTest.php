@@ -140,7 +140,7 @@ final class DataModelRegisterShapeTest extends TestCase {
 		// The origin from architecture-views-editor is still on both (a later fragment may add values).
 		foreach (['element', 'relation'] as $slug) {
 			$origins = $schemas[$slug]['properties']['origin']['enum'];
-			$this->assertSame(['imported', 'drawn'], array_values(array_intersect($origins, ['imported', 'drawn'])), $slug);
+			$this->assertSame(expected: ['imported', 'drawn'], actual: array_values(array: array_intersect($origins, ['imported', 'drawn'])), message: $slug);
 		}
 	}//end testElementAttributesAndRelationCardinalities()
 
@@ -159,8 +159,9 @@ final class DataModelRegisterShapeTest extends TestCase {
 			// still sits above this fragment's.
 			$raisedHere  = version_compare($with[$slug]['version'], $without[$slug]['version'], '>');
 			$raisedLater = version_compare($with[$slug]['version'], $fragment[$slug]['version'], '>');
-			$this->assertTrue($raisedHere || $raisedLater, $slug . ' version must rise');
-			$this->assertTrue(version_compare($with[$slug]['version'], $fragment[$slug]['version'], '>='), $slug);
+			$this->assertTrue(condition: $raisedHere || $raisedLater, message: $slug . ' version must rise');
+			$atLeast = version_compare(version1: $with[$slug]['version'], version2: $fragment[$slug]['version'], operator: '>=');
+			$this->assertTrue(condition: $atLeast, message: $slug);
 		}
 	}//end testTheFragmentBumpsUsageElementAndRelation()
 
@@ -171,8 +172,9 @@ final class DataModelRegisterShapeTest extends TestCase {
 	 */
 	public function testTheSeedHoldsTwoOwnEntitiesTheirRelationAndTheUsageLink(): void {
 		// Other fragments seed vng-gemma elements and relations too; this test reads this fragment's own.
-		$own      = array_flip(array_map(static fn (array $o): string => $o['@self']['slug'], self::read(self::FRAGMENT)['components']['objects']));
-		$elements = array_intersect_key(self::seeded('element'), $own);
+		$fragmentObjects = self::read(path: self::FRAGMENT)['components']['objects'];
+		$own             = array_flip(array: array_map(callback: static fn (array $o): string => $o['@self']['slug'], array: $fragmentObjects));
+		$elements        = array_intersect_key(self::seeded(schema: 'element'), $own);
 		$this->assertSame(['seed-el-melding', 'seed-el-melder'], array_keys($elements));
 		foreach ($elements as $slug => $element) {
 			$this->assertSame('vng-gemma', $element['@self']['register'], $slug);
@@ -192,7 +194,7 @@ final class DataModelRegisterShapeTest extends TestCase {
 			array_map(static fn (array $a): array => [$a['name'], $a['dataType'], $a['isKey']], $elements['seed-el-melder']['attributes'])
 		);
 
-		$relations = array_intersect_key(self::seeded('relation'), $own);
+		$relations = array_intersect_key(self::seeded(schema: 'relation'), $own);
 		$this->assertSame(['seed-rel-melding-melder'], array_keys($relations));
 		$relation = $relations['seed-rel-melding-melder'];
 		$this->assertSame(
