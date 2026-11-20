@@ -153,7 +153,8 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 
 		$connection = $view['connections'][0];
 		$this->assertSame(expected: $relation['identifier'], actual: $connection['modelRelationshipId']);
-		$this->assertSame(expected: [$view['nodes'][0]['viewNodeId'], $view['nodes'][1]['viewNodeId']], actual: [$connection['sourceId'], $connection['targetId']]);
+		$nodeIds = [$view['nodes'][0]['viewNodeId'], $view['nodes'][1]['viewNodeId']];
+		$this->assertSame(expected: $nodeIds, actual: [$connection['sourceId'], $connection['targetId']]);
 		$this->assertSame(expected: ['viewNodes' => $view['nodes'], 'viewRelationships' => $view['connections']], actual: $view['xml']);
 
 		$this->assertSame(expected: 'saved-view', actual: $result['uuid']);
@@ -310,7 +311,9 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 
 		$rows = $this->service()->searchElements(query: 'zaak', types: ['ApplicationComponent', 'BusinessProcess'], limit: 500);
 
-		$expected = [['uuid' => 'u-z', 'identifier' => 'id-z', 'name' => 'Zaaksysteem', 'type' => 'ApplicationComponent', 'gemmaType' => 'Referentiecomponent']];
+		$expected = [
+			['uuid' => 'u-z', 'identifier' => 'id-z', 'name' => 'Zaaksysteem', 'type' => 'ApplicationComponent', 'gemmaType' => 'Referentiecomponent'],
+		];
 		$this->assertSame(expected: $expected, actual: $rows);
 		$this->assertSame(expected: ['schema' => 'element', 'filters' => ['_search' => 'zaak', '_limit' => 50]], actual: $this->searches[0]);
 
@@ -340,7 +343,8 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 		$this->expectException(exception: RuntimeException::class);
 		$this->expectExceptionMessage(message: 'OpenRegister is not available.');
 
-		(new ArchitectureViewDraftService(registers: $registers, userSession: $this->createMock(originalClassName: IUserSession::class)))->searchElements(query: 'x');
+		$service = new ArchitectureViewDraftService(registers: $registers, userSession: $this->createMock(originalClassName: IUserSession::class));
+		$service->searchElements(query: 'x');
 	}//end testWithoutOpenRegisterTheServiceIsUnavailable()
 
 	/**

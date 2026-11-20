@@ -170,7 +170,7 @@ class McpToolCatalogueTest extends TestCase {
 			$handler->expects($this->once())->method($name)->with($args)->willReturn(['tool' => $name]);
 		}
 
-		$provider = new StackiqToolProvider($contract, $read, $write, $draft);
+		$provider = new StackiqToolProvider(contractTools: $contract, readTools: $read, writeTools: $write, draftTools: $draft);
 		foreach (array_keys($handlers) as $name) {
 			$this->assertSame(['tool' => $name], $provider->invokeTool('stackiq.'.$name, $args), $name);
 		}

@@ -91,7 +91,8 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 			->with('zaak', ['ApplicationComponent'], 7)
 			->willReturn([['uuid' => 'u1']]);
 
-		$drafted = $provider->invokeTool('stackiq.draftView', ['name' => 'Concept', 'description' => 'Why', 'elements' => $elements, 'relations' => $relations]);
+		$arguments = ['name' => 'Concept', 'description' => 'Why', 'elements' => $elements, 'relations' => $relations];
+		$drafted   = $provider->invokeTool('stackiq.draftView', $arguments);
 		$this->assertSame(expected: $answer, actual: $drafted);
 		$found = $provider->invokeTool('stackiq.searchArchitectureElements', ['query' => 'zaak', 'types' => ['ApplicationComponent'], 'limit' => 7]);
 		$this->assertSame(expected: ['elements' => [['uuid' => 'u1']]], actual: $found);
@@ -143,7 +144,7 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 		$args = ['name' => 'C', 'elements' => [['key' => 'a']]];
 		foreach ([
 			'validation_error' => new InvalidArgumentException("Element 'a' needs a name."),
-			'forbidden' => new DraftRefusedException('You may not create a view here.'),
+			'forbidden' => new DraftRefusedException(message: 'You may not create a view here.'),
 			'unavailable' => new RuntimeException('OpenRegister is not available.'),
 		] as $code => $error) {
 			$provider = $this->provider();
@@ -171,11 +172,13 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 		$this->drafts = $this->createMock(originalClassName: ArchitectureViewDraftService::class);
 
+		$gate = new McpAdminGate(userSession: $session, groupManager: $this->createMock(originalClassName: IGroupManager::class));
+
 		return new StackiqToolProvider(
-			$this->createMock(originalClassName: McpContractTools::class),
-			$this->createMock(originalClassName: McpReadTools::class),
-			$this->createMock(originalClassName: McpWriteTools::class),
-			new McpDraftTools(new McpAdminGate($session, $this->createMock(originalClassName: IGroupManager::class)), new McpArgumentValidator(), $this->drafts)
+			contractTools: $this->createMock(originalClassName: McpContractTools::class),
+			readTools: $this->createMock(originalClassName: McpReadTools::class),
+			writeTools: $this->createMock(originalClassName: McpWriteTools::class),
+			draftTools: new McpDraftTools(session: $gate, validator: new McpArgumentValidator(), drafts: $this->drafts)
 		);
 	}//end provider()
 }//end class

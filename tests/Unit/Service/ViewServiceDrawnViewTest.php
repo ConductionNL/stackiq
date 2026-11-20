@@ -195,7 +195,7 @@ final class ViewServiceDrawnViewTest extends TestCase {
 				$this->entity(['id' => 'legacy', 'name' => 'Imported before origin existed']),
 				$this->entity(['id' => 'drawn', 'name' => 'Our landscape', 'origin' => 'drawn']),
 				// An assistant's draft is no GEMMA content either (architecture-assistant-drafted-views D6).
-				$this->entity(['id' => 'drafted', 'name' => 'Concept van de assistent', 'origin' => 'assistant']),
+				$this->entity(data: ['id' => 'drafted', 'name' => 'Concept van de assistent', 'origin' => 'assistant']),
 				$this->entity(['id' => 'future', 'name' => 'Some later origin', 'origin' => 'generated']),
 			]
 		);

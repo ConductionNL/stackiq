@@ -198,9 +198,10 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 		$this->assertSame(expected: 'date-time', actual: $view['properties']['draftedAt']['format']);
 		$this->assertNotContains(needle: 'draftedFor', haystack: $view['required']);
 
-		$editor = self::read(self::SETTINGS . '/register.d/architecture-views.json')['components']['schemas'];
+		$editor = self::read(path: self::SETTINGS . '/register.d/architecture-views.json')['components']['schemas'];
 		foreach (['view', 'element', 'relation'] as $slug) {
-			$this->assertTrue(condition: version_compare(version1: $merged['components']['schemas'][$slug]['version'], version2: $editor[$slug]['version'], operator: '>'), message: $slug);
+			$raised = version_compare(version1: $merged['components']['schemas'][$slug]['version'], version2: $editor[$slug]['version'], operator: '>');
+			$this->assertTrue(condition: $raised, message: $slug);
 		}
 
 		$seeded = [];
