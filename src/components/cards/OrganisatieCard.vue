@@ -67,6 +67,14 @@
 					</span>
 				</div>
 
+				<!-- A cooperation's number of participants (shared-usage-visible-to-participants REQ-DLG-012) -->
+				<p
+					v-if="isCooperation"
+					class="organisatieParticipants"
+					data-testid="organisatie-participants">
+					{{ n('stackiq', 'Cooperation · %n participant', 'Cooperation · %n participants', participantCount) }}
+				</p>
+
 				<!-- Organisation Description -->
 				<div class="organisatieDescription">
 					<p v-if="item.shortDescription" class="shortDescription">
@@ -177,6 +185,7 @@
 </template>
 
 <script>
+import { translatePlural as n } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
@@ -185,6 +194,7 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
+import { participantsOf } from '../../utils/sharedUsage.js'
 
 /**
  * Whether a view change switches to the contact person view from another
@@ -257,6 +267,24 @@ export default {
 		}
 	},
 
+	computed: {
+		/**
+		 * @return {boolean} Whether the organisation is a cooperation.
+		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 */
+		isCooperation() {
+			return ['Collaboration', 'Samenwerking'].includes(this.item?.type)
+		},
+
+		/**
+		 * @return {number} How many participant organisations the cooperation lists, each once.
+		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 */
+		participantCount() {
+			return participantsOf({ participants: this.item?.participants }).length
+		},
+	},
+
 	watch: {
 		/**
 		 * Watch for changes in currentView and refresh user data when switching to contactpersonen
@@ -290,6 +318,8 @@ export default {
 	},
 
 	methods: {
+		n,
+
 		/**
 		 * Emit the `click` event CnCardGrid/CnIndexPage listen on for
 		 * navigation (CnPageRenderer.onRowOpen resolves the matching
@@ -502,6 +532,11 @@ export default {
 	font-size: 12px;
 	font-weight: 600;
 	text-transform: capitalize;
+}
+
+.organisatieParticipants {
+	margin: 0 0 var(--default-grid-baseline, 4px);
+	color: var(--color-text-maxcontrast);
 }
 
 .typeBadge {

@@ -49,13 +49,19 @@ class TechnologyComponentDeclarationTest extends TestCase {
 
 		$files = glob($dir . '/register.d/*.json');
 		sort($files);
+		// Merge up to this change's fragment: without it, or with it as the last one merged. A later
+		// fragment that raises the usage version again would otherwise hide whether this one raised it.
 		foreach ($files as $file) {
-			if ($withFragment === false && basename($file) === 'operations-technology-components.json') {
-				continue;
+			$isThisChange = basename($file) === 'operations-technology-components.json';
+			if ($isThisChange === true && $withFragment === false) {
+				break;
 			}
 
 			$fragment = json_decode((string) file_get_contents($file), true);
 			$merged   = $keep->invoke(null, $merged, $merge->invoke(null, $merged, $fragment));
+			if ($isThisChange === true) {
+				break;
+			}
 		}
 
 		return $merged;

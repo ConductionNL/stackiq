@@ -86,6 +86,10 @@ final class ListenerRegistrar {
 		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
 		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+		// A shared usage's participants may read the connections it lists (shared-usage-visible-to-participants).
+		$context->registerEventListener(ObjectCreatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectDeletedEvent::class, ConnectionShareSubscriber::class);
 
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
@@ -132,24 +136,35 @@ final class ListenerRegistrar {
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
-		// Project a concluded contract-approval Decision from the decision app
-		// onto the catalog contract. The listener filters by sourceApp and
-		// IDOR-checks the decision id before projecting (the In onderhandeling
-		// -> Actief transition is reached only here). Replaces the former HTTP
-		// outcome-callback + daily reconcile poll.
-		//
-		// BOTH SPELLINGS, by FQN STRING rather than `::class`. That app renamed
-		// its PSR-4 root from OCA\Decidesk to OCA\Decidiq with no compatibility
-		// alias, and `::class` on an imported name resolves at COMPILE TIME — so
-		// this registered a class nothing dispatches any more, the listener
-		// never fired, and every approved contract stayed in `In onderhandeling`.
-		// An event with no listener and a listener on no event look identical
-		// from here: nothing throws, nothing is logged.
-		//
-		// Registering a name that does not resolve is harmless, because dispatch
-		// matches on the concrete event class, but the guard is kept so this
-		// stays symmetric with ContractApprovalService::isDelegationConfigured()
-		// on the outbound side.
+		$this->registerDecisionConclusion(context: $context);
+
+	}//end register()
+
+	/**
+	 * Project a concluded contract-approval Decision from the decision app
+	 * onto the catalog contract. The listener filters by sourceApp and
+	 * IDOR-checks the decision id before projecting (the In onderhandeling
+	 * -> Actief transition is reached only here). Replaces the former HTTP
+	 * outcome-callback + daily reconcile poll.
+	 *
+	 * BOTH SPELLINGS, by FQN STRING rather than `::class`. That app renamed
+	 * its PSR-4 root from OCA\Decidesk to OCA\Decidiq with no compatibility
+	 * alias, and `::class` on an imported name resolves at COMPILE TIME — so
+	 * this registered a class nothing dispatches any more, the listener
+	 * never fired, and every approved contract stayed in `In onderhandeling`.
+	 * An event with no listener and a listener on no event look identical
+	 * from here: nothing throws, nothing is logged.
+	 *
+	 * Registering a name that does not resolve is harmless, because dispatch
+	 * matches on the concrete event class, but the guard is kept so this
+	 * stays symmetric with ContractApprovalService::isDelegationConfigured()
+	 * on the outbound side.
+	 *
+	 * @param IRegistrationContext $context Registration context.
+	 *
+	 * @return void
+	 */
+	private function registerDecisionConclusion(IRegistrationContext $context): void {
 		foreach (ContractApprovalServiceInterface::DECISION_CONCLUDED_EVENTS as $concludedEvent) {
 			if (class_exists($concludedEvent) === false) {
 				continue;
@@ -158,5 +173,5 @@ final class ListenerRegistrar {
 			$context->registerEventListener($concludedEvent, DecisionConcludedListener::class);
 		}
 
-	}//end register()
+	}//end registerDecisionConclusion()
 }//end class

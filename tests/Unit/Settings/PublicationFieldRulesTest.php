@@ -165,7 +165,10 @@ class PublicationFieldRulesTest extends TestCase {
 			needle: ['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
 			haystack: $after
 		);
-		$this->assertCount(expectedCount: count($before) + 1, haystack: $after);
+		// The shared-usage-visible-to-participants change adds the participant read rules (UsageParticipantReadRuleTest);
+		// apart from those, publication adds exactly the public rule.
+		$ownRules = array_filter($after, static fn (array $rule): bool => isset($rule['match']['participants']) === false);
+		$this->assertCount(expectedCount: count($before) + 1, haystack: $ownRules);
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
 	/**

@@ -1,0 +1,68 @@
+{
+  "$comment": "shared-usage-visible-to-participants (REQ-DLG-010): a usage manager or reader of an organisation listed in usage.participants may READ that usage. Update and delete stay with the owner's rules. The read list restates the merged one (publication-field-rules.json) because a fragment's list replaces the list before it, then adds the two participant entries. Reading the connections such a usage lists cannot match through usage.koppelingen, so the connection schema matches a derived sharedWithOrganisations field instead (shared-usage-visible-to-participants-connections.json).",
+  "components": {
+    "schemas": {
+      "usage": {
+        "slug": "usage",
+        "version": "1.6.3",
+        "authorization": {
+          "read": [
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "consumer": "$organisation"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "provider": "$organisation"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "public",
+              "match": {
+                "publicationDate": {
+                  "$lte": "$now"
+                }
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "participants": {
+                  "$contains": "$organisation"
+                }
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "participants": {
+                  "$contains": "$organisation"
+                }
+              },
+              "crossOrganisation": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
