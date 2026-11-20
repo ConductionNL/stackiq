@@ -50,7 +50,7 @@ async function seed(schema: string, data: Record<string, unknown>): Promise<stri
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: `${RUN_ID} municipality` })
+	ids.org = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
 	ids.anna = await seed('contactPerson', {
 		contactsUid: anna,
 		organization: ids.org,

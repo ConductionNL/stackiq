@@ -147,6 +147,35 @@ class OwnershipTransferControllerTest extends TestCase {
 	}//end testBothRoutesDeclareNoAdminRequired()
 
 	/**
+	 * When the caller's organisations cannot be read, a maintainer is refused and the failure is logged.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableMembershipsRefuseTheTransfer(): void {
+		$this->transfers->expects($this->never())->method('execute');
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => $this->params[$key] ?? $default);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('beheer-ab');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn(false);
+		$groups->method('isInGroup')->willReturn(true);
+		$organisations = $this->createMock(OrganisationService::class);
+		$organisations->method('getUserOrganisations')->willThrowException(new \RuntimeException('database gone'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('Stackiq: could not read the caller organisations for a transfer', ['error' => 'database gone']);
+
+		$response = (new OwnershipTransferController($request, $this->transfers, $session, $groups, $organisations, $logger))->execute();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(['message' => 'Only an administrator of both organisations may move entries'], $response->getData());
+	}//end testUnreadableMembershipsRefuseTheTransfer()
+
+	/**
 	 * The controller for this caller.
 	 *
 	 * @param string|null  $uid        The caller, null when signed out

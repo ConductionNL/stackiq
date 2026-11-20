@@ -1,0 +1,198 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-data-model-and-ggm: the Data model over AMEF `element` objects of type BusinessObject, the GGM entities a GEMMA import brings and the organisation's own (origin drawn). An entity page draws its relations around it (DataEntityRelations), lists its attributes with keys (DataEntityAttributes) and the applications in use that hold its data (usage.dataEntities). The menu entry sits under the Architecture group (menu-layout.json relocates it), so the top-level count does not grow (ADR-097).",
+	"menu": [
+		{
+			"id": "Gegevensmodel",
+			"label": "Data model",
+			"icon": "Database",
+			"route": "Gegevensmodel",
+			"order": 52
+		}
+	],
+	"pages": [
+		{
+			"id": "Gegevensmodel",
+			"route": "/gegevensmodel",
+			"type": "index",
+			"title": "Data model",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "element",
+				"description": "The data entities of the Gemeentelijk Gegevensmodel and your own, with their relations and the applications that hold their data.",
+				"filter": {
+					"type": "BusinessObject"
+				},
+				"columns": [
+					"name",
+					"ggm-uml-type",
+					"gemmaType",
+					"origin"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "GGM",
+						"filter": {
+							"origin": "imported"
+						},
+						"icon": "ArchiveOutline"
+					},
+					{
+						"label": "Own",
+						"filter": {
+							"origin": "drawn"
+						},
+						"icon": "FileDocumentEdit"
+					}
+				],
+				"addLabel": "New data entity",
+				"createDefaults": {
+					"type": "BusinessObject",
+					"origin": "drawn"
+				},
+				"includeFields": [
+					"name",
+					"documentation",
+					"attributes"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl",
+				"rowRoute": "GegevensobjectDetail"
+			}
+		},
+		{
+			"id": "GegevensobjectDetail",
+			"route": "/gegevensmodel/:id",
+			"type": "detail",
+			"title": "Data entity",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "element",
+				"_note": "A data entity is read as what it is, what it relates to, what it holds and who holds its data: the data widget, then the relations drawn around it with a text table, then its attributes, then the applications in use whose dataEntities name it.",
+				"widgets": [
+					{
+						"id": "ge-data",
+						"type": "data",
+						"title": "Data entity",
+						"icon": "Database",
+						"content": {
+							"columns": 2,
+							"include": [
+								"name",
+								"documentation",
+								"ggm-guid",
+								"ggm-uml-type",
+								"origin"
+							]
+						}
+					},
+					{
+						"id": "entity-usages",
+						"type": "object-list",
+						"title": "Applications that hold this data",
+						"icon": "OfficeBuilding",
+						"content": {
+							"register": "@resolve:voorzieningen_register",
+							"schema": "usage",
+							"filter": {
+								"dataEntities": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "module",
+									"label": "Application",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "@resolve:voorzieningen_register",
+										"schema": "module",
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "consumer",
+									"label": "Organisation",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "@resolve:voorzieningen_register",
+										"schema": "organization",
+										"labelField": "name"
+									}
+								},
+								"status"
+							],
+							"limit": 50,
+							"rowRoute": "GebruikDetail",
+							"allowCreate": false,
+							"emptyText": "No application in use holds data for this entity yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "ge-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "2",
+						"widgetId": "entity-usages",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "ge-relations",
+						"component": "DataEntityRelations",
+						"props": {
+							"objectId": "@objectId",
+							"register": "@resolve:amef_register"
+						},
+						"placement": "after-data",
+						"colSpan": 12
+					},
+					{
+						"id": "ge-attributes",
+						"component": "DataEntityAttributes",
+						"props": {
+							"objectId": "@objectId",
+							"register": "@resolve:amef_register"
+						},
+						"placement": "after-data",
+						"colSpan": 12
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

@@ -91,6 +91,11 @@
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
+## Build notes (round 2, 2026-11-17)
+
+- `tests/e2e/workflows/architecture-views.spec.ts` is written: the Drawn, Imported and Mine quick filters and the tag and status queries (task 2), drawing two elements with a connection, saving and reopening, and the lock notice for a colleague (task 4), Copy to edit (task 6), and two saved versions compared (task 7). It lints, type-checks and `playwright --list` collects its 5 tests, but it has not run against a live instance yet, so those Test boxes stay open until it has.
+- Task 9: `docs/features/architecture-views.md` and the English and Dutch strings are on development; its screenshots still need a Playwright capture on a live instance.
+
 ## Verification
 
 - `openspec validate architecture-views-editor --type change --strict`
