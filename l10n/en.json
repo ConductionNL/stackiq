@@ -2157,6 +2157,38 @@
         "Drafted by an assistant": "Drafted by an assistant",
         "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Drafted by an assistant for {user} on {date}. Review it before you submit it.",
         "an unknown user": "an unknown user",
+        "{owner}, {count}": "{owner}, {count}",
+        "a cooperation": "a cooperation",
+        "an unknown organisation": "an unknown organisation",
+        "Joined": "Joined",
+        "Loading the participants": "Loading the participants",
+        "Not recorded": "Not recorded",
+        "The participants could not be loaded.": "The participants could not be loaded.",
+        "This application in use is not shared with other organisations": "This application in use is not shared with other organisations",
+        "Your organisation takes part in this application in use. Only the owner can change it.": "Your organisation takes part in this application in use. Only the owner can change it.",
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
+            "Run by {owner} for {count} organisation",
+            "Run by {owner} for {count} organisations"
+        ],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
+            "Shared by {count} organisation",
+            "Shared by {count} organisations"
+        ],
+        "Shared through a cooperation": "Shared through a cooperation",
+        "[{count:shared} shared through a cooperation]": "[{count:shared} shared through a cooperation]",
+        "Run by {owner} for {count} organisation": "Run by {owner} for {count} organisation",
+        "Run by {owner} for {count} organisations": "Run by {owner} for {count} organisations",
+        "Shared by {count} organisation": "Shared by {count} organisation",
+        "Shared by {count} organisations": "Shared by {count} organisations",
+        "nobody": "nobody",
+        "Shared with": "Shared with",
+        "This cooperation lists no participants yet": "This cooperation lists no participants yet",
+        "Cooperation · %n participant": "Cooperation · %n participant",
+        "Cooperation · %n participants": "Cooperation · %n participants",
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
+            "Cooperation · %n participant",
+            "Cooperation · %n participants"
+        ],
         "Ask the catalogue": "Ask the catalogue",
         "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.",
         "Your question": "Your question",

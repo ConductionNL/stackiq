@@ -2216,6 +2216,38 @@ OC.L10N.register(
         "Drafted by an assistant": "Opgesteld door een assistent",
         "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Opgesteld door een assistent voor {user} op {date}. Controleer hem voordat je hem indient.",
         "an unknown user": "een onbekende gebruiker",
+        "{owner}, {count}": "{owner}, {count}",
+        "a cooperation": "een samenwerking",
+        "an unknown organisation": "een onbekende organisatie",
+        "Joined": "Deelnemer sinds",
+        "Loading the participants": "De deelnemers worden geladen",
+        "Not recorded": "Niet vastgelegd",
+        "The participants could not be loaded.": "De deelnemers konden niet worden geladen.",
+        "This application in use is not shared with other organisations": "Deze applicatie in gebruik wordt niet met andere organisaties gedeeld",
+        "Your organisation takes part in this application in use. Only the owner can change it.": "Uw organisatie neemt deel aan deze applicatie in gebruik. Alleen de eigenaar kan haar wijzigen.",
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
+            "Beheerd door {owner} voor {count} organisatie",
+            "Beheerd door {owner} voor {count} organisaties"
+        ],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
+            "Gedeeld door {count} organisatie",
+            "Gedeeld door {count} organisaties"
+        ],
+        "Shared through a cooperation": "Gedeeld via een samenwerking",
+        "[{count:shared} shared through a cooperation]": "[{count:shared} gedeeld via een samenwerking]",
+        "Run by {owner} for {count} organisation": "Beheerd door {owner} voor {count} organisatie",
+        "Run by {owner} for {count} organisations": "Beheerd door {owner} voor {count} organisaties",
+        "Shared by {count} organisation": "Gedeeld door {count} organisatie",
+        "Shared by {count} organisations": "Gedeeld door {count} organisaties",
+        "nobody": "niemand",
+        "Shared with": "Gedeeld met",
+        "This cooperation lists no participants yet": "Deze samenwerking heeft nog geen deelnemers",
+        "Cooperation · %n participant": "Samenwerking · %n deelnemer",
+        "Cooperation · %n participants": "Samenwerking · %n deelnemers",
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
+            "Samenwerking · %n deelnemer",
+            "Samenwerking · %n deelnemers"
+        ],
         "Ask the catalogue": "Vraag het de catalogus",
         "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Stel een vraag over de applicaties, diensten, organisaties, gebruik, koppelingen, compliance en contracten in de catalogus. Alleen de items die u mag zien worden doorzocht, en alleen die worden naar de assistent gestuurd.",
         "Your question": "Uw vraag",
