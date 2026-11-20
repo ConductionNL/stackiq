@@ -2142,7 +2142,10 @@ OC.L10N.register(
         "Applications in use and elements": "Applications in use and elements",
         "The architecture decisions of your organisation, each reviewed by a second person and linked to the applications and GEMMA elements it affects.": "The architecture decisions of your organisation, each reviewed by a second person and linked to the applications and GEMMA elements it affects.",
         "No architecture decisions name this application in use yet": "No architecture decisions name this application in use yet",
-        "No architecture decisions name this standard yet": "No architecture decisions name this standard yet"
+        "No architecture decisions name this standard yet": "No architecture decisions name this standard yet",
+        "Drafted by an assistant": "Drafted by an assistant",
+        "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Drafted by an assistant for {user} on {date}. Review it before you submit it.",
+        "an unknown user": "an unknown user"
     },
     "nplurals=2; plural=(n != 1);"
 )

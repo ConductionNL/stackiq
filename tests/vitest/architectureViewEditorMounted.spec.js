@@ -227,6 +227,37 @@ describe('the view editor', () => {
 		expect(wrapper.text()).toContain('The view is saved.')
 	})
 
+	it('lays out a drafted view on first open, keeps its mark on save and names who it was drafted for', async () => {
+		const unplaced = ({ x, y, ...node }) => node
+		db.view.push({
+			name: 'Concept',
+			origin: 'assistant',
+			status: 'draft',
+			draftedFor: 'anna',
+			draftedAt: '2026-09-27T09:00:00+00:00',
+			xml: { viewNodes: [unplaced(nodeA), unplaced(nodeB)], viewRelationships: [{ viewRelationshipId: 'c1', modelRelationshipId: 'id-rel', sourceId: 'n1', targetId: 'n2', type: 'Flow', bendpoints: [] }] },
+			'@self': { id: 'a1' },
+		})
+
+		const { wrapper } = await open(ArchitectureViewEditor, 'a1')
+		const notice = wrapper.find('[data-testid="view-editor-draft-notice"]')
+		expect(notice.exists()).toBe(true)
+		expect(notice.text()).toContain('Drafted by an assistant for anna on')
+		expect(wrapper.text()).toContain('Drafted by an assistant ·')
+
+		// The layout is unsaved work: Save is offered straight away.
+		expect(button(wrapper, 'Save').attributes('disabled')).toBeUndefined()
+		await button(wrapper, 'Save').trigger('click')
+		await flushPromises()
+
+		const saved = db.view[0]
+		expect(saved.origin).toBe('assistant')
+		const points = saved.xml.viewNodes.map((n) => `${n.x},${n.y}`)
+		expect(points.every((point) => !point.includes('undefined'))).toBe(true)
+		expect(new Set(points).size).toBe(2)
+		expect(wrapper.find('[data-testid="view-editor-draft-notice"]').exists()).toBe(true)
+	})
+
 	it('asks for a name and creates a drawn draft on /views/new', async () => {
 		const { wrapper, router } = await open(ArchitectureViewEditor, 'new')
 		wrapper.findComponent({ name: 'NcTextField' }).vm.$emit('update:modelValue', 'Zaakgericht werken')

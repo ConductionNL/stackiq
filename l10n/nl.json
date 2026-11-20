@@ -2209,6 +2209,9 @@
         "Applications in use and elements": "Applicaties in gebruik en elementen",
         "The architecture decisions of your organisation, each reviewed by a second person and linked to the applications and GEMMA elements it affects.": "De architectuurbesluiten van je organisatie, elk beoordeeld door een tweede persoon en gekoppeld aan de applicaties en GEMMA-elementen waarop het van invloed is.",
         "No architecture decisions name this application in use yet": "Nog geen architectuurbesluiten noemen deze applicatie in gebruik",
-        "No architecture decisions name this standard yet": "Nog geen architectuurbesluiten noemen deze standaard"
+        "No architecture decisions name this standard yet": "Nog geen architectuurbesluiten noemen deze standaard",
+        "Drafted by an assistant": "Opgesteld door een assistent",
+        "Drafted by an assistant for {user} on {date}. Review it before you submit it.": "Opgesteld door een assistent voor {user} op {date}. Controleer hem voordat je hem indient.",
+        "an unknown user": "een onbekende gebruiker"
     }
 }

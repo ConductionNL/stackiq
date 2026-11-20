@@ -11,6 +11,8 @@
  * its children.
  */
 
+import { layoutFlowNodes, needsFullLayout } from '@conduction/nextcloud-vue/src/composables/flowGraphLayout.js'
+
 /**
  * A number, or 0.
  *
@@ -125,4 +127,38 @@ export function fromCanvas(nodes = [], edges = []) {
 	}))
 
 	return { viewNodes, viewRelationships }
+}
+
+/**
+ * The nodes of a view laid out, when none of them carries a position.
+ *
+ * A view an assistant drafted is stored without positions
+ * (architecture-assistant-drafted-views, design D4). Its nodes get the
+ * shared library's layered layout, each on a point of its own, the way a
+ * flow without positions is laid out. A view whose nodes are placed comes
+ * back as given, so an arrangement someone chose is never rearranged.
+ *
+ * @param {Array<object>} viewNodes The view's `xml.viewNodes`.
+ * @param {Array<object>} viewRelationships The view's `xml.viewRelationships`.
+ * @return {{viewNodes: Array<object>, laidOut: boolean}} The nodes, and whether they were laid out.
+ * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-004-a-drafted-view-shall-be-laid-out-when-it-is-first-opened
+ */
+export function layoutUnplacedNodes(viewNodes = [], viewRelationships = []) {
+	if (!needsFullLayout(viewNodes)) {
+		return { viewNodes, laidOut: false }
+	}
+
+	const nodes = viewNodes.map((node) => ({ id: String(node.viewNodeId) }))
+	const lines = viewRelationships.map((relation) => ({ source: String(relation.sourceId), target: String(relation.targetId) }))
+	const targets = new Set(lines.map((line) => line.target))
+	const starts = nodes.filter((node) => !targets.has(node.id)).map((node) => node.id)
+	const placed = new Map(layoutFlowNodes(nodes, lines, starts.length ? starts : [nodes[0].id]).map((node) => [node.id, node]))
+
+	return {
+		viewNodes: viewNodes.map((node) => {
+			const point = placed.get(String(node.viewNodeId))
+			return { ...node, x: point.x, y: point.y }
+		}),
+		laidOut: true,
+	}
 }
