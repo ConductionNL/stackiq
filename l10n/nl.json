@@ -2251,6 +2251,31 @@
         "_Cooperation · %n participant_::_Cooperation · %n participants_": [
             "Samenwerking · %n deelnemer",
             "Samenwerking · %n deelnemers"
-        ]
+        ],
+        "Ask the catalogue": "Vraag het de catalogus",
+        "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Stel een vraag over de applicaties, diensten, organisaties, gebruik, koppelingen, compliance en contracten in de catalogus. Alleen de items die u mag zien worden doorzocht, en alleen die worden naar de assistent gestuurd.",
+        "Your question": "Uw vraag",
+        "Ask": "Vragen",
+        "No catalogue entries matched this question.": "Geen catalogusitems passen bij deze vraag.",
+        "Sources": "Bronnen",
+        "The reply cites no catalogue entry.": "Het antwoord noemt geen catalogusitem.",
+        "Entries searched: {count}": "Doorzochte items: {count}",
+        "The assistant is not available.": "De assistent is niet beschikbaar.",
+        "You asked many questions in a short time. Try again in a minute.": "U hebt veel vragen in korte tijd gesteld. Probeer het over een minuut opnieuw.",
+        "The assistant could not answer this question.": "De assistent kon deze vraag niet beantwoorden.",
+        "Assistant actions": "Assistentacties",
+        "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.": "Wat assistenten met de tools van stackiq aan catalogusrecords hebben gedaan, gelezen uit de audittrail van OpenRegister.",
+        "Tool": "Tool",
+        "From": "Van",
+        "To": "Tot en met",
+        "Apply filters": "Filters toepassen",
+        "No assistant actions match these filters.": "Geen assistentacties voldoen aan deze filters.",
+        "When": "Wanneer",
+        "Record": "Record",
+        "Succeeded": "Gelukt",
+        "Failed: {error}": "Mislukt: {error}",
+        "Load more": "Meer laden",
+        "Only administrators can review assistant actions.": "Alleen beheerders kunnen assistentacties bekijken.",
+        "The assistant actions could not be loaded.": "De assistentacties konden niet worden geladen."
     }
 }
