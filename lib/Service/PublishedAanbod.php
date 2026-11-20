@@ -42,6 +42,8 @@ use Throwable;
  * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
  */
 class PublishedAanbod implements PublishedAanbodInterface {
+	use ParsesStoredDates;
+
 	/**
 	 * The most entries one schema read returns.
 	 */
@@ -122,12 +124,12 @@ class PublishedAanbod implements PublishedAanbodInterface {
 	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
 	public function isPublished(array $entry, DateTimeImmutable $now): bool {
-		$published = $this->date(value: $entry['publicationDate'] ?? null);
+		$published = $this->storedDate(value: $entry['publicationDate'] ?? null);
 		if ($published === null || $published > $now) {
 			return false;
 		}
 
-		$withdrawn = $this->date(value: $entry['depublicationDate'] ?? null);
+		$withdrawn = $this->storedDate(value: $entry['depublicationDate'] ?? null);
 
 		return $withdrawn === null || $withdrawn > $now;
 	}//end isPublished()
@@ -229,23 +231,4 @@ class PublishedAanbod implements PublishedAanbodInterface {
 			'offset' => $offset,
 		];
 	}//end paginate()
-
-	/**
-	 * A date value, or null.
-	 *
-	 * @param mixed $value The stored value.
-	 *
-	 * @return DateTimeImmutable|null The date.
-	 */
-	private function date(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception $e) {
-			return null;
-		}
-	}//end date()
 }//end class
