@@ -1477,7 +1477,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testWithoutThePackStoreTheShippedMappingIsUsedWithAWarning(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
@@ -1498,7 +1498,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAPackEditedInOpenRegisterIsWhatTheImportRuns(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
@@ -1541,7 +1541,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAPlainNoteMappingFromAnEmptyColumnKeepsTheNoteClean(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');

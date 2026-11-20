@@ -35,7 +35,7 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -165,7 +165,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @param CmdbImportPackStore|null $packStore OpenRegister's pack store; null builds one on the container.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -199,7 +199,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *                             the store that holds the packs is not available.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function load(): void {
 		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): array => $store->resolve(shipped: $shipped));
@@ -217,7 +217,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function loadForView(): void {
 		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): ?array => $store->find(shipped: $shipped));
@@ -232,7 +232,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function loadPacks(callable $storedPack): void {
 		$run = new CmdbPackLoadRun(
@@ -262,7 +262,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is gone after the packs were stored there.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function storeReader(callable $storedPack): ?Closure {
 		$store = $this->packStore();
@@ -284,7 +284,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when a pack is unreadable, invalid or breaks an import rule.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function loadTarget(CmdbPackLoadRun $run, string $target): void {
 		$shipped = $this->readShippedPack(profile: $run->profile, target: $target, validator: $run->validator);
@@ -305,7 +305,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the stored pack is invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function takeStoredPack(CmdbPackLoadRun $run, string $target): void {
 		if ($run->readStored === null || in_array($target, self::EDITABLE_TARGETS, true) === false) {
@@ -388,7 +388,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing or a file is unreadable or invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function shippedEditablePacks(): array {
 		$validator = $this->resolveValidator();
@@ -412,7 +412,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when loading fails.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function usesShippedFallback(): bool {
 		$this->profile();
@@ -793,7 +793,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function dateColumns(): array {
 		$columns = $this->stringList(key: 'dateColumns');
@@ -954,7 +954,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function concatSeparator(string $target, string $field): ?string {
 		$separator = null;
@@ -1102,8 +1102,8 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing,
 	 *                             or the profile or a pack is unreadable or invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function mappingOverview(): array {
 		$this->profile();
@@ -1322,7 +1322,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @return CmdbImportPackStore
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function packStore(): CmdbImportPackStore {
 		if ($this->packStore === null) {
@@ -1343,7 +1343,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the profile names no pack or the file is unreadable or invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function readShippedPack(array $profile, string $target, object $validator): array {
 		$fileName = $profile['packs'][$target] ?? null;
@@ -1372,7 +1372,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack is invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function assertValidPack(object $validator, array $pack, string $label, array $details = []): void {
 		$errors = $validator->validate($pack);
@@ -1402,7 +1402,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack breaks a rule, or the register cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function assertImportRules(CmdbPackLoadRun $run, string $target): void {
 		$origin = $run->origins[$target];

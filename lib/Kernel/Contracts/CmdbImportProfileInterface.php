@@ -61,8 +61,8 @@ interface CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing,
 	 *                             or the profile or a pack is unreadable or invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function mappingOverview(): array;
 
@@ -75,7 +75,7 @@ interface CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing or a file is unreadable or invalid.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function shippedEditablePacks(): array;
 }//end interface

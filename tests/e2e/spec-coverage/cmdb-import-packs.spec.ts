@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * E2e coverage for openspec/changes/cmdb-import-mapping-view: the CMDB
+ * E2e coverage for openspec/changes/archive/2026-11-20-cmdb-import-mapping-view: the CMDB
  * import packs stored in OpenRegister's migration-pack store, the mapping
  * endpoint that reports them and the import that runs them.
  *

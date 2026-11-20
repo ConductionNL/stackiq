@@ -637,7 +637,7 @@ export default {
 		 * until then or when it could not be loaded.
 		 *
 		 * @return {Array<string>} Every sheet the profile names, at least one
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		sheetNames() {
 			return mappingSheetNames(this.mapping)
@@ -650,7 +650,7 @@ export default {
 		 * not be loaded.
 		 *
 		 * @return {string|null} The sheet name, or null
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		archiveSheet() {
 			return mappingArchiveSheet(this.mapping)
@@ -660,7 +660,7 @@ export default {
 		 * The help text under the file chooser, naming every sheet the import reads.
 		 *
 		 * @return {string} The text
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		fileHelp() {
 			return fileHelpText(this.sheetNames, this.profileDefaults.maxFileBytes)
@@ -670,7 +670,7 @@ export default {
 		 * The info-panel sentence naming the sheets the import reads.
 		 *
 		 * @return {string} The text
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		sheetsReadInfo() {
 			return sheetsReadText(this.sheetNames, this.archiveSheet)
@@ -681,7 +681,7 @@ export default {
 		 * naming the profile's archive sheet.
 		 *
 		 * @return {string} The text
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		missingApplicationsInfo() {
 			return missingApplicationsText(this.archiveSheet)
@@ -969,7 +969,7 @@ export default {
 		 *
 		 * @param {object} mapping The mapping endpoint's answer
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		onMappingLoaded(mapping) {
 			this.mapping = mapping

@@ -21,7 +21,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 /**
  * Lists the import rules a pack breaks.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 class CmdbImportPackRules {
 	/**
@@ -149,7 +149,7 @@ class CmdbImportPackRules {
 	 *
 	 * @param string|null $settingsDirectory Directory of the register file and its fragments; null is the shipped one.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private ?string $settingsDirectory = null,
@@ -170,7 +170,7 @@ class CmdbImportPackRules {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function violations(string $target, array $pack, array $profile): array {
 		$never = $profile['neverWritten'][$target] ?? [];
@@ -206,7 +206,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function requiredViolations(string $target, array $pack, string $keyColumn): array {
 		$violations = [];
@@ -235,7 +235,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function hasRequiredMapping(array $pack, string $field, string $keyColumn): bool {
 		foreach (($pack['fieldMappings'] ?? []) as $mapping) {
@@ -261,7 +261,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function mappingViolations(string $target, array $pack, array $allowed, array $refused): array {
 		$violations = [];
@@ -285,7 +285,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function defaultViolations(string $target, array $pack, array $allowed, array $refused): array {
 		$defaults = $pack['defaults'] ?? [];
@@ -320,7 +320,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function fieldViolation(string $field, array $refused, string $target): string {
 		if (in_array($field, $refused['managed'], true) === true) {
@@ -349,7 +349,7 @@ class CmdbImportPackRules {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function schemaFields(): array {
 		if ($this->registerSchema === null) {
@@ -368,7 +368,7 @@ class CmdbImportPackRules {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function targetFields(string $target): array {
 		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
@@ -389,7 +389,7 @@ class CmdbImportPackRules {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function fieldsWithReason(string $target, string $reason): array {
 		$schema = (self::TARGET_SCHEMAS[$target] ?? null);

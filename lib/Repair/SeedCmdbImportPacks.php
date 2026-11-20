@@ -24,7 +24,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Seeds and updates the CMDB import packs in OpenRegister's migration-pack store.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
  */
 class SeedCmdbImportPacks implements IRepairStep {
 	/**
@@ -54,7 +54,7 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 * @param CmdbImportPackStoreInterface $store OpenRegister's migration-pack store.
 	 * @param LoggerInterface $logger Logger for seed diagnostics.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly CmdbImportProfileInterface $profile,
@@ -68,7 +68,7 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function getName(): string {
 		return 'Seed the CMDB import mapping packs into OpenRegister';
@@ -81,7 +81,7 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function run(IOutput $output): void {
 		if ($this->store->isAvailable() === false) {
@@ -124,7 +124,7 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	private function seed(IOutput $output, array $shipped): void {
 		$stored = $this->storedPack(output: $output, shipped: $shipped);

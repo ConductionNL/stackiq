@@ -311,7 +311,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function testAMappedCreateOnlyDefaultStaysACreateOnlyField(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -357,7 +357,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function testTheOverviewShowsWhatTheImportRuns(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -417,7 +417,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function testAProfileWithoutAUsagePackIsMappingUnavailable(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -465,7 +465,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAStoredPackIsWhatTheImportRuns(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -516,7 +516,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testUneditedPacksFollowTheReleaseAndEditedOnesAreReported(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -557,7 +557,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function testTheMappingOverviewOnlyReadsTheStore(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -595,7 +595,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAnInvalidStoredPackIsMappingUnavailable(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -668,7 +668,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @dataProvider brokenRules
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAStoredPackThatBreaksAnImportRuleIsRefused(string $file, callable $edit, string $rule): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -693,7 +693,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testWithoutTheStoreBeforeASeedTheShippedFilesAreUsed(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -718,7 +718,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testWithoutTheStoreAfterASeedTheImportFailsClosed(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -746,7 +746,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testADateColumnOfAStoredPackIsConverted(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -779,7 +779,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testTheConcatSeparatorIsThePacks(): void {
 		CmdbTestSupport::loadMigrationPack();
@@ -805,7 +805,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testALaterPlainMappingKeepsTheConcatSeparator(): void {
 		CmdbTestSupport::loadMigrationPack();

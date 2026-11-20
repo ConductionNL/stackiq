@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Resolves OpenRegister's pack service when the store may be used.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 final class CmdbImportPackStoreProbe {
 	/**
@@ -74,7 +74,7 @@ final class CmdbImportPackStoreProbe {
 	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
 	 * @param string $controllerClass The controller whose write methods must be guarded.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -89,7 +89,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function service(): ?object {
 		if ($this->service === null) {
@@ -114,7 +114,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return object|false
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function resolve(): object|false {
 		if ($this->storeIsOffered() === false) {
@@ -162,7 +162,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool False when the class or a write method is missing, or a write method is opened.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function writesAreGuarded(string $controllerClass): bool {
 		if (class_exists($controllerClass) === false) {
@@ -186,7 +186,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function isOpened(ReflectionMethod $method): bool {
 		$attributes = array_map(
@@ -210,7 +210,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function hasMethods(object $service): bool {
 		foreach (self::SERVICE_METHODS as $method) {

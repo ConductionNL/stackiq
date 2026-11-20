@@ -15,7 +15,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,7 +30,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 /**
  * Reads the register's properties per schema and why no pack may write them.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 class CmdbRegisterSchemaFields {
 
@@ -46,7 +46,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @param string $settingsDirectory Directory of the register file and its fragments.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private string $settingsDirectory,
@@ -64,7 +64,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function fields(): array {
 		if ($this->fields !== null) {
@@ -135,7 +135,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function registerDocuments(): array {
 		$register = $this->decodeJson(file: $this->settingsDirectory . '/softwarecatalogus_register.json');
@@ -178,7 +178,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function reasonOf(mixed $definition, bool $calculated): string {
 		if (self::isRelationOrFile(definition: $definition) === true) {
@@ -203,7 +203,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function isRelationOrFile(mixed $definition): bool {
 		if (is_array($definition) === false) {
@@ -244,7 +244,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function isSystemOwned(mixed $definition, bool $calculated): bool {
 		if ($calculated === true) {
@@ -261,7 +261,7 @@ class CmdbRegisterSchemaFields {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function decodeJson(string $file): ?array {
 		$content = false;
