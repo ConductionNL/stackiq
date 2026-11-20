@@ -182,7 +182,7 @@
 		},
 		{
 		  "id": "StoreMenu",
-		  "label": "Store",
+		  "label": "Marketplace",
 		  "icon": "StoreOutline",
 		  "route": "Store",
 		  "section": "footer",
@@ -218,7 +218,7 @@
 			"id": "Store",
 			"route": "/store",
 			"type": "custom",
-			"title": "Store",
+			"title": "Marketplace",
 			"component": "FeaturesRoadmapTabs",
 			"_note": "REQ-FRM-002: one entry for the store. This route only redirects old links and the footer Store entry to FeaturesRoadmap with tab=extensions, which renders the store list (CnStorePage with the same app, title and description). platform-properties REQ-PLAT-007: the store adds configuration others published; with no registry configured it renders the app's built-in items and makes NO network call. ADR-114 Decision 4 / ADR-080: openregister hosts the store plane, so this app writes NO store controller.",
 			"config": {
@@ -1193,7 +1193,7 @@
 				"documentationUrl": "https://stackiq.conduction.nl",
 				"store": {
 					"app": "stackiq",
-					"title": "Store",
+					"title": "Marketplace",
 					"description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
 				}
 			}
