@@ -715,9 +715,7 @@ final class ServiceFactories {
 					// The integriq connection report (adopt-connection-registry). Passed by
 					// name: this factory is hand-built, so the constructor default of null
 					// would otherwise switch every federation report off without a sound.
-					connectionReports: $container->get(ConnectionReportService::class),
-					// Reads a peer's published listing over HTTP (federation-pull-fetches-the-peer).
-					peerCatalog: $container->get(PeerCatalogClient::class)
+					connectionReports: $container->get(ConnectionReportService::class)
 				);
 			}
 		);

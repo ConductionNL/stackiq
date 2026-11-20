@@ -444,8 +444,6 @@ class ServiceFactoriesTest extends TestCase {
 		$this->assertSame($this->stub(id: SettingsService::class), $this->property($service, 'settingsService'));
 		$this->assertNotNull($this->property($service, 'connectionReports'));
 		$this->assertSame($this->stub(id: ConnectionReportService::class), $this->property($service, 'connectionReports'));
-		// The pull reads the peer over HTTP through the peer catalogue client (federation-pull-fetches-the-peer).
-		$this->assertSame($this->stub(id: PeerCatalogClient::class), $this->property($service, 'peerCatalog'));
 
 	}//end testFederationServiceIsWiredWithItsConnectionReport()
 

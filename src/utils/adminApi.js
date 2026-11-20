@@ -168,20 +168,43 @@ export function normaliseFederationStatus(status) {
 		directoryUrl: raw.directoryUrl || '',
 		staleAfter: typeof raw.staleAfter === 'number' ? raw.staleAfter : 3,
 		message: raw.message || '',
-		peers: peers.map((peer) => {
-			if (typeof peer === 'string') {
-				return { url: peer, name: peer, lastPulledAt: null, objectCount: 0, lastError: null, failures: 0, stale: false, allowed: true }
-			}
-			return {
-				url: peer.url || '',
-				name: peer.name || peer.url || '',
-				lastPulledAt: typeof peer.lastPulledAt === 'string' && peer.lastPulledAt !== '' ? peer.lastPulledAt : null,
-				objectCount: typeof peer.objectCount === 'number' ? peer.objectCount : 0,
-				lastError: typeof peer.lastError === 'string' && peer.lastError !== '' ? peer.lastError : null,
-				failures: typeof peer.failures === 'number' ? peer.failures : 0,
-				stale: peer.stale === true,
-				allowed: peer.allowed !== false,
-			}
-		}),
+		peers: peers.map((peer) => normaliseFederationPeer(typeof peer === 'string' ? { url: peer } : peer)),
 	}
+}
+
+/**
+ * One peer of a federation status in the shape the peers list renders.
+ *
+ * @param {object} peer - The raw peer.
+ * @return {{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}} The peer.
+ * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ */
+function normaliseFederationPeer(peer) {
+	const url = peer.url || ''
+	return {
+		url,
+		name: peer.name || url,
+		lastPulledAt: textOrNull(peer.lastPulledAt),
+		objectCount: numberOrZero(peer.objectCount),
+		lastError: textOrNull(peer.lastError),
+		failures: numberOrZero(peer.failures),
+		stale: peer.stale === true,
+		allowed: peer.allowed !== false,
+	}
+}
+
+/**
+ * @param {unknown} value - A value.
+ * @return {?string} The value when it is a non-empty string, else null.
+ */
+function textOrNull(value) {
+	return typeof value === 'string' && value !== '' ? value : null
+}
+
+/**
+ * @param {unknown} value - A value.
+ * @return {number} The value when it is a number, else 0.
+ */
+function numberOrZero(value) {
+	return typeof value === 'number' ? value : 0
 }

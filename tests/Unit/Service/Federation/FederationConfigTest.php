@@ -263,12 +263,16 @@ class FederationConfigTest extends TestCase {
 		);
 		$config = new FederationConfig(appConfig: $this->appConfig);
 
-		$this->assertSame(expected: ['name' => 'B', 'lastPulledAt' => null, 'objectCount' => 4, 'lastError' => null], actual: $config->getPeerState(peerUrl: 'https://b.nl'));
-		$this->assertSame(expected: ['name' => '', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null], actual: $config->getPeerState(peerUrl: 'https://a.nl'));
+		$blank = ['name' => '', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null];
+		$this->assertSame(expected: array_merge($blank, ['name' => 'B', 'objectCount' => 4]), actual: $config->getPeerState(peerUrl: 'https://b.nl'));
+		$this->assertSame(expected: $blank, actual: $config->getPeerState(peerUrl: 'https://a.nl'));
 
 		$config->setPeerState(peerUrl: 'https://a.nl', changes: ['lastError' => 'not reachable']);
 		$config->setPeerState(peerUrl: 'https://a.nl', changes: ['name' => 'A', 'objectCount' => 2]);
-		$this->assertSame(expected: ['name' => 'A', 'lastPulledAt' => null, 'objectCount' => 2, 'lastError' => 'not reachable'], actual: $config->getPeerState(peerUrl: 'https://a.nl'));
+		$this->assertSame(
+			expected: ['name' => 'A', 'lastPulledAt' => null, 'objectCount' => 2, 'lastError' => 'not reachable'],
+			actual: $config->getPeerState(peerUrl: 'https://a.nl')
+		);
 		$this->assertSame(expected: 'B', actual: $config->getPeerState(peerUrl: 'https://b.nl')['name']);
 
 		$config->setPeerState(peerUrl: 'https://a.nl', changes: null);

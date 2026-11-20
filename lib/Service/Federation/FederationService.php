@@ -70,10 +70,8 @@ class FederationService implements FederationServiceInterface {
 	 * @param ObjectTypeLocatorInterface|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
-	 * @param PeerCatalogClient|null $peerCatalog Reads a peer's published listing over HTTP.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -83,7 +81,6 @@ class FederationService implements FederationServiceInterface {
 		private readonly ?ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
-		private readonly ?PeerCatalogClient $peerCatalog = null,
 	) {
 	}//end __construct()
 
@@ -428,15 +425,7 @@ class FederationService implements FederationServiceInterface {
 		// Successful pull clears the failure streak and un-stales surviving mirrors.
 		$this->config->setPeerFailures($peerUrl, 0);
 		$this->clearStaleMirrors(objectService: $objectService, target: $target, peerUrl: $peerUrl);
-		$this->config->setPeerState(
-			peerUrl: $peerUrl,
-			changes: [
-				'name' => $peer['organisation'],
-				'lastPulledAt' => $peer['syncedAt'],
-				'objectCount' => $this->merger->countMergeable(peerEntries: $fetch['entries']),
-				'lastError' => null,
-			]
-		);
+		$this->recordPullSuccess(peer: $peer, entries: $fetch['entries']);
 
 		return [
 			'ok' => true,
@@ -453,8 +442,9 @@ class FederationService implements FederationServiceInterface {
 	 *
 	 * OpenCatalogi's DirectoryService answers this instance's directory, not
 	 * the peer's catalogue, so the pull reads the peer directly through
-	 * {@see PeerCatalogClient}. Only published entries are returned: the peer's
-	 * public listing is governed by its own `publicatiedatum<=$now` gate.
+	 * {@see PeerCatalogClient}, resolved from the container like the other
+	 * collaborators. Only published entries are returned: the peer's public
+	 * listing is governed by its own `publicatiedatum<=$now` gate.
 	 *
 	 * @param string $peerUrl The peer base URL.
 	 *
@@ -463,11 +453,19 @@ class FederationService implements FederationServiceInterface {
 	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function fetchPeerCatalog(string $peerUrl): array {
-		if ($this->peerCatalog === null) {
-			return ['ok' => false, 'reason' => 'peer catalogue client unavailable', 'organisation' => null, 'entries' => []];
+		$unavailable = ['ok' => false, 'reason' => 'peer catalogue client unavailable', 'organisation' => null, 'entries' => []];
+		try {
+			$client = $this->container->get(PeerCatalogClient::class);
+		} catch (\Throwable $e) {
+			$this->logger->error('[Federation] peer catalogue client unavailable', ['error' => $e::class]);
+			return $unavailable;
 		}
 
-		return $this->peerCatalog->fetch(peerUrl: $peerUrl);
+		if ($client instanceof PeerCatalogClient === false) {
+			return $unavailable;
+		}
+
+		return $client->fetch(peerUrl: $peerUrl);
 	}//end fetchPeerCatalog()
 
 	/**
@@ -492,6 +490,29 @@ class FederationService implements FederationServiceInterface {
 
 		return $peerUrl;
 	}//end peerName()
+
+	/**
+	 * Record a successful pull on the peer's state: its catalogue name, the
+	 * moment, the number of mirrored objects, and no error.
+	 *
+	 * @param array{url: string, organisation: string, syncedAt: string} $peer    The pulled peer.
+	 * @param array<int,array<string,mixed>>                             $entries The peer's published entries.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	private function recordPullSuccess(array $peer, array $entries): void {
+		$this->config->setPeerState(
+			peerUrl: $peer['url'],
+			changes: [
+				'name' => $peer['organisation'],
+				'lastPulledAt' => $peer['syncedAt'],
+				'objectCount' => $this->merger->countMergeable(peerEntries: $entries),
+				'lastError' => null,
+			]
+		);
+	}//end recordPullSuccess()
 
 	/**
 	 * Record a failed pull: increment the peer's failure streak and, past the

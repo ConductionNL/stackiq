@@ -34,6 +34,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\Stackiq\Tests\Unit\Support\FakePeerCatalogClient;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 
 /**
  * Announce, peer discovery and the pull of every peer once OpenCatalogi is there.
@@ -89,7 +90,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	 *
 	 * @return FederationService
 	 */
-	private function service(?ConnectionReportService $reports = null, ?FakePeerCatalogClient $peerCatalog = null): FederationService {
+	private function service(?ConnectionReportService $reports = null): FederationService {
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => (string)($this->store[$key] ?? $default)
@@ -128,8 +129,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 			merger: new FederationMerger(),
 			settingsService: null,
 			logger: $this->logger,
-			connectionReports: $reports,
-			peerCatalog: $peerCatalog
+			connectionReports: $reports
 		);
 	}//end service()
 
@@ -316,6 +316,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	public function testPullAllPeersPullsEveryConfiguredPeer(): void {
 		$this->store['federation_peers'] = json_encode(['http://192.168.0.10', 'https://peer.example.org']);
 		$peerCatalog = new FakePeerCatalogClient(listing: new RuntimeException('timeout'));
+		$this->services[PeerCatalogClient::class] = $peerCatalog;
 		$empty    = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 		$expected = [
 			'ok' => true,
@@ -328,7 +329,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('federationPulled')->with($expected);
 
-		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports, peerCatalog: $peerCatalog)->pullAllPeers());
+		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports)->pullAllPeers());
 		$this->assertSame(expected: ['https://peer.example.org'], actual: $peerCatalog->fetched);
 		$this->assertSame(expected: json_encode(['https://peer.example.org' => 1]), actual: $this->store['federation_peer_failures']);
 		$this->assertSame(

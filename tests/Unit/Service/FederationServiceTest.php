@@ -31,6 +31,7 @@ use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Tests\Unit\Support\FakePeerCatalogClient;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -542,11 +543,12 @@ class FederationServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['stackiq', 'opencatalogi']);
 		$logger = $this->createMock(LoggerInterface::class);
+		$peerCatalog = null;
 
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($directory, $objectService) {
-				if ($id === 'OCA\\OpenCatalogi\\Service\\DirectoryService' && $directory !== null) {
-					return $directory;
+			function (string $id) use (&$peerCatalog, $objectService) {
+				if ($id === PeerCatalogClient::class && $peerCatalog !== null) {
+					return $peerCatalog;
 				}
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService' && $objectService !== null) {
 					return $objectService;
@@ -564,7 +566,6 @@ class FederationServiceTest extends TestCase {
 			eval('namespace OCA\\OpenCatalogi\\Service; class DirectoryService {}');
 		}
 
-		$peerCatalog = null;
 		if ($directory !== null) {
 			try {
 				$listing = $directory->getDirectory([]);
@@ -575,6 +576,6 @@ class FederationServiceTest extends TestCase {
 			$peerCatalog = new FakePeerCatalogClient(listing: $listing);
 		}
 
-		return new FederationService($container, $appManager, $config, new FederationMerger(), $settings, $logger, null, $peerCatalog);
+		return new FederationService($container, $appManager, $config, new FederationMerger(), $settings, $logger);
 	}//end makePullServiceWithConfig()
 }//end class

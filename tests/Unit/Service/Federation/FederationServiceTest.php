@@ -35,6 +35,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\Stackiq\Tests\Unit\Support\FakePeerCatalogClient;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
@@ -138,6 +139,7 @@ class FederationServiceTest extends TestCase {
 				$service = match ($id) {
 					'OCA\\OpenCatalogi\\Service\\DirectoryService' => $this->directory,
 					'OCA\\OpenRegister\\Service\\ObjectService' => $this->objects,
+					PeerCatalogClient::class => $this->peerCatalog,
 					default => null,
 				};
 				if ($service === null) {
@@ -165,8 +167,7 @@ class FederationServiceTest extends TestCase {
 			merger: new FederationMerger(),
 			settingsService: $locator,
 			logger: $this->logger,
-			connectionReports: $reports,
-			peerCatalog: $this->peerCatalog
+			connectionReports: $reports
 		);
 	}//end service()
 

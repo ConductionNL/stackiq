@@ -98,20 +98,22 @@ class PeerCatalogClient {
 	public function fetch(string $peerUrl): array {
 		$cap = $this->config->getMaxEntries();
 		$entries = [];
+		$total = 0;
 		$organisation = null;
 		$page = 1;
 
 		do {
-			$answer = $this->fetchPage(peerUrl: $peerUrl, page: $page, limit: min(self::PAGE_SIZE, ($cap - count($entries))));
+			$answer = $this->fetchPage(peerUrl: $peerUrl, page: $page, limit: min(self::PAGE_SIZE, ($cap - $total)));
 			if ($answer['ok'] === false) {
 				return ['ok' => false, 'reason' => $answer['reason'], 'organisation' => null, 'entries' => []];
 			}
 
 			$organisation ??= $answer['organisation'];
 			$entries = array_merge($entries, $answer['entries']);
-			$more = ($answer['entries'] !== [] && $page < $answer['pages']);
+			$total += count($answer['entries']);
+			$more = ($answer['entries'] !== [] && $page < $answer['pages'] && $total < $cap);
 			$page++;
-		} while ($more === true && count($entries) < $cap);
+		} while ($more === true);
 
 		return [
 			'ok' => true,

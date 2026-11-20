@@ -107,7 +107,12 @@ class PeerCatalogClientTest extends TestCase {
 	private function response(int $status, mixed $body): IResponse {
 		$response = $this->createMock(originalClassName: IResponse::class);
 		$response->method('getStatusCode')->willReturn($status);
-		$response->method('getBody')->willReturn(is_array($body) === true ? json_encode($body) : $body);
+		$text = $body;
+		if (is_array($body) === true) {
+			$text = json_encode($body);
+		}
+
+		$response->method('getBody')->willReturn($text);
 		return $response;
 	}//end response()
 
@@ -131,12 +136,11 @@ class PeerCatalogClientTest extends TestCase {
 	public function testTheListingUrlAddsThePathOnce(): void {
 		$client = $this->client(answers: []);
 
-		$this->assertSame(self::PEER.PeerCatalogClient::LISTING_PATH, $client->listingUrl(peerUrl: self::PEER));
-		$this->assertSame(self::PEER.PeerCatalogClient::LISTING_PATH, $client->listingUrl(peerUrl: ' '.self::PEER.'/ '));
-		$this->assertSame(
-			self::PEER.PeerCatalogClient::LISTING_PATH,
-			$client->listingUrl(peerUrl: self::PEER.PeerCatalogClient::LISTING_PATH)
-		);
+		$listing = self::PEER.PeerCatalogClient::LISTING_PATH;
+
+		$this->assertSame(expected: $listing, actual: $client->listingUrl(peerUrl: self::PEER));
+		$this->assertSame(expected: $listing, actual: $client->listingUrl(peerUrl: ' '.self::PEER.'/ '));
+		$this->assertSame(expected: $listing, actual: $client->listingUrl(peerUrl: $listing));
 	}//end testTheListingUrlAddsThePathOnce()
 
 	/**
@@ -149,24 +153,27 @@ class PeerCatalogClientTest extends TestCase {
 		$this->store['federation_peer_timeout'] = 7;
 		$client = $this->client(
 			answers: [
-				$this->response(status: 200, body: ['organisation' => 'Softwarecatalogus Drechtsteden', 'pages' => 2, 'results' => $this->entries(from: 1, to: 100)]),
+				$this->response(
+					status: 200,
+					body: ['organisation' => 'Softwarecatalogus Drechtsteden', 'pages' => 2, 'results' => $this->entries(from: 1, to: 100)]
+				),
 				$this->response(status: 200, body: ['pages' => 2, 'results' => $this->entries(from: 101, to: 104)]),
 			]
 		);
 
 		$result = $client->fetch(peerUrl: self::PEER);
 
-		$this->assertTrue($result['ok']);
-		$this->assertSame('Softwarecatalogus Drechtsteden', $result['organisation']);
-		$this->assertCount(104, $result['entries']);
-		$this->assertSame('p-104', $result['entries'][103]['id']);
-		$this->assertCount(2, $this->requests);
-		$this->assertSame(self::PEER.PeerCatalogClient::LISTING_PATH, $this->requests[0][0]);
-		$this->assertSame(['_page' => 1, '_limit' => 100], $this->requests[0][1]['query']);
-		$this->assertSame(['_page' => 2, '_limit' => 100], $this->requests[1][1]['query']);
-		$this->assertSame(7, $this->requests[0][1]['timeout']);
-		$this->assertFalse($this->requests[0][1]['http_errors']);
-		$this->assertFalse($this->requests[0][1]['nextcloud']['allow_local_address']);
+		$this->assertTrue(condition: $result['ok']);
+		$this->assertSame(expected: 'Softwarecatalogus Drechtsteden', actual: $result['organisation']);
+		$this->assertCount(expectedCount: 104, haystack: $result['entries']);
+		$this->assertSame(expected: 'p-104', actual: $result['entries'][103]['id']);
+		$this->assertCount(expectedCount: 2, haystack: $this->requests);
+		$this->assertSame(expected: self::PEER.PeerCatalogClient::LISTING_PATH, actual: $this->requests[0][0]);
+		$this->assertSame(expected: ['_page' => 1, '_limit' => 100], actual: $this->requests[0][1]['query']);
+		$this->assertSame(expected: ['_page' => 2, '_limit' => 100], actual: $this->requests[1][1]['query']);
+		$this->assertSame(expected: 7, actual: $this->requests[0][1]['timeout']);
+		$this->assertFalse(condition: $this->requests[0][1]['http_errors']);
+		$this->assertFalse(condition: $this->requests[0][1]['nextcloud']['allow_local_address']);
 	}//end testAReachablePeerIsReadPageByPage()
 
 	/**
@@ -186,10 +193,10 @@ class PeerCatalogClientTest extends TestCase {
 
 		$result = $client->fetch(peerUrl: self::PEER);
 
-		$this->assertTrue($result['ok']);
-		$this->assertCount(150, $result['entries']);
-		$this->assertCount(2, $this->requests);
-		$this->assertSame(['_page' => 2, '_limit' => 50], $this->requests[1][1]['query']);
+		$this->assertTrue(condition: $result['ok']);
+		$this->assertCount(expectedCount: 150, haystack: $result['entries']);
+		$this->assertCount(expectedCount: 2, haystack: $this->requests);
+		$this->assertSame(expected: ['_page' => 2, '_limit' => 50], actual: $this->requests[1][1]['query']);
 	}//end testTheCapStopsThePull()
 
 	/**
@@ -202,8 +209,8 @@ class PeerCatalogClientTest extends TestCase {
 
 		$result = $client->fetch(peerUrl: self::PEER);
 
-		$this->assertSame(['ok' => true, 'reason' => 'ok', 'organisation' => null, 'entries' => $this->entries(from: 1, to: 2)], $result);
-		$this->assertCount(1, $this->requests);
+		$this->assertSame(expected: ['ok' => true, 'reason' => 'ok', 'organisation' => null, 'entries' => $this->entries(from: 1, to: 2)], actual: $result);
+		$this->assertCount(expectedCount: 1, haystack: $this->requests);
 	}//end testABareListIsOnePage()
 
 	/**
@@ -219,7 +226,10 @@ class PeerCatalogClientTest extends TestCase {
 			'peer answered no JSON listing' => [$this->response(status: 200, body: '<html>')],
 		];
 		foreach ($cases as $reason => $answers) {
-			$this->assertSame(['ok' => false, 'reason' => $reason, 'organisation' => null, 'entries' => []], $this->client(answers: $answers)->fetch(peerUrl: self::PEER));
+			$this->assertSame(
+				expected: ['ok' => false, 'reason' => $reason, 'organisation' => null, 'entries' => []],
+				actual: $this->client(answers: $answers)->fetch(peerUrl: self::PEER)
+			);
 		}
 
 		$halfway = $this->client(
@@ -228,10 +238,10 @@ class PeerCatalogClientTest extends TestCase {
 				$this->response(status: 500, body: ''),
 			]
 		)->fetch(peerUrl: self::PEER);
-		$this->assertSame(['ok' => false, 'reason' => 'peer answered HTTP 500', 'organisation' => null, 'entries' => []], $halfway);
+		$this->assertSame(expected: ['ok' => false, 'reason' => 'peer answered HTTP 500', 'organisation' => null, 'entries' => []], actual: $halfway);
 
 		$notAList = $this->client(answers: [$this->response(status: 200, body: ['results' => ['id' => 'p-1']])])->fetch(peerUrl: self::PEER);
-		$this->assertSame('peer answered no JSON listing', $notAList['reason']);
+		$this->assertSame(expected: 'peer answered no JSON listing', actual: $notAList['reason']);
 	}//end testAFailingPeerFailsTheWholeFetch()
 
 	/**
@@ -251,8 +261,8 @@ class PeerCatalogClientTest extends TestCase {
 		$client->fetch(peerUrl: 'http://10.0.0.5:8080');
 		$client->fetch(peerUrl: self::PEER);
 
-		$this->assertTrue($this->requests[0][1]['nextcloud']['allow_local_address']);
-		$this->assertFalse($this->requests[1][1]['nextcloud']['allow_local_address']);
+		$this->assertTrue(condition: $this->requests[0][1]['nextcloud']['allow_local_address']);
+		$this->assertFalse(condition: $this->requests[1][1]['nextcloud']['allow_local_address']);
 	}//end testOnlyAnAllowlistedHostMayBeLocal()
 
 	/**
@@ -263,6 +273,6 @@ class PeerCatalogClientTest extends TestCase {
 	public function testTheNameMayComeFromTheCatalogTitle(): void {
 		$client = $this->client(answers: [$this->response(status: 200, body: ['catalog' => ['title' => ' WSHD '], 'results' => []])]);
 
-		$this->assertSame('WSHD', $client->fetch(peerUrl: self::PEER)['organisation']);
+		$this->assertSame(expected: 'WSHD', actual: $client->fetch(peerUrl: self::PEER)['organisation']);
 	}//end testTheNameMayComeFromTheCatalogTitle()
 }//end class
