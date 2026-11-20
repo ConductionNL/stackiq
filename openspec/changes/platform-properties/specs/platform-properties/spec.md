@@ -102,11 +102,11 @@ Each catalogue detail page SHALL have a History tab that shows who changed the r
 
 ### Requirement: The store adds configuration published by others (REQ-PLAT-007)
 
-The Store page SHALL list the configuration sets and flows for stackiq that the configured registry offers, and let an administrator install one. Without a registry it SHALL show only the app's built-in items and make no network call. Provider: the OpenRegister store plane; stackiq declares the page and its store types (`openregister.configset`, `openregister.flows`) and writes no store controller.
+The Marketplace page SHALL list the configuration sets and flows for stackiq that the configured registry offers, and let an administrator install one. Without a registry it SHALL show only the app's built-in items and make no network call. Provider: the OpenRegister store plane; stackiq declares the page and its store types (`openregister.configset`, `openregister.flows`) and writes no store controller.
 
 #### Scenario: No registry is configured
 - GIVEN a default install
-- WHEN an administrator opens the Store page
+- WHEN an administrator opens the Marketplace page
 - THEN the built-in items are listed and no outside request is made
 
 #### Scenario: An administrator installs a flow

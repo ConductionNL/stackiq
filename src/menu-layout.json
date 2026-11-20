@@ -8,7 +8,10 @@
 		"Ask": "ReportsCompliance",
 		"AssistantActions": "ReportsCompliance",
 		"Standaarden": "Architecture",
-		"Views": "Architecture"
+		"Views": "Architecture",
+		"Gegevensmodel": "Architecture",
+		"KnowledgeBaseMenu": "Modules",
+		"Architectuurbesluiten": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []

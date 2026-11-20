@@ -27,9 +27,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Mcp;
 
 use Exception;
-use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersonenControllerInterface;
 use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
@@ -57,7 +57,7 @@ class McpReadTools {
 	 * @param McpAdminGate                      $session     The caller and the admin check.
 	 * @param McpArgumentValidator              $validator   The argument checks.
 	 * @param McpSbomGate                       $sbomGate    The SBOM read guard.
-	 * @param ContactpersonenController         $contacts    The `/api/me` resolution.
+	 * @param ContactpersonenControllerInterface $contacts    The `/api/me` resolution.
 	 * @param AanbodServiceInterface            $offers      The offers.
 	 * @param AangebodenGebruikServiceInterface $usages      The offered and shared usages.
 	 * @param PortfolioReportServiceInterface   $portfolio   The portfolio report.
@@ -73,7 +73,7 @@ class McpReadTools {
 		private readonly McpAdminGate $session,
 		private readonly McpArgumentValidator $validator,
 		private readonly McpSbomGate $sbomGate,
-		private readonly ContactpersonenController $contacts,
+		private readonly ContactpersonenControllerInterface $contacts,
 		private readonly AanbodServiceInterface $offers,
 		private readonly AangebodenGebruikServiceInterface $usages,
 		private readonly PortfolioReportServiceInterface $portfolio,

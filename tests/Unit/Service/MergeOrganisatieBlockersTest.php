@@ -276,7 +276,15 @@ class MergeOrganisatieBlockersTest extends TestCase {
 
 		$this->assertSame(['sourceUuid', 'targetUuid', 'counts', 'blockers'], array_keys($preview));
 		$this->assertSame(0, array_sum($preview['counts']));
-		$this->assertSame(['groupMembers', 'usage', 'contactPerson', 'aanbod', 'module', 'catalogService', 'catalogContract', 'compliancy', 'moduleOwnership', 'catalogServiceOwnership'], array_keys($preview['counts']));
+		$this->assertSame(
+			[
+				'groupMembers', 'usage', 'contactPerson', 'aanbod', 'module', 'catalogService',
+				// operations-record-reconciliation REQ-RRC-005: every other organisation reference.
+				'usageProvider', 'organizationDeelnames', 'organizationParticipants', 'catalogContractSupplier', 'modelOrganizations', 'aiSystemProvider', 'scenarioOrganisation', 'complianceDocumentPublisher', 'complianceDocumentSharedWithOrganisations', 'technologyComponentOrganization',
+				'catalogContract', 'compliancy', 'moduleOwnership', 'catalogServiceOwnership',
+			],
+			array_keys($preview['counts'])
+		);
 		$this->assertSame(['find', 'org-a'], $this->trace[0]);
 		$this->assertSame(['find', 'org-b'], $this->trace[2]);
 		$this->assertSame(

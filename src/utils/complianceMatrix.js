@@ -51,19 +51,31 @@ import { dataOf, resolveUuid } from './lifecyclePhase.js'
 export { dataOf, resolveUuid }
 
 /**
- * @typedef {('verified'|'claimed'|'none')} CellState
+ * @typedef {('verified'|'claimed'|'not-met'|'none')} CellState
  */
 
 /**
  * Cell-state constants. Exported so callers never compare against bare strings.
  *
- * @type {{VERIFIED: CellState, CLAIMED: CellState, NONE: CellState}}
+ * `not-met` is a recorded claim with result "does-not-meet"
+ * (bio-measures-shipped-and-not-met): it stays apart from `none`, which means
+ * nobody assessed the pair.
+ *
+ * @type {{VERIFIED: CellState, CLAIMED: CellState, NOT_MET: CellState, NONE: CellState}}
  */
 export const CELL = Object.freeze({
 	VERIFIED: 'verified',
 	CLAIMED: 'claimed',
+	NOT_MET: 'not-met',
 	NONE: 'none',
 })
+
+/**
+ * The result a compliancy record carries when it says the module does not meet the column.
+ *
+ * @type {string}
+ */
+export const RESULT_DOES_NOT_MEET = 'does-not-meet'
 
 /**
  * @typedef {('standard_version'|'bioMeasure')} ColumnSource
@@ -158,6 +170,7 @@ function compliancyRelations(record) {
 		standaardversieUuid: resolveUuid(data.standard_version),
 		bioMaatregelUuid: resolveUuid(data.bioMeasure),
 		evidenced: hasEvidence(data),
+		meets: data.result !== RESULT_DOES_NOT_MEET,
 	}
 }
 
@@ -189,8 +202,8 @@ function conflictEntry(rel) {
  * @return {Array} The bucket and entry.
  */
 function resolvedEntry(rel, columnUuid) {
-	const { moduleUuid, evidenced, record } = rel
-	return ['resolved', { moduleUuid, columnUuid, evidenced, record }]
+	const { moduleUuid, evidenced, meets, record } = rel
+	return ['resolved', { moduleUuid, columnUuid, evidenced, meets, record }]
 }
 
 /**
@@ -266,20 +279,36 @@ export function partitionCompliancy(
 }
 
 /**
+ * The state one resolved entry gives its cell: not met when the record says
+ * so, else verified with evidence and claimed without.
+ *
+ * @param {{evidenced: boolean, meets: boolean}} entry The resolved entry.
+ * @return {CellState} The state.
+ *
+ * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+ */
+export function entryState(entry) {
+	if (entry.meets === false) {
+		return CELL.NOT_MET
+	}
+	return entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
+}
+
+/**
  * Combine two cell states for the same (module, standard) pair, keeping the
- * strongest signal. verified > claimed > none. Two compliancy records for the
- * same pair therefore render verified if either is evidenced.
+ * strongest signal. verified > claimed > not-met > none. Two compliancy
+ * records for the same pair therefore render verified if either is evidenced,
+ * and a "does not meet" record shows only when no record says it meets.
  *
  * @param {CellState} a First state.
  * @param {CellState} b Second state.
  * @return {CellState} The strongest of the two.
  */
 function strongest(a, b) {
-	if (a === CELL.VERIFIED || b === CELL.VERIFIED) {
-		return CELL.VERIFIED
-	}
-	if (a === CELL.CLAIMED || b === CELL.CLAIMED) {
-		return CELL.CLAIMED
+	for (const state of [CELL.VERIFIED, CELL.CLAIMED, CELL.NOT_MET]) {
+		if (a === state || b === state) {
+			return state
+		}
 	}
 	return CELL.NONE
 }
@@ -308,7 +337,7 @@ function indexCells(resolved) {
  * @return {{state: string, record: object}} The cell.
  */
 function mergeCell(existing, entry) {
-	const state = entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
+	const state = entryState(entry)
 	if (existing === undefined) {
 		return { state, record: entry.record }
 	}
@@ -447,7 +476,7 @@ function moduleStates(resolved, targetUuid) {
 		if (entry.columnUuid !== targetUuid) {
 			continue
 		}
-		const state = entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
+		const state = entryState(entry)
 		const current = moduleState.get(entry.moduleUuid) ?? CELL.NONE
 		moduleState.set(entry.moduleUuid, strongest(current, state))
 	}
@@ -507,4 +536,23 @@ export function buildOrganisationCoverage({
 	return (usages || []).map((gebruik) =>
 		coverageRow(gebruik, { moduleIndex, moduleState }),
 	)
+}
+
+/**
+ * How many cells of a matrix are in each state, for the summary under the legend.
+ *
+ * @param {{rows: Array<{cells: {[key: string]: {state: CellState}}}>}} matrix The matrix.
+ * @return {{verified: number, claimed: number, notMet: number, none: number}} The counts.
+ *
+ * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+ */
+export function countCellStates(matrix) {
+	const counts = { verified: 0, claimed: 0, notMet: 0, none: 0 }
+	const key = { [CELL.VERIFIED]: 'verified', [CELL.CLAIMED]: 'claimed', [CELL.NOT_MET]: 'notMet', [CELL.NONE]: 'none' }
+	for (const row of matrix?.rows || []) {
+		for (const cell of Object.values(row.cells || {})) {
+			counts[key[cell.state] ?? 'none']++
+		}
+	}
+	return counts
 }

@@ -24,20 +24,26 @@ require_once __DIR__ . '/decision-conclusion-event-doubles.php';
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
+use OCA\Stackiq\EventListener\AttestationCorrectionListener;
+use OCA\Stackiq\EventListener\CatalogueMergeRelinker;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
+use OCA\Stackiq\EventListener\ContractApprovalListener;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
 use OCA\Stackiq\EventListener\LifecycleCalendarListener;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
+use OCA\Stackiq\EventListener\ModuleComponentListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\StackiqEventListener;
 use OCA\Stackiq\EventListener\TestEventListener;
+use OCA\Stackiq\EventListener\UsageClassificationSubscriber;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\User\Events\UserLoggedInEvent;
@@ -88,17 +94,25 @@ final class ListenerRegistrarTest extends TestCase {
 				[UserLoggedInEvent::class, TestEventListener::class],
 				[ObjectCreatedEvent::class, ModuleComplianceSubscriber::class],
 				[ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class],
+				[ObjectCreatedEvent::class, UsageClassificationSubscriber::class],
+				[ObjectUpdatedEvent::class, UsageClassificationSubscriber::class],
 				[ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatingEvent::class, AnonymousRegistrationListener::class],
 				[ObjectCreatingEvent::class, ContactPersonOrganisationListener::class],
 				[ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class],
+				[ObjectCreatingEvent::class, ModuleComponentListener::class],
+				[ObjectUpdatingEvent::class, ModuleComponentListener::class],
+				[ObjectCreatingEvent::class, ContractApprovalListener::class],
+				[ObjectUpdatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatedEvent::class, MaintenanceRecipientsListener::class],
+				[ObjectsMergedEvent::class, CatalogueMergeRelinker::class],
 				[ObjectCreatedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectDeletedEvent::class, ModuleVersionPublicationListener::class],
 				[ObjectCreatedEvent::class, LifecycleCalendarListener::class],
 				[ObjectUpdatedEvent::class, LifecycleCalendarListener::class],
+				[ObjectUpdatedEvent::class, AttestationCorrectionListener::class],
 				[UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class],
 			],
 			$pairs

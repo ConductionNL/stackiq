@@ -11,6 +11,7 @@
  */
 
 import { getRequestToken } from '@nextcloud/auth'
+import { translate as t } from '@nextcloud/l10n'
 
 /**
  * A publish or depublish action.
@@ -96,7 +97,8 @@ export async function assertPublicationDone(response, verb) {
 		return
 	}
 	const errorText = await response.text()
-	throw new Error(
-		`Failed to ${verb} object: ${response.status} ${response.statusText} - ${errorText}`,
-	)
+	const params = { status: response.status, statusText: response.statusText, error: errorText }
+	throw new Error(verb === 'publish'
+		? t('stackiq', 'Failed to publish object: {status} {statusText} - {error}', params)
+		: t('stackiq', 'Failed to depublish object: {status} {statusText} - {error}', params))
 }

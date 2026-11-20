@@ -197,7 +197,11 @@ function setStores(state = {}) {
 async function mountView() {
 	const wrapper = mount(ViewObject, {
 		attachTo: document.body,
-		global: { stubs, directives: { tooltip: {} } },
+		global: {
+			stubs,
+			directives: { tooltip: {} },
+			mocks: { n: (app, one, many, count, vars = {}) => String(count === 1 ? one : many).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) },
+		},
 	})
 	await flushPromises()
 	return wrapper
@@ -720,7 +724,7 @@ describe('ViewObject mounted: an existing object', () => {
 		const wrapper = await mountView()
 		expect(wrapper.findComponent({ name: 'NcCounterBubble' }).exists()).toBe(false)
 		const loading = wrapper.findAllComponents({ name: 'NcEmptyContent' })
-		expect(loading.map((c) => c.props('title'))).toEqual(['Loading files...'])
+		expect(loading.map((c) => c.props('title'))).toEqual(['Loading files…'])
 
 		objectStore.state.loading = false
 		objectStore.state.files = []
@@ -728,16 +732,16 @@ describe('ViewObject mounted: an existing object', () => {
 		expect(wrapper.findAllComponents({ name: 'NcEmptyContent' }).map((c) => c.props('name'))).toEqual(['No files attached'])
 	})
 
-	it('hands the object to the publish and delete dialogs from the footer', async () => {
+	it('hands the object to the delete and upload dialogs from the footer, without publish or depublish', async () => {
+		// Publishing moved to the list selection strip and the entry page
+		// (publish-and-lock-from-the-list task 3).
 		const wrapper = await mountView()
-		const expected = [{ ...EXISTING, id: 'obj-1' }]
 
+		expect(byText(wrapper, 'NcButton', 'Publish')).toBeUndefined()
 		expect(byText(wrapper, 'NcButton', 'Depublish')).toBeUndefined()
-		await byText(wrapper, 'NcButton', 'Publish').trigger('click')
-		expect(objectStore.setSelectedObjects).toHaveBeenLastCalledWith(expected)
-		expect(navigationStore.setDialog).toHaveBeenLastCalledWith('massPublishObjects')
 
 		await byText(wrapper, 'NcButton', 'Delete').trigger('click')
+		expect(objectStore.setSelectedObjects).toHaveBeenLastCalledWith([{ ...EXISTING, id: 'obj-1' }])
 		expect(navigationStore.setDialog).toHaveBeenLastCalledWith('massDeleteObject')
 
 		await byText(wrapper, 'NcButton', 'Add File').trigger('click')
@@ -746,8 +750,7 @@ describe('ViewObject mounted: an existing object', () => {
 		objectStore.state.active = { ...structuredClone(EXISTING), '@self': { ...EXISTING['@self'], published: '2026-01-01' } }
 		await flushPromises()
 		expect(byText(wrapper, 'NcButton', 'Publish')).toBeUndefined()
-		await byText(wrapper, 'NcButton', 'Depublish').trigger('click')
-		expect(navigationStore.setDialog).toHaveBeenLastCalledWith('massDepublishObjects')
+		expect(byText(wrapper, 'NcButton', 'Depublish')).toBeUndefined()
 	})
 
 	it('puts the edited object and closes the dialog shortly after', async () => {

@@ -1,0 +1,128 @@
+{
+    "components": {
+        "schemas": {
+            "view": {
+                "version": "0.0.11",
+                "properties": {
+                    "origin": {
+                        "title": "Origin",
+                        "enum": [
+                            "assistant"
+                        ],
+                        "description": "Where the object comes from: `imported` by the GEMMA import, `drawn` in the view editor, or `assistant` when an assistant drafted it through the stackiq.draftView tool. An object without an origin was imported before this field existed and counts as imported."
+                    },
+                    "draftedFor": {
+                        "type": "string",
+                        "title": "Drafted for",
+                        "description": "The Nextcloud user an assistant drafted this view for, in the session the draft tool ran in. Empty for a view nobody drafted.",
+                        "visible": true,
+                        "example": "admin"
+                    },
+                    "draftedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Drafted at",
+                        "description": "When an assistant drafted this view.",
+                        "visible": true,
+                        "example": "2026-09-27T09:00:00+00:00"
+                    }
+                }
+            },
+            "element": {
+                "version": "0.0.16",
+                "properties": {
+                    "origin": {
+                        "title": "Origin",
+                        "enum": [
+                            "assistant"
+                        ],
+                        "description": "Where the object comes from: `imported` by the GEMMA import, `drawn` in the view editor, or `assistant` when an assistant created it for a drafted view. An object without an origin was imported before this field existed and counts as imported."
+                    }
+                }
+            },
+            "relation": {
+                "version": "0.0.13",
+                "properties": {
+                    "origin": {
+                        "title": "Origin",
+                        "enum": [
+                            "assistant"
+                        ],
+                        "description": "Where the object comes from: `imported` by the GEMMA import, `drawn` in the view editor, or `assistant` when an assistant created it for a drafted view. An object without an origin was imported before this field existed and counts as imported."
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "element",
+                    "slug": "seed-el-zaaksysteem",
+                    "version": "1.0.0"
+                },
+                "identifier": "id-seed-el-zaaksysteem",
+                "type": "ApplicationComponent",
+                "name": "Zaaksysteem",
+                "origin": "assistant"
+            },
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "element",
+                    "slug": "seed-el-dms",
+                    "version": "1.0.0"
+                },
+                "identifier": "id-seed-el-dms",
+                "type": "ApplicationComponent",
+                "name": "Documentbeheer",
+                "origin": "assistant"
+            },
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "relation",
+                    "slug": "seed-rel-zaak-dms",
+                    "version": "1.0.0"
+                },
+                "identifier": "id-seed-rel-zaak-dms",
+                "type": "Flow",
+                "source": "id-seed-el-zaaksysteem",
+                "target": "id-seed-el-dms",
+                "origin": "assistant"
+            },
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "view",
+                    "slug": "seed-view-assistant-zaak-dms",
+                    "version": "1.0.0"
+                },
+                "identifier": "id-seed-view-assistant-zaak-dms",
+                "name": "Zaaksysteem en documentbeheer, concept van de assistent",
+                "documentation": "Hoe het zaaksysteem documenten overdraagt aan documentbeheer.",
+                "status": "draft",
+                "origin": "assistant",
+                "draftedFor": "admin",
+                "draftedAt": "2026-09-27T09:00:00+00:00",
+                "tags": [],
+                "nodes": [
+                    {"viewNodeId": "id-seed-node-zaaksysteem", "parent": null, "elementRef": "id-seed-el-zaaksysteem", "width": 120, "height": 55, "name": "Zaaksysteem", "type": "ApplicationComponent"},
+                    {"viewNodeId": "id-seed-node-dms", "parent": null, "elementRef": "id-seed-el-dms", "width": 120, "height": 55, "name": "Documentbeheer", "type": "ApplicationComponent"}
+                ],
+                "connections": [
+                    {"viewRelationshipId": "id-seed-conn-zaak-dms", "modelRelationshipId": "id-seed-rel-zaak-dms", "sourceId": "id-seed-node-zaaksysteem", "targetId": "id-seed-node-dms", "type": "Flow", "bendpoints": []}
+                ],
+                "xml": {
+                    "viewNodes": [
+                        {"viewNodeId": "id-seed-node-zaaksysteem", "parent": null, "elementRef": "id-seed-el-zaaksysteem", "width": 120, "height": 55, "name": "Zaaksysteem", "type": "ApplicationComponent"},
+                        {"viewNodeId": "id-seed-node-dms", "parent": null, "elementRef": "id-seed-el-dms", "width": 120, "height": 55, "name": "Documentbeheer", "type": "ApplicationComponent"}
+                    ],
+                    "viewRelationships": [
+                        {"viewRelationshipId": "id-seed-conn-zaak-dms", "modelRelationshipId": "id-seed-rel-zaak-dms", "sourceId": "id-seed-node-zaaksysteem", "targetId": "id-seed-node-dms", "type": "Flow", "bendpoints": []}
+                    ]
+                }
+            }
+        ]
+    }
+}

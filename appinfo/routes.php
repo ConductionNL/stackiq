@@ -108,6 +108,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
         ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
+        // Whether the caller may export that organisation: the detail page's action asks before it shows (insight-exports-and-custom-reports).
+        ['name' => 'settings#orgExportAccess', 'url' => '/api/archimate/export/organization/{organizationUuid}/access', 'verb' => 'GET'],
         ['name' => 'settings#downloadArchiMate', 'url' => '/api/archimate/download/{fileName}', 'verb' => 'GET'],
 
         // ArchiMate status management routes (status reading is via main settings endpoint)
@@ -206,6 +208,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
         ['name' => 'view#getViewImage', 'url' => '/api/views/{viewId}/image.svg', 'verb' => 'GET'],
+        ['name' => 'viewDocument#createViewDocument', 'url' => '/api/views/{viewId}/document', 'verb' => 'POST'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
@@ -216,12 +219,20 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
         ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
 
+        // The Applications and Services lists as filtered, as CSV or XLSX (insight-exports-and-custom-reports).
+        // @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+        ['name' => 'catalogExport#export', 'url' => '/api/catalog/{schema}/export', 'verb' => 'GET'],
+
         // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
         // ========================================================================
 
         // Aanbod API endpoints for managing offers (gebruik, dienst, module, koppeling)
         ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
+        // Usages other organisations claim of the active organisation's products (supplier-accepts-claimed-usage).
+        ['name' => 'claimedUsage#index', 'url' => '/api/aanbod/claimed', 'verb' => 'GET'],
+        ['name' => 'claimedUsage#accept', 'url' => '/api/aanbod/claimed/{uuid}/accept', 'verb' => 'PUT'],
+        ['name' => 'claimedUsage#decline', 'url' => '/api/aanbod/claimed/{uuid}/decline', 'verb' => 'PUT'],
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
         // Derived connection suggestions of a usage (connections-derived-dependencies REQ-DCN-001..003).
@@ -263,6 +274,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // landscape-move-between-organisations: move chosen entries to another organisation, keeping their identity.
         ['name' => 'ownershipTransfer#plan', 'url' => '/api/ownership-transfers/plan', 'verb' => 'POST'],
         ['name' => 'ownershipTransfer#execute', 'url' => '/api/ownership-transfers/execute', 'verb' => 'POST'],
+
+        // ENTRY TYPE CHANGE — an application becomes a service or system software and
+        // back without a new uuid. The caller's own rights on both schemas are checked
+        // in EntryTypeService before OpenRegister moves the object.
+        // @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+        ['name' => 'entryType#preview', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'GET'],
+        ['name' => 'entryType#change', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'POST'],
 
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,
@@ -338,16 +356,32 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
+        // security-baseline-classification REQ-BCL-003/004: the GEMMA suggestion and the anonymous summary.
+        ['name' => 'usageClassification#suggestion', 'url' => '/api/gebruik/{usageId}/classification-suggestion', 'verb' => 'GET'],
+        ['name' => 'usageClassification#summary', 'url' => '/api/modules/{moduleId}/classification-summary', 'verb' => 'GET'],
 
         // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
         // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
         ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
         // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
         ['name' => 'dataQualityReport#index', 'url' => '/api/data-quality', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
+        [
+            'name'         => 'entryConfirmation#confirm',
+            'url'          => '/api/data-quality/confirm/{kind}/{id}',
+            'verb'         => 'POST',
+            'requirements' => ['kind' => 'module|usage'],
+        ],
         // @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
+        // @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+        ['name' => 'landscapeComparison#index', 'url' => '/api/landscape-comparison', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+        ['name' => 'attestation#start', 'url' => '/api/attestation-rounds', 'verb' => 'POST'],
+        // @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+        ['name' => 'attestation#confirm', 'url' => '/api/attestation-requests/{id}/confirm', 'verb' => 'POST'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         // `postfix` keeps this SPA catch-all from colliding with the bare-root

@@ -219,15 +219,19 @@ final class SettingsControllerArchiMateExportTest extends TestCase {
 	 * @return void
 	 */
 	public function testOrgExportPassesTheOptions(): void {
-		$this->params = ['modules' => 'false', 'deelnames' => 'true'];
+		$this->params = ['modules' => 'false', 'deelnames' => 'true', 'connections' => 'true'];
 		$this->archiMate->expects($this->once())
 			->method('exportOrgArchiMate')
-			->with('org-1', ['modules' => false, 'deelnames' => true, 'usage' => false])
-			->willReturn(['success' => true, 'xml' => '<model/>']);
+			->with('org-1', ['modules' => false, 'deelnames' => true, 'usage' => false, 'connections' => true])
+			->willReturn(['success' => true, 'xml' => '<model/>', 'connections_skipped' => 2]);
 
 		$response = $this->controller()->exportOrgArchiMate('org-1');
 
 		$this->assertSame('<model/>', $response->render());
+		// REQ-CDX-004: the connections skipped for an end outside the model are counted.
+		// getHeaders() needs a running server, so the header is read off the response itself.
+		$headers = (new \ReflectionProperty(\OCP\AppFramework\Http\Response::class, 'headers'))->getValue($response);
+		$this->assertSame('2', $headers['X-Stackiq-Connections-Skipped'] ?? null);
 
 	}//end testOrgExportPassesTheOptions()
 

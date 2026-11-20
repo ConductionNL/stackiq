@@ -151,7 +151,7 @@ describe('ComplianceMatrixView mounted', () => {
 		expect(row(wrapper, 'Zaaksysteem').find('button').attributes('aria-label')).toBe('Zaaksysteem — StUF 3.01: Verified')
 		expect(row(wrapper, 'DMS').find('.cmv-cellText').text()).toBe('Claimed')
 		const none = row(wrapper, 'Portaal').find('.cmv-cellNone')
-		expect([none.exists(), none.attributes('aria-label')]).toEqual([true, 'Portaal — StUF 3.01: None'])
+		expect([none.exists(), none.attributes('aria-label')]).toEqual([true, 'Portaal — StUF 3.01: Unknown'])
 		expect(row(wrapper, 'Portaal').find('button').exists()).toBe(false)
 
 		const notes = wrapper.findAll('.note').map((n) => n.text())

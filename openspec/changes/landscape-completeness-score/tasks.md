@@ -17,7 +17,7 @@
 - **acceptance_criteria**:
   - GIVEN the Applications list WHEN it opens THEN each row shows good, fair or poor
   - GIVEN an application confirmed a year ago WHEN its owner clicks Confirm this entry is current THEN lastConfirmedAt is today and the score rises
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/data-quality.spec.ts`)
 
 ### Task 3: Data quality page (board SkDatakwaliteit)
@@ -27,15 +27,15 @@
   - GIVEN usages with mixed scores WHEN the information manager opens Data quality THEN the page shows the register score, average completeness, not-confirmed count, the per-rule counts and the lowest completeness first
   - GIVEN a user of another organisation WHEN they request the report THEN it is refused before any query
 - [x] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/DataQualityDerivationTest.php`, `tests/Unit/Service/OrganisationReportAccessTest.php`; Playwright case in `tests/e2e/workflows/data-quality.spec.ts`)
+- [x] Test (PHPUnit `tests/Unit/Service/DataQualityDerivationTest.php`, `tests/Unit/Service/OrganisationReportAccessTest.php`; Playwright case in `tests/e2e/workflows/data-quality.spec.ts`, passed on a live NC 34 instance on 2026-11-17 once the page loaded its own organisations)
 
 ### Task 4: Rescore existing rows
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
 - **files**: `lib/Repair/RescoreDataQuality.php`, `appinfo/info.xml`
 - **acceptance_criteria**:
   - GIVEN modules without a score WHEN the repair step runs THEN each has a score and the count is logged
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Repair/RescoreDataQualityTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Repair/RescoreDataQualityTest.php`)
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-report-shows-the-spread-and-the-weakest-entries
