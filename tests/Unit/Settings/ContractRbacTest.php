@@ -37,7 +37,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contract-reads-must-deny-non-counterparty-cross-organisation-access-via-the-openregister-schema-rbac-rule-req-006
+ * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
  */
 
 declare(strict_types=1);
