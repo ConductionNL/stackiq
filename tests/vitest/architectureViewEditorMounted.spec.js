@@ -86,6 +86,7 @@ function passthrough (name, tag = 'div') {
 
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: passthrough('NcButton', 'button'),
+	NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),
 	NcEmptyContent: passthrough('NcEmptyContent'),
 	NcLoadingIcon: passthrough('NcLoadingIcon'),
 	NcNoteCard: passthrough('NcNoteCard'),
