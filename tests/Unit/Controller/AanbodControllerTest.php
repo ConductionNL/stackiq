@@ -57,23 +57,25 @@ class AanbodControllerTest extends TestCase {
 	/**
 	 * Build the controller with the current mocks.
 	 *
+	 * @param PublishedAanbod|null $published The anonymous reader, or none.
+	 *
 	 * @return AanbodController The controller under test.
 	 */
 	private function makeController(?PublishedAanbod $published = null): AanbodController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn([]);
 		$request->method('getParam')->willReturn(null);
 
-		$this->aanbodService = $this->createMock(AanbodService::class);
-		$this->userSession = $this->createMock(IUserSession::class);
+		$this->aanbodService = $this->createMock(originalClassName: AanbodService::class);
+		$this->userSession = $this->createMock(originalClassName: IUserSession::class);
 
 		return new AanbodController(
-			'stackiq',
-			$request,
-			$this->userSession,
-			$this->aanbodService,
-			$this->createMock(LoggerInterface::class),
-			$published
+			appName: 'stackiq',
+			request: $request,
+			userSession: $this->userSession,
+			aanbodService: $this->aanbodService,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			publishedAanbod: $published
 		);
 
 	}//end makeController()
@@ -88,19 +90,25 @@ class AanbodControllerTest extends TestCase {
 	 * @return PublishedAanbod
 	 */
 	private function publishedAanbod(array &$queries, array &$rbac): PublishedAanbod {
-		$settings = $this->createMock(RegisterConfigReaderInterface::class);
+		$settings = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 7, 'module_schema' => 11]);
 
 		$objectService = new class($queries, $rbac) {
 			/**
-			 * @param array<int, array<string, mixed>> $queries
-			 * @param array<int, bool>                 $rbac
+			 * The double that records each search.
+			 *
+			 * @param array<int, array<string, mixed>> $queries The searches received.
+			 * @param array<int, bool>                 $rbac    The _rbac flag of each search.
 			 */
 			public function __construct(private array &$queries, private array &$rbac) {
 			}
 
 			/**
-			 * @param array<string, mixed> $query
+			 * Record the search and answer one published module.
+			 *
+			 * @param array<string, mixed> $query         The query.
+			 * @param bool                 $_rbac         The _rbac flag.
+			 * @param bool                 $_multitenancy The _multitenancy flag.
 			 *
 			 * @return array<string, mixed>
 			 */
@@ -126,7 +134,7 @@ class AanbodControllerTest extends TestCase {
 			}
 		};
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($objectService);
 
 		return new PublishedAanbod(settingsService: $settings, container: $container, logger: new NullLogger());
@@ -149,18 +157,18 @@ class AanbodControllerTest extends TestCase {
 
 		$response = $controller->getAanbod();
 
-		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$data = $response->getData();
-		$this->assertSame(1, $data['total']);
+		$this->assertSame(expected: 1, actual: $data['total']);
 		$this->assertSame(
-			[['id' => 'zaaksysteem-x', 'name' => 'Zaaksysteem X', 'publicationDate' => '2020-01-01T00:00:00+00:00', '_aanbod_type' => 'module']],
-			$data['results']
+			expected: [['id' => 'zaaksysteem-x', 'name' => 'Zaaksysteem X', 'publicationDate' => '2020-01-01T00:00:00+00:00', '_aanbod_type' => 'module']],
+			actual: $data['results']
 		);
-		$this->assertStringNotContainsString('Concept Y', json_encode($data));
-		$this->assertStringNotContainsString('org-1', json_encode($data));
-		$this->assertSame([true], $rbac, 'the read keeps OpenRegister RBAC on');
-		$this->assertSame(['register' => 7, 'schema' => 11], $queries[0]['@self']);
-		$this->assertArrayNotHasKey('provider', $queries[0], 'no organisation filter is resolved');
+		$this->assertStringNotContainsString(needle: 'Concept Y', haystack: json_encode(value: $data));
+		$this->assertStringNotContainsString(needle: 'org-1', haystack: json_encode(value: $data));
+		$this->assertSame(expected: [true], actual: $rbac, message: 'the read keeps OpenRegister RBAC on');
+		$this->assertSame(expected: ['register' => 7, 'schema' => 11], actual: $queries[0]['@self']);
+		$this->assertArrayNotHasKey(key: 'provider', array: $queries[0], message: 'no organisation filter is resolved');
 
 	}//end testAnAnonymousCallerGetsThePublishedEntriesOnly()
 
@@ -178,11 +186,11 @@ class AanbodControllerTest extends TestCase {
 
 		$response = $controller->getAanbod();
 
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
 		$data = $response->getData();
-		$this->assertSame([], $data['results']);
-		$this->assertSame(0, $data['total']);
-		$this->assertSame('Not authenticated', $data['message']);
+		$this->assertSame(expected: [], actual: $data['results']);
+		$this->assertSame(expected: 0, actual: $data['total']);
+		$this->assertSame(expected: 'Not authenticated', actual: $data['message']);
 
 	}//end testAnAnonymousCallerIsRejectedWhenThePublishedReaderIsMissing()
 
@@ -197,7 +205,7 @@ class AanbodControllerTest extends TestCase {
 		$rbac = [];
 		$controller = $this->makeController(published: $this->publishedAanbod(queries: $queries, rbac: $rbac));
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('caller-uid');
 		$this->userSession->method('getUser')->willReturn($user);
 
@@ -206,9 +214,9 @@ class AanbodControllerTest extends TestCase {
 
 		$response = $controller->getAanbod();
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame($empty, $response->getData());
-		$this->assertSame([], $queries, 'the published reader is not used for a logged-in caller');
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: $empty, actual: $response->getData());
+		$this->assertSame(expected: [], actual: $queries, message: 'the published reader is not used for a logged-in caller');
 
 	}//end testAnAuthenticatedCallerWithNoOrganisationGetsTheEmptyEnvelope()
 
@@ -224,7 +232,7 @@ class AanbodControllerTest extends TestCase {
 	public function testAuthenticatedCallerReachesService(): void {
 		$controller = $this->makeController();
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('caller-uid');
 		$this->userSession->method('getUser')->willReturn($user);
 
@@ -243,7 +251,7 @@ class AanbodControllerTest extends TestCase {
 
 		$response = $controller->getAanbod();
 
-		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
 
 	}//end testAuthenticatedCallerReachesService()
 
