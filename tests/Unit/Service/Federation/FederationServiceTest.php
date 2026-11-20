@@ -504,7 +504,7 @@ class FederationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function testASuccessfulPullRecordsThePeerState(): void {
 		$this->appManager->method('getInstalledApps')->willReturn([]);
@@ -532,7 +532,7 @@ class FederationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function testABlockedHostOrAMissingClientRecordsTheError(): void {
 		$lastPull = ['name' => 'Peer', 'lastPulledAt' => '2026-11-19T10:00:00+00:00', 'objectCount' => 3];

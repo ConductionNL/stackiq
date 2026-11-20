@@ -157,7 +157,7 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
  * @param {object} status - The raw `/api/federation/status` response.
  * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
  * @spec openspec/specs/federated-catalog-sync/spec.md
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 export function normaliseFederationStatus(status) {
 	const raw = status || {}
@@ -177,7 +177,7 @@ export function normaliseFederationStatus(status) {
  *
  * @param {object} peer - The raw peer.
  * @return {{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}} The peer.
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 function normaliseFederationPeer(peer) {
 	const url = peer.url || ''

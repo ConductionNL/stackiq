@@ -452,7 +452,7 @@ class ServiceFactoriesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function testPeerCatalogClientIsWiredWithTheHttpClient(): void {
 		$registrations = $this->register(method: 'registerDomainServices');

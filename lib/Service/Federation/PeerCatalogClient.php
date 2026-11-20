@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Fetches the published entries a peer catalogue exposes to anonymous readers.
  *
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
  */
 class PeerCatalogClient {
 	/**
@@ -54,7 +54,7 @@ class PeerCatalogClient {
 	 * @param FederationConfig $config        The timeout, the cap and the local allowlist.
 	 * @param LoggerInterface  $logger        Logger.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function __construct(
 		private readonly IClientService $clientService,
@@ -71,7 +71,7 @@ class PeerCatalogClient {
 	 *
 	 * @return string The listing URL.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function listingUrl(string $peerUrl): string {
 		$base = rtrim(trim($peerUrl), '/');
@@ -93,7 +93,7 @@ class PeerCatalogClient {
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function fetch(string $peerUrl): array {
 		$cap = $this->config->getMaxEntries();
@@ -132,7 +132,7 @@ class PeerCatalogClient {
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>, pages:int}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function fetchPage(string $peerUrl, int $page, int $limit): array {
 		try {
@@ -167,7 +167,7 @@ class PeerCatalogClient {
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>, pages:int}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function readListing(string $body): array {
 		$listing = json_decode($body, true);
@@ -200,7 +200,7 @@ class PeerCatalogClient {
 	 *
 	 * @return string|null The name, or null.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	private function organisationName(array $listing): ?string {
 		$name = $listing['organisation'] ?? ($listing['catalog']['title'] ?? null);
@@ -219,7 +219,7 @@ class PeerCatalogClient {
 	 *
 	 * @return bool True when allowlisted.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function isAllowlisted(string $peerUrl): bool {
 		$host = parse_url($peerUrl, PHP_URL_HOST);
@@ -233,7 +233,7 @@ class PeerCatalogClient {
 	 *
 	 * @return array{ok:false, reason:string, organisation:null, entries:array<int,array<string,mixed>>, pages:int}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function failure(string $reason): array {
 		return ['ok' => false, 'reason' => $reason, 'organisation' => null, 'entries' => [], 'pages' => 0];

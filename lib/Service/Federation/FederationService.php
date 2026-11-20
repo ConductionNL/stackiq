@@ -116,7 +116,7 @@ class FederationService implements FederationServiceInterface {
 	 *               allowed:bool}>, staleAfter:int, message:string}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function getStatus(): array {
 		$available = $this->isAvailable();
@@ -368,8 +368,8 @@ class FederationService implements FederationServiceInterface {
 	 * @return array{ok:bool, reason:string, created:int, updated:int, withdrawn:int, stale:bool}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function pullPeer(string $peerUrl): array {
 		$empty = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
@@ -450,7 +450,7 @@ class FederationService implements FederationServiceInterface {
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function fetchPeerCatalog(string $peerUrl): array {
 		$unavailable = ['ok' => false, 'reason' => 'peer catalogue client unavailable', 'organisation' => null, 'entries' => []];
@@ -476,7 +476,7 @@ class FederationService implements FederationServiceInterface {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	private function peerName(string $peerUrl, string $name): string {
 		if ($name !== '' && $name !== $peerUrl) {
@@ -500,7 +500,7 @@ class FederationService implements FederationServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	private function recordPullSuccess(array $peer, array $entries): void {
 		$this->config->setPeerState(

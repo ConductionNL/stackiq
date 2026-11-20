@@ -7,7 +7,7 @@
  * `organisation`, the entry's id at the peer as `peerEntryId`); a record
  * without an `instance` is this catalogue's own.
  *
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 
 /**
@@ -22,7 +22,7 @@ export const PEER_LISTING_PATH = '/index.php/apps/opencatalogi/api/publications'
  *
  * @param {object|null} object The record (its data, with `_source`).
  * @return {{name: string, url: string|null}|null} The provenance, or null.
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 export function provenanceOf(object) {
 	const source = object && typeof object === 'object' ? object._source : null

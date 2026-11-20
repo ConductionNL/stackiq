@@ -8,7 +8,7 @@
  * only, and the Organisations cards carry a source badge and offer a mirror
  * no edit or delete. This catalogue's own records show none of it.
  *
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

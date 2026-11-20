@@ -4934,10 +4934,10 @@
 				"state": "built",
 				"evidence": "A pull reads the peer's own public listing of published entries (OpenCatalogi's public publications API at the peer's address) over Nextcloud's IClientService, after the SSRF guard, page by page up to federation_max_entries (lib/Service/Federation/PeerCatalogClient.php, FederationService::fetchPeerCatalog()); a timeout, non-2xx or non-JSON answer counts as a failure and leaves the mirrors alone. Mirrors keep their _source provenance (lib/Service/Federation/FederationMerger.php). The peers table shows catalogue, address, last pulled, objects and the last error (src/views/settings/sections/FederationSettings.vue); an organisation mirrored from a peer shows \"From: <catalogue>\" with a link to the original and is read only (src/components/federation/ProvenanceNotice.vue, OrganisatieDetail readOnlyWhen), and its card carries a source badge (src/components/cards/OrganisatieCard.vue). Tests: tests/Unit/Service/PeerCatalogClientTest.php, tests/Unit/Service/Federation/FederationServiceTest.php, tests/vitest/federationSettingsPeers.spec.js, tests/vitest/provenanceNotice.spec.js.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/federation-pull-fetches-the-peer",
+				"change": "2026-11-20-federation-pull-fetches-the-peer",
 				"requirement": [
-					"openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync :: A pull reads the peer's own published catalogue (REQ-FED-010)",
-					"openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync :: Mirrored entries show where they came from (REQ-FED-011)"
+					"openspec/specs/federated-catalog-sync :: A pull reads the peer's own published catalogue (REQ-FED-010)",
+					"openspec/specs/federated-catalog-sync :: Mirrored entries show where they came from (REQ-FED-011)"
 				],
 				"readOn": "2026-11-20"
 			},

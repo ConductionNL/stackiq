@@ -101,7 +101,7 @@ class FederationMerger {
 	 *
 	 * @return int The number of mergeable entries.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function countMergeable(array $peerEntries): int {
 		$ids = [];

@@ -278,7 +278,7 @@ export default {
 	computed: {
 		/**
 		 * @return {{name: string, url: string|null}|null} The peer catalogue a mirrored organisation came from, or null.
-		 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 		 */
 		provenance() {
 			return provenanceOf(this.item)
@@ -286,7 +286,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The card's actions: a mirror, read only here, offers no edit or delete.
-		 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 		 */
 		availableActions() {
 			if (!this.provenance) {
