@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The coupling is OpenRegister's find and save value objects and the refusals a confirmation can end in.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's find and save value objects and the confirmation's refusals.
  */
 class EntryConfirmationService implements EntryConfirmationServiceInterface {
 	/**
