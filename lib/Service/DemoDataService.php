@@ -246,7 +246,8 @@ class DemoDataService implements DemoDataServiceInterface {
 	 * @return mixed The importer's reply.
 	 *
 	 * @throws RuntimeException When OpenRegister is absent.
-	 */
+	 * @SuppressWarnings(PHPMD.StaticAccess) RelativeDemoDates::resolveDurations() is a pure function of the data and the clock.
+	*/
 	private function runImport(array $data): mixed {
 		$importer = $this->configurationService();
 
@@ -256,7 +257,7 @@ class DemoDataService implements DemoDataServiceInterface {
 
 		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
-			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new \DateTimeImmutable())),
+			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new DateTimeImmutable())),
 			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);

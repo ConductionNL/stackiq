@@ -62,7 +62,9 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The reviewer check, the register reads and writes and the role
  * sources each need their own collaborator.
  * @SuppressWarnings(PHPMD.ExcessiveParameterList) Every constructor argument is a boundary the controller works across.
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) ReviewedContactPerson::fromEntity() is a pure named constructor.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The access review list, its decisions and its export share one set of reads.
+*/
 class AccessReviewController extends Controller {
 
 	/**

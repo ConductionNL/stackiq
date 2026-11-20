@@ -227,13 +227,19 @@ class RoleGrantSeeder {
 		}
 
 		$first = reset($results);
+		$id    = '';
+		$data  = null;
 		if (is_object($first) === true && method_exists($first, 'getObject') === true) {
-			$id = (string) ($first->getUuid() ?? '');
+			$id   = (string) ($first->getUuid() ?? '');
 			$data = $first->getObject();
-		} else if (is_array($first) === true) {
-			$id = (string) ($first['@self']['id'] ?? $first['id'] ?? $first['uuid'] ?? '');
+		}
+
+		if (is_array($first) === true) {
+			$id   = (string) ($first['@self']['id'] ?? $first['id'] ?? $first['uuid'] ?? '');
 			$data = $first;
-		} else {
+		}
+
+		if ($data === null) {
 			return null;
 		}
 

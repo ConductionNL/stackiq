@@ -45,7 +45,8 @@ use RuntimeException;
  * only for accounts that have a contact person (syncCatalogueUser()).
  *
  * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
- */
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Deriving the roles and reconciling the groups share one set of reads.
+*/
 class RoleGrantSync {
 
 	/**
@@ -332,15 +333,12 @@ class RoleGrantSync {
 	 */
 	private function organisationType(array $contactPerson): string {
 		$organisation = $contactPerson['organisation'] ?? $contactPerson['organization'] ?? '';
-		if (is_array($organisation) === true) {
-			if (isset($organisation['type']) === true && is_string($organisation['type']) === true) {
-				return $organisation['type'];
-			}
-
-			$organisation = $organisation['id'] ?? $organisation['uuid'] ?? '';
+		if (is_array($organisation) === true && is_string($organisation['type'] ?? null) === true) {
+			return $organisation['type'];
 		}
 
-		if (is_string($organisation) === false || $organisation === '') {
+		$organisation = self::organisationId(organisation: $organisation);
+		if ($organisation === '') {
 			return '';
 		}
 
@@ -368,6 +366,27 @@ class RoleGrantSync {
 
 		return $type;
 	}//end organisationType()
+
+	/**
+	 * The uuid an organisation reference names: the reference itself, or the
+	 * id of an expanded organisation; '' when it names none.
+	 *
+	 * @param mixed $organisation The reference or the expanded organisation.
+	 *
+	 * @return string The uuid, or ''.
+	 */
+	private static function organisationId(mixed $organisation): string {
+		if (is_array($organisation) === true) {
+			$organisation = $organisation['id'] ?? $organisation['uuid'] ?? '';
+		}
+
+		if (is_string($organisation) === false) {
+			return '';
+		}
+
+		return $organisation;
+
+	}//end organisationId()
 
 	/**
 	 * The contact person whose username is the user's id.

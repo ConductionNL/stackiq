@@ -40,7 +40,9 @@ use OCP\IL10N;
  * Not final, so the services that use it can be tested against a mock.
  *
  * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
- */
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) The map is the one place every role, group, default and interval lookup goes through.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Each lookup normalises case and whitespace the same way.
+*/
 class RoleGroupMap {
 
 	/**

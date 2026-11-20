@@ -41,7 +41,8 @@ use Psr\Log\LoggerInterface;
  * services that depend on it can be tested against a mock.
  *
  * @spec openspec/specs/settings-service/spec.md
- */
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Reading, validating and remapping the role groups share one settings shape.
+*/
 class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 	/**

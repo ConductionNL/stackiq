@@ -28,6 +28,7 @@ use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -88,7 +89,8 @@ class RoleGrantSyncJob extends TimedJob {
 	 * @return void
 	 *
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
-	 */
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) TimedJob's signature; this job takes no argument.
+	*/
 	protected function run($argument): void {
 		try {
 			if ($this->roleGroupMap->grantsSeeded() === false && $this->seeder->seed()['seeded'] === false) {
@@ -108,15 +110,10 @@ class RoleGrantSyncJob extends TimedJob {
 	 *
 	 * @return array{synced: int, failed: int} The accounts synced and the ones that failed.
 	 *
-	 * @throws \RuntimeException When the contact person register or schema is not configured.
+	 * @throws RuntimeException When the contact person register or schema is not configured.
 	 */
 	private function syncAll(): array {
-		$registerId = $this->registerConfig->getRegisterIdForObjectType('contactPerson');
-		$schemaId = $this->registerConfig->getSchemaIdForObjectType('contactPerson');
-		$objectService = $this->registerConfig->getObjectService();
-		if ($registerId === null || $schemaId === null || $objectService === null) {
-			throw new \RuntimeException('The contact person register or schema is not configured.');
-		}
+		[$registerId, $schemaId, $objectService] = $this->contactPersonTarget();
 
 		$counts = ['synced' => 0, 'failed' => 0];
 		for ($offset = 0; $offset < SearchBounds::CEILING; $offset += self::BATCH_SIZE) {
@@ -147,6 +144,25 @@ class RoleGrantSyncJob extends TimedJob {
 
 		return $counts;
 	}//end syncAll()
+
+	/**
+	 * Where the contact persons are stored, and the service that reads them.
+	 *
+	 * @return array{0: int, 1: int, 2: object} The register id, the schema id and the object service.
+	 *
+	 * @throws RuntimeException When the contact person register or schema is not configured.
+	 */
+	private function contactPersonTarget(): array {
+		$registerId    = $this->registerConfig->getRegisterIdForObjectType('contactPerson');
+		$schemaId      = $this->registerConfig->getSchemaIdForObjectType('contactPerson');
+		$objectService = $this->registerConfig->getObjectService();
+		if ($registerId === null || $schemaId === null || $objectService === null) {
+			throw new RuntimeException('The contact person register or schema is not configured.');
+		}
+
+		return [$registerId, $schemaId, $objectService];
+
+	}//end contactPersonTarget()
 
 	/**
 	 * Sync the account of one contact person.
