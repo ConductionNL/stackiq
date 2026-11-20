@@ -42,8 +42,9 @@
   - GIVEN the exchange settings WHEN they render THEN a select "Send only from lifecycle state" lists the usage lifecycle states, default "In gebruik"
   - GIVEN a chosen state WHEN the administrator saves THEN `ItsmExchangeService::buildFlows()` writes it into the filter node of the outbound template and the stored config keeps it
   - GIVEN an application in use below the threshold WHEN it is saved THEN the outbound flow does not send it
-- [ ] Implement
-- [ ] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+  > Built 20 Nov: the usage schema's lifecycle (`status`: Acquisition, Planned, In production, To be phased out, Phased out) gives the order (`lib/Service/Itsm/ItsmSendFrom.php`). The chosen state is an app setting (`itsm_exchange_send_from`, default "In production"): `ItsmExchangeService::chooseSendFrom()` stores it, an unknown state is refused, and `ItsmExchangeController::setUp(sendFrom:)` chooses it before the set-up runs, answering 422 for an unknown state. `buildFlows()` writes the chosen state and every later one into an `in` condition on `json.status` in the outbound template's `ours` filter (`%SEND_STATES%`), so the stored config keeps it and the next set-up publishes it. `status()` returns `sendFrom` and `lifecycleStates`, and the exchange section has the select "Send only from lifecycle state". The spec's examples name "Gepland", "In gebruik" and "Concept"; the schema's English states take their place (Planned, In production), and there is no Concept state. Tests: `ItsmExchangeLifecycleThresholdTest` (5), `ItsmExchangeControllerTest`, `itsmExchangeSendFrom.spec.js`.
 
 ### Task 5: Webhooks section in the exchange settings (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005

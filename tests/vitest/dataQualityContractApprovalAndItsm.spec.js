@@ -190,10 +190,10 @@ describe('ItsmExchange', () => {
 
 	it('sets up the flows and reloads the configuration, or shows the refusal', async () => {
 		const s = section()
-		Object.assign(s, { desk: { id: 'jira' }, organisation: { id: 'o1' }, templateId: 'tpl' })
+		Object.assign(s, { desk: { id: 'jira' }, organisation: { id: 'o1' }, templateId: 'tpl', sendFrom: 'In production' })
 		api.apiRequest.mockResolvedValueOnce({ flows: { a: 1, b: 2, c: 3 } }).mockResolvedValueOnce({ desk: 'jira', desks: [{ id: 'jira', label: 'Jira' }] })
 		await s.setUp()
-		expect([api.apiRequest.mock.calls[0], toasts[0], s.deskLabel, s.saving]).toEqual([['itsm/setup', { method: 'POST', body: { desk: 'jira', organisation: 'o1', templateId: 'tpl' } }], ['success', '3 flows are set up. The first import runs tonight.'], 'Jira', false])
+		expect([api.apiRequest.mock.calls[0], toasts[0], s.deskLabel, s.saving]).toEqual([['itsm/setup', { method: 'POST', body: { desk: 'jira', organisation: 'o1', templateId: 'tpl', sendFrom: 'In production' } }], ['success', '3 flows are set up. The first import runs tonight.'], 'Jira', false])
 		api.apiRequest.mockRejectedValueOnce(new Error('Desk unreachable'))
 		await s.setUp()
 		expect([s.refusal, s.saving]).toEqual(['Desk unreachable', false])
