@@ -38,6 +38,7 @@ import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import OrganisationParticipantsList from './components/organisations/OrganisationParticipantsList.vue'
 import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import PublicationAction from './components/publication/PublicationAction.vue'
@@ -45,6 +46,7 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageParticipantsCard from './components/usages/UsageParticipantsCard.vue'
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
@@ -214,6 +216,10 @@ export default {
 	// usages, with accept and dismiss, which no built-in widget does.
 	ConnectionSuggestionsPanel,
 
+	// The Participants card of a shared application in use: the owner and each
+	// participant (shared-usage-visible-to-participants REQ-DLG-010).
+	UsageParticipantsCard,
+
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
 	// which no built-in widget does.
@@ -229,6 +235,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// A cooperation's participant organisations, each linked
+	// (shared-usage-visible-to-participants REQ-DLG-012).
+	OrganisationParticipantsList,
 	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
 	ClaimedUsageList,
 	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
