@@ -137,9 +137,11 @@ final class DataModelRegisterShapeTest extends TestCase {
 			$this->assertNotContains($field, $schemas['relation']['required'], $field);
 		}
 
-		// The origin from architecture-views-editor is still on both.
-		$this->assertSame(['imported', 'drawn'], $schemas['element']['properties']['origin']['enum']);
-		$this->assertSame(['imported', 'drawn'], $schemas['relation']['properties']['origin']['enum']);
+		// The origin from architecture-views-editor is still on both (a later fragment may add values).
+		foreach (['element', 'relation'] as $slug) {
+			$origins = $schemas[$slug]['properties']['origin']['enum'];
+			$this->assertSame(expected: ['imported', 'drawn'], actual: array_values(array: array_intersect($origins, ['imported', 'drawn'])), message: $slug);
+		}
 	}//end testElementAttributesAndRelationCardinalities()
 
 	/**
@@ -153,15 +155,13 @@ final class DataModelRegisterShapeTest extends TestCase {
 		$fragment = self::read(self::FRAGMENT)['components']['schemas'];
 
 		foreach (['usage', 'element', 'relation'] as $slug) {
-			// A later fragment may raise the version further (shared-usage-visible-to-participants
-			// takes usage to 1.6.3); the merged version then still sits above this fragment's.
-			$raisedHere  = version_compare(version1: $with[$slug]['version'], version2: $without[$slug]['version'], operator: '>');
-			$raisedLater = version_compare(version1: $with[$slug]['version'], version2: $fragment[$slug]['version'], operator: '>');
+			// A later fragment may raise the version further; the merged version then
+			// still sits above this fragment's.
+			$raisedHere  = version_compare($with[$slug]['version'], $without[$slug]['version'], '>');
+			$raisedLater = version_compare($with[$slug]['version'], $fragment[$slug]['version'], '>');
 			$this->assertTrue(condition: $raisedHere || $raisedLater, message: $slug . ' version must rise');
-			$this->assertTrue(
-				condition: version_compare(version1: $with[$slug]['version'], version2: $fragment[$slug]['version'], operator: '>='),
-				message: $slug
-			);
+			$atLeast = version_compare(version1: $with[$slug]['version'], version2: $fragment[$slug]['version'], operator: '>=');
+			$this->assertTrue(condition: $atLeast, message: $slug);
 		}
 	}//end testTheFragmentBumpsUsageElementAndRelation()
 
@@ -171,7 +171,10 @@ final class DataModelRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheSeedHoldsTwoOwnEntitiesTheirRelationAndTheUsageLink(): void {
-		$elements = self::seeded('element');
+		// Other fragments seed vng-gemma elements and relations too; this test reads this fragment's own.
+		$fragmentObjects = self::read(path: self::FRAGMENT)['components']['objects'];
+		$own             = array_flip(array: array_map(callback: static fn (array $o): string => $o['@self']['slug'], array: $fragmentObjects));
+		$elements        = array_intersect_key(self::seeded(schema: 'element'), $own);
 		$this->assertSame(['seed-el-melding', 'seed-el-melder'], array_keys($elements));
 		foreach ($elements as $slug => $element) {
 			$this->assertSame('vng-gemma', $element['@self']['register'], $slug);
@@ -191,7 +194,7 @@ final class DataModelRegisterShapeTest extends TestCase {
 			array_map(static fn (array $a): array => [$a['name'], $a['dataType'], $a['isKey']], $elements['seed-el-melder']['attributes'])
 		);
 
-		$relations = self::seeded('relation');
+		$relations = array_intersect_key(self::seeded(schema: 'relation'), $own);
 		$this->assertSame(['seed-rel-melding-melder'], array_keys($relations));
 		$relation = $relations['seed-rel-melding-melder'];
 		$this->assertSame(

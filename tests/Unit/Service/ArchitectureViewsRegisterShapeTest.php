@@ -86,11 +86,12 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 
 		$this->assertSame(['draft', 'in review', 'published', 'retired'], $view['properties']['status']['enum']);
 		$this->assertSame('draft', $view['properties']['status']['default']);
-		$this->assertSame(['imported', 'drawn'], $view['properties']['origin']['enum']);
+		// `assistant` is added by the assistant-drafted-views fragment (architecture-assistant-drafted-views).
+		$this->assertSame(expected: ['imported', 'drawn', 'assistant'], actual: $view['properties']['origin']['enum']);
 		$this->assertTrue($view['properties']['tags']['facetable']);
 
 		foreach (['element', 'relation'] as $slug) {
-			$this->assertSame(['imported', 'drawn'], $schemas[$slug]['properties']['origin']['enum'], $slug);
+			$this->assertSame(expected: ['imported', 'drawn', 'assistant'], actual: $schemas[$slug]['properties']['origin']['enum'], message: $slug);
 			$this->assertNotContains('origin', $schemas[$slug]['required'], $slug);
 		}
 	}//end testViewElementAndRelationGainTheirFields()
@@ -181,4 +182,53 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 			$this->assertTrue(version_compare($merged[$slug]['version'], $base[$slug]['version'], '>'), $slug);
 		}
 	}//end testTheChangedSchemasCarryBumpedVersions()
+	/**
+	 * A drafted view records who it was drafted for and when, the three schemas move past
+	 * the views editor's versions, and the seed holds one drafted view over elements and a
+	 * relation it names (architecture-assistant-drafted-views task 1).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+	 */
+	public function testADraftedViewCarriesItsMarkAndTheSeedHoldsOne(): void {
+		$merged = self::merged();
+		$view = $merged['components']['schemas']['view'];
+		$this->assertSame(expected: 'string', actual: $view['properties']['draftedFor']['type']);
+		$this->assertSame(expected: 'date-time', actual: $view['properties']['draftedAt']['format']);
+		$this->assertNotContains(needle: 'draftedFor', haystack: $view['required']);
+
+		$editor = self::read(path: self::SETTINGS . '/register.d/architecture-views.json')['components']['schemas'];
+		foreach (['view', 'element', 'relation'] as $slug) {
+			$raised = version_compare(version1: $merged['components']['schemas'][$slug]['version'], version2: $editor[$slug]['version'], operator: '>');
+			$this->assertTrue(condition: $raised, message: $slug);
+		}
+
+		$seeded = [];
+		foreach ($merged['components']['objects'] as $object) {
+			if (($object['@self']['register'] ?? null) === 'vng-gemma') {
+				$seeded[$object['@self']['schema']][] = $object;
+			}
+		}
+
+		$this->assertCount(expectedCount: 1, haystack: $seeded['view']);
+		$drafted = $seeded['view'][0];
+		$this->assertSame(expected: ['assistant', 'draft', 'admin'], actual: [$drafted['origin'], $drafted['status'], $drafted['draftedFor']]);
+		$identifiers = array_column(array_merge($seeded['element'], $seeded['relation']), 'identifier');
+		foreach ($drafted['nodes'] as $node) {
+			$this->assertContains(needle: $node['elementRef'], haystack: $identifiers);
+			$this->assertArrayNotHasKey(key: 'x', array: $node, message: 'a drafted view is laid out on first open');
+		}
+
+		$this->assertContains(needle: $drafted['connections'][0]['modelRelationshipId'], haystack: $identifiers);
+
+		// Other fragments seed vng-gemma elements too (drawn ones); the ones this
+		// drafted view places and connects carry the assistant mark.
+		$placed = array_merge(array_column($drafted['nodes'], 'elementRef'), array_column($drafted['connections'], 'modelRelationshipId'));
+		foreach (array_merge($seeded['element'], $seeded['relation']) as $object) {
+			if (in_array($object['identifier'] ?? null, $placed, true) === true) {
+				$this->assertSame(expected: 'assistant', actual: $object['origin']);
+			}
+		}
+	}//end testADraftedViewCarriesItsMarkAndTheSeedHoldsOne()
 }//end class

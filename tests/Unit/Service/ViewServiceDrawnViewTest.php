@@ -194,6 +194,8 @@ final class ViewServiceDrawnViewTest extends TestCase {
 				$this->entity(['id' => 'gemma', 'name' => 'GEMMA view', 'origin' => 'imported']),
 				$this->entity(['id' => 'legacy', 'name' => 'Imported before origin existed']),
 				$this->entity(['id' => 'drawn', 'name' => 'Our landscape', 'origin' => 'drawn']),
+				// An assistant's draft is no GEMMA content either (architecture-assistant-drafted-views D6).
+				$this->entity(data: ['id' => 'drafted', 'name' => 'Concept van de assistent', 'origin' => 'assistant']),
 				$this->entity(['id' => 'future', 'name' => 'Some later origin', 'origin' => 'generated']),
 			]
 		);
@@ -226,6 +228,35 @@ final class ViewServiceDrawnViewTest extends TestCase {
 		$this->assertNull($drawn['view']);
 		$this->assertSame(str_replace('missing-uuid', 'drawn-uuid', $missing['error']), $drawn['error']);
 	}//end testADrawnViewReadsAsMissing()
+
+	/**
+	 * A view an assistant drafted answers exactly as a missing view does
+	 * (architecture-assistant-drafted-views D6).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-005-the-draft-tools-shall-run-with-the-callers-rights-and-shall-keep-drafts-out-of-shared-readers
+	 */
+	public function testADraftedViewReadsAsMissing(): void {
+		$this->currentUserId = 'bob';
+		$this->activeOrganisation = 'org-b';
+		$this->objectService->method('find')->willReturnCallback(
+			function (int|string $id): ?ObjectEntityInterface {
+				if ($id !== 'drafted-uuid') {
+					return null;
+				}
+
+				return $this->entity(data: ['id' => 'drafted-uuid', 'name' => 'Concept', 'origin' => 'assistant']);
+			}
+		);
+
+		$drafted = $this->viewService->getView(viewId: 'drafted-uuid');
+		$missing = $this->viewService->getView(viewId: 'missing-uuid');
+
+		$this->assertFalse(condition: $drafted['success']);
+		$this->assertNull(actual: $drafted['view']);
+		$this->assertSame(expected: str_replace(search: 'missing-uuid', replace: 'drafted-uuid', subject: $missing['error']), actual: $drafted['error']);
+	}//end testADraftedViewReadsAsMissing()
 
 	/**
 	 * An imported view and one saved before `origin` existed are still served.
