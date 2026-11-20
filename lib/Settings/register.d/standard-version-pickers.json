@@ -3,7 +3,7 @@
   "components": {
     "schemas": {
       "connection": {
-        "version": "0.3.7",
+        "version": "0.3.8",
         "properties": {
           "standardVersions": {
             "items": {
