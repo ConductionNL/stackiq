@@ -2,7 +2,6 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.16",
         "properties": {
           "referenceComponents": {
             "hideOnForm": false,
