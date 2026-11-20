@@ -14,6 +14,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Connection Suggestions](connection-suggestions.md) | Suggested connections for an application in use, from your landscape and earlier usages |
 | [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
+| [Applications on GEMMA views](shared-usage-on-views.md) | Show your own and partners' shared applications inside the components of a GEMMA view |
 | [Data model](data-model.md) | The GGM data entities and your own, their relations and attributes, and the applications that hold their data |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Application Components](application-components.md) | Record the applications an application is made of, and list them on its page |
