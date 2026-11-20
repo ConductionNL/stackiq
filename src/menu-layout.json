@@ -6,7 +6,8 @@
 		"Komplianties": "ReportsCompliance",
 		"ComplianceMatrix": "ReportsCompliance",
 		"Standaarden": "Architecture",
-		"Views": "Architecture"
+		"Views": "Architecture",
+		"Gegevensmodel": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []

@@ -36,4 +36,4 @@
 
 ## 6. After integriq ships
 
-- [ ] 6.1 Run the e2e spec against an instance with both apps, then archive this change.
+- [x] 6.1 Run the e2e spec against an instance with both apps, then archive this change. (integrations-page.spec.ts 3/3 on NC 34 with integriq development, 2026-11-17)
