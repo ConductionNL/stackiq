@@ -21,8 +21,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\DashboardController;
-use OCA\Stackiq\Service\SyncAccessPolicy;
+use OCA\Stackiq\Service\ShellPermissions;
 use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -37,6 +38,7 @@ use PHPUnit\Framework\TestCase;
  * @package  OCA\Stackiq\Tests\Unit\Controller
  *
  * @covers \OCA\Stackiq\Controller\DashboardController
+ * @uses   \OCA\Stackiq\Service\ShellPermissions
  * @uses   \OCA\Stackiq\Service\SyncAccessPolicy
  */
 class DashboardControllerPermissionsTest extends TestCase {
@@ -61,6 +63,14 @@ class DashboardControllerPermissionsTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$groups = $this->createMock(originalClassName: IGroupManager::class);
+		$memberships = [];
+		if ($inGroup === true) {
+			$group = $this->createMock(originalClassName: IGroup::class);
+			$group->method('getGID')->willReturn('functioneel-beheerder');
+			$memberships[] = $group;
+		}
+
+		$groups->method('getUserGroups')->willReturn($memberships);
 		$groups->method('isAdmin')->willReturnCallback(fn (string $id): bool => $id === $uid && $isAdmin);
 		$groups->method('isInGroup')->willReturnCallback(
 			fn (string $id, string $group): bool => $id === $uid && $group === 'functioneel-beheerder' && $inGroup
@@ -79,8 +89,7 @@ class DashboardControllerPermissionsTest extends TestCase {
 			request: $this->createMock(originalClassName: IRequest::class),
 			userSession: $session,
 			initialState: $state,
-			groupManager: $groups,
-			syncAccess: new SyncAccessPolicy(groupManager: $groups)
+			shellPermissions: new ShellPermissions(groupManager: $groups)
 		);
 		$response   = $controller->page(null);
 		$this->assertSame(expected: 'index', actual: $response->getTemplateName());
@@ -100,12 +109,15 @@ class DashboardControllerPermissionsTest extends TestCase {
 	}//end testARegularUserHoldsOnlyUser()
 
 	/**
-	 * A functional administrator may see the sync but is not an admin.
+	 * A functional administrator may see the sync and review access, but is not an admin.
 	 *
 	 * @return void
 	 */
 	public function testAFunctionalAdministratorMaySeeTheSync(): void {
-		$this->assertSame(expected: [['permissions', ['user', 'sync.view']]], actual: $this->provided(uid: 'fb', isAdmin: false, inGroup: true));
+		$this->assertSame(
+			expected: [['permissions', ['user', 'access.review', 'sync.view']]],
+			actual: $this->provided(uid: 'fb', isAdmin: false, inGroup: true)
+		);
 
 	}//end testAFunctionalAdministratorMaySeeTheSync()
 
@@ -116,7 +128,7 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 */
 	public function testAnAdminHoldsAdminAndSyncView(): void {
 		$this->assertSame(
-			expected: [['permissions', ['user', 'admin', 'sync.view']]],
+			expected: [['permissions', ['user', 'admin', 'access.review', 'sync.view']]],
 			actual: $this->provided(uid: 'admin', isAdmin: true, inGroup: false)
 		);
 

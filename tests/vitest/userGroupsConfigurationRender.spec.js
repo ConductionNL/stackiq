@@ -138,11 +138,15 @@ describe('UserGroupsConfiguration rendering', () => {
 		const wrapper = await mountSection({ genericUserGroups: ['gebruiker'] })
 		const visible = () => wrapper.findAll('.tab-panel').map((p) => p.element.style.display !== 'none')
 
-		expect(visible()).toEqual([true, false, false])
+		expect(visible()).toEqual([true, false, false, false])
 
 		await wrapper.findAll('.tab-button').find((b) => b.text() === 'Super User Groups').trigger('click')
 
-		expect(visible()).toEqual([false, false, true])
+		expect(visible()).toEqual([false, false, true, false])
+
+		await wrapper.findAll('.tab-button').find((b) => b.text() === 'Role mapping').trigger('click')
+
+		expect(visible()).toEqual([false, false, false, true])
 	})
 
 	it('shows validation errors and the save outcome of each tab', async () => {

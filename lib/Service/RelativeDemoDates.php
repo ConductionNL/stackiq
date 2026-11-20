@@ -29,10 +29,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use DateInterval;
 use DateTimeImmutable;
+use DateTimeInterface;
 
 /**
- * Turns `{{today±N[d|m|y]}}` strings in demo objects into dates.
+ * Turns `{{today±N[d|m|y]}}` strings in demo objects into dates, and a
+ * top-level negative ISO 8601 duration such as `-P7D` (seven days before the
+ * import) into a date-time.
  *
  * @spec openspec/specs/contract-administration/spec.md
  */
@@ -50,6 +54,13 @@ class RelativeDemoDates {
 	 * @var array<string, string>
 	 */
 	private const UNITS = ['d' => 'days', 'm' => 'months', 'y' => 'years'];
+
+	/**
+	 * A negative ISO 8601 duration of days, weeks, months or years.
+	 *
+	 * @var string
+	 */
+	private const DURATION = '/^-(P(?:\d+Y)?(?:\d+M)?(?:\d+W)?(?:\d+D)?)$/';
 
 	/**
 	 * Resolve every placeholder in the descriptor's objects against today.
@@ -103,4 +114,56 @@ class RelativeDemoDates {
 
 		return $today->modify($match[1] . $match[2] . ' ' . self::UNITS[$match[3]])->format('Y-m-d');
 	}//end resolveValue()
+	/**
+	 * The descriptor with every relative duration of its objects resolved.
+	 *
+	 * A demo dataset that holds fixed dates ages: a review "a week ago" is a
+	 * year old a year later. A top-level field of a demo object whose value is
+	 * a negative ISO 8601 duration is replaced by the import moment minus that
+	 * duration, as an ISO 8601 date-time. Every other value is left as it is.
+	 *
+	 * @param array<string, mixed> $data The decoded descriptor.
+	 * @param DateTimeImmutable    $now  The import moment.
+	 *
+	 * @return array<string, mixed> The descriptor with absolute dates.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	 */
+	public static function resolveDurations(array $data, DateTimeImmutable $now): array {
+		$objects = ($data['components']['objects'] ?? null);
+		if (is_array($objects) === false) {
+			return $data;
+		}
+
+		foreach ($objects as $index => $object) {
+			if (is_array($object) === false) {
+				continue;
+			}
+
+			foreach ($object as $field => $value) {
+				$date = self::durationDate(value: $value, now: $now);
+				if ($date !== null) {
+					$data['components']['objects'][$index][$field] = $date;
+				}
+			}
+		}
+
+		return $data;
+	}//end resolveDurations()
+
+	/**
+	 * The date a relative duration stands for, or null for any other value.
+	 *
+	 * @param mixed             $value The field value.
+	 * @param DateTimeImmutable $now   The import moment.
+	 *
+	 * @return string|null The ISO 8601 date-time, or null.
+	 */
+	private static function durationDate(mixed $value, DateTimeImmutable $now): ?string {
+		if (is_string($value) === false || $value === '-P' || preg_match(self::DURATION, $value, $match) !== 1) {
+			return null;
+		}
+
+		return $now->sub(new DateInterval($match[1]))->format(DateTimeInterface::ATOM);
+	}//end durationDate()
 }//end class

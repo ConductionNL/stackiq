@@ -9,8 +9,8 @@
   - GIVEN no saved mapping WHEN the map is read THEN each of the six roles has its lower-case role group and no source groups, and the four organisation types have their default roles on the English enum
   - GIVEN an admin WHEN they save Gebruik-beheerder onto Inkoop and an interval of 180 days THEN the config returns both
   - GIVEN a non-admin WHEN they read or write the config THEN they get 403
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/RoleGroupMapTest.php and tests/Unit/Controller/SettingsControllerUserGroupsTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/RoleGroupMapTest.php and tests/Unit/Controller/SettingsControllerUserGroupsTest.php)
 
 ### Task 2: Keep role groups in step and fix the two broken paths
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
@@ -20,8 +20,8 @@
   - GIVEN a person who no longer derives a role WHEN the sync runs THEN they leave that role group and keep every non-role group
   - GIVEN a Supplier contact without roles WHEN their account is created THEN they are in aanbod-beheerder
   - GIVEN the old updateGemeenteGroups() WHEN the code is searched THEN it is gone
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/RoleGrantSyncTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/RoleGrantSyncTest.php)
 
 ### Task 3: Run the sync at sign-in, on changes and nightly, after a safe upgrade
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
@@ -30,8 +30,8 @@
   - GIVEN a real UserLoggedInEvent WHEN the listener runs THEN the user is synced
   - GIVEN a current role group member without the role WHEN the repair step runs THEN the role is written onto their contact person and logged
   - GIVEN many users WHEN the nightly job runs THEN it works in bounded batches
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Repair/SeedRolesFromGroupsTest.php and tests/Unit/BackgroundJob/RoleGrantSyncJobTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Repair/SeedRolesFromGroupsTest.php and tests/Unit/BackgroundJob/RoleGrantSyncJobTest.php)
 
 ### Task 4: Add the review fields and the review endpoints
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-004-a-reviewer-shall-confirm-or-withdraw-a-persons-access-and-the-decision-shall-be-recorded
@@ -41,8 +41,8 @@
   - GIVEN a functional administrator WHEN they list their own organisation THEN each row carries roles with sources, last sign-in, enabled, reviewed at and by, and due
   - GIVEN another organisation WHEN they list it THEN they get 403, and a Nextcloud admin gets 200
   - GIVEN their own contact person WHEN they confirm it THEN the endpoint refuses
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Controller/AccessReviewControllerTest.php and tests/Unit/Settings/AccessReviewDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Controller/AccessReviewControllerTest.php and tests/Unit/Settings/AccessReviewDeclarationTest.php)
 
 ### Task 5: Add the Access review page under Organisations
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
@@ -52,8 +52,12 @@
   - GIVEN a due row WHEN Keep access is chosen THEN the row shows today and the reviewer, and is no longer due
   - GIVEN a role from a mapped group WHEN the row renders THEN it names the group and offers no Remove role for it
   - GIVEN a Nextcloud admin WHEN the page renders THEN it offers an organisation picker and Disable account
-- [ ] Implement
+- [x] Implement
+      2026-11-17: the permission list is built here, since the other change has not built it yet. `ShellPermissions` gives every signed-in user `user` (the shell shows every entry when the list is empty), Nextcloud admins `admin`, and admins plus `functioneel-beheerder`/`organisatie-beheerder` members `access.review`. `DashboardController` hands it to the shell as initial state `permissions`, and `App.vue` reads it, falling back to `OC.currentUser.permissions`. PHPUnit: `ShellPermissionsTest`, `DashboardControllerContractTest::testPageProvidesTheUsersPermissionList`.
+      Built: the page fragment, the menu entry under Organisations with `permission: access.review`, `AccessReviewView` (registered in `src/customComponents.js`), its icon, and the English and Dutch strings. Left: `access.review` in the shell's permission list (`DashboardController`), which `operations-sync-status-and-progress` introduces and is not built yet; until it is, the entry shows for everyone and the endpoint refuses anyone but admins and the organisation's functional administrators.
 - [ ] Test (vitest tests/vitest/accessReviewView.spec.js and Playwright tests/e2e/spec-coverage/access-review.spec.ts)
+      vitest done (9 tests); the Playwright spec needs a live instance.
+      2026-11-17, written: `tests/e2e/spec-coverage/access-review.spec.ts` (two never-reviewed colleagues listed as due, Keep access makes a row current by the reviewer, Remove role takes Gebruik-beheerder from the row, the contact person and the group, a regular user's menu has no Access review). Not run against a live instance yet.
 
 ### Task 6: Seed review dates and document both features
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
@@ -62,7 +66,9 @@
   - GIVEN a fresh demo import WHEN the Access review page opens THEN it shows one current and two due rows
   - GIVEN the docs WHEN a reader opens the feature page THEN it explains role groups, mapped groups and the review with screenshots, and points SAML and OpenID Connect users to OpenRegister's derived grants
 - [ ] Implement
+      Built: `accessReviewedAt` on the first two demo contact persons as `-P7D` and `-P14M`, resolved against the import date by `RelativeDemoDates` in `DemoDataService` (the third has none), and `docs/features/role-mapping-and-access-review.md`. Left: the screenshots, which the Playwright specs capture on a live instance; the demo contact persons have no accounts, so whether the page shows the three rows needs that live check too.
 - [ ] Test (Playwright tests/e2e/spec-coverage/role-mapping.spec.ts and tests/e2e/spec-coverage/access-review.spec.ts against the demo data)
+      2026-11-17, written: `tests/e2e/spec-coverage/role-mapping.spec.ts` (an admin maps Gebruik-beheerder onto a seeded Inkoop group and its member lands in `gebruik-beheerder`; only the role mapping is restored afterwards). The access-review spec seeds its own rows rather than reading the demo data, because the demo contact persons have no accounts. Not run live yet.
 
 ## Verification
 

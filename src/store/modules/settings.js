@@ -323,6 +323,9 @@ function userSettingsState() {
 		genericUserGroups: [],
 		organizationAdminGroups: [],
 		superUserGroups: [],
+		roleMapping: {},
+		organisationTypeRoles: {},
+		accessReviewIntervalDays: null,
 		emailSettings: { ...DEFAULT_EMAIL_SETTINGS },
 	}
 }
@@ -423,6 +426,59 @@ function applyUserGroups(store, config) {
 	store.genericUserGroups = [...(config.generic || [])]
 	store.organizationAdminGroups = [...(config.organizationAdmin || [])]
 	store.superUserGroups = [...(config.superUser || [])]
+	applyRoleMapping(store, config)
+}
+
+/**
+ * Write the catalogue role mapping into the store: per role its role group
+ * and the groups that grant it, the default role per organisation type, and
+ * the review interval. An answer without the mapping leaves it unloaded, so
+ * a save does not post it.
+ *
+ * @param {object} store The settings store.
+ * @param {object} config The user group configuration from the API.
+ * @return {void}
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+ */
+export function applyRoleMapping(store, config) {
+	if (!config.roleMapping) {
+		return
+	}
+	store.roleMapping = Object.fromEntries(
+		Object.entries(config.roleMapping).map(([role, entry]) => [
+			role,
+			{
+				group: entry.group,
+				sourceGroups: [...(entry.sourceGroups || [])],
+			},
+		]),
+	)
+	store.organisationTypeRoles = { ...(config.organisationTypeRoles || {}) }
+	store.accessReviewIntervalDays = config.accessReviewIntervalDays ?? null
+}
+
+/**
+ * The role mapping as the endpoint takes it, or null when it was never loaded.
+ *
+ * @param {object} store The settings store.
+ * @return {object|null} `roleMapping` (source groups per role), `organisationTypeRoles` and `accessReviewIntervalDays`.
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+ */
+export function roleMappingSavePayload(store) {
+	const mapping = store.roleMapping || {}
+	if (Object.keys(mapping).length === 0) {
+		return null
+	}
+	return {
+		roleMapping: Object.fromEntries(
+			Object.entries(mapping).map(([role, entry]) => [
+				role,
+				(entry.sourceGroups || []).filter((group) => group && group.trim()),
+			]),
+		),
+		organisationTypeRoles: { ...(store.organisationTypeRoles || {}) },
+		accessReviewIntervalDays: Number(store.accessReviewIntervalDays),
+	}
 }
 
 /**
@@ -654,15 +710,19 @@ const USER_GROUP_LISTS = [
  * @return {object|null} The payload.
  */
 function userGroupsSavePayload(store) {
+	const roleMapping = roleMappingSavePayload(store)
 	if (!USER_GROUP_LISTS.some(([, list]) => store[list].length > 0)) {
-		return null
+		return roleMapping
 	}
-	return Object.fromEntries(
-		USER_GROUP_LISTS.map(([key, list]) => [
-			key,
-			store[list].filter((group) => group && group.trim()),
-		]),
-	)
+	return {
+		...Object.fromEntries(
+			USER_GROUP_LISTS.map(([key, list]) => [
+				key,
+				store[list].filter((group) => group && group.trim()),
+			]),
+		),
+		...(roleMapping || {}),
+	}
 }
 
 /**
@@ -1992,6 +2052,9 @@ export const useSettingsStore = defineStore('settings', {
 			this.genericUserGroups = []
 			this.organizationAdminGroups = []
 			this.superUserGroups = []
+			this.roleMapping = {}
+			this.organisationTypeRoles = {}
+			this.accessReviewIntervalDays = null
 			this.statistics = emptyStatistics()
 			this.loadingStats = false
 			this.error = null

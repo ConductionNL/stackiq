@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -29,6 +32,10 @@ use Psr\Log\LoggerInterface;
  * rules name are lower case (aanbod-beheerder), so a holder of the role was
  * never added, and a member of the group was removed on the next update.
  *
+ * The handler now delegates to RoleGrantSync, so these cases run through the
+ * real sync over the real role map: the generic group configuration no
+ * longer decides which groups are synced, the role groups do.
+ *
  * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
@@ -48,6 +55,13 @@ class GroupHandlerRoleCaseTest extends TestCase {
 	 * @var string[]
 	 */
 	private array $removedFrom = [];
+
+	/**
+	 * Groups looked up by gid.
+	 *
+	 * @var string[]
+	 */
+	private array $lookedUp = [];
 
 	/**
 	 * A capitalised role puts the user in the lower-case role group.
@@ -87,9 +101,24 @@ class GroupHandlerRoleCaseTest extends TestCase {
 
 		$handler->updateRoleBasedGroups($this->user(), ['roles' => ['Gebruik-beheerder']]);
 
-		$this->assertSame([], $this->addedTo);
+		$this->assertSame(['gebruik-beheerder'], $this->addedTo);
 		$this->assertSame(['aanbod-beheerder'], $this->removedFrom);
 	}//end testAMemberWithoutTheRoleLeavesTheGroup()
+
+	/**
+	 * A configured generic group that is no role group is never looked up nor changed.
+	 *
+	 * @return void
+	 */
+	public function testAGenericGroupIsNeverTouched(): void {
+		$handler = $this->makeHandler(configuredGroups: ['software-catalog-users'], alreadyIn: ['software-catalog-users']);
+
+		$handler->updateRoleBasedGroups($this->user(), ['roles' => []]);
+
+		$this->assertNotContains('software-catalog-users', $this->lookedUp);
+		$this->assertSame([], $this->addedTo);
+		$this->assertSame([], $this->removedFrom);
+	}//end testAGenericGroupIsNeverTouched()
 
 	/**
 	 * Build the handler over configured groups and existing memberships.
@@ -102,6 +131,7 @@ class GroupHandlerRoleCaseTest extends TestCase {
 	private function makeHandler(array $configuredGroups, array $alreadyIn): GroupHandler {
 		$this->addedTo = [];
 		$this->removedFrom = [];
+		$this->lookedUp = [];
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -117,6 +147,7 @@ class GroupHandlerRoleCaseTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('get')->willReturnCallback(
 			function (string $gid) use ($alreadyIn): IGroup {
+				$this->lookedUp[] = $gid;
 				$group = $this->createMock(IGroup::class);
 				$group->method('inGroup')->willReturn(in_array($gid, $alreadyIn, true));
 				$group->method('addUser')->willReturnCallback(
@@ -133,13 +164,22 @@ class GroupHandlerRoleCaseTest extends TestCase {
 			}
 		);
 
+		$logger = $this->createMock(LoggerInterface::class);
+		$sync = new RoleGrantSync(
+			roleGroupMap: new RoleGroupMap(appConfig: $appConfig),
+			groupManager: $groupManager,
+			registerConfig: $this->createMock(RegisterConfigReaderInterface::class),
+			logger: $logger
+		);
+
 		return new GroupHandler(
 			$groupManager,
 			$this->createMock(IUserManager::class),
 			$appConfig,
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
-			$this->createMock(LoggerInterface::class)
+			$logger,
+			$sync
 		);
 	}//end makeHandler()
 

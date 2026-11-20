@@ -13,6 +13,7 @@
 // vue-material-design-icons.
 
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
+import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import AccountClockOutline from 'vue-material-design-icons/AccountClockOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
@@ -93,6 +94,7 @@ import Web from 'vue-material-design-icons/Web.vue'
 
 export default {
 	AccountBoxOutline,
+	AccountCheckOutline,
 	AccountClockOutline,
 	AccountGroup,
 	AccountMultiple,

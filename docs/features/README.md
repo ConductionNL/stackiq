@@ -26,6 +26,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Contract Management](#contract-management) | Track license and service agreements |
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
+| [Role Mapping and Access Review](role-mapping-and-access-review.md) | Map catalogue roles onto your own groups, and review who still needs access |
 | [Security classification (BIO)](baseline-classification.md) | Classify each application in use on availability, integrity and confidentiality, with a GEMMA suggestion and an anonymous comparison |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
 | [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |

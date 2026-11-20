@@ -49,6 +49,7 @@ import UsageClassificationPanel from './components/usages/UsageClassificationPan
 import UsageParticipantsCard from './components/usages/UsageParticipantsCard.vue'
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import AccessReviewView from './views/access/AccessReviewView.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
 import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
@@ -329,6 +330,12 @@ export default {
 	// rules over one organisation's usages, bounded like the portfolio report.
 	// @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	DataQualityReportView,
+	// --- Lib gap: the access review of one organisation's people. ---
+	// GET /api/access-review/{organisationUuid} derives each person's roles and
+	// their sources from the contact person, the mapped groups and the
+	// organisation type, with Keep access / Remove role / Disable account per row.
+	// @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	AccessReviewView,
 	// --- Lib gap: the GEMMA plate. ---
 	// GET /api/reference-component-coverage joins one organisation's usages
 	// with the GEMMA reference components; a component nobody uses has no

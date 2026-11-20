@@ -239,14 +239,15 @@ class DemoDataService implements DemoDataServiceInterface {
 	}//end install()
 
 	/**
-	 * Hand the descriptor to OpenRegister's importer, schemas pinned first.
+	 * Hand the descriptor to OpenRegister's importer, relative dates resolved and schemas pinned first.
 	 *
 	 * @param array<string, mixed> $data The decoded descriptor.
 	 *
 	 * @return mixed The importer's reply.
 	 *
 	 * @throws RuntimeException When OpenRegister is absent.
-	 */
+	 * @SuppressWarnings(PHPMD.StaticAccess) RelativeDemoDates::resolveDurations() is a pure function of the data and the clock.
+	*/
 	private function runImport(array $data): mixed {
 		$importer = $this->configurationService();
 
@@ -256,7 +257,7 @@ class DemoDataService implements DemoDataServiceInterface {
 
 		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
-			data: $this->pinSchemasToTheirRegisters(data: $data),
+			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new DateTimeImmutable())),
 			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);

@@ -100,6 +100,7 @@ Vrij en open source onder de EUPL-licentie.
 		<job>OCA\Stackiq\BackgroundJob\ContractStatusJob</job>
 		<job>OCA\Stackiq\BackgroundJob\FederationSyncJob</job>
 		<job>OCA\Stackiq\BackgroundJob\EolSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\RoleGrantSyncJob</job>
 		<job>OCA\Stackiq\BackgroundJob\AttestationOverdueJob</job>
 	</background-jobs>
 
@@ -295,6 +296,9 @@ Vrij en open source onder de EUPL-licentie.
 				so nobody wonders why syncs stopped. Changes nothing.
 			-->
 			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
+			<!-- Before the role sync runs on its own: write each role group member's
+			     role onto their contact person, so the upgrade takes nobody's access. -->
+			<step>OCA\Stackiq\Repair\SeedRolesFromGroups</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -379,6 +383,8 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!-- An app-id rename presents as a fresh install; seed the role groups here too. -->
+			<step>OCA\Stackiq\Repair\SeedRolesFromGroups</step>
 		</install>
 	</repair-steps>
 

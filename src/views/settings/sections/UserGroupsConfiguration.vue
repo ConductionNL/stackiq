@@ -51,6 +51,7 @@
 					title: 'Organization Admin Groups',
 				},
 				{ key: 'super-user-groups', title: 'Super User Groups' },
+				{ key: 'role-mapping', title: t('stackiq', 'Role mapping') },
 			]"
 			:activeTab="activeTab"
 			@update:activeTab="activeTab = $event">
@@ -318,6 +319,87 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- Role Mapping Tab (organisations-role-mapping-and-access-review) -->
+			<div
+				v-show="activeTab === 'role-mapping'"
+				class="tab-panel"
+				data-testid="usergroups-role-mapping">
+				<h3>{{ t('stackiq', 'Role mapping') }}</h3>
+				<p>
+					{{ t('stackiq', 'Choose, per catalogue role, which of your own groups grant it. Members of those groups are kept in the role group the access rules use.') }}
+				</p>
+
+				<NcNoteCard v-if="roleNames.length === 0" type="info">
+					{{ t('stackiq', 'The role mapping is not loaded yet.') }}
+				</NcNoteCard>
+
+				<table v-else class="role-mapping-table" data-testid="role-mapping-table">
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('stackiq', 'Role') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Role group') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Groups that grant this role') }}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="role in roleNames"
+							:key="role"
+							:data-testid="'role-mapping-row-' + role">
+							<th scope="row">
+								{{ role }}
+							</th>
+							<td>
+								<code>{{ store.roleMapping[role].group }}</code>
+							</td>
+							<td>
+								<NcSelect
+									:modelValue="store.roleMapping[role].sourceGroups"
+									:options="groupOptions"
+									:multiple="true"
+									:taggable="true"
+									:inputLabel="t('stackiq', 'Groups that grant {role}', { role })"
+									:placeholder="t('stackiq', 'No group')"
+									@update:modelValue="setSourceGroups(role, $event)" />
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h4>{{ t('stackiq', 'Default role per organisation type') }}</h4>
+				<p>
+					{{ t('stackiq', 'A contact person of an organisation of this type holds this role.') }}
+				</p>
+				<div class="organisation-type-roles">
+					<NcSelect
+						v-for="type in organisationTypes"
+						:key="type"
+						:modelValue="store.organisationTypeRoles[type] || null"
+						:options="roleNames"
+						:inputLabel="organisationTypeLabel(type)"
+						:placeholder="t('stackiq', 'No role')"
+						:data-testid="'organisation-type-role-' + type"
+						@update:modelValue="setOrganisationTypeRole(type, $event)" />
+				</div>
+
+				<h4>{{ t('stackiq', 'Access review') }}</h4>
+				<NcTextField
+					:modelValue="String(store.accessReviewIntervalDays ?? '')"
+					type="number"
+					min="1"
+					max="3650"
+					:label="t('stackiq', 'Review interval in days')"
+					:helperText="t('stackiq', 'A person is due for review when their access was not reviewed within this many days.')"
+					data-testid="access-review-interval"
+					@update:modelValue="setReviewInterval($event)" />
+			</div>
 		</StandardTabs>
 
 		<!-- Info Content Slot -->
@@ -408,7 +490,7 @@
 import { showError, showSuccess } from '@nextcloud/dialogs'
 // Nextcloud Vue components
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 // Icons
@@ -430,6 +512,7 @@ export default {
 		NcButton,
 		NcTextField,
 		NcNoteCard,
+		NcSelect,
 		Plus,
 		Close,
 		Alert,
@@ -546,7 +629,41 @@ export default {
 				this.genericUserGroups.length > 0
 				|| this.organizationAdminGroups.length > 0
 				|| this.superUserGroups.length > 0
+				|| this.roleNames.length > 0
 			)
+		},
+
+		/**
+		 * The catalogue roles, in the order the server lists them.
+		 *
+		 * @return {string[]} The roles.
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		roleNames() {
+			return Object.keys(this.store.roleMapping || {})
+		},
+
+		/**
+		 * The organisation types that have a default role setting.
+		 *
+		 * @return {string[]} The stored organisation type values.
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		organisationTypes() {
+			return Object.keys(this.store.organisationTypeRoles || {})
+		},
+
+		/**
+		 * The Nextcloud groups to choose from, without the role groups themselves.
+		 *
+		 * @return {string[]} The group ids.
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		groupOptions() {
+			const roleGroups = Object.values(this.store.roleMapping || {}).map((entry) => entry.group)
+			return (this.store.allGroups || [])
+				.map((group) => (typeof group === 'string' ? group : group.id))
+				.filter((id) => id && !roleGroups.includes(id))
 		},
 	},
 
@@ -560,6 +677,68 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * Set the groups that grant a role.
+		 *
+		 * @param {string} role The catalogue role.
+		 * @param {Array<string|object>} groups The chosen groups.
+		 * @return {void}
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		setSourceGroups(role, groups) {
+			const ids = (groups || [])
+				.map((group) => (typeof group === 'string' ? group : group?.id || group?.label || ''))
+				.map((id) => id.trim())
+				.filter((id, index, all) => id !== '' && all.indexOf(id) === index)
+			this.store.roleMapping[role] = {
+				...this.store.roleMapping[role],
+				sourceGroups: ids,
+			}
+		},
+
+		/**
+		 * Set the default role of an organisation type; empty means none.
+		 *
+		 * @param {string} type The stored organisation type.
+		 * @param {string|null} role The role, or null for none.
+		 * @return {void}
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		setOrganisationTypeRole(type, role) {
+			this.store.organisationTypeRoles = {
+				...this.store.organisationTypeRoles,
+				[type]: role || null,
+			}
+		},
+
+		/**
+		 * Set the review interval from the field's text.
+		 *
+		 * @param {string} value The days, as typed.
+		 * @return {void}
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+		 */
+		setReviewInterval(value) {
+			const days = parseInt(value, 10)
+			this.store.accessReviewIntervalDays = Number.isNaN(days) ? null : days
+		},
+
+		/**
+		 * The label of an organisation type's default role field.
+		 *
+		 * @param {string} type The stored organisation type.
+		 * @return {string} The label.
+		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+		 */
+		organisationTypeLabel(type) {
+			const labels = {
+				Municipality: t('stackiq', 'Municipality'),
+				Supplier: t('stackiq', 'Supplier'),
+				Collaboration: t('stackiq', 'Collaboration'),
+				Community: t('stackiq', 'Community'),
+			}
+			return labels[type] || type
+		},
 
 		/**
 		 * Get description for a group
@@ -716,6 +895,31 @@ export default {
 </script>
 
 <style scoped>
+.role-mapping-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 16px 0 24px;
+}
+
+.role-mapping-table th,
+.role-mapping-table td {
+	padding: 8px;
+	text-align: start;
+	vertical-align: middle;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.role-mapping-table td:last-child {
+	min-width: 260px;
+}
+
+.organisation-type-roles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 12px;
+	margin-bottom: 24px;
+}
+
 .generic-groups-section,
 .organization-admin-groups-section,
 .super-user-groups-section {

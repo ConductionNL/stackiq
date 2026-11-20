@@ -43,6 +43,7 @@ use OCA\Stackiq\EventListener\ModuleComponentListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\StackiqEventListener;
+use OCA\Stackiq\EventListener\RoleGrantLoginListener;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UsageClassificationSubscriber;
 use OCA\Stackiq\EventListener\ConnectionShareSubscriber;
@@ -95,6 +96,7 @@ final class ListenerRegistrarTest extends TestCase {
 		self::assertSame(
 			[
 				[UserLoggedInEvent::class, TestEventListener::class],
+				[UserLoggedInEvent::class, RoleGrantLoginListener::class],
 				[ObjectCreatedEvent::class, ModuleComplianceSubscriber::class],
 				[ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class],
 				[ObjectCreatedEvent::class, UsageClassificationSubscriber::class],
