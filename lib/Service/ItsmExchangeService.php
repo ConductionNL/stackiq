@@ -60,13 +60,6 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	public const ENABLED_KEY = 'itsm_exchange_enabled';
 
 	/**
-	 * The app setting holding the lifecycle state applications are sent from.
-	 *
-	 * @var string
-	 */
-	public const SEND_FROM_KEY = 'itsm_exchange_send_from';
-
-	/**
 	 * The register every stackiq flow writes to.
 	 *
 	 * @var string
@@ -188,7 +181,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 			'flows'        => ($config['flows'] ?? []),
 			'setUpAt'      => ($config['setUpAt'] ?? null),
 			'desks'        => $desks,
-			'sendFrom'     => $this->sendFrom(),
+			'sendFrom'     => (new ItsmSendFrom(appConfig: $this->appConfig))->current(),
 			'lifecycleStates' => ItsmSendFrom::STATES,
 		];
 	}//end status()
@@ -249,7 +242,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				'DESK_BASE'       => $base,
 				'TEMPLATE_ID'     => $templateId,
 				'CALL_QUERY'      => $profile['callQuery'],
-				'SEND_STATES'     => ItsmSendFrom::statesFrom(state: $this->sendFrom()),
+				'SEND_STATES'     => (new ItsmSendFrom(appConfig: $this->appConfig))->states(),
 			];
 			if ($key === 'file') {
 				$values['SYNC']   = 'itsm-file-applications';
@@ -278,33 +271,8 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function chooseSendFrom(string $state): ?string {
-		if ($state === '') {
-			$state = ItsmSendFrom::DEFAULT;
-		}
-
-		if (ItsmSendFrom::isState(state: $state) === false) {
-			return 'Nothing was created. ' . ItsmSendFrom::unknown(state: $state);
-		}
-
-		$this->appConfig->setValueString(AppIdentity::APP_ID, self::SEND_FROM_KEY, $state);
-		return null;
+		return (new ItsmSendFrom(appConfig: $this->appConfig))->choose(state: $state);
 	}//end chooseSendFrom()
-
-	/**
-	 * The lifecycle state applications are sent from: the stored choice, else the default.
-	 *
-	 * @return string The state.
-	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
-	 */
-	private function sendFrom(): string {
-		$state = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SEND_FROM_KEY, ItsmSendFrom::DEFAULT);
-		if (ItsmSendFrom::isState(state: $state) === false) {
-			return ItsmSendFrom::DEFAULT;
-		}
-
-		return $state;
-	}//end sendFrom()
 
 	/**
 	 * Set up the exchange: check every flow, then create or update them all.

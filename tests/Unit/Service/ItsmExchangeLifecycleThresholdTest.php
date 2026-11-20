@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use InvalidArgumentException;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCA\Stackiq\Service\Itsm\ItsmSendFrom;
 use OCA\Stackiq\Service\ItsmExchangeService;
@@ -159,23 +158,19 @@ class ItsmExchangeLifecycleThresholdTest extends TestCase {
 	}//end sendCondition()
 
 	/**
-	 * The states from a state on follow the usage lifecycle, and an unknown state is refused.
+	 * The states sent follow the usage lifecycle from the chosen one on.
 	 *
 	 * @return void
 	 */
-	public function testTheStatesFromAStateFollowTheLifecycle(): void {
-		$this->assertSame(
-			expected: ['In production', 'To be phased out', 'Phased out'],
-			actual: ItsmSendFrom::statesFrom(state: 'In production')
-		);
-		$this->assertSame(expected: ItsmSendFrom::STATES, actual: ItsmSendFrom::statesFrom(state: 'Acquisition'));
-		$this->assertTrue(condition: ItsmSendFrom::isState(state: 'Planned'));
-		$this->assertFalse(condition: ItsmSendFrom::isState(state: 'In gebruik'));
+	public function testTheStatesSentFollowTheLifecycle(): void {
+		$service = $this->service();
 
-		$this->expectException(exception: InvalidArgumentException::class);
-		$this->expectExceptionMessage(message: 'Unknown lifecycle state "In gebruik"');
-		ItsmSendFrom::statesFrom(state: 'In gebruik');
-	}//end testTheStatesFromAStateFollowTheLifecycle()
+		foreach (ItsmSendFrom::STATES as $index => $state) {
+			$this->assertNull(actual: $service->chooseSendFrom(state: $state));
+			$flows = $service->buildFlows(desk: 'topdesk', organisation: self::ORG, runAs: 'admin', location: 'https://rotterdam.topdesk.net');
+			$this->assertSame(expected: array_slice(ItsmSendFrom::STATES, $index), actual: self::sendCondition(flow: $flows['outbound'])[1], message: $state);
+		}
+	}//end testTheStatesSentFollowTheLifecycle()
 
 	/**
 	 * By default the outbound filter sends from "In production", so a planned application stays in stackiq.
@@ -229,7 +224,7 @@ class ItsmExchangeLifecycleThresholdTest extends TestCase {
 		$outbound = array_values(array_filter($this->saved, static fn (array $flow): bool => self::sendCondition(flow: $flow) !== []));
 		$this->assertCount(expectedCount: 1, haystack: $outbound);
 		$this->assertSame(expected: ['To be phased out', 'Phased out'], actual: self::sendCondition(flow: $outbound[0])[1]);
-		$this->assertSame(expected: 'To be phased out', actual: $this->settings[ItsmExchangeService::SEND_FROM_KEY]);
+		$this->assertSame(expected: 'To be phased out', actual: $this->settings[ItsmSendFrom::KEY]);
 		$this->assertSame(expected: 'To be phased out', actual: $service->status()['sendFrom']);
 	}//end testTheSetUpUsesTheChosenStateAndTheStatusReadsIt()
 
@@ -243,13 +238,16 @@ class ItsmExchangeLifecycleThresholdTest extends TestCase {
 		$service = $this->service();
 
 		$this->assertNull(actual: $service->chooseSendFrom(state: ''));
-		$this->assertSame(expected: 'In production', actual: $this->settings[ItsmExchangeService::SEND_FROM_KEY]);
+		$this->assertSame(expected: 'In production', actual: $this->settings[ItsmSendFrom::KEY]);
 
 		$refusal = $service->chooseSendFrom(state: 'Concept');
-		$this->assertSame(expected: 'Nothing was created. ' . ItsmSendFrom::unknown(state: 'Concept'), actual: $refusal);
-		$this->assertSame(expected: 'In production', actual: $this->settings[ItsmExchangeService::SEND_FROM_KEY]);
+		$this->assertSame(
+			expected: 'Unknown lifecycle state "Concept". Choose one of: Acquisition, Planned, In production, To be phased out, Phased out.',
+			actual: $refusal
+		);
+		$this->assertSame(expected: 'In production', actual: $this->settings[ItsmSendFrom::KEY]);
 
-		$this->settings[ItsmExchangeService::SEND_FROM_KEY] = 'Gepland';
+		$this->settings[ItsmSendFrom::KEY] = 'Gepland';
 		$this->assertSame(expected: 'In production', actual: $service->status()['sendFrom']);
 	}//end testAnEmptyChoiceIsTheDefaultAndAnUnknownStateIsRefused()
 }//end class
