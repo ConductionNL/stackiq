@@ -4,7 +4,7 @@
     "schemas": {
       "compliancy": {
         "slug": "compliancy",
-        "version": "0.0.13",
+        "version": "0.0.14",
         "properties": {
           "verifiedBy": {
             "description": "The reviewer who checked the evidence and marked the claim verified.",

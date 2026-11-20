@@ -661,6 +661,7 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 	 * @param array                  $query         The contract search.
 	 *
 	 * @return array|int The contracts found, as the object service answers them.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function searchContracts(ObjectServiceInterface $objectService, array $query): array|int {
 		try {

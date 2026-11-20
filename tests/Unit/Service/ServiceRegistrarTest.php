@@ -51,7 +51,7 @@ class ServiceRegistrarTest extends TestCase {
 	 * @return IRegistrationContext
 	 */
 	private function recordingContext(array &$aliases, array &$services): IRegistrationContext {
-		$context = $this->createMock(IRegistrationContext::class);
+		$context = $this->createMock(originalClassName: IRegistrationContext::class);
 		$context->method('registerServiceAlias')->willReturnCallback(
 			function (string $alias, string $target) use (&$aliases): void {
 				$aliases[$alias] = $target;
@@ -76,21 +76,21 @@ class ServiceRegistrarTest extends TestCase {
 		$aliases  = [];
 		$services = [];
 
-		(new ServiceRegistrar())->register($this->recordingContext($aliases, $services));
+		(new ServiceRegistrar())->register($this->recordingContext(aliases: $aliases, services: $services));
 
-		$this->assertSame('OCA\OpenRegister\Service\ObjectService', $aliases[ObjectServiceInterface::class]);
-		$this->assertSame(CatalogueLocator::class, $aliases[ObjectTypeLocatorInterface::class]);
-		$this->assertSame(SettingsService::class, $aliases[RegisterConfigReaderInterface::class]);
-		$this->assertSame(SettingsService::class, $aliases[SettingsServiceInterface::class]);
-		$this->assertCount(65, $aliases);
+		$this->assertSame(expected: 'OCA\OpenRegister\Service\ObjectService', actual: $aliases[ObjectServiceInterface::class]);
+		$this->assertSame(expected: CatalogueLocator::class, actual: $aliases[ObjectTypeLocatorInterface::class]);
+		$this->assertSame(expected: SettingsService::class, actual: $aliases[RegisterConfigReaderInterface::class]);
+		$this->assertSame(expected: SettingsService::class, actual: $aliases[SettingsServiceInterface::class]);
+		$this->assertCount(expectedCount: 66, haystack: $aliases);
 		$this->assertSame(
-			[
+			expected: [
 				'OCA\Stackiq\Service\Stackiq\OrganizationHandler',
 				'OCA\Stackiq\Service\Stackiq\ContactPersonHandler',
 				'OCA\Stackiq\Service\Stackiq\GroupHandler',
 				'OCA\Stackiq\Service\Stackiq\HierarchyHandler',
 			],
-			$services
+			actual: $services
 		);
 
 	}//end testRegisterBindsAliasesContractsAndHandlers()
@@ -104,12 +104,12 @@ class ServiceRegistrarTest extends TestCase {
 		$aliases  = [];
 		$services = [];
 
-		(new ServiceRegistrar())->registerDomainServices($this->recordingContext($aliases, $services));
+		(new ServiceRegistrar())->registerDomainServices($this->recordingContext(aliases: $aliases, services: $services));
 
-		$this->assertSame([], $aliases);
-		$this->assertContains(SettingsService::class, $services);
-		$this->assertContains(ModuleVersionService::class, $services);
-		$this->assertNotContains('OCA\Stackiq\Service\Stackiq\ContactPersonHandler', $services);
+		$this->assertSame(expected: [], actual: $aliases);
+		$this->assertContains(needle: SettingsService::class, haystack: $services);
+		$this->assertContains(needle: ModuleVersionService::class, haystack: $services);
+		$this->assertNotContains(needle: 'OCA\Stackiq\Service\Stackiq\ContactPersonHandler', haystack: $services);
 
 	}//end testRegisterDomainServicesRegistersFactoriesOnly()
 }//end class

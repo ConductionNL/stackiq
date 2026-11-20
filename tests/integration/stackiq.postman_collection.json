@@ -2000,7 +2000,7 @@
      ]
     },
     {
-     "name": "get aanbod NO AUTH (authz: PUBLIC endpoint, no org -> 200 empty)",
+     "name": "get aanbod NO AUTH (open data: PUBLIC endpoint -> 200, published entries only)",
      "request": {
       "auth": {
        "type": "noauth"
@@ -2048,13 +2048,27 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// AanbodController::getAanbod is annotated @PublicPage (by design - the public",
-         "// catalog of offers). Unauthenticated it has no 'current organization' so it",
-         "// returns 200 with an empty result set rather than 401. Asserting the real",
-         "// contract honestly (it does NOT require auth).",
+         "// AanbodController::getAanbod is @PublicPage (decision 392, vendor-visibility-rbac",
+         "// REQ-009): an anonymous caller gets the published modules, diensten and",
+         "// koppelingen in the open-data projection, never an unpublished entry and never",
+         "// an organisation-scoped field.",
          "pm.test('200 (public endpoint, not 401)', () => pm.response.to.have.status(200));",
          "const b = pm.response.json();",
-         "pm.test('empty results without an org context', () => pm.expect(b.results).to.eql([]));"
+         "pm.test('the paginated envelope', () => { pm.expect(b.results).to.be.an('array'); pm.expect(b.total).to.be.a('number'); });",
+         "const now = Date.now();",
+         "pm.test('every entry is published now', () => {",
+         "    b.results.forEach((entry) => {",
+         "        pm.expect(entry.publicationDate, entry.id).to.be.a('string');",
+         "        pm.expect(Date.parse(entry.publicationDate), entry.id).to.be.at.most(now);",
+         "        if (entry.depublicationDate) { pm.expect(Date.parse(entry.depublicationDate), entry.id).to.be.above(now); }",
+         "    });",
+         "});",
+         "pm.test('no organisation-scoped field', () => {",
+         "    b.results.forEach((entry) => {",
+         "        pm.expect(entry, entry.id).to.not.have.property('@self');",
+         "        Object.keys(entry).filter((key) => key !== '_aanbod_type').forEach((key) => pm.expect(key.startsWith('_'), key).to.be.false);",
+         "    });",
+         "});"
         ],
         "type": "text/javascript"
        }
