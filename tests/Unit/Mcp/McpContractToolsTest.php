@@ -19,6 +19,9 @@ use OCA\Stackiq\Mcp\McpAdminGate;
 use OCA\Stackiq\Mcp\McpArgumentValidator;
 use OCA\Stackiq\Mcp\McpContractGate;
 use OCA\Stackiq\Mcp\McpContractTools;
+use OCA\Stackiq\Mcp\McpDraftTools;
+use OCA\Stackiq\Mcp\McpReadTools;
+use OCA\Stackiq\Mcp\McpWriteTools;
 use OCA\Stackiq\Mcp\StackiqToolProvider;
 use OCP\IConfig;
 use OCP\IGroup;
@@ -95,7 +98,12 @@ class McpContractToolsTest extends TestCase {
 		$adminGate = new McpAdminGate($session, $groupManager);
 		$gate = new McpContractGate($adminGate, $this->approvals, $groupManager, $config);
 
-		return new StackiqToolProvider(new McpContractTools($adminGate, $gate, new McpArgumentValidator(), $this->approvals));
+		return new StackiqToolProvider(
+			new McpContractTools($adminGate, $gate, new McpArgumentValidator(), $this->approvals),
+			$this->createMock(McpReadTools::class),
+			$this->createMock(originalClassName: McpWriteTools::class),
+			$this->createMock(originalClassName: McpDraftTools::class)
+		);
 	}//end provider()
 
 	/**

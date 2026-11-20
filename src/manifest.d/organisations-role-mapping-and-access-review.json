@@ -1,0 +1,22 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "organisations-role-mapping-and-access-review: the Access review page, a child of Organisations. A custom page because it renders the organisation-scoped GET /api/access-review/{organisationUuid} answer (roles with their sources, last sign-in, review state) and its Keep access, Remove role and Disable account actions; no index type expresses per-row decisions over a derived, non-object list. The entry carries permission access.review, which the shell's permission list grants to Nextcloud admins and functional administrators.",
+	"menu": [
+		{
+			"id": "Organisaties",
+			"children": [
+				{ "id": "AccessReview", "label": "Access review", "icon": "AccountCheckOutline", "route": "AccessReview", "order": 40, "permission": "access.review" }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "AccessReview",
+			"route": "/organisaties/access-review",
+			"type": "custom",
+			"title": "Access review",
+			"component": "AccessReviewView",
+			"_note": "One row per person with an account: roles and where each comes from, last sign-in, account status, when and by whom access was last reviewed, and whether a review is due. The server answers Nextcloud admins for any organisation and functional administrators for their own, and refuses others."
+		}
+	]
+}

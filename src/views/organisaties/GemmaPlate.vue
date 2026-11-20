@@ -267,6 +267,7 @@
 				v-else-if="showPeers && peers"
 				:components="plateComponents"
 				:peers="peers" />
+			<CoverageViewMap :components="coverage.components" />
 		</template>
 	</div>
 </template>
@@ -287,12 +288,14 @@ import {
 import Download from 'vue-material-design-icons/Download.vue'
 import PeerUsageTable from '../../components/gemma/PeerUsageTable.vue'
 import { peerLabel } from '../../components/gemma/peerLabel.js'
+import CoverageViewMap from './CoverageViewMap.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import pinia from '../../pinia.js'
 import { useViewStore } from '../../store/modules/view.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import { peerApplicationsOf, peerIndex } from '../../utils/peerUsage.js'
+import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
 import {
 	filterCoverage,
 	filterGroups,
@@ -316,6 +319,7 @@ export default {
 		CnKpiGrid,
 		CnStatsBlock,
 		CnStatusBadge,
+		CoverageViewMap,
 		Download,
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -508,6 +512,16 @@ export default {
 			this.selectedView = option
 			await this.viewStore.fetchView(option.id)
 		}
+	},
+
+	/**
+	 * Load the organisations the picker offers.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+	 */
+	async mounted() {
+		await loadObjectTypeCollection('organization')
 	},
 
 	methods: {

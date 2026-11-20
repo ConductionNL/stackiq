@@ -10,6 +10,7 @@
     "components": [
         {
             "id": "",
+            "identifier": "",
             "name": "No id",
             "identifier": "",
             "group": "",
@@ -21,6 +22,7 @@
         },
         {
             "id": "fin",
+            "identifier": "",
             "name": "Financiële component",
             "identifier": "",
             "group": "Back-office",
@@ -39,6 +41,7 @@
         },
         {
             "id": "kb",
+            "identifier": "",
             "name": "Kennisbankcomponent",
             "identifier": "",
             "group": "Front-office",
@@ -52,6 +55,7 @@
         },
         {
             "id": "ab",
+            "identifier": "",
             "name": "Alpha",
             "identifier": "",
             "group": "Mid-office",
@@ -70,6 +74,7 @@
         },
         {
             "id": "doc",
+            "identifier": "",
             "name": "Documentbeheercomponent",
             "identifier": "",
             "group": "Mid-office",
@@ -88,6 +93,7 @@
         },
         {
             "id": "zrc",
+            "identifier": "id-zrc",
             "name": "Zaakregistratiecomponent",
             "identifier": "id-zrc",
             "group": "Mid-office",

@@ -45,6 +45,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
@@ -82,6 +85,12 @@ class ModerationService implements ModerationServiceInterface {
 	 * Rejected state — shared field value across types.
 	 */
 	public const STATUS_REJECTED = 'rejected';
+
+	/**
+	 * The organisation status an approved registration gets, so user
+	 * provisioning treats it as active.
+	 */
+	public const ORGANISATION_STATUS_ACTIVE = 'Active';
 
 	/**
 	 * Constructor.
@@ -167,6 +176,10 @@ class ModerationService implements ModerationServiceInterface {
 			type: $type,
 			mutator: static function (array $data) use ($config): array {
 				$data[$config['statusField']] = $config['approvedValue'];
+				foreach ($config['alsoOnApprove'] as $field => $value) {
+					$data[$field] = $value;
+				}
+
 				if ($config['stampPublication'] === true) {
 					$data['publicationDate'] = gmdate('Y-m-d\TH:i:sP');
 					$data['depublicationDate'] = null;
@@ -214,18 +227,27 @@ class ModerationService implements ModerationServiceInterface {
 	 * state, what its "approved" value is, and whether approval also stamps
 	 * `publicatiedatum` (organisatie only — beoordeeling's public visibility
 	 * is governed entirely by its own `status` field via the schema RBAC
-	 * rule, no publication date involved).
+	 * rule, no publication date involved), and the other fields approval sets
+	 * in the same save (organisatie: its own `status` becomes Active, so the
+	 * organisation is active everywhere, not only in the moderation queue).
 	 *
 	 * @param string $type The moderated object type.
 	 *
-	 * @return array{statusField:string, approvedValue:string, stampPublication:bool} The config.
+	 * @return array{statusField:string, approvedValue:string, stampPublication:bool, alsoOnApprove:array<string, string>} The config.
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md#requirement-approving-a-self-registered-organisation-makes-it-active-req-clr-010
 	 */
 	private function typeConfig(string $type): array {
 		if ($type === self::MODERATED_TYPE_REVIEW) {
-			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false];
+			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false, 'alsoOnApprove' => []];
 		}
 
-		return ['statusField' => 'registrationStatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
+		return [
+			'statusField'      => 'registrationStatus',
+			'approvedValue'    => self::STATUS_ACTIVE,
+			'stampPublication' => true,
+			'alsoOnApprove'    => ['status' => self::ORGANISATION_STATUS_ACTIVE],
+		];
 	}//end typeConfig()
 
 	/**
@@ -258,8 +280,10 @@ class ModerationService implements ModerationServiceInterface {
 		try {
 			$entity = $objectService->find(
 				id: $uuid,
-				register: (string)$target['register'],
-				schema: (string)$target['schema'],
+				options: new ObjectFindOptions(
+					register: (string)$target['register'],
+					schema: (string)$target['schema']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -288,9 +312,10 @@ class ModerationService implements ModerationServiceInterface {
 		try {
 			$objectService->saveObject(
 				object: $data,
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $uuid
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('ModerationService: ' . $action . ' failed', ['type' => $type, 'uuid' => $uuid, 'error' => $e->getMessage()]);

@@ -29,9 +29,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use DateTimeImmutable;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -64,9 +66,11 @@ class DemoDataService implements DemoDataServiceInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppManager        $appManager Resolves this app's path and version.
-	 * @param ContainerInterface $container  Resolves OpenRegister's importer.
-	 * @param LoggerInterface    $logger     Records what was imported.
+	 * @param IAppManager        $appManager  Resolves this app's path and version.
+	 * @param ContainerInterface $container   Resolves OpenRegister's importer.
+	 * @param LoggerInterface    $logger      Records what was imported.
+	 * @param ITimeFactory|null  $timeFactory The clock `{{today...}}` placeholders resolve against; the system
+	 *                                        clock when null.
 	 *
 	 * @return void
 	 */
@@ -74,6 +78,7 @@ class DemoDataService implements DemoDataServiceInterface {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly ?ITimeFactory $timeFactory = null,
 	) {
 	}//end __construct()
 
@@ -234,25 +239,43 @@ class DemoDataService implements DemoDataServiceInterface {
 	}//end install()
 
 	/**
-	 * Hand the descriptor to OpenRegister's importer, schemas pinned first.
+	 * Hand the descriptor to OpenRegister's importer, relative dates resolved and schemas pinned first.
 	 *
 	 * @param array<string, mixed> $data The decoded descriptor.
 	 *
 	 * @return mixed The importer's reply.
 	 *
 	 * @throws RuntimeException When OpenRegister is absent.
-	 */
+	 * @SuppressWarnings(PHPMD.StaticAccess) RelativeDemoDates::resolveDurations() is a pure function of the data and the clock.
+	*/
 	private function runImport(array $data): mixed {
 		$importer = $this->configurationService();
 
+		// Dates written as `{{today+45d}}` become real dates of the import day, so
+		// a demo contract seeded to read Expiring still does months later.
+		$data = (new RelativeDemoDates())->resolve(data: $data, today: $this->today());
+
 		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
-			data: $this->pinSchemasToTheirRegisters(data: $data),
+			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new DateTimeImmutable())),
 			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);
 
 	}//end runImport()
+
+	/**
+	 * The import day.
+	 *
+	 * @return DateTimeImmutable
+	 */
+	private function today(): DateTimeImmutable {
+		if ($this->timeFactory !== null) {
+			return DateTimeImmutable::createFromMutable($this->timeFactory->getDateTime());
+		}
+
+		return new DateTimeImmutable();
+	}//end today()
 
 	/**
 	 * Log what an import brought in.

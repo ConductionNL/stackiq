@@ -1,0 +1,167 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-decision-register: the architectureDecision schema in lib/Settings/register.d/architecture-decision-register.json. menu-layout.json relocates the entry under the Architecture group (architecture-views-editor); until that group exists the relocation leaves it at top level. Status transitions come from the schema's x-openregister-lifecycle; submit, accept, reject and supersede run OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard.",
+	"menu": [
+		{
+			"id": "Architectuurbesluiten",
+			"label": "Architecture decisions",
+			"icon": "ScaleBalance",
+			"route": "Architectuurbesluiten"
+		}
+	],
+	"pages": [
+		{
+			"id": "Architectuurbesluiten",
+			"route": "/architectuurbesluiten",
+			"type": "index",
+			"title": "Architecture decisions",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "architectureDecision",
+				"description": "The architecture decisions of your organisation, each reviewed by a second person and linked to the applications and GEMMA elements it affects.",
+				"columns": [
+					"title",
+					"status",
+					"category",
+					"impact",
+					"reviewer"
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "In review",
+						"filter": {
+							"status": "in review"
+						},
+						"icon": "AccountClockOutline"
+					},
+					{
+						"label": "Accepted",
+						"filter": {
+							"status": "accepted"
+						},
+						"icon": "CheckCircleOutline"
+					},
+					{
+						"label": "To review by me",
+						"filter": {
+							"reviewer": "@me",
+							"status": "in review"
+						},
+						"icon": "AccountCheckOutline"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ArchitectuurbesluitDetail",
+			"route": "/architectuurbesluiten/:id",
+			"type": "detail",
+			"title": "Architecture decision",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "architectureDecision",
+				"_note": "The decision text 8 wide, classification and review 4 wide, then the linked applications in use and elements. Lifecycle actions come from the schema; the History tab shows each transition.",
+				"lifecycleActions": {
+					"field": "status"
+				},
+				"widgets": [
+					{
+						"id": "ad-text",
+						"type": "data",
+						"title": "Decision",
+						"icon": "ScaleBalance",
+						"content": {
+							"columns": 1,
+							"include": [
+								"title",
+								"context",
+								"decision",
+								"alternatives",
+								"consequences"
+							]
+						}
+					},
+					{
+						"id": "ad-review",
+						"type": "data",
+						"title": "Classification and review",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"columns": 1,
+							"include": [
+								"category",
+								"impact",
+								"status",
+								"reviewer",
+								"decidedOn",
+								"supersedes",
+								"supersededBy",
+								"boardDecisions"
+							]
+						}
+					},
+					{
+						"id": "ad-related",
+						"type": "related",
+						"title": "Applications in use and elements",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "ad-text",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 8
+					},
+					{
+						"id": "2",
+						"widgetId": "ad-review",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
+					},
+					{
+						"id": "3",
+						"widgetId": "ad-related",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

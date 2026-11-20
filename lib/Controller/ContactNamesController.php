@@ -56,6 +56,10 @@ use Throwable;
  * @package  OCA\Stackiq\Controller
  *
  * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) phpmd 3 counts the route attributes
+ *   (NoAdminRequired, NoCSRFRequired, UserRateLimit) as coupling; the controller itself
+ *   reads contact persons and looks their UIDs up, nothing more.
  */
 class ContactNamesController extends Controller {
 

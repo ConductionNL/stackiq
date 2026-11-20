@@ -8,7 +8,7 @@
 
 ## 1. Manifest observability block
 
-- [ ] 1.1 Add `observability` to `src/manifest.json`: `health.checks = [{id: database, type: database}, {id: openregister, type: orAvailable}]` (default `statusCodePolicy: adr006`); `metrics = [{name: gebruik_total, type: gauge, help: "Gebruik (usage) records", source: {kind: objectCount, register: stackiq, schema: gebruik}}]` — implicit `stackiq_info`/`stackiq_up` come free
+- [x] 1.1 Add `observability` to `src/manifest.json`: `health.checks = [{id: database, type: database}, {id: openregister, type: orAvailable}]` (default `statusCodePolicy: adr006`); `metrics = [{name: gebruik_total, type: gauge, help: "Gebruik (usage) records", source: {kind: objectCount, register: stackiq, schema: gebruik}}]` — implicit `stackiq_info`/`stackiq_up` come free
 - [ ] 1.2 Validate the block via ManifestService diagnostics (no errors); confirm `stackiq`/`gebruik` slugs resolve against the imported register
 
 ## 2. Wiring, deletions, real health/metrics routes

@@ -23,6 +23,8 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpis"><slot /></div>' },
 	CnStatsBlock: { props: ['title', 'count'], template: '<div class="stat">{{ title }}={{ count }}</div>' },
 	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+	// The coverage map below the plate (REQ-RCC-003) has its own spec, coverageViewMap.spec.js.
+	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
 // The view picker's store is not under test here; it holds no views.
@@ -35,6 +37,7 @@ vi.mock('../../src/store/store.js', () => store)
 const { default: GemmaPlate } = await import('../../src/views/organisaties/GemmaPlate.vue')
 
 const stubs = {
+	CoverageViewMap: { props: ['components'], template: '<div class="coverage-map" :data-count="components.length" />' },
 	NcButton: {
 		props: ['variant', 'href'],
 		emits: ['click'],

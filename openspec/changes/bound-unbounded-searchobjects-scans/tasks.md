@@ -47,15 +47,17 @@
 
 ## 5. Verification
 
-- [ ] 5.1 PHPUnit: for at least one representative call site per service
+- [x] 5.1 PHPUnit: for at least one representative call site per service
   (`ViewService`, `OrganizationSyncService`, `UserProfileUpdatedEventListener`),
   assert the query array passed to `searchObjects()` contains `_limit`.
+  - Met by tests that pin the exact query: `ViewServiceGebruikDataGoldenTest` (`_limit` 500 and 1000 on the gebruik reads), `OrganizationSyncRelatedContactsGoldenTest` with `golden/organizationSyncRelatedContacts.json` (all 15 `searchObjects` calls carry `_limit` 500) and `UserProfileContactSyncGoldenTest` (`_limit` 5 on the username and search lookups). Checked 17 Nov 2026.
 - [x] 5.2 Manual/log verification: confirm no call site listed in the
   proposal was missed (re-run the `_limit`-proximity grep from the
   proposal and confirm 0 remaining unbounded call sites among the ones
   enumerated).
 - [ ] 5.3 Run `composer check:strict` (PHPCS/PHPMD/Psalm/PHPStan) — no new
   violations.
+  - 17 Nov 2026: the build added a PHPMD `StaticAccess` on every `SearchBounds::bounded()` call; each of those methods now carries the repository's reasoned `@SuppressWarnings(PHPMD.StaticAccess)`, so PHPMD reports none for `SearchBounds`. PHPCS (no new findings) and PHPStan (no errors) are clean on the touched files. Left: Psalm, which needs PHP >= 8.3.16 and the build container runs 8.3.6.
 
 ## Build notes
 

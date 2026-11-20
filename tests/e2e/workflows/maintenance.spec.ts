@@ -67,7 +67,7 @@ function daysAhead(days: number, hour: number): string {
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: `${RUN_ID} municipality` })
+	ids.org = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
 	ids.x = await seed('module', { name: product, roadmapStatement: statement })
 	ids.v3 = await seed('moduleVersion', {
 		module: ids.x,

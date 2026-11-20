@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "software-review": {
+        "version": "0.1.5",
         "properties": {
           "auteur": {
             "type": "string",
@@ -20,12 +21,13 @@
               "rejected"
             ],
             "default": "pending",
-            "description": "Moderation status. Every new review is forced to 'pending' server-side by ReviewService regardless of client input; only an admin approval/rejection decision (ModerationService, reusing the organisatie moderation pattern) may transition it. The public RBAC read rule below only ever matches 'approved'.",
+            "description": "Moderation status. Every new review is forced to 'pending' server-side by ReviewService regardless of client input; only an admin approval/rejection decision (ModerationService, reusing the organisatie moderation pattern) may transition it. The public RBAC read rule below only ever matches 'approved'. Hidden on the review form (REQ-CLR-008): the author never sets it.",
             "visible": true,
             "facetable": true,
             "title": "Status",
             "order": 11,
-            "example": "Bijvoorbeeld: pending"
+            "example": "Bijvoorbeeld: pending",
+            "hideOnForm": true
           }
         },
         "authorization": {
@@ -49,16 +51,70 @@
               },
               "crossOrganisation": true
             },
-            "aanbod-beheerder",
-            "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "ambtenaar",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "vng-raadpleger",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "software-catalog-users",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
             "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "status": "approved"
+              },
+              "crossOrganisation": true
+            }
           ],
           "update": [
             "software-catalog-admins",

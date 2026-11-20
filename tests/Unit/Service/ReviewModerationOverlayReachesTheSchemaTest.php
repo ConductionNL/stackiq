@@ -58,18 +58,18 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			(string)file_get_contents($root.'/lib/Settings/softwarecatalogus_register.json'),
 			true
 		);
-		$this->assertIsArray($base, 'the register JSON must parse');
+		$this->assertIsArray(actual: $base, message: 'the register JSON must parse');
 
 		$method = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
 		$method->setAccessible(true);
 
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
-		$this->assertNotEmpty($fragments, 'there must be fragments to merge');
+		$this->assertNotEmpty(actual: $fragments, message: 'there must be fragments to merge');
 
 		sort($fragments);
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
-			$this->assertIsArray($overlay, basename($fragment).' must parse');
+			$this->assertIsArray(actual: $overlay, message: basename($fragment).' must parse');
 			$base = $method->invoke(null, $base, $overlay);
 		}
 
@@ -97,7 +97,7 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$declared = array_keys($base['components']['schemas']);
 
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
-		$this->assertNotEmpty($fragments);
+		$this->assertNotEmpty(actual: $fragments);
 
 		// A fragment may also add a schema of its own, provided it registers it
 		// in a register's schema list (ADR-037); an overlay of a misspelt slug
@@ -112,14 +112,22 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$orphans = [];
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
-			foreach (array_keys(($overlay['components']['schemas'] ?? [])) as $slug) {
-				if (in_array($slug, $declared, true) === false) {
+			// A fragment that declares a whole schema (slug and properties) and
+			// attaches it to a register adds it, rather than overlaying one.
+			$added = [];
+			foreach (($overlay['components']['registers'] ?? []) as $register) {
+				$added = array_merge($added, ($register['schemas'] ?? []));
+			}
+
+			foreach (($overlay['components']['schemas'] ?? []) as $slug => $schema) {
+				$isNew = in_array($slug, $added, true) === true && ($schema['slug'] ?? null) === $slug && isset($schema['properties']) === true;
+				if (in_array($slug, $declared, true) === false && $isNew === false) {
 					$orphans[] = basename($fragment).' -> '.$slug;
 				}
 			}
 		}
 
-		$this->assertSame([], $orphans, 'a fragment overlays a schema the register does not declare');
+		$this->assertSame(expected: [], actual: $orphans, message: 'a fragment overlays a schema the register does not declare');
 
 	}//end testEveryFragmentOverlaysASchemaThatExists()
 
@@ -135,30 +143,30 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 	public function testTheReviewSchemaPublicReadIsGatedOnApproved(): void {
 		$slug = ReviewService::REVIEW_TYPE;
 		$this->assertSame(
-			$slug,
-			ModerationService::MODERATED_TYPE_REVIEW,
-			'the write path and the moderation queue must name the same schema'
+			expected: $slug,
+			actual: ModerationService::MODERATED_TYPE_REVIEW,
+			message: 'the write path and the moderation queue must name the same schema'
 		);
 
 		$schemas = $this->mergedRegister()['components']['schemas'];
-		$this->assertArrayHasKey($slug, $schemas);
+		$this->assertArrayHasKey(key: $slug, array: $schemas);
 
 		$read = $schemas[$slug]['authorization']['read'];
 
 		$this->assertNotContains(
-			'public',
-			$read,
-			'a bare public read makes every pending and rejected review world-readable'
+			needle: 'public',
+			haystack: $read,
+			message: 'a bare public read makes every pending and rejected review world-readable'
 		);
 		$this->assertNotContains(
-			['group' => 'public', 'crossOrganisation' => true],
-			$read,
-			'an unconditional public read makes every pending and rejected review world-readable'
+			needle: ['group' => 'public', 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'an unconditional public read makes every pending and rejected review world-readable'
 		);
 		$this->assertContains(
-			['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
-			$read,
-			'anonymous readers must see approved reviews and only those'
+			needle: ['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'anonymous readers must see approved reviews and only those'
 		);
 
 	}//end testTheReviewSchemaPublicReadIsGatedOnApproved()
@@ -180,12 +188,61 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$read = $base['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
 
 		$this->assertContains(
-			['group' => 'public', 'crossOrganisation' => true],
-			$read,
-			'the base is expected to carry the unconditional public read that the fragment removes; '
+			needle: ['group' => 'public', 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'the base is expected to carry the unconditional public read that the fragment removes; '
 			.'if the base has been gated directly, this test and the fragment are now redundant'
 		);
 
 	}//end testTheBaseRegisterIsUngatedWithoutTheFragment()
+
+	/**
+	 * A pending review is readable only by its author and the catalogue admins
+	 * (REQ-CLR-008). The author reaches it through OpenRegister's owner admit,
+	 * so every read rule but the admins' must match approved reviews only.
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md#requirement-a-pending-review-is-readable-only-by-its-author-and-the-moderators-req-clr-008
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheAdminsReadAReviewThatIsNotApproved(): void {
+		$read = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
+
+		$this->assertContains(needle: 'software-catalog-admins', haystack: $read, message: 'the moderators must read every review');
+
+		$ungated = [];
+		foreach ($read as $rule) {
+			if ($rule === 'software-catalog-admins') {
+				continue;
+			}
+
+			if (is_array($rule) === false || ($rule['match']['status'] ?? null) !== 'approved') {
+				$ungated[] = $rule;
+			}
+		}
+
+		$this->assertSame(expected: [], actual: $ungated, message: 'a group outside the admins would read pending and rejected reviews');
+
+		$groups = array_map(static fn ($rule): string => (string)($rule['group'] ?? $rule), $read);
+		$this->assertContains(needle: 'software-catalog-users', haystack: $groups, message: 'catalogue users still read approved reviews');
+		$this->assertContains(needle: 'public', haystack: $groups, message: 'anonymous readers still read approved reviews');
+
+	}//end testOnlyTheAdminsReadAReviewThatIsNotApproved()
+
+	/**
+	 * The review form does not offer the status, so its author cannot approve
+	 * their own review (REQ-CLR-008).
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md#requirement-a-pending-review-is-readable-only-by-its-author-and-the-moderators-req-clr-008
+	 *
+	 * @return void
+	 */
+	public function testTheReviewFormDoesNotOfferTheStatus(): void {
+		$status = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['properties']['status'];
+
+		$this->assertTrue(condition: ($status['hideOnForm'] ?? false), message: 'the author must not set the status on the form');
+		$this->assertSame(expected: 'pending', actual: $status['default']);
+
+	}//end testTheReviewFormDoesNotOfferTheStatus()
 
 }//end class

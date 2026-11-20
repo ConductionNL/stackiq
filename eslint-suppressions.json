@@ -219,20 +219,6 @@
       "count": 1
     }
   },
-  "src/modals/object/MergeObject.vue": {
-    "@nextcloud/no-deprecated-library-props": {
-      "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 10
-    },
-    "no-console": {
-      "count": 3
-    },
-    "vue/prefer-define-options": {
-      "count": 1
-    }
-  },
   "src/modals/object/MergeOrganisationConfirmDialog.vue": {
     "@nextcloud/no-deprecated-library-props": {
       "count": 1
@@ -303,13 +289,10 @@
       "count": 8
     },
     "jsdoc/require-param-type": {
-      "count": 71
+      "count": 69
     },
     "no-console": {
       "count": 11
-    },
-    "no-useless-assignment": {
-      "count": 1
     },
     "vue/prefer-define-options": {
       "count": 1

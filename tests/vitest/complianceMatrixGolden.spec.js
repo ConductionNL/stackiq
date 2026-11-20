@@ -63,6 +63,8 @@ function dataSet(seed) {
 			evidence: pick(EVIDENCE),
 			evidenceReference: pick(REFS),
 			url: pick(URLS),
+			// REQ-CLR-022: a reviewer marked every record, so the evidenced ones read verified as before.
+			verifiedBy: 'Rita Reviewer',
 		}
 		return pick([() => data, () => ({ id: 'r' + i, object: data })])()
 	})

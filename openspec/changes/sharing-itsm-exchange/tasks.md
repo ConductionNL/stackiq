@@ -49,7 +49,7 @@
   - GIVEN a signed-in admin WHEN the CMDB page opens THEN it names what stackiq records and what it does not, links to each list, and shows the exchange status
   - GIVEN a usage with a service desk reference WHEN Applications in use opens THEN the Service desk column links to the record
 - [x] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/itsm-exchange.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/itsm-exchange.spec.ts`; 2/2 on a live NC 34 instance, 2026-11-17)
 
 ### Task 6: Live run against the mocks
 - **spec_ref**: openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-004-a-write-never-echoes-back

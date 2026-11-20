@@ -16,22 +16,22 @@
 - **acceptance_criteria**:
   - GIVEN a usage of an application WHEN a vulnerability is reported for it THEN the usage's application owner is a recipient
   - GIVEN the subject templates WHEN checked THEN every placeholder names a schema property
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/VulnerabilityNotificationRuleTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/VulnerabilityNotificationRuleTest.php`)
 
 ### Task 3: Tell the users of an application about its new version
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/softwarecatalog-notifications/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module-version-published recipients)
 - **acceptance_criteria**:
   - GIVEN a usage of an application WHEN a version of it is published THEN the usage's application owner is a recipient
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/VersionNotificationRuleTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/VersionNotificationRuleTest.php`)
 
 ### Task 4: Record the module versions a vulnerability affects
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (vulnerability.moduleVersions), `src/manifest.json` (vulnerability and module version pages)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/vulnerability-versions.spec.ts`)
+- [x] Implement (`register.d/vulnerability-affected-versions.json`: `vulnerability.moduleVersions`, related module versions next to `modules`, version 1.0.23, shown by KwetsbaarheidDetail's data widget; ModuleversieDetail lists the vulnerabilities recorded against the version (`mv-vulnerabilities`, filter `moduleVersions` = the version))
+- [x] Test (PHPUnit `tests/Unit/Settings/VulnerabilityAffectedVersionsTest.php`; Playwright `tests/e2e/workflows/vulnerability-versions.spec.ts`, written, needs a live run)
 
 ### Task 5: Link AI systems to business processes
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/ai-system-inventory/spec.md
@@ -43,26 +43,26 @@
 ### Task 6: Offer the reference components on the application form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/reference-component-placement/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module.referenceComponents not hideOnForm, picker register), `src/manifest.json` (ModuleDetail md-data)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/reference-component-placement.spec.ts`)
+- [x] Implement (`lib/Settings/register.d/reference-component-placement.json`: `referenceComponents` is no longer `hideOnForm`, and its items carry `x-external-register: vng-gemma` and `x-label-field: name`, so the form's picker reads the GEMMA elements, filtered to reference components, from the register that holds them; ModuleDetail's md-data shows the field)
+- [x] Test (PHPUnit `tests/Unit/Settings/ReferenceComponentPlacementTest.php`; Playwright `tests/e2e/workflows/reference-component-placement.spec.ts`, written, needs a live run. The GEMMA plate draws applications from usages' `usedForReferenceComponents`, not from this field: the plate half of the scenario is not built here)
 
 ### Task 7: Keep pending reviews hidden on the Reviews index, and take status off the form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings/spec.md
 - **files**: `lib/Settings/register.d/catalog-ratings.json`, `src/manifest.json` (Reviews index)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/review-moderation.spec.ts`)
+- [x] Implement (`catalog-ratings.json`: every read rule but `software-catalog-admins` matches `status: approved`, so a pending or rejected review reaches only its author, through OpenRegister's owner admit, and the admins; `status` is `hideOnForm`, so the index's form no longer offers it and a new review keeps the default `pending`; the Reviews index reads through the same rules, no manifest change needed)
+- [x] Test (PHPUnit `tests/Unit/Service/ReviewModerationOverlayReachesTheSchemaTest.php`: the read rules and the hidden status; Playwright `tests/e2e/workflows/review-moderation.spec.ts`, written, needs a live run)
 
 ### Task 8: Make an approved organisation active
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md
 - **files**: `lib/Service/ModerationService.php`
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ModerationServiceTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ModerationServiceTest.php`)
 
 ### Task 9: Resolve the standard version picker on a connection
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalogue-connection-pages/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (connection.standardVersions), `src/manifest.d/connections.json`
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/connections.spec.ts`)
+- [x] Implement (`register.d/standard-version-pickers.json`: `connection.standardVersions` items carry `x-external-register: vng-gemma` and `x-label-field: name`, so the form's picker lists the GEMMA standard versions (still filtered on `gemmaType=standaardversie`) from the register that holds them; KoppelingDetail's kp-data shows `standardVersions`)
+- [x] Test (PHPUnit `tests/Unit/Settings/StandardVersionPickersTest.php`; the Playwright scenario in `tests/e2e/workflows/connections.spec.ts` needs a live run)
 
 ### Task 10: Test the built behaviour the matrix rows claim
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/proposal.md
@@ -74,8 +74,8 @@
 ### Task 11: Open a vulnerability on its own page with the exposed organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
 - **files**: `src/views/KwetsbaarhedenView.vue` (row opens KwetsbaarheidDetail, not the generic modal), `src/manifest.json` (VulnerabilityExposurePanel)
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/vulnerabilities.spec.ts`)
+- [x] Implement (`KwetsbaarhedenView.openDetail` routes a row to KwetsbaarheidDetail, whose data widget shows severity, affected applications and versions and whose Exposure tab (`VulnerabilityExposurePanel`, already on the page) lists the organisations and their in-production usages; the record modal stays only as the fallback without a router)
+- [x] Test (vitest `kwetsbaarhedenViewRender.spec.js`; Playwright `tests/e2e/workflows/vulnerabilities.spec.ts`, written, needs a live run)
 
 ### Task 12: A public sign-up form for new organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md
@@ -94,55 +94,55 @@
 - **files**: `tests/Unit/Controller/ViewControllerTest.php` (new)
 - **acceptance_criteria**:
   - REQ-CLR-020 and REQ-CLR-021 each have a test that passes against the current code
-- [ ] Test
+- [x] Test (PHPUnit `tests/Unit/Controller/ViewControllerTest.php`: REQ-CLR-021, the list with id and name and a view without enrichment parameters returned as imported; `tests/Unit/Settings/HostingModelFieldsTest.php`: REQ-CLR-020, Hosting offers IaaS and PaaS next to on-premises and SaaS and is filterable, hosting location and jurisdiction record NL)
 
 ### Task 15: A reviewer outside the supplier marks a compliance claim verified
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy verifiedBy, verifiedAt), `src/utils/complianceMatrix.js` (verified needs verifiedBy, not evidence alone), `src/views/ComplianceMatrixView.vue`
 - **acceptance_criteria**:
   - GIVEN a claim with evidence and no reviewer WHEN the matrix renders THEN the cell reads claimed
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+- [x] Implement (`register.d/compliance-claim-verification.json`: compliancy `verifiedBy`, `verifiedAt`, `verifiedByOrganisation`, hidden on the form, version 0.0.13; `POST /api/compliancy/{id}/verify` (`ComplianceVerificationController`, `ComplianceVerificationService`): a user in admin, software-catalog-admins or functioneel-beheerder whose active organisation is not the module's provider marks an evidenced claim verified, every refusal before the write, an unknown supplier refuses; `ComplianceVerificationGuard` refuses those fields on every other create and update and clears them when the evidence changes; `complianceMatrix.js` reads verified only with evidence and `verifiedBy`; the matrix cell shows "Verified by <name> on <date>" and offers Mark as verified on a claimed cell with evidence)
+- [x] Test (PHPUnit `ComplianceVerificationTest`, `ComplianceVerificationServiceTest`, `ComplianceVerificationGuardTest`, `ComplianceVerificationControllerTest`; vitest `complianceMatrix.spec.js`; Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`, written, needs a live run)
 
 ### Task 16: List the organisations waiting in draft on the dashboard widget
 - **spec_ref**: openspec/specs/fe-organizations/spec.md
 - **files**: `src/views/widgets/ConceptOrganisatiesWidget.vue` (filter on status `Draft`, accept writes `Active`)
 - **acceptance_criteria**:
   - GIVEN an organisation with status Draft WHEN the dashboard opens THEN the widget lists it, and accepting it saves status Active
-- [ ] Implement
-- [ ] Test (Vitest on the widget)
+- [x] Implement (already on development: `src/utils/organisationStatus.js` filters on Draft and accepts with Active; `tests/vitest/cmdbOverviewAndConceptWidget.spec.js`)
+- [x] Test (Vitest on the widget)
 
 ### Task 17: Re-point the remaining relations on an organisation merge
 - **spec_ref**: openspec/specs/organisation-merge/spec.md
 - **files**: `lib/Service/MergeOrganisatieService.php` (FIELD_RELATION_TYPES: usage provider, organisation memberships and participants, model organisations), the dry-run counts
 - **acceptance_criteria**:
   - GIVEN a merge WHEN it completes THEN no usage, organisation membership or model still points at the merged-away organisation, and the preview counted each
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/MergeOrganisatieServiceTest.php`)
+- [x] Implement (already on development: `CatalogueReferenceMap::REFERENCES['organization']` walks usage provider, organisation deelnames and participants and model organizations; `MergeOrganisatieServiceTest` counts each in the dry run)
+- [x] Test (PHPUnit `tests/Unit/Service/MergeOrganisatieServiceTest.php`)
 
 ### Task 18: Resolve the standard version picker on a compliance record, and offer it from the application page
 - **spec_ref**: openspec/specs/module-compliance-assessment/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (compliancy standard version relation register), `src/manifest.json` (ModuleDetail declare a standard)
 - **acceptance_criteria**:
   - GIVEN an application page WHEN a user declares support for a standard version THEN the version resolves and the record shows on the compliance matrix
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/compliance-matrix.spec.ts`)
+- [x] Implement (`register.d/standard-version-pickers.json`: `compliancy.standardVersion` reads the vng-gemma register the same way; ModuleDetail's Compliance claims list offers "Declare a standard" (create on, with standard version, URL and evidence reference, the module set by the list's filter), so the record shows on the compliance matrix as claimed until a reviewer verifies it, task 15)
+- [x] Test (PHPUnit `tests/Unit/Settings/StandardVersionPickersTest.php`; Playwright `tests/e2e/workflows/compliance-matrix.spec.ts` covers the matrix half, needs a live run)
 
 ### Task 19: Usages made on stackiq's own forms carry the supplier
 - **spec_ref**: openspec/specs/application-page/spec.md
 - **files**: usage create and edit (set the hidden provider from the module's provider), a repair step for existing usages
 - **acceptance_criteria**:
   - GIVEN a municipality adds a usage on the usage form WHEN the supplier opens its application page THEN the supplier sees that organisation in the usages list
-- [ ] Implement
-- [ ] Test (PHPUnit on the usage provider, Playwright `tests/e2e/workflows/usages.spec.ts`)
+- [x] Implement (`UsageProviderListener` on every usage create and update sets `provider` to the supplier of the module it names, in the same write, so a usage made on the usage form, which hides the field, reaches its supplier through the usage read rule on `provider`; a module without a supplier leaves the provider as it is. `BackfillUsageProvider` after the register import sets it on existing usages. `UsageProviderSync` reads the module with RBAC off, once per request)
+- [x] Test (PHPUnit `UsageProviderSyncTest`, `UsageProviderListenerTest`, `BackfillUsageProviderTest`; Playwright scenario added to `tests/e2e/workflows/usages.spec.ts`, needs a live run)
 
 ### Task 20: Anonymous readers get only published applications
 - **spec_ref**: openspec/specs/open-data-publishing/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (module public read rule: publication date at or before now, drop the registeredBy Supplier branch)
 - **acceptance_criteria**:
   - GIVEN a supplier's module without a publication date WHEN an anonymous reader asks for it THEN it is not returned
-- [ ] Implement
-- [ ] Test (Newman open-data collection)
+- [x] Implement (the module's `{group: public, match: {registeredBy: Supplier}}` read rule is gone, and so is its mirror `moduleRegisteredBy` on moduleVersion (`register.d/publication-field-rules.json`) and in `ModuleVersionPublicationService::isPublicNow()`; the public rule left is the publication date at or before now)
+- [x] Test (PHPUnit `PublishGateRbacTest::testAnUnpublishedSupplierModuleIsNotPublic`; Newman folder `11. Open data: anonymous module reads` in `tests/integration/stackiq.postman_collection.json`, written, needs a live run)
 
 ### Task 21: Switch federation on in the exchange settings and show the registration status
 - **spec_ref**: openspec/specs/federated-catalog-sync/spec.md

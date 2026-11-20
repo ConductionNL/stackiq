@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -286,7 +282,7 @@ OC.L10N.register(
         "Reports": "Reporty",
         "Pick a report to open it.": "Vyberte report a otevřete jej.",
         "Overlapping and ageing software across the portfolio.": "Překrývající se a zastaralý software v portfoliu.",
-        "Store": "Obchod",
+        "Marketplace": "Obchod",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Nainstalujte registry, schémata a toky zveřejněné jinými organizacemi."
     },
     "nplurals=2; plural=(n != 1);"

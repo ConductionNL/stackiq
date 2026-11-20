@@ -44,6 +44,7 @@ use RuntimeException;
  * Cases for the sync entry points.
  *
  * @covers \OCA\Stackiq\Service\OrganizationSyncService
+ * @uses   \OCA\Stackiq\Service\SyncProgress
  *
  * @spec openspec/specs/organization-sync/spec.md
  */

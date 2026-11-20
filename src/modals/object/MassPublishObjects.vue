@@ -38,6 +38,10 @@ import { objectStore } from '../../store/store.js'
 <script>
 import Publish from 'vue-material-design-icons/Publish.vue'
 import MassObjectDialog from './MassObjectDialog.vue'
+import {
+	publicationTarget,
+	runPublication,
+} from '../../services/publicationActions.js'
 
 export default {
 	name: 'MassPublishObjects',
@@ -82,10 +86,14 @@ export default {
 		 */
 		massAction() {
 			return {
+				// Through stackiq's guarded publication endpoint, one call per
+				// entry, so its ownership guard runs for each (REQ-ODP-010).
 				run: () =>
-					objectStore.massPublishObjects([
-						...(objectStore.selectedObjects || []),
-					]),
+					runPublication(
+						'publish',
+						publicationTarget().objectType,
+						[...(objectStore.selectedObjects || [])],
+					),
 
 				failedText: (count) =>
 					this.t('stackiq', 'Failed to publish {count} objects', {

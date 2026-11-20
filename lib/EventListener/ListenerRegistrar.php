@@ -24,6 +24,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
@@ -57,6 +58,8 @@ final class ListenerRegistrar {
 	public function register(IRegistrationContext $context): void {
 		// TEST event listener for easily triggerable Nextcloud events.
 		$context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+		// Role groups follow the roles a person derives, at every sign-in.
+		$context->registerEventListener(UserLoggedInEvent::class, RoleGrantLoginListener::class);
 
 		// OpenRegister object lifecycle events are NO LONGER broadcast to
 		// StackiqEventListener.
@@ -82,6 +85,14 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
+		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
+		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+		// A shared usage's participants may read the connections it lists (shared-usage-visible-to-participants).
+		$context->registerEventListener(ObjectCreatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, ConnectionShareSubscriber::class);
+		$context->registerEventListener(ObjectDeletedEvent::class, ConnectionShareSubscriber::class);
+
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 
@@ -91,12 +102,28 @@ final class ListenerRegistrar {
 		// A contact person only from someone who may add members to its organisation.
 		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
+
+		// An application cannot be part of itself or of one of its components (landscape-application-components).
+		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
+		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
+		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);
+		// Only the verify action marks a compliance claim verified; changed evidence resets it (REQ-CLR-022).
+		$context->registerEventListener(ObjectCreatingEvent::class, ComplianceVerificationGuard::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ComplianceVerificationGuard::class);
+		// A usage carries its application's supplier as provider, so the supplier sees it (REQ-APG-002).
+		$context->registerEventListener(ObjectCreatingEvent::class, UsageProviderListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, UsageProviderListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
 
 		// A module version is public only while its application is (publication-field-rules).
+		// operations-record-reconciliation D3: after OpenRegister merges two
+		// applications or services, the catalogue's references follow the survivor.
+		$context->registerEventListener(ObjectsMergedEvent::class, CatalogueMergeRelinker::class);
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);
@@ -105,27 +132,41 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, LifecycleCalendarListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, LifecycleCalendarListener::class);
 
+		// An owner's own edit of an entry answers their confirmation request (landscape-owner-attestation).
+		$context->registerEventListener(ObjectUpdatedEvent::class, AttestationCorrectionListener::class);
+
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 
-		// Project a concluded contract-approval Decision from the decision app
-		// onto the catalog contract. The listener filters by sourceApp and
-		// IDOR-checks the decision id before projecting (the In onderhandeling
-		// -> Actief transition is reached only here). Replaces the former HTTP
-		// outcome-callback + daily reconcile poll.
-		//
-		// BOTH SPELLINGS, by FQN STRING rather than `::class`. That app renamed
-		// its PSR-4 root from OCA\Decidesk to OCA\Decidiq with no compatibility
-		// alias, and `::class` on an imported name resolves at COMPILE TIME — so
-		// this registered a class nothing dispatches any more, the listener
-		// never fired, and every approved contract stayed in `In onderhandeling`.
-		// An event with no listener and a listener on no event look identical
-		// from here: nothing throws, nothing is logged.
-		//
-		// Registering a name that does not resolve is harmless, because dispatch
-		// matches on the concrete event class, but the guard is kept so this
-		// stays symmetric with ContractApprovalService::isDelegationConfigured()
-		// on the outbound side.
+		$this->registerDecisionConclusion(context: $context);
+
+	}//end register()
+
+	/**
+	 * Project a concluded contract-approval Decision from the decision app
+	 * onto the catalog contract. The listener filters by sourceApp and
+	 * IDOR-checks the decision id before projecting (the In onderhandeling
+	 * -> Actief transition is reached only here). Replaces the former HTTP
+	 * outcome-callback + daily reconcile poll.
+	 *
+	 * BOTH SPELLINGS, by FQN STRING rather than `::class`. That app renamed
+	 * its PSR-4 root from OCA\Decidesk to OCA\Decidiq with no compatibility
+	 * alias, and `::class` on an imported name resolves at COMPILE TIME — so
+	 * this registered a class nothing dispatches any more, the listener
+	 * never fired, and every approved contract stayed in `In onderhandeling`.
+	 * An event with no listener and a listener on no event look identical
+	 * from here: nothing throws, nothing is logged.
+	 *
+	 * Registering a name that does not resolve is harmless, because dispatch
+	 * matches on the concrete event class, but the guard is kept so this
+	 * stays symmetric with ContractApprovalService::isDelegationConfigured()
+	 * on the outbound side.
+	 *
+	 * @param IRegistrationContext $context Registration context.
+	 *
+	 * @return void
+	 */
+	private function registerDecisionConclusion(IRegistrationContext $context): void {
 		foreach (ContractApprovalServiceInterface::DECISION_CONCLUDED_EVENTS as $concludedEvent) {
 			if (class_exists($concludedEvent) === false) {
 				continue;
@@ -134,5 +175,5 @@ final class ListenerRegistrar {
 			$context->registerEventListener($concludedEvent, DecisionConcludedListener::class);
 		}
 
-	}//end register()
+	}//end registerDecisionConclusion()
 }//end class

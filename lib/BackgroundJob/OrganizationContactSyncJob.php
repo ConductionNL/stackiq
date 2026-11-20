@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
@@ -278,10 +280,10 @@ class OrganizationContactSyncJob extends TimedJob {
 
 			$objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: $registerId,
-				schema: $schemaId,
-				uuid: $uuidArg,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+					uuid: $uuidArg
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
