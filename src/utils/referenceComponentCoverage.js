@@ -69,7 +69,8 @@ const bareIdentifier = (identifier) => String(identifier ?? '').trim().replace(/
  * child RELATIVE to its `parentNode`, and wants a parent listed before its
  * children. A node finds its component by `elementRef` against the
  * component's ArchiMate `identifier`; a node of any other element carries no
- * coverage.
+ * coverage. A node of a view fetched with `include_products=true` also carries
+ * its `products` list; otherwise `products` is null.
  *
  * @param {Array<object>} viewNodes The view's nodes (`viewNodes`).
  * @param {Array<object>} viewRelationships The view's connections (`viewRelationships`).
@@ -115,7 +116,12 @@ export function coverageMapGraph(viewNodes = [], viewRelationships = [], compone
 				},
 				...(parent && { parentNode: String(parent.viewNodeId) }),
 				style: { width: `${width}px`, height: `${height}px` },
-				data: { name: node.name ?? component?.name ?? '', component },
+				data: {
+					name: node.name ?? component?.name ?? '',
+					component,
+					// Only a view fetched with include_products carries the list.
+					products: Array.isArray(node.products) ? node.products : null,
+				},
 			}
 		})
 

@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Rapports",
         "Pick a report to open it.": "Tscherni in rapport per l'avrir.",
         "Overlapping and ageing software across the portfolio.": "Software surpassà e vegl en il portfolio.",
-        "Store": "Butia",
+        "Marketplace": "Butia",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installescha registers, schemas e process ch'autras organisaziuns han publitgà."
     },
     "nplurals=2; plural=(n != 1);"

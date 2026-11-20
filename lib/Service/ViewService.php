@@ -834,6 +834,7 @@ class ViewService implements ViewServiceInterface {
 	 * @param array $query The organisation-scoped products query.
 	 *
 	 * @return array Products data indexed by elementRef.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function indexProducts(ObjectServiceInterface $objectService, array $query): array {
 		$allProducts = $this->indexByElementRef(
@@ -1107,6 +1108,7 @@ class ViewService implements ViewServiceInterface {
 	 * @param array $query The module query of one schema.
 	 *
 	 * @return array The modules of that schema.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function searchModuleSchema(ObjectServiceInterface $objectService, array $query): array {
 		try {
@@ -1282,6 +1284,7 @@ class ViewService implements ViewServiceInterface {
 	 * @param array $query The owned gebruik query.
 	 *
 	 * @return array Gebruik data indexed by elementRef.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function readOwnedGebruik(ObjectServiceInterface $objectService, array $query): array {
 		$allGebruik = [];
@@ -1778,6 +1781,7 @@ class ViewService implements ViewServiceInterface {
 	 * @param array $query The deelnames gebruik query.
 	 *
 	 * @return array Deelnames gebruik data indexed by elementRef.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function readDeelnamesGebruik(ObjectServiceInterface $objectService, array $query): array {
 		$allDeelnames = [];

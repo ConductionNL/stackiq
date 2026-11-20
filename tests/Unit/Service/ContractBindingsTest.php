@@ -44,7 +44,7 @@ class ContractBindingsTest extends TestCase {
 	 */
 	private function aliases(): array {
 		$aliases = [];
-		$context = $this->createMock(IRegistrationContext::class);
+		$context = $this->createMock(originalClassName: IRegistrationContext::class);
 		$context->expects($this->atLeastOnce())->method('registerServiceAlias')->willReturnCallback(
 			function (string $alias, string $target) use (&$aliases): void {
 				$aliases[] = [$alias, $target];
@@ -59,7 +59,7 @@ class ContractBindingsTest extends TestCase {
 	}//end aliases()
 
 	/**
-	 * Sixty-two contracts are bound, none of them twice.
+	 * Sixty-three contracts are bound, none of them twice.
 	 *
 	 * @return void
 	 */
@@ -67,8 +67,8 @@ class ContractBindingsTest extends TestCase {
 		$aliases = $this->aliases();
 		$names   = array_column($aliases, 0);
 
-		$this->assertCount(62, $aliases);
-		$this->assertSame($names, array_values(array_unique($names)));
+		$this->assertCount(expectedCount: 64, haystack: $aliases);
+		$this->assertSame(expected: $names, actual: array_values(array: array_unique(array: $names)));
 
 	}//end testEveryContractIsBoundExactlyOnce()
 
@@ -79,10 +79,10 @@ class ContractBindingsTest extends TestCase {
 	 */
 	public function testEveryTargetImplementsItsContract(): void {
 		foreach ($this->aliases() as [$alias, $target]) {
-			$this->assertStringStartsWith('OCA\Stackiq\Kernel\Contracts\\', $alias);
-			$this->assertTrue(interface_exists($alias), $alias.' is not an interface');
-			$this->assertTrue(class_exists($target), $target.' is not a class');
-			$this->assertContains($alias, class_implements($target), $target.' does not implement '.$alias);
+			$this->assertStringStartsWith(prefix: 'OCA\Stackiq\Kernel\Contracts\\', string: $alias);
+			$this->assertTrue(condition: interface_exists(interface: $alias), message: $alias.' is not an interface');
+			$this->assertTrue(condition: class_exists(class: $target), message: $target.' is not a class');
+			$this->assertContains(needle: $alias, haystack: class_implements(object_or_class: $target), message: $target.' does not implement '.$alias);
 		}
 
 	}//end testEveryTargetImplementsItsContract()
@@ -98,10 +98,10 @@ class ContractBindingsTest extends TestCase {
 			$map[$alias] = $target;
 		}
 
-		$this->assertSame(SettingsService::class, $map[SettingsServiceInterface::class]);
-		$this->assertSame(ViewService::class, $map[ViewServiceInterface::class]);
-		$this->assertSame(ContactPersonHandler::class, $map['OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface']);
-		$this->assertSame(ViewServiceInterface::class, array_key_last($map));
+		$this->assertSame(expected: SettingsService::class, actual: $map[SettingsServiceInterface::class]);
+		$this->assertSame(expected: ViewService::class, actual: $map[ViewServiceInterface::class]);
+		$this->assertSame(expected: ContactPersonHandler::class, actual: $map['OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface']);
+		$this->assertSame(expected: ViewServiceInterface::class, actual: array_key_last(array: $map));
 
 	}//end testKnownContractsPointAtTheirServices()
 }//end class

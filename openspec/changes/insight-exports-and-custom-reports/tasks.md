@@ -85,3 +85,8 @@
 - Playwright: tests/e2e/spec-coverage/catalogue-exports.spec.ts and tests/e2e/spec-coverage/custom-reports.spec.ts
 - Docs in docs/features/catalogue-exports-and-reports.md with screenshots (ADR-010)
 - English and Dutch strings for the menu entries, the action, the page, the dialog and the cut-off row (ADR-005)
+
+## Build notes (round 2, 2026-11-17)
+
+- `tests/e2e/spec-coverage/catalogue-exports.spec.ts` (6 tests: the Applications CSV export with its search, the 400 for another schema, the Export menu on `/komplianties` and `/moduleversies`, the organisation ArchiMate action for the admin and its absence and 403 for an account of no organisation) and `tests/e2e/spec-coverage/custom-reports.spec.ts` (4 tests: the card, a three-field BBN2 report's header and rows, another account's report not listed, delete) are written. They lint, type-check and `playwright --list` collects them, but they have not run against a live instance yet, so the Test boxes of tasks 2, 4, 5 and 6 stay open until they have.
+- Task 7: `docs/features/catalogue-exports-and-reports.md` is on development; its screenshots need a capture on a live instance.

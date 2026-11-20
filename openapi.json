@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Stackiq",
-        "version": "0.2.7-unstable.20261116120000",
+        "version": "0.2.8-unstable.20261119065125",
         "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -78,6 +78,10 @@
         {
             "name": "data-quality-report",
             "description": "Serves one organisation's data quality report"
+        },
+        {
+            "name": "entry-confirmation",
+            "description": "Confirm an application or usage is current."
         },
         {
             "name": "entry-type",
@@ -2392,6 +2396,78 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/data-quality/confirm/{kind}/{id}": {
+            "post": {
+                "operationId": "entry-confirmation-confirm",
+                "summary": "Confirm the entry is current",
+                "description": "Sets lastConfirmedAt of one application (module) or usage to now and nothing else, so OpenRegister rescores it. Only a user who may update the entry can confirm it.",
+                "tags": [
+                    "entry-confirmation"
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "usage"
+                            ]
+                        },
+                        "description": "The kind of entry."
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The entry's id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The moment stored, as `{lastConfirmedAt}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "lastConfirmedAt": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "description": "OpenRegister or its configuration is unavailable."
                     }
                 }
             }

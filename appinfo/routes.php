@@ -372,6 +372,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
         // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
         ['name' => 'dataQualityReport#index', 'url' => '/api/data-quality', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
+        [
+            'name'         => 'entryConfirmation#confirm',
+            'url'          => '/api/data-quality/confirm/{kind}/{id}',
+            'verb'         => 'POST',
+            'requirements' => ['kind' => 'module|usage'],
+        ],
         // @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],

@@ -10,7 +10,7 @@
   - GIVEN an application owner WHEN they use the panel THEN they can link an existing page, create and link a new one, and unlink one
   - GIVEN the page WHEN it renders THEN md-files is still there and md-knowledge sits in a new full-width row below the existing rows
   - GIVEN an instance without Collectives WHEN /modules/:id opens THEN the panel shows the set-up state
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts)
 
 ### Task 2: Add the Knowledge base page and its menu entry under Applications
@@ -21,7 +21,7 @@
   - GIVEN the merged menu WHEN it is built THEN KnowledgeBaseMenu is a child of Modules and the top-level count does not grow
   - GIVEN a title match WHEN the user types on /knowledge THEN the result links into Collectives
   - GIVEN no Collectives app WHEN stackiq opens THEN the entry is hidden and /knowledge says Collectives is needed
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest tests/vitest/manifestFragments.spec.js and Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts)
 
 ### Task 3: Document the knowledge base
