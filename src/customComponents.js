@@ -361,7 +361,7 @@ export default {
 	// --- The Connections page's Add opens the guided entry wizard. ---
 	// Rendered in the declarative index page's actions slot
 	// (`actionsComponent`), so the page keeps its columns and filters.
-	// @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+	// @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 	ConnectionWizardAction,
 	// --- Ratings & reviews (stackiq#375). ---
 	// Approved-only aggregate (average + count) + a bounded approved-review

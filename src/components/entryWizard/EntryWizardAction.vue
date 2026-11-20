@@ -9,7 +9,7 @@
  not compete). It opens EntryWizardDialog for its kind and, once the record is
  saved, opens the record's page.
 
- @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 -->
 <template>
 	<span class="entry-wizard-action">
@@ -60,7 +60,7 @@ export default {
 		 *
 		 * @param {string|undefined} id The saved record's id.
 		 * @return {void}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		onCreated(id) {
 			this.open = false

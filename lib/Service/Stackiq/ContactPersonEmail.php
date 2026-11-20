@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+ * @spec openspec/specs/contactpersoon-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 /**
  * Resolves the email address a contact person's account is made for.
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+ * @spec openspec/specs/contactpersoon-sync/spec.md
  */
 class ContactPersonEmail implements ContactPersonEmailInterface {
 
@@ -56,7 +56,7 @@ class ContactPersonEmail implements ContactPersonEmailInterface {
 	 *
 	 * @return string The email address, or '' when there is none.
 	 *
-	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 * @spec openspec/specs/contactpersoon-sync/spec.md
 	 */
 	public function of(array $contactData): string {
 		$linked = $this->linkedContactEmail(contactsUid: $contactData['contactsUid'] ?? null);

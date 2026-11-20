@@ -309,7 +309,7 @@ export default {
 		 * The guided entry wizard the page's Add opens (manifest `config.addWizard`),
 		 * a kind of src/utils/entryWizard.js such as `module`. Empty keeps the list's own Add.
 		 *
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		addWizard: {
 			type: String,

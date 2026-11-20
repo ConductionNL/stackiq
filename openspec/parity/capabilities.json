@@ -1451,10 +1451,10 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "planned",
-				"evidence": "Not built: only suites have a wizard (src/dialogs/SuiteWizardDialog.vue); applications, services and connections use the plain form. Planned in openspec/changes/capability-requirements-from-the-matrix (REQ-GEW-001), set back from built on 2026-11-12. src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
+				"evidence": "Not built: only suites have a wizard (src/dialogs/SuiteWizardDialog.vue); applications, services and connections use the plain form. Planned in openspec/changes/archive/2026-11-20-capability-requirements-from-the-matrix (REQ-GEW-001), set back from built on 2026-11-12. src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/capability-requirements-from-the-matrix",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard :: REQ-GEW-001 Applications, services and connections are added through a step-by-step wizard",
+				"change": "2026-11-20-capability-requirements-from-the-matrix",
+				"requirement": "openspec/specs/guided-entry-wizard :: REQ-GEW-001 Applications, services and connections are added through a step-by-step wizard",
 				"readOn": "2026-11-12"
 			},
 			"reachedOn": "Suites /suites, New suite wizard only",
@@ -2423,7 +2423,7 @@
 				"evidence": "src/manifest.json page Standaarden /standaarden (index on @resolve:amef_register schema element, filter gemmaType=standaard, columns name/gemmaThema/gemmaStatus/url) and StandaardDetail /standaarden/:id with compliance claims per standard; menu entry Standards (order 50)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-module-compliance-assessment",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/module-compliance-assessment :: Standards are browsable on their own page with their compliance claims"
+				"requirement": "openspec/specs/module-compliance-assessment :: Standards are browsable on their own page with their compliance claims"
 			},
 			"reachedOn": "Standaarden /standaarden, menu Standards; detail StandaardDetail /standaarden/:id",
 			"provider": "stackiq",
@@ -2586,7 +2586,7 @@
 				"evidence": "appinfo/routes.php:275 POST /api/bulk-sync-standards -> lib/Controller/SettingsController.php:3598 (isAdmin check) -> lib/Service/ModuleComplianceService.php:527 bulkSyncModuleStandards (reads up to 1000 compliancy records and updates module standards); UI src/views/settings/sections/StatisticsOverview.vue:79 button -> src/modals/BulkSyncDialog.vue:321",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-module-compliance-assessment",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/module-compliance-assessment :: An admin updates the standards of every application in one action"
+				"requirement": "openspec/specs/module-compliance-assessment :: An admin updates the standards of every application in one action"
 			},
 			"reachedOn": "admin settings, Statistics overview section, bulk sync button",
 			"provider": "stackiq",
@@ -2939,7 +2939,7 @@
 				"evidence": "src/manifest.json:386 Organisaties type:index over schema organization with status filter and OrganisatieCard; register :2022 organization.type is facetable (Municipality/Supplier/Collaboration/Community); public read of Active suppliers in organization authorization (:2467)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/fe-organizations :: The Organisations page lists organisations with search, a type facet and a status filter"
+				"requirement": "openspec/specs/fe-organizations :: The Organisations page lists organisations with search, a type facet and a status filter"
 			},
 			"reachedOn": "Organisations /organisaties (main menu)",
 			"provider": "stackiq",
@@ -4138,7 +4138,7 @@
 				"change": "2026-07-23-sbom-import",
 				"requirement": [
 					"openspec/specs/sbom-import :: CycloneDX SBOM files are parsed into a normalized component list",
-					"openspec/changes/capability-requirements-from-the-matrix/specs/sbom-import :: SPDX 2.x JSON files are parsed into the same component list"
+					"openspec/specs/sbom-import :: SPDX 2.x JSON files are parsed into the same component list"
 				]
 			},
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components, upload",
@@ -4321,7 +4321,7 @@
 				"evidence": "src/manifest.json:386 Organisaties type:index over schema organization (Add form); register :2022 organization.type enum Municipality/Supplier/Collaboration/Community, required contactsUid + type",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/fe-organizations :: An organisation is registered with its type",
+				"requirement": "openspec/specs/fe-organizations :: An organisation is registered with its type",
 				"plan": "openspec/changes/stackiq-uses-the-shared-organisation"
 			},
 			"reachedOn": "Organisations /organisaties (main menu), Add form; walkthrough step create-organisatie",
@@ -4437,7 +4437,7 @@
 				"evidence": "src/manifest.json:418 OrganisatieDetail org-contactpersonen object-list (role, roles) with rowRoute ContactpersoonDetail; register :1788 contactPerson (contactsUid, role, organization, roles enum of catalogue roles)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/fe-organizations :: An organisation's page lists its contact persons with their function and roles"
+				"requirement": "openspec/specs/fe-organizations :: An organisation's page lists its contact persons with their function and roles"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id 'Contact persons' list -> ContactpersoonDetail /contactpersonen/:id",
 			"provider": "stackiq",
@@ -5295,7 +5295,7 @@
 				"evidence": "src/manifest.json:72 Dashboard page with stat widgets kpi-organisations, kpi-modules, kpi-services, kpi-contracts (source metric count on organization/module/catalogService/catalogContract) plus catalog-panels.",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-26-fe-shell-navigation",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/fe-shell-navigation :: The dashboard shows counts of organisations, applications, services and contracts"
+				"requirement": "openspec/specs/fe-shell-navigation :: The dashboard shows counts of organisations, applications, services and contracts"
 			},
 			"reachedOn": "Dashboard / (first menu entry)",
 			"provider": "stackiq",
@@ -7830,7 +7830,7 @@
 				"change": "2026-09-29-connections-catalogue-pages",
 				"readOn": "2026-10-07",
 				"requirement": [
-					"openspec/changes/capability-requirements-from-the-matrix/specs/catalogue-connection-pages :: REQ-CCP-005 A connection records its two applications, its direction and the standard versions it uses",
+					"openspec/specs/catalogue-connection-pages :: REQ-CCP-005 A connection records its two applications, its direction and the standard versions it uses",
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalogue-connection-pages :: A connection's standard is picked from the GEMMA standard versions (REQ-CLR-012)"
 				],
 				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
@@ -7875,7 +7875,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-landscape-usage-registration",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/application-usage-pages :: REQ-UAP-006 A usage records the connections the organisation runs within it"
+				"requirement": "openspec/specs/application-usage-pages :: REQ-UAP-006 A usage records the connections the organisation runs within it"
 			},
 			"reachedOn": "Applications in use detail /gebruik/:id (Connections field and 'Connections and services' panel)",
 			"provider": "stackiq",
@@ -8396,7 +8396,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-open-data-publishing",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/open-data-publishing :: Using the catalogue asks for no payment"
+				"requirement": "openspec/specs/open-data-publishing :: Using the catalogue asks for no payment"
 			},
 			"reachedOn": "no page: a property of the app and its licence",
 			"provider": "stackiq",
@@ -8698,14 +8698,14 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "planned",
-				"evidence": "Not built: catalogContract.status is a plain enum (Active, Expired, In negotiation) with no guard, so a user can create or edit a contract as Active without an approved decision. Planned in openspec/changes/capability-requirements-from-the-matrix (REQ-SCCD-007), set back from built on 2026-11-12. lib/Service/ContractApprovalService.php:254 submitForApproval dispatches OCA\\Decidiq\\Event\\DecisionRequestedEvent (fail-closed), :412 projectOutcome sets status Active only on an approved outcome (:434); routes appinfo/routes.php:36-37 submit/renewal; src/components/contracts/ContractApprovalPanel.vue:169 'Submit for approval' on ContractDetail (src/manifest.json:600); but lib/Settings/softwarecatalogus_register.json:3528 x-openregister-lifecycle now uses the English states and declares 'sign' In negotiation -> Active (:3535) with no requires guard, so OpenRegister's LifecycleValidationListener lets a direct status edit through; status (:3425) stays an editable required form field, so a contract can also be created as Active, and approvalState (register.d/contracts-to-decidesk.json) is not readOnly",
+				"evidence": "Not built: catalogContract.status is a plain enum (Active, Expired, In negotiation) with no guard, so a user can create or edit a contract as Active without an approved decision. Planned in openspec/changes/archive/2026-11-20-capability-requirements-from-the-matrix (REQ-SCCD-007), set back from built on 2026-11-12. lib/Service/ContractApprovalService.php:254 submitForApproval dispatches OCA\\Decidiq\\Event\\DecisionRequestedEvent (fail-closed), :412 projectOutcome sets status Active only on an approved outcome (:434); routes appinfo/routes.php:36-37 submit/renewal; src/components/contracts/ContractApprovalPanel.vue:169 'Submit for approval' on ContractDetail (src/manifest.json:600); but lib/Settings/softwarecatalogus_register.json:3528 x-openregister-lifecycle now uses the English states and declares 'sign' In negotiation -> Active (:3535) with no requires guard, so OpenRegister's LifecycleValidationListener lets a direct status edit through; status (:3425) stays an editable required form field, so a contract can also be created as Active, and approvalState (register.d/contracts-to-decidesk.json) is not readOnly",
 				"owner": "ConductionNL/decidiq",
 				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/decidiq",
-				"change": "openspec/changes/capability-requirements-from-the-matrix",
+				"change": "2026-11-20-capability-requirements-from-the-matrix",
 				"readOn": "2026-11-12",
 				"requirement": [
 					"openspec/specs/contract-decision-delegation :: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent",
-					"openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation :: REQ-SCCD-007 A contract becomes Active only through an approved decision"
+					"openspec/specs/contract-decision-delegation :: REQ-SCCD-007 A contract becomes Active only through an approved decision"
 				]
 			},
 			"reachedOn": "ContractDetail /contracten/:id, Approval panel 'Submit for approval' (needs decidiq installed)",
@@ -8883,11 +8883,11 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "planned",
-				"evidence": "Not built for current contacts: the conversion reads email or e-mailadres (lib/Service/ContactpersoonService.php:128, lib/Controller/ContactpersonenController.php:461), but the contactPerson schema holds only contactsUid, role, organization, notifications and roles, so a contact made with the current form fails with \"No email address found\". Planned in openspec/changes/capability-requirements-from-the-matrix, set back from built on 2026-11-12. lib/Controller/ContactpersonenController.php:393 convertToUser validates $contactData['email'] (:448) -> lib/Service/Stackiq/ContactPersonHandler.php:292 createUserAccount reads objectData['email'] (:299); automatic path lib/Service/ContactpersoonService.php:114 processContactpersoon also reads contactData['email'] (:128); contactPerson schema (register :1797) has contactsUid, role, organization, notifications, roles and no email; role group by organisation type now maps the English enum (ContactPersonHandler.php:1612 municipality/collaboration -> gebruik-beheerder, supplier/community -> aanbod-beheerder, fixed 28 Sep #1151); UI src/components/ContactpersonenList.vue:97 'Convert to User'",
+				"evidence": "Not built for current contacts: the conversion reads email or e-mailadres (lib/Service/ContactpersoonService.php:128, lib/Controller/ContactpersonenController.php:461), but the contactPerson schema holds only contactsUid, role, organization, notifications and roles, so a contact made with the current form fails with \"No email address found\". Planned in openspec/changes/archive/2026-11-20-capability-requirements-from-the-matrix, set back from built on 2026-11-12. lib/Controller/ContactpersonenController.php:393 convertToUser validates $contactData['email'] (:448) -> lib/Service/Stackiq/ContactPersonHandler.php:292 createUserAccount reads objectData['email'] (:299); automatic path lib/Service/ContactpersoonService.php:114 processContactpersoon also reads contactData['email'] (:128); contactPerson schema (register :1797) has contactsUid, role, organization, notifications, roles and no email; role group by organisation type now maps the English enum (ContactPersonHandler.php:1612 municipality/collaboration -> gebruik-beheerder, supplier/community -> aanbod-beheerder, fixed 28 Sep #1151); UI src/components/ContactpersonenList.vue:97 'Convert to User'",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/capability-requirements-from-the-matrix",
+				"change": "2026-11-20-capability-requirements-from-the-matrix",
 				"readOn": "2026-11-12",
-				"requirement": "openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync :: Converting a contact person takes the email address from its linked Nextcloud contact"
+				"requirement": "openspec/specs/contactpersoon-sync :: Converting a contact person takes the email address from its linked Nextcloud contact"
 			},
 			"reachedOn": "Organisations /organisaties card -> 'Bekijk contactpersonen' toggle -> Convert to User (org admins)",
 			"provider": "stackiq",
