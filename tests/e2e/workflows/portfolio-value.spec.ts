@@ -52,7 +52,7 @@ async function seed(schema: string, data: Record<string, unknown>): Promise<stri
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: organisation })
+	ids.org = await seed('organization', { name: organisation, type: 'Municipality' })
 	ids.x = await seed('module', { name: appX })
 	ids.y = await seed('module', { name: appY })
 	ids.z = await seed('module', { name: appZ })
@@ -125,7 +125,7 @@ test('the mismatch filter lists a usage whose scores contradict its class and le
 	await gotoAppRoute(page, '/portfolio-report')
 	await dismissSupportDialog(page)
 	await page.getByLabel('Organisation').first().click()
-	await page.getByRole('option', { name: organisation }).first().click()
+	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
 	await expect(page.getByTestId('pr-value-fit')).toBeVisible({ timeout: 30000 })
 	await page.getByTestId('pr-mismatch-filter').click()
 	const rows = page.getByTestId('pr-row')

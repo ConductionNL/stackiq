@@ -1,5 +1,5 @@
 {
-  "_comment": "connections-api-catalogue (board SkKoppelingen, row stackiq:conn-api-catalogue). Adds the applicationInterface schema: an API an application offers, with its style, version, specification and the standards it follows, so the catalogue keeps APIs next to the application. Authorization is the module's own read rules, as an API is published with its application. A connection gains an optional interface field naming the API it calls; its version rises above the 0.3.5 that publication-field-rules.json sets, so the change deploys.",
+  "_comment": "connections-api-catalogue (board SkKoppelingen, row stackiq:conn-api-catalogue). Adds the applicationInterface schema: an API an application offers, with its style, version, specification and the standards it follows, so the catalogue keeps APIs next to the application. Authorization is the module's own read rules, as an API is published with its application, without the module's registeredBy rule: an API carries no registeredBy, and OpenRegister refuses a read rule on a field the schema lacks. A connection gains an optional interface field naming the API it calls; its version rises above the 0.3.5 that publication-field-rules.json sets, so the change deploys.",
   "components": {
     "registers": {
       "stackiq": {
@@ -193,13 +193,6 @@
               "match": {
                 "_organisation": "$organisation"
               }
-            },
-            {
-              "group": "public",
-              "match": {
-                "registeredBy": "Supplier"
-              },
-              "crossOrganisation": true
             }
           ]
         },
