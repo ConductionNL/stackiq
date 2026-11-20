@@ -712,7 +712,7 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 	 *
 	 * @return array<int,array<string,mixed>> The contracts it owns.
 	 *
-	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
 	 */
 	private function ownedContracts(array $contracts, string $organisationUuid): array {
 		if ($organisationUuid === '') {

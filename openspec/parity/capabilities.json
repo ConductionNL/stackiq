@@ -926,8 +926,8 @@
 				"state": "built",
 				"evidence": "src/manifest.json:915 Moduleversies type:index (columns version, module, dateInUse, status) + :937 ModuleversieDetail; register.json:7649 moduleVersion schema with dateInUse (register.json:7746), dateInDevelopment, dateEndSupport, dateWithdrawn",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/landscape-services-and-module-versions",
-				"requirement": "openspec/changes/landscape-services-and-module-versions/specs/module-versions :: A released version of an application is recorded with its lifecycle dates (REQ-MVR-001)",
+				"change": "2026-11-20-landscape-services-and-module-versions",
+				"requirement": "openspec/specs/module-versions :: A released version of an application is recorded with its lifecycle dates (REQ-MVR-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Module versions /moduleversies (menu), Add + detail /moduleversies/:id; also ModuleDetail md-versions list (src/manifest.json:504, allowCreate false)",
@@ -1005,8 +1005,8 @@
 				"state": "built",
 				"evidence": "src/manifest.json:682 Diensten page (FacetedCatalogIndexView, schema catalogService, columns name, provider, type, publicationDate) with the CnIndexPage create form; :423 org-diensten list on the organisation page; register.json catalogService requires name, provider and type (enum Functional/Application/Technical management, Implementation support, Training, Licence reseller), modules[]. Re-read 30 Oct against board SkApplicaties: the board draws services as the Diensten tab with its count, no service detail page and no hosting type, so the missing detail page and hosting type named before are not gaps against the canon.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/landscape-services-and-module-versions",
-				"requirement": "openspec/changes/landscape-services-and-module-versions/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)",
+				"change": "2026-11-20-landscape-services-and-module-versions",
+				"requirement": "openspec/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Services /diensten (menu), Add button",
@@ -2857,7 +2857,7 @@
 				"change": "2026-06-14-open-data-publishing",
 				"requirement": [
 					"openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data",
-					"openspec/changes/landscape-services-and-module-versions/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)"
+					"openspec/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)"
 				]
 			},
 			"reachedOn": "Applications /modules and Services /diensten (main menu), create via the index Add form",
@@ -8971,27 +8971,26 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: the catalogContract read rule still grants ambtenaar crossOrganisation: true (lib/Settings/softwarecatalogus_register.json, catalogContract authorization.read), so every civil servant reads every organisation's contracts. Planned in openspec/changes/contracts-readable-by-owner-only (decision 409, 13 Nov 2026). What works: register authorization.read rules with {match: {_organisation: $organisation}} on catalogContract (:3484), usage (:3149, replaced by register.d/publication-field-rules.json:442 adding public-after-publicationDate), connection (:3865), contactPerson (:1936); OpenRegister executes the match branch (openregister lib/Db/MagicMapper/MagicRbacHandler.php:78 via ConditionMatcher); but contactPerson read grants bare gebruik-beheerder and gebruik-raadpleger (:1937-1938), and catalogContract read grants bare ambtenaar (:3485), the exception schema-rbac-hardening REQ-006 allows; lib/Controller/ContactpersonenController.php:292 checkOrganisationReadPermission guards the custom endpoint",
+				"state": "built",
+				"evidence": "catalogContract authorization.read in lib/Settings/softwarecatalogus_register.json grants a read across organisations only to software-catalog-admins (crossOrganisation) and admin; ambtenaar and every other role are match-scoped to {_organisation: $organisation} (decision 409). tests/Unit/Settings/ContractRbacTest.php (testAmbtenaarReadIsOrganisationScoped, testOnlyTheAdminsReadAcrossOrganisations, testRoleReadIsNotBare, testRoleReadIsOrganisationScoped) pins the rule; the unscoped portfolio report read counts only the reporting organisation's own contracts (lib/Service/PortfolioReportService.php, tests/Unit/Service/PortfolioReportRowsTest.php). usage (:3149, register.d/publication-field-rules.json:442) and connection (:3865) reads are match-scoped as well; OpenRegister executes the match branch (openregister lib/Db/MagicMapper/MagicRbacHandler.php:78 via ConditionMatcher). Still open outside this row's contract scope: contactPerson read grants bare gebruik-beheerder and gebruik-raadpleger.",
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq (rules), executed by ConductionNL/openregister",
-				"change": "contracts-readable-by-owner-only",
-				"readOn": "2026-10-07",
+				"change": "2026-11-20-contracts-readable-by-owner-only",
+				"readOn": "2026-11-20",
 				"requirement": [
-					"openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac :: Contracts MUST be readable only by the owning organisation and admins (REQ-006)",
+					"openspec/specs/vendor-visibility-rbac :: Contracts MUST be readable only by the owning organisation and admins (REQ-006)",
 					"openspec/specs/vendor-visibility-rbac :: `gebruik-beheerder` reads of gebruik objects MUST be scoped to the caller's own organisation (REQ-003)",
 					"openspec/specs/vendor-visibility-rbac :: `gebruik`, `koppeling`, and `organisatie` schema-level RBAC reads MUST deny cross-organisation access for `gebruik-beheerder` (REQ-008)"
-				],
-				"plan": "openspec/changes/contracts-readable-by-owner-only"
+				]
 			},
 			"reachedOn": "no page: enforced by OpenRegister RBAC/multitenancy on every list and detail page",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "roles-and-access",
-			"note": "Organisation-scoped reads are declared per schema, and OpenRegister applies the match rules on list and detail reads. Contact persons are still readable across organisations by gebruik-beheerder and gebruik-raadpleger, and every civil servant (ambtenaar) can read every organisation's contracts. Decision 409 (13 Nov 2026) closes the contract exception: contracts are readable only by the owning organisation plus admins; not built until the ambtenaar grant is match-scoped.",
+			"note": "Organisation-scoped reads are declared per schema, and OpenRegister applies the match rules on list and detail reads. Contracts are readable only by the owning organisation plus admin and software-catalog-admins (decision 409, 13 Nov 2026). Contact persons are still readable across organisations by gebruik-beheerder and gebruik-raadpleger.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: every query on entity scoped items is restricted to the user's active entities, src/DbUtils.php:920 getEntitiesRestrictCriteria; records carry entities_id and is_recursive (install/mysql/glpi-empty.sql:8937 and :8938 on glpi_appliances), so an entity's records stay invisible to other entities unless shared down the tree. Reached on: entity selector in the header.",
-				"stackiq": "Not built: the catalogContract read rule still grants ambtenaar crossOrganisation: true (lib/Settings/softwarecatalogus_register.json, catalogContract authorization.read), so every civil servant reads every organisation's contracts. Planned in openspec/changes/contracts-readable-by-owner-only (decision 409, 13 Nov 2026). What works: register authorization.read rules with {match: {_organisation: $organisation}} on catalogContract (:3484), usage (:3149, replaced by register.d/publication-field-rules.json:442 adding public-after-publicationDate), connection (:3865), contactPerson (:1936); OpenRegister executes the match branch (openregister lib/Db/MagicMapper/MagicRbacHandler.php:78 via ConditionMatcher); but contactPerson read grants bare gebruik-beheerder and gebruik-raadpleger (:1937-1938), and catalogContract read grants bare ambtenaar (:3485), the exception schema-rbac-hardening REQ-006 allows; lib/Controller/ContactpersonenController.php:292 checkOrganisationReadPermission guards the custom endpoint",
+				"stackiq": "catalogContract authorization.read in lib/Settings/softwarecatalogus_register.json grants a read across organisations only to software-catalog-admins (crossOrganisation) and admin; ambtenaar and every other role are match-scoped to {_organisation: $organisation} (decision 409). tests/Unit/Settings/ContractRbacTest.php (testAmbtenaarReadIsOrganisationScoped, testOnlyTheAdminsReadAcrossOrganisations, testRoleReadIsNotBare, testRoleReadIsOrganisationScoped) pins the rule; the unscoped portfolio report read counts only the reporting organisation's own contracts (lib/Service/PortfolioReportService.php, tests/Unit/Service/PortfolioReportRowsTest.php). usage (:3149, register.d/publication-field-rules.json:442) and connection (:3865) reads are match-scoped as well; OpenRegister executes the match branch (openregister lib/Db/MagicMapper/MagicRbacHandler.php:78 via ConditionMatcher). Still open outside this row's contract scope: contactPerson read grants bare gebruik-beheerder and gebruik-raadpleger.",
 				"topdesk": "https://docs.topdesk.com/en/details-about-certain-permissions.html: \"To restrict access to specific data, link the operator to branch, operator, or category filters\" (read 2026-09-26). Reached on: Operator card > filters.",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/16564: E6: \"Alle gegevens ingevoerd door de gemeenten en samenwerkingen zijn alleen zichtbaar voor gemeentelijke raadplegers en beheerders\"; E2 \"Ingelogde gemeenten en samenwerkingsverbanden kunnen de applicatielandschappen en koppelingen van collega-gemeenten ... bekijken\" (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967491-business-units: business units 'organize content (objects and views)' and 'The selected business unit then acts as a filter for navigation'; role permissions apply per object definition (https://help.bluedolphin.io/en/articles/11967624-manage-roles-and-permissions) and views can be private. Per organisation record isolation is not documented (read 2026-09-26). Reached on: Business units; roles; private views.",

@@ -137,7 +137,7 @@ class ContractRbacTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
 	 */
 	public function testAmbtenaarReadIsOrganisationScoped(): void {
 		$authorization = $this->loadContractAuthorization();
@@ -156,7 +156,7 @@ class ContractRbacTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
 	 */
 	public function testOnlyTheAdminsReadAcrossOrganisations(): void {
 		$sources = ['softwarecatalogus_register.json' => $this->loadContractAuthorization()];

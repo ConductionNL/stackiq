@@ -25,4 +25,5 @@
 - **files**: `openspec/parity/capabilities.json`
 - **acceptance_criteria**:
   - GIVEN the change is archived WHEN the matrix is read THEN both rows cite the merged specs
-- [ ] Implement
+- [x] Implement
+  > Built 20 Nov: the specs are synced to `openspec/specs/module-versions` and `openspec/specs/catalogue-services`, and the `land-module-versions` and catalogue-services rows cite them.
