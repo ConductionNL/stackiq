@@ -1,0 +1,34 @@
+# Stackiq
+
+> Nextcloud app for software portfolio management: applications, modules, connections and contracts aligned with the Dutch GEMMA standards, stored as OpenRegister objects.
+
+## Docs
+
+- [README](README.md): features, architecture overview and data model
+- [AGENTS.md](AGENTS.md): setup, build, test, lint and commit conventions for coding agents
+- [Contributing](CONTRIBUTING.md): development setup, quality checks and commit format
+- [Documentation home](docs/README.md): entry point of the documentation site
+- [Features](docs/features/README.md): one page per user-facing feature
+- [User guide](docs/USER_GUIDE.md): user accounts, groups and organisation hierarchy from a user and admin view
+- [Configuration](docs/CONFIGURATION.md): required apps and app settings
+- [Architecture](docs/ARCHITECTURE.md): services, background jobs and the synchronisation design
+- [Architecture decisions](docs/adr/README.md): numbered records of decisions this app has made
+
+## API
+
+- [OpenAPI document](openapi.json): OpenAPI 3.0.3 description of the app's HTTP API
+- [Routes](appinfo/routes.php): every route and the controller method it maps to
+- [API reference](docs/API_REFERENCE.md): written guide to the configuration and sync endpoints
+- [API testing](docs/API_TESTING.md): repeatable local API tests for organisation synchronisation
+- [Postman collection](postman/stackiq-tests.json): API tests run with Newman
+
+## Specs
+
+- [Specs index](openspec/specs/README.md): how capability specs are written and their lifecycle
+- [Software catalog](openspec/specs/software-catalog/spec.md): names of the catalogue schemas and the repair steps that rename them
+- [API contract](openspec/specs/api-contract/spec.md): versioned paths, problem-detail errors and the published OpenAPI document
+- [Federated catalog sync](openspec/specs/federated-catalog-sync/spec.md): sharing catalog data between instances
+- [Open data publishing](openspec/specs/open-data-publishing/spec.md): publishing catalog entries publicly
+- [Contract administration](openspec/specs/contract-administration/spec.md): contract pages, expiry and annualised cost
+- [Organisation sync](openspec/specs/organization-sync/spec.md): turning register contacts into Nextcloud users and groups
+- [Open changes](openspec/changes/): proposed and in-progress OpenSpec changes
