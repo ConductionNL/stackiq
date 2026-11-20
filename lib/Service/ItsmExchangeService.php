@@ -215,21 +215,16 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 		$base    = self::baseOf(location: $location);
 		$flows   = [];
 		foreach (self::FLOWS as $key => $flow) {
-			$deskKey = $desk;
-			if ($key === 'file') {
-				$deskKey = 'file';
-			}
-
 			$values = [
 				'REGISTER'        => self::REGISTER,
 				'CONSUMER'        => $organisation,
 				'RUN_AS'          => $runAs,
 				'CRON'            => self::CRON,
-				'DESK'            => $deskKey,
+				'DESK'            => $desk,
 				'DESK_LABEL'      => $profile['label'],
 				'SOURCE'          => $profile['source'],
-				'SYNC'            => 'itsm-' . $deskKey . '-' . $flow['feed'],
-				'PRESET'          => 'itsm-' . $deskKey . '-' . $flow['preset'],
+				'SYNC'            => 'itsm-' . $desk . '-' . $flow['feed'],
+				'PRESET'          => 'itsm-' . $desk . '-' . $flow['preset'],
 				'CONTRACT_TYPE'   => ($flow['contractType'] ?? 'Licence'),
 				'FEED_LABEL'      => ($flow['feedLabel'] ?? $flow['feed']),
 				'APP_URL'         => $appUrl,
@@ -245,6 +240,8 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				'SEND_STATES'     => (new ItsmSendFrom(appConfig: $this->appConfig))->states(),
 			];
 			if ($key === 'file') {
+				// The file import is the same for every desk.
+				$values['DESK']   = 'file';
 				$values['SYNC']   = 'itsm-file-applications';
 				$values['PRESET'] = 'itsm-file-application-inbound';
 			}
