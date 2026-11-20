@@ -6,7 +6,7 @@
  * come from nextcloud-vue's CnChartWidget, which brings apexcharts), and no
  * source file imports the lodash barrel, only the function it uses.
  *
- * @spec openspec/changes/bundle-hygiene-apexcharts-lodash/specs/frontend-bundle-hygiene/spec.md#requirement-no-duplicate-charting-library-dependency
+ * @spec openspec/specs/frontend-bundle-hygiene/spec.md#requirement-no-duplicate-charting-library-dependency
  */
 
 import * as fs from 'fs'
