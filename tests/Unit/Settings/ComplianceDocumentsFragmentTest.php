@@ -69,13 +69,16 @@ final class ComplianceDocumentsFragmentTest extends TestCase {
 	public function testTheSchemaJoinsTheRegister(): void {
 		$register = $this->merged()['components']['registers']['stackiq'];
 		self::assertContains('complianceDocument', $register['schemas']);
-		self::assertSame('0.1.0', $this->merged()['components']['schemas']['complianceDocument']['version']);
+		self::assertSame(expected: '0.2.0', actual: $this->merged()['components']['schemas']['complianceDocument']['version']);
 
 		$schema = $this->schema();
 		self::assertSame('complianceDocument', $schema['slug']);
 		self::assertSame(
-			['module', 'documentType', 'title', 'summary', 'issuedOn', 'validUntil', 'publisher', 'audience', 'sharedWithOrganisations'],
-			array_keys($schema['properties'])
+			expected: [
+				'module', 'documentType', 'title', 'summary', 'issuedOn', 'validUntil', 'publisher', 'audience',
+				'sharedWithOrganisations', 'daysUntilExpiry', 'expiresWithin90Days',
+			],
+			actual: array_keys($schema['properties'])
 		);
 		self::assertSame(['public', 'government', 'named'], $schema['properties']['audience']['enum']);
 		self::assertSame('named', $schema['properties']['audience']['default']);
@@ -246,4 +249,45 @@ final class ComplianceDocumentsFragmentTest extends TestCase {
 
 		return true;
 	}//end conditionsHold()
+
+	/**
+	 * Expiring within 90 days is a materialised calculation over Valid until,
+	 * so the documents list can filter on it by equality, and a document without
+	 * a validity never counts as expiring (REQ-SCD-001).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
+	 */
+	public function testExpiringWithinNinetyDaysIsCalculatedFromTheValidity(): void {
+		$schema       = $this->schema();
+		$calculations = $schema['configuration']['x-openregister-calculations'];
+
+		self::assertSame(expected: 'integer', actual: $calculations['daysUntilExpiry']['type']);
+		self::assertTrue(condition: $calculations['daysUntilExpiry']['materialise']);
+		self::assertSame(
+			expected: ['dateDiff' => ['from' => 'now', 'to' => ['prop' => 'validUntil'], 'unit' => 'days']],
+			actual: $calculations['daysUntilExpiry']['expression']['if'][2]
+		);
+		self::assertNull(actual: $calculations['daysUntilExpiry']['expression']['if'][1], message: 'no validity, no days');
+
+		$expiring = $calculations['expiresWithin90Days'];
+		self::assertSame(expected: 'boolean', actual: $expiring['type']);
+		self::assertTrue(condition: $expiring['materialise']);
+		self::assertSame(
+			expected: [
+				['ne' => [['prop' => 'validUntil'], null]],
+				['gte' => [['prop' => 'daysUntilExpiry'], 0]],
+				['lte' => [['prop' => 'daysUntilExpiry'], 90]],
+			],
+			actual: $expiring['expression']['and']
+		);
+
+		foreach (['daysUntilExpiry', 'expiresWithin90Days'] as $field) {
+			self::assertTrue(condition: $schema['properties'][$field]['readOnly'], message: $field . ' is not edited');
+			self::assertTrue(condition: $schema['properties'][$field]['hideOnForm'], message: $field . ' is not on the form');
+		}
+
+		self::assertTrue(condition: $schema['properties']['expiresWithin90Days']['facetable']);
+	}//end testExpiringWithinNinetyDaysIsCalculatedFromTheValidity()
 }//end class

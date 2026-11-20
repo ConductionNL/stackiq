@@ -91,6 +91,6 @@ final class UsageParticipantReadRuleTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVersionMovesSoTheImportApplies(): void {
-		$this->assertSame('1.6.2', $this->merged()['components']['schemas']['usage']['version']);
+		$this->assertSame('1.6.3', $this->merged()['components']['schemas']['usage']['version']);
 	}//end testTheVersionMovesSoTheImportApplies()
 }//end class

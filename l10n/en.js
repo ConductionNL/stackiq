@@ -1,6 +1,7 @@
 OC.L10N.register(
     "stackiq",
     {
+        "Marketplace": "Marketplace",
         "Set up the mail transport": "Set up the mail transport",
         "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",
@@ -864,6 +865,57 @@ OC.L10N.register(
         "Rating (1-10)": "Rating (1-10)",
         "Select a rating": "Select a rating",
         "Testimonial": "Testimonial",
+        "Data model": "Data model",
+        "The data entities of the Gemeentelijk Gegevensmodel and your own, with their relations and the applications that hold their data.": "The data entities of the Gemeentelijk Gegevensmodel and your own, with their relations and the applications that hold their data.",
+        "GGM": "GGM",
+        "Own": "Own",
+        "New data entity": "New data entity",
+        "Data entity": "Data entity",
+        "Applications that hold this data": "Applications that hold this data",
+        "No application in use holds data for this entity yet": "No application in use holds data for this entity yet",
+        "Data entities": "Data entities",
+        "Attributes": "Attributes",
+        "Source cardinality": "Source cardinality",
+        "Target cardinality": "Target cardinality",
+        "Relations": "Relations",
+        "Loading the relations": "Loading the relations",
+        "The relations could not be loaded.": "The relations could not be loaded.",
+        "No relations yet": "No relations yet",
+        "This data entity is not related to another entity.": "This data entity is not related to another entity.",
+        "Relations of {name}": "Relations of {name}",
+        "Only the first {count} relations at each end are shown.": "Only the first {count} relations at each end are shown.",
+        "Relation": "Relation",
+        "Related entity": "Related entity",
+        "Cardinality": "Cardinality",
+        "Open {name}": "Open {name}",
+        "(outgoing)": "(outgoing)",
+        "(incoming)": "(incoming)",
+        "{from} to {to}": "{from} to {to}",
+        "Association": "Association",
+        "Aggregation": "Aggregation",
+        "Composition": "Composition",
+        "Specialization": "Specialization",
+        "Loading the attributes": "Loading the attributes",
+        "The attributes could not be loaded.": "The attributes could not be loaded.",
+        "The GGM does not publish attributes in this file.": "The GGM does not publish attributes in this file.",
+        "Attribute {number}": "Attribute {number}",
+        "Data type": "Data type",
+        "Part of the key": "Part of the key",
+        "Remove attribute {number}": "Remove attribute {number}",
+        "Remove": "Remove",
+        "Add attribute": "Add attribute",
+        "Save attributes": "Save attributes",
+        "No attributes yet.": "No attributes yet.",
+        "Key": "Key",
+        "key": "key",
+        "Edit attributes": "Edit attributes",
+        "The attributes are saved.": "The attributes are saved.",
+        "The attributes could not be saved.": "The attributes could not be saved.",
+        "Text": "Text",
+        "Number": "Number",
+        "Date": "Date",
+        "Yes or no": "Yes or no",
+        "Reference": "Reference",
         "What was your experience with this software?": "What was your experience with this software?",
         "Submit review": "Submit review",
         "Your review will be visible to other municipalities once an administrator approves it.": "Your review will be visible to other municipalities once an administrator approves it.",
@@ -1540,6 +1592,10 @@ OC.L10N.register(
         "Publisher": "Publisher",
         "Processing agreements": "Processing agreements",
         "Pentest reports": "Pentest reports",
+        "Expiring within 90 days": "Expiring within 90 days",
+        "Expires within 90 days": "Expires within 90 days",
+        "Days until it expires": "Days until it expires",
+        "Calculated from Valid until; it cannot be edited.": "Calculated from Valid until; it cannot be edited.",
         "Assurance reports": "Assurance reports",
         "Certificates": "Certificates",
         "ENSIA statements": "ENSIA statements",
@@ -1569,6 +1625,7 @@ OC.L10N.register(
         "The classification could not be saved.": "The classification could not be saved.",
         "The classifications could not be loaded.": "The classifications could not be loaded.",
         "The levels show once at least three organisations have classified it.": "The levels show once at least three organisations have classified it.",
+        "The view could not be loaded.": "The view could not be loaded.",
         "Find duplicates": "Find duplicates",
         "This entry was merged into another one.": "This entry was merged into another one.",
         "Merged into {name}": "Merged into {name}",
@@ -1634,7 +1691,6 @@ OC.L10N.register(
         "Pick a GEMMA view to see the coverage drawn on it.": "Pick a GEMMA view to see the coverage drawn on it.",
         "Select a view": "Select a view",
         "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
-        "The view could not be loaded.": "The view could not be loaded.",
         "This view holds no elements.": "This view holds no elements.",
         "(Do not map)": "(Do not map)",
         "{count} error": "{count} error",
@@ -1811,7 +1867,6 @@ OC.L10N.register(
         "Publish {count} file": "Publish {count} file",
         "Publish {count} files": "Publish {count} files",
         "Reason": "Reason",
-        "Reference": "Reference",
         "Register": "Register",
         "Register:": "Register:",
         "Related": "Related",
@@ -1868,7 +1923,6 @@ OC.L10N.register(
         "Target Register": "Target Register",
         "Target Schema": "Target Schema",
         "Target:": "Target:",
-        "Text": "Text",
         "Themes": "Themes",
         "Total Errors": "Total Errors",
         "Total Time": "Total Time",
@@ -1884,17 +1938,50 @@ OC.L10N.register(
         "View Object": "View Object",
         "What will happen:": "What will happen:",
         "XML Parsing": "XML Parsing",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Choose the destination register and schema for the {count} selected object:","Choose the destination register and schema for the {count} selected objects:"],
-        "_Delete {count} file_::_Delete {count} files_": ["Delete {count} file","Delete {count} files"],
-        "_Depublish {count} file_::_Depublish {count} files_": ["Depublish {count} file","Depublish {count} files"],
-        "_Migrate {count} object_::_Migrate {count} objects_": ["Migrate {count} object","Migrate {count} objects"],
-        "_Publish {count} file_::_Publish {count} files_": ["Publish {count} file","Publish {count} files"],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan all {count} compliance object","Scan all {count} compliance objects"],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Show details for {count} import error","Show details for {count} import errors"],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["Successfully imported {count} object in {time}","Successfully imported {count} objects in {time}"],
-        "_{count} error_::_{count} errors_": ["{count} error","{count} errors"],
-        "_{count} object_::_{count} objects_": ["{count} object","{count} objects"],
-        "_{count} occurrence_::_{count} occurrences_": ["{count} occurrence","{count} occurrences"],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
+            "Choose the destination register and schema for the {count} selected object:",
+            "Choose the destination register and schema for the {count} selected objects:"
+        ],
+        "_Delete {count} file_::_Delete {count} files_": [
+            "Delete {count} file",
+            "Delete {count} files"
+        ],
+        "_Depublish {count} file_::_Depublish {count} files_": [
+            "Depublish {count} file",
+            "Depublish {count} files"
+        ],
+        "_Migrate {count} object_::_Migrate {count} objects_": [
+            "Migrate {count} object",
+            "Migrate {count} objects"
+        ],
+        "_Publish {count} file_::_Publish {count} files_": [
+            "Publish {count} file",
+            "Publish {count} files"
+        ],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
+            "Scan all {count} compliance object",
+            "Scan all {count} compliance objects"
+        ],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": [
+            "Show details for {count} import error",
+            "Show details for {count} import errors"
+        ],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
+            "Successfully imported {count} object in {time}",
+            "Successfully imported {count} objects in {time}"
+        ],
+        "_{count} error_::_{count} errors_": [
+            "{count} error",
+            "{count} errors"
+        ],
+        "_{count} object_::_{count} objects_": [
+            "{count} object",
+            "{count} objects"
+        ],
+        "_{count} occurrence_::_{count} occurrences_": [
+            "{count} occurrence",
+            "{count} occurrences"
+        ],
         "ArchiMate type": "ArchiMate type",
         "Asset tag": "Asset tag",
         "Class": "Class",
@@ -1973,6 +2060,9 @@ OC.L10N.register(
         "The type was changed.": "The type was changed.",
         "This entry is an application.": "This entry is an application.",
         "This entry is system software.": "This entry is system software.",
+        "Show products": "Show products",
+        "No product": "No product",
+        "Products ({count}): {names}": "Products ({count}): {names}",
         "{owner}, {count}": "{owner}, {count}",
         "a cooperation": "a cooperation",
         "an unknown organisation": "an unknown organisation",
@@ -1982,8 +2072,14 @@ OC.L10N.register(
         "The participants could not be loaded.": "The participants could not be loaded.",
         "This application in use is not shared with other organisations": "This application in use is not shared with other organisations",
         "Your organisation takes part in this application in use. Only the owner can change it.": "Your organisation takes part in this application in use. Only the owner can change it.",
-        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Run by {owner} for {count} organisation","Run by {owner} for {count} organisations"],
-        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Shared by {count} organisation","Shared by {count} organisations"],
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
+            "Run by {owner} for {count} organisation",
+            "Run by {owner} for {count} organisations"
+        ],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
+            "Shared by {count} organisation",
+            "Shared by {count} organisations"
+        ],
         "Shared through a cooperation": "Shared through a cooperation",
         "[{count:shared} shared through a cooperation]": "[{count:shared} shared through a cooperation]",
         "Run by {owner} for {count} organisation": "Run by {owner} for {count} organisation",
@@ -1995,7 +2091,10 @@ OC.L10N.register(
         "This cooperation lists no participants yet": "This cooperation lists no participants yet",
         "Cooperation · %n participant": "Cooperation · %n participant",
         "Cooperation · %n participants": "Cooperation · %n participants",
-        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Cooperation · %n participant","Cooperation · %n participants"]
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
+            "Cooperation · %n participant",
+            "Cooperation · %n participants"
+        ]
     },
     "nplurals=2; plural=(n != 1);"
 )

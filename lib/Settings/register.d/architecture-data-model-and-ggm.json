@@ -1,0 +1,194 @@
+{
+    "components": {
+        "schemas": {
+            "usage": {
+                "version": "1.6.2",
+                "properties": {
+                    "dataEntities": {
+                        "type": "array",
+                        "title": "Data entities",
+                        "description": "The data entities (GGM or own) this application in use holds data for.",
+                        "visible": true,
+                        "facetable": true,
+                        "items": {
+                            "type": "object",
+                            "$ref": "#/components/schemas/element",
+                            "objectConfiguration": {
+                                "handling": "related-object",
+                                "queryParams": "type=BusinessObject"
+                            }
+                        },
+                        "example": [
+                            "5f0c2d1e-7a3b-4c8d-9e0f-1a2b3c4d5e6f"
+                        ]
+                    }
+                }
+            },
+            "element": {
+                "version": "0.0.15",
+                "properties": {
+                    "attributes": {
+                        "type": "array",
+                        "title": "Attributes",
+                        "description": "The attributes of a data entity the municipality added, with their data type and whether they are part of the key. GGM entities carry none in the GEMMA file.",
+                        "visible": true,
+                        "facetable": false,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "name"
+                            ],
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "title": "Name",
+                                    "description": "The attribute's name."
+                                },
+                                "dataType": {
+                                    "type": "string",
+                                    "title": "Data type",
+                                    "description": "The attribute's data type.",
+                                    "enum": [
+                                        "text",
+                                        "number",
+                                        "date",
+                                        "boolean",
+                                        "reference"
+                                    ],
+                                    "default": "text"
+                                },
+                                "isKey": {
+                                    "type": "boolean",
+                                    "title": "Key",
+                                    "description": "Whether the attribute is part of the entity's key.",
+                                    "default": false
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "title": "Description",
+                                    "description": "What the attribute holds."
+                                }
+                            }
+                        },
+                        "example": [
+                            {
+                                "name": "meldingnummer",
+                                "dataType": "text",
+                                "isKey": true
+                            }
+                        ]
+                    }
+                }
+            },
+            "relation": {
+                "version": "0.0.12",
+                "properties": {
+                    "sourceCardinality": {
+                        "type": "string",
+                        "enum": [
+                            "0..1",
+                            "1",
+                            "0..*",
+                            "1..*"
+                        ],
+                        "title": "Source cardinality",
+                        "description": "How many source entities take part in the relation, set on drawn relations.",
+                        "visible": true,
+                        "facetable": false,
+                        "example": "0..*"
+                    },
+                    "targetCardinality": {
+                        "type": "string",
+                        "enum": [
+                            "0..1",
+                            "1",
+                            "0..*",
+                            "1..*"
+                        ],
+                        "title": "Target cardinality",
+                        "description": "How many target entities take part in the relation, set on drawn relations.",
+                        "visible": true,
+                        "facetable": false,
+                        "example": "1"
+                    }
+                }
+            }
+        },
+        "objects": [
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "element",
+                    "slug": "seed-el-melding",
+                    "version": "0.0.15"
+                },
+                "identifier": "id-seed-el-melding",
+                "type": "BusinessObject",
+                "name": "Melding openbare ruimte",
+                "documentation": "Een melding over de openbare ruimte, zoals een losliggende stoeptegel.",
+                "origin": "drawn",
+                "properties": [],
+                "attributes": [
+                    {
+                        "name": "meldingnummer",
+                        "dataType": "text",
+                        "isKey": true
+                    },
+                    {
+                        "name": "datum melding",
+                        "dataType": "date",
+                        "isKey": false
+                    },
+                    {
+                        "name": "locatie",
+                        "dataType": "text",
+                        "isKey": false
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "element",
+                    "slug": "seed-el-melder",
+                    "version": "0.0.15"
+                },
+                "identifier": "id-seed-el-melder",
+                "type": "BusinessObject",
+                "name": "Melder",
+                "documentation": "De persoon die een melding doet.",
+                "origin": "drawn",
+                "properties": [],
+                "attributes": [
+                    {
+                        "name": "e-mailadres",
+                        "dataType": "text",
+                        "isKey": true
+                    },
+                    {
+                        "name": "naam",
+                        "dataType": "text",
+                        "isKey": false
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "vng-gemma",
+                    "schema": "relation",
+                    "slug": "seed-rel-melding-melder",
+                    "version": "0.0.12"
+                },
+                "identifier": "id-seed-rel-melding-melder",
+                "type": "Association",
+                "name": "gedaan door",
+                "source": "id-seed-el-melding",
+                "target": "id-seed-el-melder",
+                "sourceCardinality": "0..*",
+                "targetCardinality": "1",
+                "origin": "drawn",
+                "properties": []
+            }
+        ]
+    }
+}

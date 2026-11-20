@@ -173,7 +173,10 @@ class TechnologyComponentDeclarationTest extends TestCase {
 
 		$this->assertArrayNotHasKey('runsOn', $before['properties']);
 		$this->assertSame('#/components/schemas/technologyComponent', $after['properties']['runsOn']['items']['$ref']);
-		$this->assertTrue(version_compare($after['version'], $before['version'], '>'));
+		// Another fragment may lift usage further; the merged version stays above the base register's.
+		$base = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
+		$this->assertTrue(version_compare($after['version'], $base['components']['schemas']['usage']['version'], '>'));
+		$this->assertTrue(version_compare($after['version'], '1.6.1', '>='));
 		$this->assertSame([], array_values(array_diff(array_keys($before['properties']), array_keys($after['properties']))), 'usage lost a property');
 		$this->assertSame([], array_values(array_diff(array_keys($after['properties']), [...array_keys($before['properties']), 'runsOn'])), 'usage gained more than runsOn');
 	}//end testUsageGainsRunsOnAndAHigherVersion()

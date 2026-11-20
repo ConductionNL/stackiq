@@ -850,6 +850,57 @@ OC.L10N.register(
         "Version {number}: {label}": "Versie {number}: {label}",
         "Version label": "Versielabel",
         "Testimonial": "Testimonial",
+        "Data model": "Gegevensmodel",
+        "The data entities of the Gemeentelijk Gegevensmodel and your own, with their relations and the applications that hold their data.": "De gegevensobjecten uit het Gemeentelijk Gegevensmodel en uw eigen gegevensobjecten, met hun relaties en de applicaties die hun gegevens bevatten.",
+        "GGM": "GGM",
+        "Own": "Eigen",
+        "New data entity": "Nieuw gegevensobject",
+        "Data entity": "Gegevensobject",
+        "Applications that hold this data": "Applicaties die deze gegevens bevatten",
+        "No application in use holds data for this entity yet": "Nog geen applicatie in gebruik bevat gegevens van dit gegevensobject",
+        "Data entities": "Gegevensobjecten",
+        "Attributes": "Attributen",
+        "Source cardinality": "Kardinaliteit bron",
+        "Target cardinality": "Kardinaliteit doel",
+        "Relations": "Relaties",
+        "Loading the relations": "De relaties worden geladen",
+        "The relations could not be loaded.": "De relaties konden niet worden geladen.",
+        "No relations yet": "Nog geen relaties",
+        "This data entity is not related to another entity.": "Dit gegevensobject heeft geen relatie met een ander gegevensobject.",
+        "Relations of {name}": "Relaties van {name}",
+        "Only the first {count} relations at each end are shown.": "Alleen de eerste {count} relaties aan elke kant worden getoond.",
+        "Relation": "Relatie",
+        "Related entity": "Gerelateerd gegevensobject",
+        "Cardinality": "Kardinaliteit",
+        "Open {name}": "{name} openen",
+        "(outgoing)": "(uitgaand)",
+        "(incoming)": "(inkomend)",
+        "{from} to {to}": "{from} op {to}",
+        "Association": "Associatie",
+        "Aggregation": "Aggregatie",
+        "Composition": "Compositie",
+        "Specialization": "Specialisatie",
+        "Loading the attributes": "De attributen worden geladen",
+        "The attributes could not be loaded.": "De attributen konden niet worden geladen.",
+        "The GGM does not publish attributes in this file.": "Het GGM publiceert in dit bestand geen attributen.",
+        "Attribute {number}": "Attribuut {number}",
+        "Data type": "Gegevenstype",
+        "Part of the key": "Onderdeel van de sleutel",
+        "Remove attribute {number}": "Attribuut {number} verwijderen",
+        "Remove": "Verwijderen",
+        "Add attribute": "Attribuut toevoegen",
+        "Save attributes": "Attributen opslaan",
+        "No attributes yet.": "Nog geen attributen.",
+        "Key": "Sleutel",
+        "key": "sleutel",
+        "Edit attributes": "Attributen bewerken",
+        "The attributes are saved.": "De attributen zijn opgeslagen.",
+        "The attributes could not be saved.": "De attributen konden niet worden opgeslagen.",
+        "Text": "Tekst",
+        "Number": "Getal",
+        "Date": "Datum",
+        "Yes or no": "Ja of nee",
+        "Reference": "Verwijzing",
         "What was your experience with this software?": "Wat was uw ervaring met deze software?",
         "Submit review": "Beoordeling indienen",
         "Thank you — your review was submitted for moderation": "Bedankt — uw beoordeling is ingediend ter moderatie",
@@ -963,7 +1014,7 @@ OC.L10N.register(
         "Reports": "Rapporten",
         "Pick a report to open it.": "Kies een rapport om het te openen.",
         "Overlapping and ageing software across the portfolio.": "Overlappende en verouderde software in de portfolio.",
-        "Store": "Store",
+        "Marketplace": "Marktplaats",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd.",
         "xmlns": "xmlns",
         "xsi": "xsi",
@@ -1617,6 +1668,7 @@ OC.L10N.register(
         "The classification could not be saved.": "De classificatie kon niet worden opgeslagen.",
         "The classifications could not be loaded.": "De classificaties konden niet worden geladen.",
         "The levels show once at least three organisations have classified it.": "De niveaus worden getoond zodra minstens drie organisaties de applicatie hebben geclassificeerd.",
+        "The view could not be loaded.": "De view kon niet worden geladen.",
         "Find duplicates": "Dubbelingen zoeken",
         "This entry was merged into another one.": "Dit item is samengevoegd met een ander item.",
         "Merged into {name}": "Samengevoegd met {name}",
@@ -1636,6 +1688,10 @@ OC.L10N.register(
         "Publisher": "Uitgever",
         "Processing agreements": "Verwerkersovereenkomsten",
         "Pentest reports": "Pentestrapporten",
+        "Expiring within 90 days": "Verloopt binnen 90 dagen",
+        "Expires within 90 days": "Verloopt binnen 90 dagen",
+        "Days until it expires": "Dagen tot het verloopt",
+        "Calculated from Valid until; it cannot be edited.": "Berekend uit Geldig tot; dit kun je niet wijzigen.",
         "Assurance reports": "Assurancerapporten",
         "Certificates": "Certificaten",
         "ENSIA statements": "ENSIA-verklaringen",
@@ -1700,7 +1756,6 @@ OC.L10N.register(
         "Pick a GEMMA view to see the coverage drawn on it.": "Kies een GEMMA-view om de dekking erop te zien.",
         "Select a view": "Selecteer een view",
         "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
-        "The view could not be loaded.": "De view kon niet worden geladen.",
         "This view holds no elements.": "Deze view bevat geen elementen.",
         "(Do not map)": "(Niet koppelen)",
         "{count} error": "{count} fout",
@@ -1876,7 +1931,6 @@ OC.L10N.register(
         "Publish {count} file": "{count} bestand publiceren",
         "Publish {count} files": "{count} bestanden publiceren",
         "Reason": "Reden",
-        "Reference": "Verwijzing",
         "Register": "Register",
         "Register:": "Register:",
         "Relationship": "Relatie",
@@ -1932,7 +1986,6 @@ OC.L10N.register(
         "Target Register": "Doelregister",
         "Target Schema": "Doelschema",
         "Target:": "Doel:",
-        "Text": "Tekst",
         "Themes": "Thema's",
         "Total Errors": "Totaal aantal fouten",
         "Total Time": "Totale tijd",
@@ -1948,17 +2001,50 @@ OC.L10N.register(
         "View Object": "Object bekijken",
         "What will happen:": "Wat er gebeurt:",
         "XML Parsing": "XML verwerken",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Kies het doelregister en -schema voor het {count} geselecteerde object:","Kies het doelregister en -schema voor de {count} geselecteerde objecten:"],
-        "_Delete {count} file_::_Delete {count} files_": ["{count} bestand verwijderen","{count} bestanden verwijderen"],
-        "_Depublish {count} file_::_Depublish {count} files_": ["{count} bestand depubliceren","{count} bestanden depubliceren"],
-        "_Migrate {count} object_::_Migrate {count} objects_": ["{count} object migreren","{count} objecten migreren"],
-        "_Publish {count} file_::_Publish {count} files_": ["{count} bestand publiceren","{count} bestanden publiceren"],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan {count} compliance-object","Scan alle {count} compliance-objecten"],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Details tonen voor {count} importfout","Details tonen voor {count} importfouten"],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["{count} object geïmporteerd in {time}","{count} objecten geïmporteerd in {time}"],
-        "_{count} error_::_{count} errors_": ["{count} fout","{count} fouten"],
-        "_{count} object_::_{count} objects_": ["{count} object","{count} objecten"],
-        "_{count} occurrence_::_{count} occurrences_": ["{count} keer","{count} keer"],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
+            "Kies het doelregister en -schema voor het {count} geselecteerde object:",
+            "Kies het doelregister en -schema voor de {count} geselecteerde objecten:"
+        ],
+        "_Delete {count} file_::_Delete {count} files_": [
+            "{count} bestand verwijderen",
+            "{count} bestanden verwijderen"
+        ],
+        "_Depublish {count} file_::_Depublish {count} files_": [
+            "{count} bestand depubliceren",
+            "{count} bestanden depubliceren"
+        ],
+        "_Migrate {count} object_::_Migrate {count} objects_": [
+            "{count} object migreren",
+            "{count} objecten migreren"
+        ],
+        "_Publish {count} file_::_Publish {count} files_": [
+            "{count} bestand publiceren",
+            "{count} bestanden publiceren"
+        ],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
+            "Scan {count} compliance-object",
+            "Scan alle {count} compliance-objecten"
+        ],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": [
+            "Details tonen voor {count} importfout",
+            "Details tonen voor {count} importfouten"
+        ],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
+            "{count} object geïmporteerd in {time}",
+            "{count} objecten geïmporteerd in {time}"
+        ],
+        "_{count} error_::_{count} errors_": [
+            "{count} fout",
+            "{count} fouten"
+        ],
+        "_{count} object_::_{count} objects_": [
+            "{count} object",
+            "{count} objecten"
+        ],
+        "_{count} occurrence_::_{count} occurrences_": [
+            "{count} keer",
+            "{count} keer"
+        ],
         "ArchiMate type": "ArchiMate-type",
         "Asset tag": "Inventarisnummer",
         "Class": "Klasse",
@@ -2037,6 +2123,9 @@ OC.L10N.register(
         "The type was changed.": "Het type is gewijzigd.",
         "This entry is an application.": "Deze registratie is een applicatie.",
         "This entry is system software.": "Deze registratie is systeemsoftware.",
+        "Show products": "Producten tonen",
+        "No product": "Geen product",
+        "Products ({count}): {names}": "Producten ({count}): {names}",
         "{owner}, {count}": "{owner}, {count}",
         "a cooperation": "een samenwerking",
         "an unknown organisation": "een onbekende organisatie",
@@ -2046,8 +2135,14 @@ OC.L10N.register(
         "The participants could not be loaded.": "De deelnemers konden niet worden geladen.",
         "This application in use is not shared with other organisations": "Deze applicatie in gebruik wordt niet met andere organisaties gedeeld",
         "Your organisation takes part in this application in use. Only the owner can change it.": "Uw organisatie neemt deel aan deze applicatie in gebruik. Alleen de eigenaar kan haar wijzigen.",
-        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Beheerd door {owner} voor {count} organisatie","Beheerd door {owner} voor {count} organisaties"],
-        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Gedeeld door {count} organisatie","Gedeeld door {count} organisaties"],
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
+            "Beheerd door {owner} voor {count} organisatie",
+            "Beheerd door {owner} voor {count} organisaties"
+        ],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
+            "Gedeeld door {count} organisatie",
+            "Gedeeld door {count} organisaties"
+        ],
         "Shared through a cooperation": "Gedeeld via een samenwerking",
         "[{count:shared} shared through a cooperation]": "[{count:shared} gedeeld via een samenwerking]",
         "Run by {owner} for {count} organisation": "Beheerd door {owner} voor {count} organisatie",
@@ -2059,7 +2154,10 @@ OC.L10N.register(
         "This cooperation lists no participants yet": "Deze samenwerking heeft nog geen deelnemers",
         "Cooperation · %n participant": "Samenwerking · %n deelnemer",
         "Cooperation · %n participants": "Samenwerking · %n deelnemers",
-        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Samenwerking · %n deelnemer","Samenwerking · %n deelnemers"]
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
+            "Samenwerking · %n deelnemer",
+            "Samenwerking · %n deelnemers"
+        ]
     },
     "nplurals=2; plural=(n != 1);"
 )

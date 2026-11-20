@@ -81,7 +81,7 @@
 				"lifecycleActions": { "field": "status" },
 				"permissions": true,
 				"widgets": [
-					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "interneAnnotation", "installedVersion", "publicationDate" ] } },
+					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "interneAnnotation", "installedVersion", "publicationDate", "dataEntities" ] } },
 					{ "id": "gb-service-desk", "type": "data", "title": "Service desk", "icon": "Sitemap", "content": { "columns": 2, "include": [ "serviceDeskSystem", "serviceDeskRecordId", "serviceDeskUrl", "serviceDeskSyncedAt" ] } },
 					{ "id": "gb-assessment", "type": "data", "title": "Value assessment", "icon": "ScaleBalance", "content": { "columns": 2, "include": [ "businessValue", "technicalFit", "riskScore", "scoredOn", "timeClassification", "suggestedTimeClassification", "timeRationale", "timeReviewDate" ] } },
 					{ "id": "gb-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },

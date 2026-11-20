@@ -554,6 +554,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 * @param array                  $modulesData   The modules found so far
 	 *
 	 * @return array The merged modules
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function mergeAllModules(ObjectServiceInterface $objectService, array $query, array $modulesData): array {
 		$allModules = $objectService->searchObjects(
@@ -825,6 +826,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 * @param array $query Optional query criteria and pagination parameters
 	 *
 	 * @return array Array of objects matching the criteria
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function getObjectsWithPagination(string $schemaType, array $query = []): array {
 		try {
