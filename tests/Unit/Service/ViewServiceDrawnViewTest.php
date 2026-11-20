@@ -241,15 +241,21 @@ final class ViewServiceDrawnViewTest extends TestCase {
 		$this->currentUserId = 'bob';
 		$this->activeOrganisation = 'org-b';
 		$this->objectService->method('find')->willReturnCallback(
-			fn (int|string $id): ?ObjectEntityInterface => $id === 'drafted-uuid' ? $this->entity(['id' => 'drafted-uuid', 'name' => 'Concept', 'origin' => 'assistant']) : null
+			function (int|string $id): ?ObjectEntityInterface {
+				if ($id !== 'drafted-uuid') {
+					return null;
+				}
+
+				return $this->entity(data: ['id' => 'drafted-uuid', 'name' => 'Concept', 'origin' => 'assistant']);
+			}
 		);
 
 		$drafted = $this->viewService->getView(viewId: 'drafted-uuid');
 		$missing = $this->viewService->getView(viewId: 'missing-uuid');
 
-		$this->assertFalse($drafted['success']);
-		$this->assertNull($drafted['view']);
-		$this->assertSame(str_replace('missing-uuid', 'drafted-uuid', $missing['error']), $drafted['error']);
+		$this->assertFalse(condition: $drafted['success']);
+		$this->assertNull(actual: $drafted['view']);
+		$this->assertSame(expected: str_replace(search: 'missing-uuid', replace: 'drafted-uuid', subject: $missing['error']), actual: $drafted['error']);
 	}//end testADraftedViewReadsAsMissing()
 
 	/**

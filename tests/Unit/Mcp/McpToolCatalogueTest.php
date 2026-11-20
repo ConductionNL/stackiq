@@ -149,7 +149,7 @@ class McpToolCatalogueTest extends TestCase {
 		$contract = $this->createMock(McpContractTools::class);
 		$read     = $this->createMock(McpReadTools::class);
 		$write    = $this->createMock(McpWriteTools::class);
-		$draft    = $this->createMock(McpDraftTools::class);
+		$draft    = $this->createMock(originalClassName: McpDraftTools::class);
 		$args     = ['probe' => 'x'];
 		$handlers = [
 			'getContractApprovalConfig'  => $contract,

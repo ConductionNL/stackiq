@@ -71,12 +71,12 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	public function testAMalformedDraftIsRefusedBeforeAnySave(array $elements, array $relations, string $message): void {
 		try {
 			$this->service()->draftView(name: 'Concept', description: '', elements: $elements, relations: $relations);
-			$this->fail('The draft was not refused.');
+			$this->fail(message: 'The draft was not refused.');
 		} catch (InvalidArgumentException $e) {
-			$this->assertStringContainsString($message, $e->getMessage());
+			$this->assertStringContainsString(needle: $message, haystack: $e->getMessage());
 		}
 
-		$this->assertSame([], $this->saves);
+		$this->assertSame(expected: [], actual: $this->saves);
 	}//end testAMalformedDraftIsRefusedBeforeAnySave()
 
 	/**
@@ -111,7 +111,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testADraftWithoutANameIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(exception: InvalidArgumentException::class);
 		$this->service()->draftView(name: '  ', description: '', elements: [['key' => 'a', 'type' => 'Node', 'name' => 'S']], relations: []);
 	}//end testADraftWithoutANameIsRefused()
 
@@ -131,33 +131,34 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 			relations: [['source' => 'a', 'target' => 'b', 'type' => 'Flow']]
 		);
 
-		$this->assertSame(['element', 'element', 'relation', 'view'], array_column($this->saves, 'schema'));
+		$this->assertSame(expected: ['element', 'element', 'relation', 'view'], actual: array_column(array: $this->saves, column_key: 'schema'));
 		foreach ($this->saves as $save) {
-			$this->assertSame('assistant', $save['object']['origin'], $save['schema']);
+			$this->assertSame(expected: 'assistant', actual: $save['object']['origin'], message: $save['schema']);
 		}
 
 		[$zaak, $dms, $relation, $view] = array_column($this->saves, 'object');
-		$this->assertSame(['type' => 'Flow', 'source' => $zaak['identifier'], 'target' => $dms['identifier']], array_intersect_key($relation, ['type' => 1, 'source' => 1, 'target' => 1]));
-		$this->assertSame('draft', $view['status']);
-		$this->assertSame('anna', $view['draftedFor']);
-		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $view['draftedAt']);
-		$this->assertSame('How the case system hands documents to document management.', $view['documentation']);
-		$this->assertMatchesRegularExpression('/^id-[0-9a-f-]{36}$/', $view['identifier']);
+		$ends = array_intersect_key($relation, ['type' => 1, 'source' => 1, 'target' => 1]);
+		$this->assertSame(expected: ['type' => 'Flow', 'source' => $zaak['identifier'], 'target' => $dms['identifier']], actual: $ends);
+		$this->assertSame(expected: 'draft', actual: $view['status']);
+		$this->assertSame(expected: 'anna', actual: $view['draftedFor']);
+		$this->assertMatchesRegularExpression(pattern: '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', string: $view['draftedAt']);
+		$this->assertSame(expected: 'How the case system hands documents to document management.', actual: $view['documentation']);
+		$this->assertMatchesRegularExpression(pattern: '/^id-[0-9a-f-]{36}$/', string: $view['identifier']);
 
-		$this->assertSame([$zaak['identifier'], $dms['identifier']], array_column($view['nodes'], 'elementRef'));
+		$this->assertSame(expected: [$zaak['identifier'], $dms['identifier']], actual: array_column(array: $view['nodes'], column_key: 'elementRef'));
 		foreach ($view['nodes'] as $node) {
-			$this->assertArrayNotHasKey('x', $node, 'a draft is laid out on first open');
-			$this->assertArrayNotHasKey('y', $node);
+			$this->assertArrayNotHasKey(key: 'x', array: $node, message: 'a draft is laid out on first open');
+			$this->assertArrayNotHasKey(key: 'y', array: $node);
 		}
 
 		$connection = $view['connections'][0];
-		$this->assertSame($relation['identifier'], $connection['modelRelationshipId']);
-		$this->assertSame([$view['nodes'][0]['viewNodeId'], $view['nodes'][1]['viewNodeId']], [$connection['sourceId'], $connection['targetId']]);
-		$this->assertSame(['viewNodes' => $view['nodes'], 'viewRelationships' => $view['connections']], $view['xml']);
+		$this->assertSame(expected: $relation['identifier'], actual: $connection['modelRelationshipId']);
+		$this->assertSame(expected: [$view['nodes'][0]['viewNodeId'], $view['nodes'][1]['viewNodeId']], actual: [$connection['sourceId'], $connection['targetId']]);
+		$this->assertSame(expected: ['viewNodes' => $view['nodes'], 'viewRelationships' => $view['connections']], actual: $view['xml']);
 
-		$this->assertSame('saved-view', $result['uuid']);
-		$this->assertSame('/apps/stackiq/views/saved-view', $result['url']);
-		$this->assertSame(['elements' => 2, 'relations' => 1], $result['created']);
+		$this->assertSame(expected: 'saved-view', actual: $result['uuid']);
+		$this->assertSame(expected: '/apps/stackiq/views/saved-view', actual: $result['url']);
+		$this->assertSame(expected: ['elements' => 2, 'relations' => 1], actual: $result['created']);
 	}//end testEveryCreatedObjectCarriesTheMarkInItsOwnSave()
 
 	/**
@@ -182,14 +183,16 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 			relations: [['source' => 'a', 'target' => 'b', 'type' => 'Flow']]
 		);
 
-		$this->assertSame(['view'], array_column($this->saves, 'schema'));
+		$this->assertSame(expected: ['view'], actual: array_column(array: $this->saves, column_key: 'schema'));
 		$view = $this->saves[0]['object'];
-		$this->assertSame(['id-zaak', 'id-dms'], array_column($view['nodes'], 'elementRef'));
-		$this->assertSame(['Zaaksysteem', 'Documentbeheer'], array_column($view['nodes'], 'name'));
-		$this->assertSame('id-rel', $view['connections'][0]['modelRelationshipId']);
-		$this->assertSame(['elements' => 0, 'relations' => 0], $result['created']);
-		$this->assertContains(['schema' => 'element', 'filters' => ['type' => 'ApplicationComponent', 'name' => 'Documentbeheer', '_limit' => 5]], $this->searches);
-		$this->assertContains(['schema' => 'relation', 'filters' => ['type' => 'Flow', 'source' => 'id-zaak', 'target' => 'id-dms', '_limit' => 5]], $this->searches);
+		$this->assertSame(expected: ['id-zaak', 'id-dms'], actual: array_column(array: $view['nodes'], column_key: 'elementRef'));
+		$this->assertSame(expected: ['Zaaksysteem', 'Documentbeheer'], actual: array_column(array: $view['nodes'], column_key: 'name'));
+		$this->assertSame(expected: 'id-rel', actual: $view['connections'][0]['modelRelationshipId']);
+		$this->assertSame(expected: ['elements' => 0, 'relations' => 0], actual: $result['created']);
+		$elementSearch = ['schema' => 'element', 'filters' => ['type' => 'ApplicationComponent', 'name' => 'Documentbeheer', '_limit' => 5]];
+		$this->assertContains(needle: $elementSearch, haystack: $this->searches);
+		$relationSearch = ['schema' => 'relation', 'filters' => ['type' => 'Flow', 'source' => 'id-zaak', 'target' => 'id-dms', '_limit' => 5]];
+		$this->assertContains(needle: $relationSearch, haystack: $this->searches);
 	}//end testExistingElementsAndRelationsAreReused()
 
 	/**
@@ -200,9 +203,14 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	public function testARelationOfAnotherTypeIsNotReused(): void {
 		$this->rows['relation'] = [['identifier' => 'id-rel', 'type' => 'Serving', 'source' => 'id-zaak', 'target' => 'id-zaak']];
 
-		$this->service()->draftView(name: 'Concept', description: '', elements: [['key' => 'a', 'uuid' => self::EXISTING]], relations: [['source' => 'a', 'target' => 'a', 'type' => 'Flow']]);
+		$this->service()->draftView(
+			name: 'Concept',
+			description: '',
+			elements: [['key' => 'a', 'uuid' => self::EXISTING]],
+			relations: [['source' => 'a', 'target' => 'a', 'type' => 'Flow']]
+		);
 
-		$this->assertSame(['relation', 'view'], array_column($this->saves, 'schema'));
+		$this->assertSame(expected: ['relation', 'view'], actual: array_column(array: $this->saves, column_key: 'schema'));
 	}//end testARelationOfAnotherTypeIsNotReused()
 
 	/**
@@ -211,13 +219,18 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnreadableNamedElementIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage("Element 'a' names an element that does not exist or that you cannot read.");
+		$this->expectException(exception: InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: "Element 'a' names an element that does not exist or that you cannot read.");
 
 		try {
-			$this->service()->draftView(name: 'Concept', description: '', elements: [['key' => 'a', 'uuid' => '22222222-2222-4222-8222-222222222222']], relations: []);
+			$this->service()->draftView(
+				name: 'Concept',
+				description: '',
+				elements: [['key' => 'a', 'uuid' => '22222222-2222-4222-8222-222222222222']],
+				relations: []
+			);
 		} finally {
-			$this->assertSame([], $this->saves);
+			$this->assertSame(expected: [], actual: $this->saves);
 		}
 	}//end testAnUnreadableNamedElementIsRefused()
 
@@ -236,12 +249,12 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 				elements: [['key' => 'a', 'type' => 'Node', 'name' => 'S1'], ['key' => 'b', 'type' => 'Node', 'name' => 'S2']],
 				relations: [['source' => 'a', 'target' => 'b', 'type' => 'Flow']]
 			);
-			$this->fail('The refusal was not passed on.');
+			$this->fail(message: 'The refusal was not passed on.');
 		} catch (DraftRefusedException $e) {
-			$this->assertStringContainsString('You may not create a element here', $e->getMessage());
+			$this->assertStringContainsString(needle: 'You may not create a element here', haystack: $e->getMessage());
 		}
 
-		$this->assertSame(['element'], array_column($this->saves, 'schema'));
+		$this->assertSame(expected: ['element'], actual: array_column(array: $this->saves, column_key: 'schema'));
 	}//end testARefusedSaveIsForbiddenAndStopsTheDraft()
 
 	/**
@@ -251,7 +264,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 */
 	public function testARefusedViewSaveIsForbidden(): void {
 		$this->refuse = 'view';
-		$this->expectException(DraftRefusedException::class);
+		$this->expectException(exception: DraftRefusedException::class);
 
 		$this->service()->draftView(name: 'Concept', description: '', elements: [['key' => 'a', 'uuid' => self::EXISTING]], relations: []);
 	}//end testARefusedViewSaveIsForbidden()
@@ -262,14 +275,19 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnotherSaveFailureIsNotForbidden(): void {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('searchObjectsBySlug')->willReturn([]);
 		$objects->method('saveObject')->willThrowException(new RuntimeException('database gone'));
 
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('The element could not be saved: database gone');
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'The element could not be saved: database gone');
 
-		$this->service(objects: $objects)->draftView(name: 'Concept', description: '', elements: [['key' => 'a', 'type' => 'Node', 'name' => 'S']], relations: []);
+		$this->service(objects: $objects)->draftView(
+			name: 'Concept',
+			description: '',
+			elements: [['key' => 'a', 'type' => 'Node', 'name' => 'S']],
+			relations: []
+		);
 	}//end testAnotherSaveFailureIsNotForbidden()
 
 	/**
@@ -279,17 +297,25 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 */
 	public function testTheSearchReturnsAShortProjection(): void {
 		$this->rows['element'] = [
-			['identifier' => 'id-z', 'type' => 'ApplicationComponent', 'name' => 'Zaaksysteem', 'gemmaType' => 'Referentiecomponent', 'documentation' => 'long text', 'uuid' => 'u-z'],
+			[
+				'identifier'    => 'id-z',
+				'type'          => 'ApplicationComponent',
+				'name'          => 'Zaaksysteem',
+				'gemmaType'     => 'Referentiecomponent',
+				'documentation' => 'long text',
+				'uuid'          => 'u-z',
+			],
 			['identifier' => 'id-n', 'type' => 'Node', 'name' => 'Zaakserver', 'uuid' => 'u-n'],
 		];
 
 		$rows = $this->service()->searchElements(query: 'zaak', types: ['ApplicationComponent', 'BusinessProcess'], limit: 500);
 
-		$this->assertSame([['uuid' => 'u-z', 'identifier' => 'id-z', 'name' => 'Zaaksysteem', 'type' => 'ApplicationComponent', 'gemmaType' => 'Referentiecomponent']], $rows);
-		$this->assertSame(['schema' => 'element', 'filters' => ['_search' => 'zaak', '_limit' => 50]], $this->searches[0]);
+		$expected = [['uuid' => 'u-z', 'identifier' => 'id-z', 'name' => 'Zaaksysteem', 'type' => 'ApplicationComponent', 'gemmaType' => 'Referentiecomponent']];
+		$this->assertSame(expected: $expected, actual: $rows);
+		$this->assertSame(expected: ['schema' => 'element', 'filters' => ['_search' => 'zaak', '_limit' => 50]], actual: $this->searches[0]);
 
 		$this->service()->searchElements(query: 'zaak', types: ['Node'], limit: 3);
-		$this->assertSame(['_search' => 'zaak', '_limit' => 3, 'type' => 'Node'], $this->searches[1]['filters']);
+		$this->assertSame(expected: ['_search' => 'zaak', '_limit' => 3, 'type' => 'Node'], actual: $this->searches[1]['filters']);
 	}//end testTheSearchReturnsAShortProjection()
 
 	/**
@@ -298,7 +324,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testASearchForAnUnknownTypeIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(exception: InvalidArgumentException::class);
 		$this->service()->searchElements(query: 'x', types: ['Spaceship']);
 	}//end testASearchForAnUnknownTypeIsRefused()
 
@@ -308,13 +334,13 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutOpenRegisterTheServiceIsUnavailable(): void {
-		$registers = $this->createMock(RegisterConfigReaderInterface::class);
+		$registers = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registers->method('getObjectService')->willReturn(null);
 
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('OpenRegister is not available.');
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'OpenRegister is not available.');
 
-		(new ArchitectureViewDraftService(registers: $registers, userSession: $this->createMock(IUserSession::class)))->searchElements(query: 'x');
+		(new ArchitectureViewDraftService(registers: $registers, userSession: $this->createMock(originalClassName: IUserSession::class)))->searchElements(query: 'x');
 	}//end testWithoutOpenRegisterTheServiceIsUnavailable()
 
 	/**
@@ -327,12 +353,12 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 */
 	private function service(string $uid = 'admin', ?ObjectServiceInterface $objects = null): ArchitectureViewDraftService {
 		$objects ??= $this->fakeObjects();
-		$registers = $this->createMock(RegisterConfigReaderInterface::class);
+		$registers = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registers->method('getObjectService')->willReturn($objects);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn($uid);
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
 		return new ArchitectureViewDraftService(registers: $registers, userSession: $session);
@@ -344,21 +370,27 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return ObjectServiceInterface
 	 */
 	private function fakeObjects(): ObjectServiceInterface {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug, array $filters = []): array {
-				$this->assertSame('vng-gemma', $registerSlug);
+				$this->assertSame(expected: 'vng-gemma', actual: $registerSlug);
 				$this->searches[] = ['schema' => $schemaSlug, 'filters' => $filters];
 				return $this->rows[$schemaSlug] ?? [];
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			fn (int|string $id): ?ObjectEntityInterface => ($id === self::EXISTING) ? $this->entity(data: ['identifier' => 'id-zaak', 'type' => 'ApplicationComponent', 'name' => 'Zaaksysteem'], uuid: self::EXISTING) : null
+			function (int|string $id): ?ObjectEntityInterface {
+				if ($id !== self::EXISTING) {
+					return null;
+				}
+
+				return $this->entity(data: ['identifier' => 'id-zaak', 'type' => 'ApplicationComponent', 'name' => 'Zaaksysteem'], uuid: self::EXISTING);
+			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (array $object, ObjectSaveOptions $options): ObjectEntityInterface {
 				$schema = (string)$options->target->schema;
-				$this->assertSame('vng-gemma', $options->target->register);
+				$this->assertSame(expected: 'vng-gemma', actual: $options->target->register);
 				$this->saves[] = ['schema' => $schema, 'object' => $object];
 				if ($this->refuse === $schema) {
 					throw new RuntimeException("User 'Anna' does not have permission to 'create' objects in schema '{$schema}'");
@@ -380,7 +412,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 * @return ObjectEntityInterface
 	 */
 	private function entity(array $data, string $uuid): ObjectEntityInterface {
-		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$entity->method('getObject')->willReturn($data);
 		$entity->method('getUuid')->willReturn($uuid);
 		return $entity;

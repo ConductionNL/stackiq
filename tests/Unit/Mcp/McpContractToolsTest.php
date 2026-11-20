@@ -101,8 +101,8 @@ class McpContractToolsTest extends TestCase {
 		return new StackiqToolProvider(
 			new McpContractTools($adminGate, $gate, new McpArgumentValidator(), $this->approvals),
 			$this->createMock(McpReadTools::class),
-			$this->createMock(McpWriteTools::class),
-			$this->createMock(McpDraftTools::class)
+			$this->createMock(originalClassName: McpWriteTools::class),
+			$this->createMock(originalClassName: McpDraftTools::class)
 		);
 	}//end provider()
 

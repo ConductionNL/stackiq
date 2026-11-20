@@ -87,11 +87,11 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 		$this->assertSame(['draft', 'in review', 'published', 'retired'], $view['properties']['status']['enum']);
 		$this->assertSame('draft', $view['properties']['status']['default']);
 		// `assistant` is added by the assistant-drafted-views fragment (architecture-assistant-drafted-views).
-		$this->assertSame(['imported', 'drawn', 'assistant'], $view['properties']['origin']['enum']);
+		$this->assertSame(expected: ['imported', 'drawn', 'assistant'], actual: $view['properties']['origin']['enum']);
 		$this->assertTrue($view['properties']['tags']['facetable']);
 
 		foreach (['element', 'relation'] as $slug) {
-			$this->assertSame(['imported', 'drawn', 'assistant'], $schemas[$slug]['properties']['origin']['enum'], $slug);
+			$this->assertSame(expected: ['imported', 'drawn', 'assistant'], actual: $schemas[$slug]['properties']['origin']['enum'], message: $slug);
 			$this->assertNotContains('origin', $schemas[$slug]['required'], $slug);
 		}
 	}//end testViewElementAndRelationGainTheirFields()
@@ -194,13 +194,13 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 	public function testADraftedViewCarriesItsMarkAndTheSeedHoldsOne(): void {
 		$merged = self::merged();
 		$view = $merged['components']['schemas']['view'];
-		$this->assertSame('string', $view['properties']['draftedFor']['type']);
-		$this->assertSame('date-time', $view['properties']['draftedAt']['format']);
-		$this->assertNotContains('draftedFor', $view['required']);
+		$this->assertSame(expected: 'string', actual: $view['properties']['draftedFor']['type']);
+		$this->assertSame(expected: 'date-time', actual: $view['properties']['draftedAt']['format']);
+		$this->assertNotContains(needle: 'draftedFor', haystack: $view['required']);
 
 		$editor = self::read(self::SETTINGS . '/register.d/architecture-views.json')['components']['schemas'];
 		foreach (['view', 'element', 'relation'] as $slug) {
-			$this->assertTrue(version_compare($merged['components']['schemas'][$slug]['version'], $editor[$slug]['version'], '>'), $slug);
+			$this->assertTrue(condition: version_compare(version1: $merged['components']['schemas'][$slug]['version'], version2: $editor[$slug]['version'], operator: '>'), message: $slug);
 		}
 
 		$seeded = [];
@@ -210,23 +210,23 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 			}
 		}
 
-		$this->assertCount(1, $seeded['view']);
+		$this->assertCount(expectedCount: 1, haystack: $seeded['view']);
 		$drafted = $seeded['view'][0];
-		$this->assertSame(['assistant', 'draft', 'admin'], [$drafted['origin'], $drafted['status'], $drafted['draftedFor']]);
+		$this->assertSame(expected: ['assistant', 'draft', 'admin'], actual: [$drafted['origin'], $drafted['status'], $drafted['draftedFor']]);
 		$identifiers = array_column(array_merge($seeded['element'], $seeded['relation']), 'identifier');
 		foreach ($drafted['nodes'] as $node) {
-			$this->assertContains($node['elementRef'], $identifiers);
-			$this->assertArrayNotHasKey('x', $node, 'a drafted view is laid out on first open');
+			$this->assertContains(needle: $node['elementRef'], haystack: $identifiers);
+			$this->assertArrayNotHasKey(key: 'x', array: $node, message: 'a drafted view is laid out on first open');
 		}
 
-		$this->assertContains($drafted['connections'][0]['modelRelationshipId'], $identifiers);
+		$this->assertContains(needle: $drafted['connections'][0]['modelRelationshipId'], haystack: $identifiers);
 
 		// Other fragments seed vng-gemma elements too (drawn ones); the ones this
 		// drafted view places and connects carry the assistant mark.
 		$placed = array_merge(array_column($drafted['nodes'], 'elementRef'), array_column($drafted['connections'], 'modelRelationshipId'));
 		foreach (array_merge($seeded['element'], $seeded['relation']) as $object) {
 			if (in_array($object['identifier'] ?? null, $placed, true) === true) {
-				$this->assertSame('assistant', $object['origin']);
+				$this->assertSame(expected: 'assistant', actual: $object['origin']);
 			}
 		}
 	}//end testADraftedViewCarriesItsMarkAndTheSeedHoldsOne()

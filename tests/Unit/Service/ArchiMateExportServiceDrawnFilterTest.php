@@ -65,7 +65,7 @@ final class ArchiMateExportServiceDrawnFilterTest extends TestCase {
 			$this->entity(['id' => $prefix . '-legacy']),
 			$this->entity(['id' => $prefix . '-drawn', 'origin' => 'drawn']),
 			// An assistant's draft stays out of the full export too (architecture-assistant-drafted-views D6).
-			$this->entity(['id' => $prefix . '-drafted', 'origin' => 'assistant']),
+			$this->entity(data: ['id' => $prefix . '-drafted', 'origin' => 'assistant']),
 		];
 	}//end objects()
 
