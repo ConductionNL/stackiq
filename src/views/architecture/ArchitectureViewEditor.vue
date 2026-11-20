@@ -344,6 +344,7 @@ export default {
 		 * Load the view, then take the lock when it is a drawn view.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
 		 */
 		async load() {
 			this.loading = true
@@ -613,6 +614,7 @@ export default {
 		 *
 		 * @param {object|null} view The enriched view.
 		 * @return {{[nodeId: string]: {usage: Array, deelnamesGebruik: Array}}} The usage by node.
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
 		 */
 		usageIndex(view) {
 			const index = {}
@@ -631,6 +633,7 @@ export default {
 		 *
 		 * @param {{node: object}} event The canvas's node event.
 		 * @return {void}
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
 		 */
 		onNodeSelect(event) {
 			const usageId = event?.node?.data?.usageId
