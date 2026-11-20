@@ -38,7 +38,8 @@ use Psr\Log\LoggerInterface;
  * The owners of the usages of the application(s) a notification is about.
  *
  * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/softwarecatalog-notifications/spec.md
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) MaintenanceRecipientService::referenceId() is a pure reader of a reference value.
+*/
 class UsageOwnerRecipientResolver implements RecipientResolverInterface {
 
 	/**

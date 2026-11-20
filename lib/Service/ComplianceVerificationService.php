@@ -36,7 +36,8 @@ use Throwable;
  * write, so this is the only way to set them.
  *
  * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) ComplianceVerification holds the pure rules; RelationRefs is a pure reader of relation values.
+*/
 class ComplianceVerificationService {
 
 	/**

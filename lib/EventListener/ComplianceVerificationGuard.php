@@ -40,7 +40,8 @@ use OCP\EventDispatcher\IEventListener;
  * those fields, so the claim reads claimed again.
  *
  * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) ComplianceVerification holds the pure rules; isWriting() is the service's own re-entrancy flag.
+*/
 class ComplianceVerificationGuard implements IEventListener {
 
 	/**

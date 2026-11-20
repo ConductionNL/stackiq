@@ -40,7 +40,8 @@ use Throwable;
  * hides the field, and the supplier reads usages through it.
  *
  * @spec openspec/specs/application-page/spec.md#requirement-req-apg-002-the-application-page-lists-the-usages-of-the-application
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) UsageProviderSync::patch() is a pure function of the usage and its supplier.
+*/
 class UsageProviderListener implements IEventListener {
 
 	/**

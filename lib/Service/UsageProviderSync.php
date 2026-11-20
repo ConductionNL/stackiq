@@ -37,7 +37,8 @@ use Throwable;
  * usages saved before.
  *
  * @spec openspec/specs/application-page/spec.md#requirement-req-apg-002-the-application-page-lists-the-usages-of-the-application
- */
+ * @SuppressWarnings(PHPMD.StaticAccess) RelationRefs reads relation values; SearchBounds::bounded() is the shared query guard.
+*/
 class UsageProviderSync {
 
 	/**
@@ -128,15 +129,11 @@ class UsageProviderSync {
 		}
 
 		foreach (($found['results'] ?? $found) as $usage) {
-			if (is_object($usage) === true && method_exists($usage, 'jsonSerialize') === true) {
-				$usage = $usage->jsonSerialize();
-			}
-
-			if (is_array($usage) === false || is_string($usage['id'] ?? $usage['@self']['id'] ?? null) === false) {
+			$usage = self::asRecord(usage: $usage);
+			$uuid  = $usage['id'] ?? $usage['@self']['id'] ?? null;
+			if (is_string($uuid) === false) {
 				continue;
 			}
-
-			$uuid = (string)($usage['id'] ?? $usage['@self']['id']);
 
 			$patch = self::patch(usage: $usage, supplier: $this->supplierFor(usage: $usage));
 			if ($patch === []) {
@@ -160,6 +157,27 @@ class UsageProviderSync {
 
 		return $written;
 	}//end backfill()
+
+	/**
+	 * A search result as a plain record: an entity is serialised, anything
+	 * that is not a record becomes an empty one.
+	 *
+	 * @param mixed $usage The search result.
+	 *
+	 * @return array<string, mixed> The record.
+	 */
+	private static function asRecord(mixed $usage): array {
+		if (is_object($usage) === true && method_exists($usage, 'jsonSerialize') === true) {
+			$usage = $usage->jsonSerialize();
+		}
+
+		if (is_array($usage) === false) {
+			return [];
+		}
+
+		return $usage;
+
+	}//end asRecord()
 
 	/**
 	 * Read a module's provider with RBAC off; null when absent or unreadable.
