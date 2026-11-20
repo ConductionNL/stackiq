@@ -1937,7 +1937,6 @@
         "Publish {count} file": "{count} bestand publiceren",
         "Publish {count} files": "{count} bestanden publiceren",
         "Reason": "Reden",
-        "Reference": "Verwijzing",
         "Register": "Register",
         "Register:": "Register:",
         "Relationship": "Relatie",
@@ -1993,7 +1992,6 @@
         "Target Register": "Doelregister",
         "Target Schema": "Doelschema",
         "Target:": "Doel:",
-        "Text": "Tekst",
         "Themes": "Thema's",
         "Total Errors": "Totaal aantal fouten",
         "Total Time": "Totale tijd",
@@ -2133,6 +2131,11 @@
         "This entry is system software.": "Deze registratie is systeemsoftware.",
         "Show products": "Producten tonen",
         "No product": "Geen product",
-        "Products ({count}): {names}": "Producten ({count}): {names}"
+        "Products ({count}): {names}": "Producten ({count}): {names}",
+        "Does not meet": "Voldoet niet",
+        "Unknown (no claim)": "Onbekend (geen claim)",
+        "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Geverifieerd: {verified} · Geclaimd: {claimed} · Voldoet niet: {notMet} · Onbekend: {none}",
+        "Result": "Resultaat",
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Of de applicatie aan de standaard of BIO-maatregel voldoet. Geen claim betekent onbekend, niet dat ze niet voldoet."
     }
 }
