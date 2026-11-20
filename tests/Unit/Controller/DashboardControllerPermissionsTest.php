@@ -53,30 +53,37 @@ class DashboardControllerPermissionsTest extends TestCase {
 	private function provided(?string $uid, bool $isAdmin, bool $inGroup): array {
 		$user = null;
 		if ($uid !== null) {
-			$user = $this->createMock(IUser::class);
+			$user = $this->createMock(originalClassName: IUser::class);
 			$user->method('getUID')->willReturn($uid);
 		}
 
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
-		$groups = $this->createMock(IGroupManager::class);
+		$groups = $this->createMock(originalClassName: IGroupManager::class);
 		$groups->method('isAdmin')->willReturnCallback(fn (string $id): bool => $id === $uid && $isAdmin);
 		$groups->method('isInGroup')->willReturnCallback(
 			fn (string $id, string $group): bool => $id === $uid && $group === 'functioneel-beheerder' && $inGroup
 		);
 
 		$provided = [];
-		$state    = $this->createMock(IInitialState::class);
+		$state    = $this->createMock(originalClassName: IInitialState::class);
 		$state->expects($this->once())->method('provideInitialState')->willReturnCallback(
 			function (string $key, mixed $value) use (&$provided): void {
 				$provided[] = [$key, $value];
 			}
 		);
 
-		$controller = new DashboardController('stackiq', $this->createMock(IRequest::class), $session, $state, $groups, new SyncAccessPolicy($groups));
+		$controller = new DashboardController(
+			appName: 'stackiq',
+			request: $this->createMock(originalClassName: IRequest::class),
+			userSession: $session,
+			initialState: $state,
+			groupManager: $groups,
+			syncAccess: new SyncAccessPolicy(groupManager: $groups)
+		);
 		$response   = $controller->page(null);
-		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame(expected: 'index', actual: $response->getTemplateName());
 
 		return $provided;
 
@@ -88,7 +95,7 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testARegularUserHoldsOnlyUser(): void {
-		$this->assertSame([['permissions', ['user']]], $this->provided('henk', false, false));
+		$this->assertSame(expected: [['permissions', ['user']]], actual: $this->provided(uid: 'henk', isAdmin: false, inGroup: false));
 
 	}//end testARegularUserHoldsOnlyUser()
 
@@ -98,7 +105,7 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFunctionalAdministratorMaySeeTheSync(): void {
-		$this->assertSame([['permissions', ['user', 'sync.view']]], $this->provided('fb', false, true));
+		$this->assertSame(expected: [['permissions', ['user', 'sync.view']]], actual: $this->provided(uid: 'fb', isAdmin: false, inGroup: true));
 
 	}//end testAFunctionalAdministratorMaySeeTheSync()
 
@@ -108,7 +115,10 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAdminHoldsAdminAndSyncView(): void {
-		$this->assertSame([['permissions', ['user', 'admin', 'sync.view']]], $this->provided('admin', true, false));
+		$this->assertSame(
+			expected: [['permissions', ['user', 'admin', 'sync.view']]],
+			actual: $this->provided(uid: 'admin', isAdmin: true, inGroup: false)
+		);
 
 	}//end testAnAdminHoldsAdminAndSyncView()
 
@@ -118,7 +128,7 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoUserHoldsNothing(): void {
-		$this->assertSame([['permissions', []]], $this->provided(null, false, false));
+		$this->assertSame(expected: [['permissions', []]], actual: $this->provided(uid: null, isAdmin: false, inGroup: false));
 
 	}//end testNoUserHoldsNothing()
 }//end class
