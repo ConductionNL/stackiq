@@ -7,7 +7,8 @@
 		"ComplianceMatrix": "ReportsCompliance",
 		"Standaarden": "Architecture",
 		"Views": "Architecture",
-		"Gegevensmodel": "Architecture"
+		"Gegevensmodel": "Architecture",
+		"KnowledgeBaseMenu": "Modules"
 	},
 	"removals": [],
 	"settingsSection": []

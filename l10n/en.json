@@ -2097,6 +2097,12 @@
         "Suggested connections": "Suggested connections",
         "The suggested connections could not be loaded.": "The suggested connections could not be loaded.",
         "The suggestion could not be saved.": "The suggestion could not be saved.",
-        "Unnamed connection": "Unnamed connection"
+        "Unnamed connection": "Unnamed connection",
+        "Knowledge base": "Knowledge base",
+        "Knowledge articles": "Knowledge articles",
+        "Search knowledge articles": "Search knowledge articles",
+        "About this search": "About this search",
+        "The knowledge base needs the Collectives app. Ask an administrator to install it.": "The knowledge base needs the Collectives app. Ask an administrator to install it.",
+        "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/).": "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/)."
     }
 }
