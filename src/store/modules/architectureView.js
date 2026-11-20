@@ -105,6 +105,19 @@ function defaultIdentifier() {
 }
 
 /**
+ * The origin a view is saved with from the editor: an assistant's draft keeps
+ * its mark when a person edits it (architecture-assistant-drafted-views D3),
+ * every other view is drawn.
+ *
+ * @param {object} view The view being saved.
+ * @return {string} 'assistant' or 'drawn'.
+ * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+ */
+export function savedOrigin(view) {
+	return view?.origin === 'assistant' ? 'assistant' : 'drawn'
+}
+
+/**
  * The store over one register.
  *
  * @param {object} options The collaborators.
@@ -270,8 +283,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 		delete fields['@self']
 		return update(SCHEMAS.view, uuidOf(view), {
 			...fields,
-			// An assistant's draft keeps its mark when a person edits it (architecture-assistant-drafted-views D3).
-			origin: view.origin === 'assistant' ? 'assistant' : 'drawn',
+			origin: savedOrigin(view),
 			nodes: viewNodes,
 			connections: viewRelationships,
 			xml: { ...(view.xml ?? {}), viewNodes, viewRelationships },
