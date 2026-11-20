@@ -222,6 +222,19 @@
 								}}</span>
 							</button>
 							<span
+								v-if="row.cells[column.uuid].state === 'verified'"
+								class="cmv-cellReviewer">
+								{{ verifiedLine(row.cells[column.uuid].record) }}
+							</span>
+							<NcButton
+								v-else-if="canAskVerification(row.cells[column.uuid])"
+								variant="tertiary"
+								class="cmv-verifyButton"
+								:disabled="verifying === recordId(row.cells[column.uuid].record)"
+								@click="markVerified(row.cells[column.uuid].record)">
+								{{ t('stackiq', 'Mark as verified') }}
+							</NcButton>
+							<span
 								v-else
 								class="cmv-cellNone"
 								:aria-label="cellAriaLabel(row, column)">
@@ -269,7 +282,10 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -293,6 +309,7 @@ import {
 	columnLabel,
 	countCellStates,
 	dataOf,
+	hasEvidence,
 	resolveUuid,
 } from '../utils/complianceMatrix.js'
 import { registerObjectTypeFromConfig } from '../utils/objectTypeCollection.js'
@@ -363,6 +380,7 @@ export default {
 	data() {
 		return {
 			loading: true,
+			verifying: '',
 			columnSource: COLUMN_SOURCE.STANDAARDVERSIE,
 			selectedStandards: [],
 			selectedBioMeasures: [],
@@ -638,6 +656,69 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * The uuid of a compliancy record.
+		 *
+		 * @param {object} record The record.
+		 * @return {string} The uuid, or ''.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		recordId(record) {
+			return record?.['@self']?.id || record?.id || resolveUuid(record) || ''
+		},
+
+		/**
+		 * Whether a cell offers Mark as verified: a claimed record with evidence.
+		 * Who may verify is decided by the server (a reviewer outside the supplier).
+		 *
+		 * @param {{state: string, record: object}} cell The cell.
+		 * @return {boolean} True when the action is offered.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		canAskVerification(cell) {
+			return cell?.state === 'claimed' && Boolean(cell.record) && hasEvidence(dataOf(cell.record))
+		},
+
+		/**
+		 * "Verified by <name> on <date>" for a verified cell.
+		 *
+		 * @param {object} record The record.
+		 * @return {string} The line, or '' without a reviewer.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		verifiedLine(record) {
+			const data = dataOf(record)
+			if (!data?.verifiedBy) {
+				return ''
+			}
+			const date = data.verifiedAt ? new Date(data.verifiedAt).toLocaleDateString() : ''
+			return t('stackiq', 'Verified by {name} on {date}', { name: data.verifiedBy, date })
+		},
+
+		/**
+		 * Ask the server to mark a claim verified, then reload the compliance records.
+		 *
+		 * @param {object} record The record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		async markVerified(record) {
+			const id = this.recordId(record)
+			if (!id) {
+				return
+			}
+			this.verifying = id
+			try {
+				await axios.post(generateUrl('/apps/stackiq/api/compliancy/{id}/verify', { id }))
+				showSuccess(t('stackiq', 'The claim is marked verified'))
+				await this.fetchType('compliancy')
+			} catch (error) {
+				showError(error?.response?.data?.message || t('stackiq', 'Could not mark the claim verified'))
+			} finally {
+				this.verifying = ''
+			}
+		},
 
 		/**
 		 * Fetch the collections the matrix depends on.
@@ -982,6 +1063,16 @@ export default {
 
 .cmv-cell {
 	text-align: center;
+}
+
+.cmv-cellReviewer {
+	display: block;
+	font-size: var(--default-font-size);
+	color: var(--color-text-maxcontrast);
+}
+
+.cmv-verifyButton {
+	margin-top: calc(var(--default-grid-baseline) * 1);
 }
 
 .cmv-cell--verified {

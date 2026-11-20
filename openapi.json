@@ -3404,6 +3404,43 @@
                 }
             }
         },
+        "/gebruik/shared-connections": {
+            "get": {
+                "operationId": "gebruik-get-shared-connections",
+                "summary": "The connections of the usages your organisation owns or takes part in, with whom each is shared",
+                "description": "For each connection held by a shared usage that the caller's organisation owns or participates in: the other organisations it is shared with (sharedWith) and the usage ids (usages). Requires gebruik-beheerder or gebruik-raadpleger and an organisation on the account.",
+                "tags": [
+                    "gebruik"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/heartbeat": {
             "post": {
                 "operationId": "settings-heartbeat",
@@ -7282,6 +7319,51 @@
                         "$ref": "#/components/responses/Problem500"
                     }
                 }
+            }
+        },
+        "/compliancy/{id}/verify": {
+            "post": {
+                "operationId": "compliance-verification-verify",
+                "summary": "Mark a compliance claim verified",
+                "description": "Mark a compliance claim verified as the signed-in reviewer. Only a reviewer of another organisation than the supplier may, and only a claim with evidence.",
+                "tags": [
+                    "compliance-verification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{verifiedBy, verifiedAt, verifiedByOrganisation}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The compliancy uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         }
     },

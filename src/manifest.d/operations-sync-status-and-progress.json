@@ -1,0 +1,25 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "operations-sync-status-and-progress: the organisation sync's schedule, its last run and a running sync, for Nextcloud admins and functional administrators. The menu entry carries permission sync.view, which DashboardController provides only to those users (D5); src/menu-layout.json relocates it under Organisations (ADR-097). The page is custom because it polls GET /api/sync/status while a run is going, which no built-in page type does.",
+	"menu": [
+		{
+			"id": "SyncStatusMenu",
+			"label": "Synchronisation",
+			"icon": "Sync",
+			"route": "SyncStatus",
+			"order": 90,
+			"permission": "sync.view"
+		}
+	],
+	"pages": [
+		{
+			"id": "SyncStatus",
+			"route": "/organisaties/synchronisation",
+			"type": "custom",
+			"title": "Synchronisation",
+			"component": "SyncStatusView",
+			"_note": "Custom, not a built-in type: the page asks GET /api/sync/status again every three seconds while a run is going and stops when it ends, which no built-in page type does. The endpoint refuses anyone but Nextcloud admins and functional administrators with 403; the menu entry hides itself for them through permission sync.view.",
+			"permission": "sync.view"
+		}
+	]
+}

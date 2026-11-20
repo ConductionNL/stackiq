@@ -11,6 +11,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Synchronisation Status](sync-status-and-progress.md) | When the organisation sync runs, its last run and a running sync, for admins and functional administrators |
 | [Knowledge base](application-knowledge-base.md) | Link Nextcloud Collectives articles to applications and search them by title |
 | [Connection Suggestions](connection-suggestions.md) | Suggested connections for an application in use, from your landscape and earlier usages |
 | [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |

@@ -63,6 +63,13 @@ final class ShellPermissions {
 	public const ACCESS_REVIEW = 'access.review';
 
 	/**
+	 * Held by those who may see the organisation sync.
+	 *
+	 * @var string
+	 */
+	public const SYNC_VIEW = 'sync.view';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IGroupManager $groupManager Nextcloud's group manager.
@@ -80,6 +87,7 @@ final class ShellPermissions {
 	 * @return list<string> The permissions, `user` first.
 	 *
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 	 */
 	public function forUser(?IUser $user): array {
 		if ($user === null) {
@@ -87,31 +95,37 @@ final class ShellPermissions {
 		}
 
 		$permissions = [self::USER];
-		$isAdmin = $this->groupManager->isAdmin($user->getUID());
+		$isAdmin     = $this->groupManager->isAdmin($user->getUID());
+		$groupIds    = $this->groupIds(user: $user);
 		if ($isAdmin === true) {
 			$permissions[] = self::ADMIN;
 		}
 
-		if ($isAdmin === true || $this->inReviewerGroup(user: $user) === true) {
+		if ($isAdmin === true || array_intersect(AccessReviewController::REVIEWER_GROUPS, $groupIds) !== []) {
 			$permissions[] = self::ACCESS_REVIEW;
+		}
+
+		// The organisation sync, by SyncAccessPolicy's rule: admins and functional administrators.
+		if ($isAdmin === true || in_array(SyncAccessPolicy::FUNCTIONAL_ADMIN_GROUP, $groupIds, true) === true) {
+			$permissions[] = self::SYNC_VIEW;
 		}
 
 		return $permissions;
 	}//end forUser()
 
 	/**
-	 * Whether the user is in one of the reviewer groups.
+	 * The ids of the groups the user is in.
 	 *
 	 * @param IUser $user The user.
 	 *
-	 * @return bool True for a member.
+	 * @return list<string> The group ids.
 	 */
-	private function inReviewerGroup(IUser $user): bool {
-		$groupIds = array_map(
-			static fn (IGroup $group): string => $group->getGID(),
-			$this->groupManager->getUserGroups($user)
+	private function groupIds(IUser $user): array {
+		return array_values(
+			array_map(
+				static fn (IGroup $group): string => $group->getGID(),
+				($this->groupManager->getUserGroups($user) ?? [])
+			)
 		);
-
-		return array_intersect(AccessReviewController::REVIEWER_GROUPS, $groupIds) !== [];
-	}//end inReviewerGroup()
+	}//end groupIds()
 }//end class

@@ -185,13 +185,18 @@ export default {
 
 	computed: {
 		/**
-		 * The signed-in user's permission list, which the menu filters
-		 * entries such as Access review with (ShellPermissions on the server).
+		 * The signed-in user's permission list, which the menu filters entries
+		 * against, from the initial state the page provides (ShellPermissions on
+		 * the server: `user`, `admin`, `access.review`, `sync.view`). Nextcloud
+		 * does not set `OC.currentUser.permissions`, so that is only a fallback.
 		 *
+		 * @return {string[]} The permission names.
+		 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 		 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
 		 */
 		permissions() {
-			return loadState('stackiq', 'permissions', window.OC?.currentUser?.permissions ?? [])
+			const provided = loadState('stackiq', 'permissions', null)
+			return Array.isArray(provided) ? provided : (window.OC?.currentUser?.permissions ?? [])
 		},
 	},
 

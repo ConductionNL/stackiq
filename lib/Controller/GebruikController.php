@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Controller;
 
 use Exception;
 use OCA\Stackiq\Kernel\Contracts\GebruikServiceInterface;
+use OCA\Stackiq\Service\SharedUsageScope;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -49,6 +50,8 @@ use OCP\IUserSession;
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/vendor-visibility-rbac/tasks.md#task-2
+ * @SuppressWarnings(PHPMD.StaticAccess) SharedUsageScope is a pure selector over records already read.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The usage endpoints share one controller, as the routes name them.
  */
 class GebruikController extends Controller {
 	/**
@@ -104,11 +107,110 @@ class GebruikController extends Controller {
 		}
 
 		try {
-			return new JSONResponse($this->gebruikService->getGebruiken(options: $scoped));
+			$result = $this->gebruikService->getGebruiken(options: $scoped);
+
+			$participant = $this->sharedReaderOrganisation(options: $scoped);
+			if ($participant !== null) {
+				$result = SharedUsageScope::merge(
+					own: $result,
+					shared: $this->gebruikService->getSharedGebruiken(options: $scoped, orgUuid: $participant)
+				);
+			}
+
+			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
 		}
 	}//end getGebruiken()
+
+	/**
+	 * The organisation whose shared usages join a gebruik-beheerder's list, or
+	 * null when none do.
+	 *
+	 * Only a gebruik-beheerder scoped to its own organisation gets them (an
+	 * admin or ambtenaar already reads every usage, a vendor reads its own
+	 * applications). Not when the request filters on consumer itself, and
+	 * only on the first page, so paging does not repeat them.
+	 *
+	 * @param array<string,mixed> $options The scoped request options.
+	 *
+	 * @return string|null The organisation's uuid.
+	 *
+	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+	 */
+	private function sharedReaderOrganisation(array $options): ?string {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
+
+		$roles = $this->resolveUserRoles(user: $user);
+		if (self::isUnrestrictedReader(roles: $roles) === true
+			|| self::isVendorOnly(roles: $roles) === true
+			|| $roles['isBeheerder'] !== true
+			|| $roles['orgUuid'] === ''
+		) {
+			return null;
+		}
+
+		if (array_key_exists('consumer', $this->request->getParams()) === true
+			|| self::isFirstPage(options: $options) === false
+		) {
+			return null;
+		}
+
+		return $roles['orgUuid'];
+	}//end sharedReaderOrganisation()
+
+	/**
+	 * Whether the request asks for the first page.
+	 *
+	 * @param array<string,mixed> $options The request options.
+	 *
+	 * @return bool
+	 */
+	private static function isFirstPage(array $options): bool {
+		$page   = (int) ($options['_page'] ?? $options['page'] ?? 1);
+		$offset = (int) ($options['_offset'] ?? $options['offset'] ?? 0);
+
+		return $page <= 1 && $offset <= 0;
+	}//end isFirstPage()
+
+	/**
+	 * The connections of the usages the caller's organisation owns or takes
+	 * part in, each with the organisations it is shared with.
+	 *
+	 * Answers the Connections page's "Shared with" column and the
+	 * participant's own list of shared connections: OpenRegister cannot
+	 * express "a participant of a usage that lists this connection" as a
+	 * read rule on the connection schema.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @return JSONResponse `{connections: {<uuid>: {sharedWith, usages}}}`, 401 without a session,
+	 *                      403 without a gebruik role or an organisation.
+	 *
+	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 */
+	public function getSharedConnections(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$groups = $this->groupNamesOf(user: $user);
+		$orgUuid = $this->organisationOf(user: $user);
+		if (array_intersect(['gebruik-beheerder', 'gebruik-raadpleger'], $groups) === [] || $orgUuid === '') {
+			return new JSONResponse(['message' => 'Not allowed'], Http::STATUS_FORBIDDEN);
+		}
+
+		try {
+			return new JSONResponse(['connections' => $this->gebruikService->getSharedConnections(orgUuid: $orgUuid)]);
+		} catch (Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
+		}
+	}//end getSharedConnections()
 
 	/**
 	 * The request options scoped to what the calling user may read, or null

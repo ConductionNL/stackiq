@@ -333,10 +333,8 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	 * @return boolean True when an anonymous reader may read it.
 	 */
 	private static function isPublicNow(array $mirror): bool {
-		if (($mirror['moduleRegisteredBy'] ?? null) === 'Supplier') {
-			return true;
-		}
-
+		// Only the publication date makes a version public; being registered by
+		// a supplier no longer does (capability-rows-the-code-does-not-yet-meet task 20).
 		$date = ($mirror['modulePublicationDate'] ?? null);
 		if (is_string($date) === false || $date === '') {
 			return false;

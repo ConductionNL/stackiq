@@ -38,6 +38,7 @@ import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import OrganisationParticipantsList from './components/organisations/OrganisationParticipantsList.vue'
 import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import PublicationAction from './components/publication/PublicationAction.vue'
@@ -45,6 +46,7 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageParticipantsCard from './components/usages/UsageParticipantsCard.vue'
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import AccessReviewView from './views/access/AccessReviewView.vue'
@@ -54,6 +56,8 @@ import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
+import AskView from './views/AskView.vue'
+import AssistantActionsView from './views/AssistantActionsView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
@@ -66,6 +70,7 @@ import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import SyncStatusView from './views/sync/SyncStatusView.vue'
 import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { createMoveHandlers } from './services/moveToOrganisation.js'
@@ -150,6 +155,11 @@ export default {
 	// delegates to this custom component.
 	StackiqSettingsPage,
 
+	// The organisation sync's schedule, last run and running progress
+	// (operations-sync-status-and-progress D5): it polls /api/sync/status while
+	// a run is going, which no built-in page type does.
+	SyncStatusView,
+
 	// --- Lib gap: dashboard widget extraction pending. ---
 
 	// --- Lib gap: per-organisation lifecycle roadmap. ---
@@ -215,6 +225,10 @@ export default {
 	// usages, with accept and dismiss, which no built-in widget does.
 	ConnectionSuggestionsPanel,
 
+	// The Participants card of a shared application in use: the owner and each
+	// participant (shared-usage-visible-to-participants REQ-DLG-010).
+	UsageParticipantsCard,
+
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
 	// which no built-in widget does.
@@ -230,6 +244,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+
+	// A cooperation's participant organisations, each linked
+	// (shared-usage-visible-to-participants REQ-DLG-012).
+	OrganisationParticipantsList,
 	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
 	ClaimedUsageList,
 	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
@@ -268,6 +286,19 @@ export default {
 	// aggregation dashboard no built-in index/detail type expresses; stays custom
 	// until the lib grows a declarative aggregation/rollup widget.
 	LicensePostureView,
+
+	// Ask the catalogue (insight-assistant-answers-and-action-trail D2): one
+	// question answered by hermiq from the entries OpenRegister finds for the
+	// caller, with the cited entries linked. A conversation, not a list, form
+	// or detail: no built-in page type expresses it.
+	AskView,
+
+	// Assistant actions (insight-assistant-answers-and-action-trail D3): the
+	// assistant tool calls on catalogue records, read from OpenRegister's
+	// cursor-paged audit trail filtered server side on `mcp.` / `stackiq.`.
+	// The audit list is not an OpenRegister object collection, so no index
+	// page type can read it.
+	AssistantActionsView,
 
 	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
 	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every

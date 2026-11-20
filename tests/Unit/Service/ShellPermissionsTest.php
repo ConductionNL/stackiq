@@ -69,8 +69,8 @@ class ShellPermissionsTest extends TestCase {
 	 */
 	public static function users(): array {
 		return [
-			'a Nextcloud admin' => [true, [], ['user', 'admin', 'access.review']],
-			'a functional administrator' => [false, ['functioneel-beheerder', 'staff'], ['user', 'access.review']],
+			'a Nextcloud admin' => [true, [], ['user', 'admin', 'access.review', 'sync.view']],
+			'a functional administrator' => [false, ['functioneel-beheerder', 'staff'], ['user', 'access.review', 'sync.view']],
 			'an organisation administrator' => [false, ['organisatie-beheerder'], ['user', 'access.review']],
 			'a regular user' => [false, ['staff', 'gebruik-raadpleger'], ['user']],
 			'a user without groups' => [false, [], ['user']],

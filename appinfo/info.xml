@@ -50,7 +50,7 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20261120081000</version>
+    <version>0.2.8-unstable.20261120093000</version>
     <!-- @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
@@ -238,6 +238,12 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import adds connection.sharedWithOrganisations: fills it for
+			     usages shared before it existed, so their participants can read the connections. -->
+			<step>OCA\Stackiq\Repair\BackfillConnectionSharing</step>
+			<!-- Usages added on the usage form before the provider followed the application:
+			     set it, so the supplier sees them on its application page. -->
+			<step>OCA\Stackiq\Repair\BackfillUsageProvider</step>
 			<!-- After the register import: re-import keeps the stored authorization of an
 			     existing schema, so an upgraded install can keep an unconditional public read
 			     on software reviews. This rewrites it to approved reviews only. -->

@@ -10,10 +10,12 @@
  * data — modules, compliancy records, and a selection of standard versions —
  * into a matrix whose every cell carries one of three honest states:
  *
- *  - `verified` — a compliancy record links the module to the standaardversie
- *    AND carries evidence (a `bewijs` file, a `bewijsReferentie` NC Files
- *    link, or a `url`);
- *  - `claimed`  — the link exists but no evidence is attached;
+ *  - `verified` — a compliancy record links the module to the standaardversie,
+ *    carries evidence (a `bewijs` file, a `bewijsReferentie` NC Files link,
+ *    or a `url`) AND a reviewer outside the supplier marked it verified
+ *    (`verifiedBy`, REQ-CLR-022);
+ *  - `claimed`  — the link exists but no reviewer verified it, with or
+ *    without evidence;
  *  - `none`     — no compliancy record exists for that (module, standard) pair.
  *
  * Per the design (Decision 2) verified and claimed MUST stay distinct — a PvE
@@ -155,6 +157,24 @@ export function hasEvidence(record) {
 }
 
 /**
+ * Whether a reviewer outside the supplier marked the record verified.
+ * Evidence alone leaves a claim claimed (REQ-CLR-022).
+ *
+ * @param {object} record A compliancy object's data.
+ * @return {boolean} True when the record is verified by a reviewer.
+ *
+ * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+ */
+export function isReviewerVerified(record) {
+	if (!record || typeof record !== 'object') {
+		return false
+	}
+	return hasEvidence(record)
+		&& typeof record.verifiedBy === 'string'
+		&& record.verifiedBy.trim() !== ''
+}
+
+/**
  * The relations a compliancy record names, resolved to uuids, and whether it
  * carries evidence.
  *
@@ -169,7 +189,7 @@ function compliancyRelations(record) {
 		moduleUuid: resolveUuid(data.module),
 		standaardversieUuid: resolveUuid(data.standard_version),
 		bioMaatregelUuid: resolveUuid(data.bioMeasure),
-		evidenced: hasEvidence(data),
+		evidenced: isReviewerVerified(data),
 		meets: data.result !== RESULT_DOES_NOT_MEET,
 	}
 }

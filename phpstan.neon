@@ -26,6 +26,10 @@ parameters:
         # spellings are in the field, and without this one the analyser proves
         # the newer half of the inbound guard dead.
         - tests/analysis-stubs/decidiq-events.stub.php
+        # OpenRegister main's RecipientResolverInterface, which
+        # UsageOwnerRecipientResolver implements. PHPStan cannot ignore an
+        # unknown interface, and OpenRegister is not a Composer dependency.
+        - tests/Stubs/OpenRegister/Notifications/Service/Notification/RecipientResolverInterface.php
         # PhpSpreadsheet's IReadFilter, which CmdbReadFilter implements.
         # OpenRegister ships PhpSpreadsheet, so it is absent from the
         # analysis path; the stub mirrors the real 5.x signature.
