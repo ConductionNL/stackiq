@@ -2015,50 +2015,17 @@ OC.L10N.register(
         "View Object": "Object bekijken",
         "What will happen:": "Wat er gebeurt:",
         "XML Parsing": "XML verwerken",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
-            "Kies het doelregister en -schema voor het {count} geselecteerde object:",
-            "Kies het doelregister en -schema voor de {count} geselecteerde objecten:"
-        ],
-        "_Delete {count} file_::_Delete {count} files_": [
-            "{count} bestand verwijderen",
-            "{count} bestanden verwijderen"
-        ],
-        "_Depublish {count} file_::_Depublish {count} files_": [
-            "{count} bestand depubliceren",
-            "{count} bestanden depubliceren"
-        ],
-        "_Migrate {count} object_::_Migrate {count} objects_": [
-            "{count} object migreren",
-            "{count} objecten migreren"
-        ],
-        "_Publish {count} file_::_Publish {count} files_": [
-            "{count} bestand publiceren",
-            "{count} bestanden publiceren"
-        ],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
-            "Scan {count} compliance-object",
-            "Scan alle {count} compliance-objecten"
-        ],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": [
-            "Details tonen voor {count} importfout",
-            "Details tonen voor {count} importfouten"
-        ],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
-            "{count} object geïmporteerd in {time}",
-            "{count} objecten geïmporteerd in {time}"
-        ],
-        "_{count} error_::_{count} errors_": [
-            "{count} fout",
-            "{count} fouten"
-        ],
-        "_{count} object_::_{count} objects_": [
-            "{count} object",
-            "{count} objecten"
-        ],
-        "_{count} occurrence_::_{count} occurrences_": [
-            "{count} keer",
-            "{count} keer"
-        ],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Kies het doelregister en -schema voor het {count} geselecteerde object:","Kies het doelregister en -schema voor de {count} geselecteerde objecten:"],
+        "_Delete {count} file_::_Delete {count} files_": ["{count} bestand verwijderen","{count} bestanden verwijderen"],
+        "_Depublish {count} file_::_Depublish {count} files_": ["{count} bestand depubliceren","{count} bestanden depubliceren"],
+        "_Migrate {count} object_::_Migrate {count} objects_": ["{count} object migreren","{count} objecten migreren"],
+        "_Publish {count} file_::_Publish {count} files_": ["{count} bestand publiceren","{count} bestanden publiceren"],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan {count} compliance-object","Scan alle {count} compliance-objecten"],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Details tonen voor {count} importfout","Details tonen voor {count} importfouten"],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["{count} object geïmporteerd in {time}","{count} objecten geïmporteerd in {time}"],
+        "_{count} error_::_{count} errors_": ["{count} fout","{count} fouten"],
+        "_{count} object_::_{count} objects_": ["{count} object","{count} objecten"],
+        "_{count} occurrence_::_{count} occurrences_": ["{count} keer","{count} keer"],
         "ArchiMate type": "ArchiMate-type",
         "Asset tag": "Inventarisnummer",
         "Class": "Klasse",
@@ -2140,6 +2107,11 @@ OC.L10N.register(
         "Show products": "Producten tonen",
         "No product": "Geen product",
         "Products ({count}): {names}": "Producten ({count}): {names}",
+        "Does not meet": "Voldoet niet",
+        "Unknown (no claim)": "Onbekend (geen claim)",
+        "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Geverifieerd: {verified} · Geclaimd: {claimed} · Voldoet niet: {notMet} · Onbekend: {none}",
+        "Result": "Resultaat",
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Of de applicatie aan de standaard of BIO-maatregel voldoet. Geen claim betekent onbekend, niet dat ze niet voldoet.",
         "Entry published": "Vermelding gepubliceerd",
         "Entry withdrawn": "Vermelding ingetrokken",
         "Not published": "Niet gepubliceerd",
@@ -2225,14 +2197,8 @@ OC.L10N.register(
         "The participants could not be loaded.": "De deelnemers konden niet worden geladen.",
         "This application in use is not shared with other organisations": "Deze applicatie in gebruik wordt niet met andere organisaties gedeeld",
         "Your organisation takes part in this application in use. Only the owner can change it.": "Uw organisatie neemt deel aan deze applicatie in gebruik. Alleen de eigenaar kan haar wijzigen.",
-        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
-            "Beheerd door {owner} voor {count} organisatie",
-            "Beheerd door {owner} voor {count} organisaties"
-        ],
-        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
-            "Gedeeld door {count} organisatie",
-            "Gedeeld door {count} organisaties"
-        ],
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Beheerd door {owner} voor {count} organisatie","Beheerd door {owner} voor {count} organisaties"],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Gedeeld door {count} organisatie","Gedeeld door {count} organisaties"],
         "Shared through a cooperation": "Gedeeld via een samenwerking",
         "[{count:shared} shared through a cooperation]": "[{count:shared} gedeeld via een samenwerking]",
         "Run by {owner} for {count} organisation": "Beheerd door {owner} voor {count} organisatie",
@@ -2244,10 +2210,7 @@ OC.L10N.register(
         "This cooperation lists no participants yet": "Deze samenwerking heeft nog geen deelnemers",
         "Cooperation · %n participant": "Samenwerking · %n deelnemer",
         "Cooperation · %n participants": "Samenwerking · %n deelnemers",
-        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
-            "Samenwerking · %n deelnemer",
-            "Samenwerking · %n deelnemers"
-        ],
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Samenwerking · %n deelnemer","Samenwerking · %n deelnemers"],
         "Ask the catalogue": "Vraag het de catalogus",
         "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Stel een vraag over de applicaties, diensten, organisaties, gebruik, koppelingen, compliance en contracten in de catalogus. Alleen de items die u mag zien worden doorzocht, en alleen die worden naar de assistent gestuurd.",
         "Your question": "Uw vraag",
@@ -2378,7 +2341,15 @@ OC.L10N.register(
         "from the organisation type {type}": "uit het organisatietype {type}",
         "on the contact person": "op de contactpersoon",
         "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.": "{due} van {total} personen moeten worden beoordeeld. Een beoordeling is nodig als de toegang niet in de afgelopen {days} dagen is beoordeeld.",
-        "{role} removed from {person}": "{role} verwijderd bij {person}"
+        "{role} removed from {person}": "{role} verwijderd bij {person}",
+        "blocked by the SSRF guard": "geblokkeerd door de SSRF-beveiliging",
+        "Error: {reason}": "Fout: {reason}",
+        "Last pulled {date}": "Laatst opgehaald {date}",
+        "Never pulled": "Nog nooit opgehaald",
+        "not reachable": "niet bereikbaar",
+        "From: {catalogue}": "Uit: {catalogue}",
+        "Open the original": "Open het origineel",
+        "Mirrored from {catalogue}; edit it there.": "Overgenomen uit {catalogue}; wijzig het daar."
     },
     "nplurals=2; plural=(n != 1);"
 )

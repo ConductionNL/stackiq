@@ -218,7 +218,7 @@ describe('FederationSettings', () => {
 		api.apiRequest.mockResolvedValueOnce({ available: true, enabled: true, peers: ['https://a', { url: 'https://b', failures: 2, stale: true, allowed: false }] })
 		const s = section()
 		await FederationSettings.created.call(s)
-		expect([api.apiRequest.mock.calls[0], s.status.peers, s.status.staleAfter, s.loading]).toEqual([['federation/status'], [{ url: 'https://a', failures: 0, stale: false, allowed: true }, { url: 'https://b', failures: 2, stale: true, allowed: false }], 3, false])
+		expect([api.apiRequest.mock.calls[0], s.status.peers, s.status.staleAfter, s.loading]).toEqual([['federation/status'], [{ url: 'https://a', name: 'https://a', lastPulledAt: null, objectCount: 0, lastError: null, failures: 0, stale: false, allowed: true }, { url: 'https://b', name: 'https://b', lastPulledAt: null, objectCount: 0, lastError: null, failures: 2, stale: true, allowed: false }], 3, false])
 		api.apiRequest.mockRejectedValueOnce(new Error('down'))
 		await s.loadStatus()
 		expect(toasts).toEqual([['error', 'Could not load federation status: down']])

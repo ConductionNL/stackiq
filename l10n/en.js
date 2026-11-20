@@ -1952,50 +1952,17 @@ OC.L10N.register(
         "View Object": "View Object",
         "What will happen:": "What will happen:",
         "XML Parsing": "XML Parsing",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
-            "Choose the destination register and schema for the {count} selected object:",
-            "Choose the destination register and schema for the {count} selected objects:"
-        ],
-        "_Delete {count} file_::_Delete {count} files_": [
-            "Delete {count} file",
-            "Delete {count} files"
-        ],
-        "_Depublish {count} file_::_Depublish {count} files_": [
-            "Depublish {count} file",
-            "Depublish {count} files"
-        ],
-        "_Migrate {count} object_::_Migrate {count} objects_": [
-            "Migrate {count} object",
-            "Migrate {count} objects"
-        ],
-        "_Publish {count} file_::_Publish {count} files_": [
-            "Publish {count} file",
-            "Publish {count} files"
-        ],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
-            "Scan all {count} compliance object",
-            "Scan all {count} compliance objects"
-        ],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": [
-            "Show details for {count} import error",
-            "Show details for {count} import errors"
-        ],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
-            "Successfully imported {count} object in {time}",
-            "Successfully imported {count} objects in {time}"
-        ],
-        "_{count} error_::_{count} errors_": [
-            "{count} error",
-            "{count} errors"
-        ],
-        "_{count} object_::_{count} objects_": [
-            "{count} object",
-            "{count} objects"
-        ],
-        "_{count} occurrence_::_{count} occurrences_": [
-            "{count} occurrence",
-            "{count} occurrences"
-        ],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Choose the destination register and schema for the {count} selected object:","Choose the destination register and schema for the {count} selected objects:"],
+        "_Delete {count} file_::_Delete {count} files_": ["Delete {count} file","Delete {count} files"],
+        "_Depublish {count} file_::_Depublish {count} files_": ["Depublish {count} file","Depublish {count} files"],
+        "_Migrate {count} object_::_Migrate {count} objects_": ["Migrate {count} object","Migrate {count} objects"],
+        "_Publish {count} file_::_Publish {count} files_": ["Publish {count} file","Publish {count} files"],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan all {count} compliance object","Scan all {count} compliance objects"],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Show details for {count} import error","Show details for {count} import errors"],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["Successfully imported {count} object in {time}","Successfully imported {count} objects in {time}"],
+        "_{count} error_::_{count} errors_": ["{count} error","{count} errors"],
+        "_{count} object_::_{count} objects_": ["{count} object","{count} objects"],
+        "_{count} occurrence_::_{count} occurrences_": ["{count} occurrence","{count} occurrences"],
         "ArchiMate type": "ArchiMate type",
         "Asset tag": "Asset tag",
         "Class": "Class",
@@ -2077,6 +2044,11 @@ OC.L10N.register(
         "Show products": "Show products",
         "No product": "No product",
         "Products ({count}): {names}": "Products ({count}): {names}",
+        "Does not meet": "Does not meet",
+        "Unknown (no claim)": "Unknown (no claim)",
+        "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}",
+        "Result": "Result",
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.",
         "Entry published": "Entry published",
         "Entry withdrawn": "Entry withdrawn",
         "Not published": "Not published",
@@ -2162,14 +2134,8 @@ OC.L10N.register(
         "The participants could not be loaded.": "The participants could not be loaded.",
         "This application in use is not shared with other organisations": "This application in use is not shared with other organisations",
         "Your organisation takes part in this application in use. Only the owner can change it.": "Your organisation takes part in this application in use. Only the owner can change it.",
-        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": [
-            "Run by {owner} for {count} organisation",
-            "Run by {owner} for {count} organisations"
-        ],
-        "_Shared by {count} organisation_::_Shared by {count} organisations_": [
-            "Shared by {count} organisation",
-            "Shared by {count} organisations"
-        ],
+        "_Run by {owner} for {count} organisation_::_Run by {owner} for {count} organisations_": ["Run by {owner} for {count} organisation","Run by {owner} for {count} organisations"],
+        "_Shared by {count} organisation_::_Shared by {count} organisations_": ["Shared by {count} organisation","Shared by {count} organisations"],
         "Shared through a cooperation": "Shared through a cooperation",
         "[{count:shared} shared through a cooperation]": "[{count:shared} shared through a cooperation]",
         "Run by {owner} for {count} organisation": "Run by {owner} for {count} organisation",
@@ -2181,10 +2147,7 @@ OC.L10N.register(
         "This cooperation lists no participants yet": "This cooperation lists no participants yet",
         "Cooperation · %n participant": "Cooperation · %n participant",
         "Cooperation · %n participants": "Cooperation · %n participants",
-        "_Cooperation · %n participant_::_Cooperation · %n participants_": [
-            "Cooperation · %n participant",
-            "Cooperation · %n participants"
-        ],
+        "_Cooperation · %n participant_::_Cooperation · %n participants_": ["Cooperation · %n participant","Cooperation · %n participants"],
         "Ask the catalogue": "Ask the catalogue",
         "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.": "Ask a question about the applications, services, organisations, usages, connections, compliance and contracts in the catalogue. Only the entries you may see are searched, and only those are sent to the assistant.",
         "Your question": "Your question",
@@ -2316,7 +2279,15 @@ OC.L10N.register(
         "on the contact person": "on the contact person",
         "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.": "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.",
         "{role} removed from {person}": "{role} removed from {person}",
-        "Review": "Review"
+        "Review": "Review",
+        "blocked by the SSRF guard": "blocked by the SSRF guard",
+        "Error: {reason}": "Error: {reason}",
+        "Last pulled {date}": "Last pulled {date}",
+        "Never pulled": "Never pulled",
+        "not reachable": "not reachable",
+        "From: {catalogue}": "From: {catalogue}",
+        "Open the original": "Open the original",
+        "Mirrored from {catalogue}; edit it there.": "Mirrored from {catalogue}; edit it there."
     },
     "nplurals=2; plural=(n != 1);"
 )

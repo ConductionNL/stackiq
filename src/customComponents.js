@@ -31,6 +31,7 @@ import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
+import ProvenanceNotice from './components/federation/ProvenanceNotice.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
@@ -252,6 +253,8 @@ export default {
 	ClaimedUsageList,
 	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
 	ClaimAnswerNotice,
+	// On a mirrored entry's page, the peer catalogue it came from (federation-pull-fetches-the-peer).
+	ProvenanceNotice,
 
 	// The Merged into banner on a merged application's page
 	// (operations-record-reconciliation D4): it shows the survivor only when
