@@ -114,7 +114,10 @@ class DashboardControllerPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFunctionalAdministratorMaySeeTheSync(): void {
-		$this->assertSame(expected: [['permissions', ['user', 'access.review', 'sync.view']]], actual: $this->provided(uid: 'fb', isAdmin: false, inGroup: true));
+		$this->assertSame(
+			expected: [['permissions', ['user', 'access.review', 'sync.view']]],
+			actual: $this->provided(uid: 'fb', isAdmin: false, inGroup: true)
+		);
 
 	}//end testAFunctionalAdministratorMaySeeTheSync()
 
