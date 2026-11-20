@@ -45,6 +45,18 @@ class PlatformPropertiesTest extends TestCase {
 	 */
 	private const ACCESS_ATTRIBUTES = ['NoAdminRequired', 'PublicPage', 'AuthorizedAdminSetting', 'SubAdminRequired'];
 
+	/**
+	 * Controllers this app binds to an OpenRegister AppHost generic instead of shipping one, with the
+	 * generic and the posture that generic declares in OpenRegister: health is a #[PublicPage]
+	 * probe, metrics carries no access attribute, so Nextcloud keeps it admin-only.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const APPHOST_GENERICS = [
+		'health' => ['GenericHealthController', 'PublicPage'],
+		'metrics' => ['GenericMetricsController', 'admin-only'],
+	];
+
 	public function testTheAppAndItsLicenceFileAreEupl(): void {
 		$info = simplexml_load_file(self::ROOT . '/appinfo/info.xml');
 
@@ -67,6 +79,12 @@ class PlatformPropertiesTest extends TestCase {
 
 		$this->assertSame([], $undeclared, 'Routed methods without an access attribute or a documented admin-only posture');
 	}//end testEveryRouteDeclaresWhoMayCallIt()
+
+	public function testOnlyABoundAppHostGenericCountsForAMissingControllerFile(): void {
+		$this->assertSame('PublicPage', self::genericPosture(controller: 'health'));
+		$this->assertSame('admin-only', self::genericPosture(controller: 'metrics'));
+		$this->assertNull(self::genericPosture(controller: 'nonexistent'));
+	}//end testOnlyABoundAppHostGenericCountsForAMissingControllerFile()
 
 	public function testAMethodWithoutAnyAccessDeclarationIsFound(): void {
 		$source = <<<'PHP'
@@ -116,7 +134,7 @@ class PlatformPropertiesTest extends TestCase {
 	private static function posture(string $controller, string $method): ?string {
 		$path = self::ROOT . '/lib/Controller/' . ucfirst($controller) . 'Controller.php';
 		if (is_file($path) === false) {
-			return null;
+			return self::genericPosture(controller: $controller);
 		}
 
 		return self::postureIn(source: (string) file_get_contents($path), method: $method);
@@ -132,6 +150,29 @@ class PlatformPropertiesTest extends TestCase {
 	 *
 	 * @return string|null
 	 */
+	/**
+	 * The posture of a controller Application binds to an OpenRegister AppHost generic, or null.
+	 *
+	 * Only a controller named in APPHOST_GENERICS whose class name Application.php actually binds to
+	 * that generic counts; any other missing controller file stays undeclared.
+	 *
+	 * @param string $controller The route's controller name.
+	 *
+	 * @return string|null The generic's posture, or null.
+	 */
+	private static function genericPosture(string $controller): ?string {
+		if (isset(self::APPHOST_GENERICS[$controller]) === false) {
+			return null;
+		}
+
+		[$generic, $posture] = self::APPHOST_GENERICS[$controller];
+		$application = (string) file_get_contents(self::ROOT . '/lib/AppInfo/Application.php');
+		$binding = "/'OCA\\\\\\\\Stackiq\\\\\\\\Controller\\\\\\\\" . ucfirst($controller) . "Controller',\\s*static function"
+			. "[^}]*'OCA\\\\\\\\OpenRegister\\\\\\\\AppHost\\\\\\\\Controller\\\\\\\\" . $generic . "'/s";
+
+		return preg_match($binding, $application) === 1 ? $posture : null;
+	}//end genericPosture()
+
 	private static function postureIn(string $source, string $method): ?string {
 		// A docblock may not run past its own end, or it would carry an earlier method's attributes.
 		$pattern = '/((?:\\s*#\\[[^\\]]*\\]|\\s*\\/\\*\\*(?:(?!\\*\\/).)*\\*\\/)*)\\s*public function ' . preg_quote($method, '/') . '\\s*\\(/s';

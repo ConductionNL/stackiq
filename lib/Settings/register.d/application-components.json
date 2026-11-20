@@ -1,0 +1,41 @@
+{
+  "$comment": "ADR-037 register fragment (landscape-application-components). Merges `partOf` onto `module`: the application this one is a component of, limited to applications of the same supplier (design D1), with the inverse `components` list. A component stays a `module`, so it keeps its own versions, usages, connections and standards. ModuleComponentListener refuses a module that would be part of itself or of one of its own components. Does NOT edit softwarecatalogus_register.json.",
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.13",
+        "properties": {
+          "partOf": {
+            "type": "object",
+            "title": "Part of",
+            "description": "The application this one is a component of, such as the case system a portal belongs to.",
+            "visible": true,
+            "facetable": true,
+            "order": 59,
+            "objectConfiguration": {"handling": "related-object"},
+            "$ref": "#/components/schemas/module",
+            "inversedBy": "components",
+            "x-relation-filter": {"provider": "@object.provider"}
+          },
+          "components": {
+            "type": "array",
+            "title": "Components",
+            "description": "The applications that are a component of this one.",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "order": 60,
+            "$ref": "#/components/schemas/module",
+            "x-relation-filter": {"partOf": "@objectId"},
+            "items": {
+              "type": "object",
+              "objectConfiguration": {"handling": "related-object"},
+              "$ref": "#/components/schemas/module",
+              "inversedBy": "partOf"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -167,7 +167,7 @@
     "title_nl": "Instelbare portfoliorapportage",
     "summary": "Build and export your own reports over the whole portfolio.",
     "summary_nl": "Bouw en exporteer je eigen rapportages over de hele portfolio.",
-    "status": "soon"
+    "status": "beta"
   },
   {
     "slug": "audit-trail-view",

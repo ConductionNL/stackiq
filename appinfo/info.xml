@@ -50,7 +50,7 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.7-unstable.20261020120000</version>
+    <version>0.2.8-unstable.20261120065300</version>
     <!-- @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
@@ -100,6 +100,7 @@ Vrij en open source onder de EUPL-licentie.
 		<job>OCA\Stackiq\BackgroundJob\ContractStatusJob</job>
 		<job>OCA\Stackiq\BackgroundJob\FederationSyncJob</job>
 		<job>OCA\Stackiq\BackgroundJob\EolSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\AttestationOverdueJob</job>
 	</background-jobs>
 
 	<repair-steps>
@@ -236,11 +237,21 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<!-- bio-measures-shipped-and-not-met: existing compliance claims get result=meets after InitializeSettings imports the property. Idempotent. -->
 			<step>OCA\Stackiq\Repair\DefaultComplianceResultToMeets</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
+			<!--
+				operations-record-reconciliation: every existing application and
+				service gets recordStatus Active, after InitializeSettings imported
+				the property, so no row is left without one.
+			-->
+			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
@@ -349,6 +360,10 @@ Vrij en open source onder de EUPL-licentie.
 			     next edit is not refused for a field nobody touched. -->
 			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
 		</install>

@@ -41,16 +41,19 @@
 
 ## 3. Frontend: wire the Product filter toggle
 
-- [ ] 3.1 Locate the view detail component that renders the existing
+- [x] 3.1 Locate the view detail component that renders the existing
   Gebruik/Deelnames filter toggles (per `view-enrichment-api` spec scenarios)
   and confirm whether a "Product" toggle exists in the UI already.
       Finding: no component in `src/` renders the Gebruik/Deelnames toggles of the view store (`src/store/modules/view.js` holds `includeProducts` beside them, but nothing imports the store); the only `includeGebruik` is the ArchiMate export option in `ArchiMateImportExport.vue`. There is no view detail UI to wire 3.2/3.3 into; that needs a decision on where views are shown.
-- [ ] 3.2 If missing, add the "Product" toggle following the same
+      Done (17 Nov): the one surface that draws a GEMMA view is the coverage map on the GEMMA plate, `src/views/organisaties/CoverageViewMap.vue`; the Product toggle lives there.
+- [x] 3.2 If missing, add the "Product" toggle following the same
   component/store pattern as the Gebruik/Deelnames toggles, sending
   `include_products=true` on the view fetch (per
   `openspec/specs/view-enrichment-api/spec.md:60-63`).
-- [ ] 3.3 Render the `products` key on enriched nodes in the view detail UI
+      Done: a "Show products" switch on the coverage map refetches the view with `include_products=true`, and without it sends no enrichment parameter. Test: `tests/vitest/coverageViewMap.spec.js`.
+- [x] 3.3 Render the `products` key on enriched nodes in the view detail UI
   (list/count badge), matching how `modules`/`gebruik` overlays are rendered.
+      Done: each node reads "Products (n): names" or "No product" under its coverage, from `coverageMapGraph()`'s `products` (null when the view came without them).
 
 ## 4. Tests
 
@@ -62,11 +65,13 @@
   linked to a given node and excludes unrelated products; `available_products_count`
   reflects the matched count, not the total `$productsData` count.
       Done: `ViewServiceTest::testGetNodeProductsMatchesLinkedProductAndExcludesOthers`, `::testGetNodeProductsReturnsEmptyWhenNoProductLinkedToNode`.
-- [ ] 4.3 Controller-level test: `GET /api/views/{viewId}?include_products=true`
+- [x] 4.3 Controller-level test: `GET /api/views/{viewId}?include_products=true`
   returns non-empty `products` arrays on nodes that have linked products.
+      Done: `ViewControllerProductsEnrichmentTest` runs the real controller over the real `ViewService` (OpenRegister doubled): linked products land on their nodes, other organisations' products are left out, no search without the flag, empty lists when the dienst schema is unconfigured.
 - [ ] 4.4 Playwright (or existing e2e suite) coverage for the new/wired
   Product filter toggle round-trip, per ADR — gate-19 e2e traceability for the
   MODIFIED scenario below.
+      Written (17 Nov): `tests/e2e/workflows/view-products-enrichment.spec.ts` (switch on and off, the request parameter, the per-node text). Not yet run against a live instance, so it stays unticked.
 
 ## 5. Spec
 

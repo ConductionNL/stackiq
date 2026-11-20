@@ -22,6 +22,7 @@ use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The gateway's reads and runs against OpenRegister's flow and object services.
@@ -210,7 +211,11 @@ class ItsmFlowGatewayTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, array $_extend, bool $files, string $register, string $schema, bool $_rbac, bool $_multitenancy): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$_extend = $options?->extend;
+				$files = $options?->files;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = compact('id', '_extend', 'files', 'register', 'schema', '_rbac', '_multitenancy');
 				if ($this->found instanceof \Throwable) {
 					throw $this->found;
