@@ -220,6 +220,7 @@ import CoverageViewMap from './CoverageViewMap.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
+import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
 import {
 	filterCoverage,
 	groupCoverage,
@@ -350,6 +351,16 @@ export default {
 				}
 			},
 		},
+	},
+
+	/**
+	 * Load the organisations the picker offers.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+	 */
+	async mounted() {
+		await loadObjectTypeCollection('organization')
 	},
 
 	methods: {

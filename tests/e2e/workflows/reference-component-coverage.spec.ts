@@ -57,16 +57,22 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	ids.doubled = await seed(GEMMA_REGISTER, 'element', {
+		identifier: `${RUN_ID}-doubled`,
+		type: 'ApplicationComponent',
+		properties: [],
 		name: doubled,
 		gemmaType: 'referentiecomponent',
 		grouping: RUN_ID,
 	})
 	ids.missing = await seed(GEMMA_REGISTER, 'element', {
+		identifier: `${RUN_ID}-missing`,
+		type: 'ApplicationComponent',
+		properties: [],
 		name: missing,
 		gemmaType: 'referentiecomponent',
 		grouping: RUN_ID,
 	})
-	ids.org = await seed(cfg.register, 'organization', { name: organisation })
+	ids.org = await seed(cfg.register, 'organization', { name: organisation, type: 'Municipality' })
 	ids.a = await seed(cfg.register, 'module', { name: `${RUN_ID} application A` })
 	ids.b = await seed(cfg.register, 'module', { name: `${RUN_ID} application B` })
 	await seed(cfg.register, 'usage', {
@@ -98,7 +104,7 @@ test('the GEMMA plate shows the overlap with both applications and the gap', asy
 	await gotoAppRoute(page, '/gemma-plaat')
 	await dismissSupportDialog(page)
 	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
-	await page.getByRole('option', { name: organisation }).click()
+	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
 
 	const plate = page.getByTestId('gemma-plate-groups')
 	const tile = plate.getByRole('button', { name: new RegExp(doubled) })
