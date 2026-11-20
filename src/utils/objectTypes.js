@@ -101,3 +101,21 @@ export function ensureObjectTypeOrSlug(type) {
 	}
 	registerInVoorzieningen(type)
 }
+
+/**
+ * Register a type (by settings or by slug) and fetch its collection, at most
+ * 1000 objects. A page opened straight from a link has no collection loaded.
+ *
+ * @param {string} type The schema slug.
+ * @return {Promise<void>} Resolves once fetched.
+ * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+ */
+export async function loadObjectTypeCollection(type) {
+	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+		await objectStore.fetchSettings()
+	}
+	ensureObjectTypeOrSlug(type)
+	if (typeof objectStore.fetchCollection === 'function') {
+		await objectStore.fetchCollection(type, { _limit: 1000 })
+	}
+}

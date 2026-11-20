@@ -47,7 +47,7 @@ async function seed(schema: string, data: Record<string, unknown>): Promise<stri
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: organisation })
+	ids.org = await seed('organization', { name: organisation, type: 'Municipality' })
 	ids.owner = await seed('contactPerson', {
 		firstName: 'Marloes',
 		lastName: `${RUN_ID} Bakker`,
@@ -85,7 +85,7 @@ test('the Data quality page names the least complete application and what it mis
 	await gotoAppRoute(page, '/datakwaliteit')
 	await dismissSupportDialog(page)
 	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
-	await page.getByRole('option', { name: organisation }).click()
+	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
 
 	await expect(page.getByTestId('data-quality-kpis')).toContainText(
 		'Register score',
