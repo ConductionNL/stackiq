@@ -139,6 +139,7 @@ generic route-query-to-filter passthrough never sees it (see the
 			<div class="faceted-catalog-index__list">
 				<CnIndexPage
 					:key="indexPageKey"
+					ref="indexPage"
 					:title="title"
 					:register="register"
 					:schema="schema"
@@ -156,6 +157,37 @@ generic route-query-to-filter passthrough never sees it (see the
 					@rowClick="openDetail"
 					@view="openDetail"
 					@quickFilterChange="onQuickFilterChange">
+					<!-- Publish, Withdraw and Lock next to the built-in Delete in
+					     the selection strip (REQ-ODP-010, board SkApplicaties). -->
+					<template #selection-actions="{ selectedIds }">
+						<NcButton
+							variant="secondary"
+							data-testid="selection-publish"
+							@click="openSelectionDialog('massPublishObjects', selectedIds)">
+							<template #icon>
+								<Publish :size="20" />
+							</template>
+							{{ t('stackiq', 'Publish') }}
+						</NcButton>
+						<NcButton
+							variant="secondary"
+							data-testid="selection-withdraw"
+							@click="openSelectionDialog('massDepublishObjects', selectedIds)">
+							<template #icon>
+								<PublishOff :size="20" />
+							</template>
+							{{ t('stackiq', 'Withdraw') }}
+						</NcButton>
+						<NcButton
+							variant="secondary"
+							data-testid="selection-lock"
+							@click="openSelectionDialog('massLockObjects', selectedIds)">
+							<template #icon>
+								<LockOutline :size="20" />
+							</template>
+							{{ t('stackiq', 'Lock') }}
+						</NcButton>
+					</template>
 					<template v-if="addWizard !== ''" #header-actions>
 						<EntryWizardAction :kind="addWizard" />
 					</template>
@@ -185,7 +217,14 @@ import FileDelimitedOutline from 'vue-material-design-icons/FileDelimitedOutline
 import FileExcelOutline from 'vue-material-design-icons/FileExcelOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
+import Publish from 'vue-material-design-icons/Publish.vue'
+import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
+import {
+	selectedEntries,
+	setPublicationTarget,
+} from '../services/publicationActions.js'
 import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { catalogExportUrl } from '../utils/catalogExportUrl.js'
@@ -250,6 +289,10 @@ export default {
 		FileExcelOutline,
 		FolderOutline,
 		FolderStarOutline,
+		NcButton,
+		Publish,
+		PublishOff,
+		LockOutline,
 	},
 
 	props: {
@@ -545,6 +588,38 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Open a mass dialog (publish, withdraw or lock) for the rows selected
+		 * in the list: the dialog acts on those objects, and publish and
+		 * withdraw go through the publication endpoint for this list's type.
+		 *
+		 * @param {string} dialog The dialog key (`massPublishObjects`, ...).
+		 * @param {Array<string>} selectedIds The selected row ids.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+		 */
+		async openSelectionDialog(dialog, selectedIds) {
+			// The app's object and navigation stores, loaded on first use so
+			// the list itself does not pull them in.
+			const { navigationStore, objectStore } = await import('../store/store.js')
+			const page = this.$refs.indexPage
+			const loaded = (page && (page.selectedObjects || page.effectiveObjects)) || []
+			setPublicationTarget({ objectType: this.schema })
+			objectStore.setSelectedObjects(selectedEntries(selectedIds, loaded))
+			navigationStore.setDialog(dialog)
+			// Reload the list once the dialog closes, so published, withdrawn
+			// or locked entries show their new state.
+			const stop = this.$watch(
+				() => navigationStore.dialog,
+				(open) => {
+					if (!open) {
+						stop()
+						this.listRemount++
+					}
+				},
+			)
+		},
+
 		/**
 		 * Whether the user may open OpenRegister's duplicate candidates: a
 		 * Nextcloud admin or a functional administrator (`/api/me`). Anyone
