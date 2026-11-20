@@ -66,6 +66,8 @@ spl_autoload_register(function (string $class): void {
 		'OCA\\OpenRegister\\Lifecycle\\' => __DIR__ . '/Stubs/OpenRegister/Lifecycle/',
 		// OpenRegister's MCP provider interface (mcp-full-action-surface).
 		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
+		// OpenRegister main's notification recipient resolver contract.
+		'OCA\\OpenRegister\\Notifications\\' => __DIR__ . '/Stubs/OpenRegister/Notifications/',
 		'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\' => __DIR__ . '/Stubs/Kernel/Contracts/Value/',
 		// Copies of OpenRegister's search contracts (SearchOptions, ObjectSelection). After
 		// the longer Contracts\Value\ prefix: the first matching prefix wins.

@@ -32,6 +32,7 @@ use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
 use OCA\Stackiq\EventListener\AttestationCorrectionListener;
 use OCA\Stackiq\EventListener\CatalogueMergeRelinker;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
+use OCA\Stackiq\EventListener\ComplianceVerificationGuard;
 use OCA\Stackiq\EventListener\ContractApprovalListener;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
 use OCA\Stackiq\EventListener\LifecycleCalendarListener;
@@ -45,6 +46,7 @@ use OCA\Stackiq\EventListener\StackiqEventListener;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UsageClassificationSubscriber;
 use OCA\Stackiq\EventListener\ConnectionShareSubscriber;
+use OCA\Stackiq\EventListener\UsageProviderListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\User\Events\UserLoggedInEvent;
@@ -108,6 +110,10 @@ final class ListenerRegistrarTest extends TestCase {
 				[ObjectUpdatingEvent::class, ModuleComponentListener::class],
 				[ObjectCreatingEvent::class, ContractApprovalListener::class],
 				[ObjectUpdatingEvent::class, ContractApprovalListener::class],
+				[ObjectCreatingEvent::class, ComplianceVerificationGuard::class],
+				[ObjectUpdatingEvent::class, ComplianceVerificationGuard::class],
+				[ObjectCreatingEvent::class, UsageProviderListener::class],
+				[ObjectUpdatingEvent::class, UsageProviderListener::class],
 				[ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatedEvent::class, MaintenanceRecipientsListener::class],
 				[ObjectsMergedEvent::class, CatalogueMergeRelinker::class],

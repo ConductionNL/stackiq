@@ -23,6 +23,7 @@ import {
 	COLUMN_SOURCE,
 	columnLabel,
 	hasEvidence,
+	isReviewerVerified,
 	partitionCompliancy,
 	resolveUuid,
 	standardLabel,
@@ -57,6 +58,18 @@ describe('complianceMatrix.hasEvidence', () => {
 	it('detects a url', () => {
 		expect(hasEvidence({ url: 'https://example.org/proof' })).toBe(true)
 	})
+	it('leaves an evidenced claim claimed until a reviewer verifies it (REQ-CLR-022)', () => {
+		expect(isReviewerVerified({ url: 'https://proof' })).toBe(false)
+		expect(isReviewerVerified({ url: 'https://proof', verifiedBy: '  ' })).toBe(false)
+		expect(isReviewerVerified({ verifiedBy: 'Rita Reviewer' })).toBe(false)
+		expect(isReviewerVerified({ url: 'https://proof', verifiedBy: 'Rita Reviewer' })).toBe(true)
+		const { rows } = buildComplianceMatrix({
+			modules: [{ uuid: 'mA', name: 'A' }],
+			standardVersions: [{ uuid: 's1', name: 'S1' }],
+			compliancy: [{ module: 'mA', standard_version: 's1', url: 'https://proof' }],
+		})
+		expect(rows[0].cells.s1.state).toBe(CELL.CLAIMED)
+	})
 	it('returns false with no evidence', () => {
 		expect(hasEvidence({})).toBe(false)
 		expect(hasEvidence({ evidence: '', evidenceReference: '  ', url: '' })).toBe(
@@ -69,7 +82,7 @@ describe('complianceMatrix.hasEvidence', () => {
 describe('complianceMatrix.partitionCompliancy', () => {
 	it('separates resolved relations from unresolved standaardGemma-only records', () => {
 		const { resolved, unresolved } = partitionCompliancy([
-			{ module: 'm1', standard_version: 's1', url: 'https://e' },
+			{ module: 'm1', standard_version: 's1', url: 'https://e', verifiedBy: 'Rita Reviewer' },
 			{ module: 'm1', standardGemma: 'GEMMA-ZGW' },
 			{ module: 'm2', standard_version: { uuid: 's2' } },
 			{ module: 'm3' },
@@ -94,7 +107,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 
 	it('renders the three cell states correctly', () => {
 		const compliancy = [
-			{ module: 'mA', standard_version: 's1', url: 'https://proof' },
+			{ module: 'mA', standard_version: 's1', url: 'https://proof', verifiedBy: 'Rita Reviewer' },
 			{ module: 'mA', standard_version: 's2' },
 			{ module: 'mB', standard_version: 's1' },
 		]
@@ -123,7 +136,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 	it('keeps the strongest state when two records cover one pair', () => {
 		const compliancy = [
 			{ module: 'mA', standard_version: 's1' },
-			{ module: 'mA', standard_version: 's1', url: 'https://proof' },
+			{ module: 'mA', standard_version: 's1', url: 'https://proof', verifiedBy: 'Rita Reviewer' },
 		]
 		const { rows } = buildComplianceMatrix({
 			modules,
@@ -157,7 +170,7 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 	it('lists every gebruik including applications with no compliance data', () => {
 		const usages = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
-			{ module: 'mA', standard_version: 's1', url: 'https://e' },
+			{ module: 'mA', standard_version: 's1', url: 'https://e', verifiedBy: 'Rita Reviewer' },
 			{ module: 'mB', standard_version: 's1' },
 		]
 		const coverage = buildOrganisationCoverage({
@@ -175,7 +188,7 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 		const coverage = buildOrganisationCoverage({
 			usages: [{ module: 'mA' }],
 			standaardversieUuid: 's1',
-			compliancy: [{ module: 'mA', standard_version: 's2', url: 'https://e' }],
+			compliancy: [{ module: 'mA', standard_version: 's2', url: 'https://e', verifiedBy: 'Rita Reviewer' }],
 		})
 		expect(coverage[0].state).toBe(CELL.NONE)
 	})
@@ -194,7 +207,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
 		const { resolved, unresolved } = partitionCompliancy(
 			[
-				{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
+				{ module: 'mA', bioMeasure: 'b1', url: 'https://e', verifiedBy: 'Rita Reviewer' },
 				{ module: 'mA', standard_version: 's1' },
 			],
 			COLUMN_SOURCE.BIO_MAATREGEL,
@@ -209,7 +222,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 
 	it('renders the three cell states for a BIO-measure matrix, same as the standards matrix', () => {
 		const compliancy = [
-			{ module: 'mA', bioMeasure: 'b1', url: 'https://proof' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://proof', verifiedBy: 'Rita Reviewer' },
 			{ module: 'mA', bioMeasure: 'b2' },
 			{ module: 'mB', bioMeasure: 'b1' },
 		]
@@ -236,6 +249,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 				standard_version: 's1',
 				bioMeasure: 'b1',
 				url: 'https://e',
+				verifiedBy: 'Rita Reviewer',
 			},
 		]
 		const standardsMatrix = buildComplianceMatrix({
@@ -259,7 +273,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	it('computes organisation coverage for a bioMaatregel column identically to the standards path', () => {
 		const usages = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
-			{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://e', verifiedBy: 'Rita Reviewer' },
 			{ module: 'mB', bioMeasure: 'b1' },
 		]
 		const coverage = buildOrganisationCoverage({

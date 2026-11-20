@@ -2306,7 +2306,14 @@ OC.L10N.register(
         "Users created": "Gebruikers aangemaakt",
         "{processed} of {total} items": "{processed} van {total} items",
         "Every hour": "Elk uur",
-        "Every minute": "Elke minuut"
+        "Every minute": "Elke minuut",
+        "Mark as verified": "Markeren als geverifieerd",
+        "The claim is marked verified": "De claim is als geverifieerd gemarkeerd",
+        "Verified by {name} on {date}": "Geverifieerd door {name} op {date}",
+        "Could not mark the claim verified": "De claim kon niet als geverifieerd worden gemarkeerd",
+        "Declare a standard": "Standaard opgeven",
+        "CVSS score": "CVSS-score",
+        "No vulnerabilities recorded against this version": "Geen kwetsbaarheden geregistreerd voor deze versie"
     },
     "nplurals=2; plural=(n != 1);"
 )

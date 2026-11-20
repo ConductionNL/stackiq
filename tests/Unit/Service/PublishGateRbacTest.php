@@ -49,7 +49,7 @@ class PublishGateRbacTest extends TestCase {
 	protected function setUp(): void {
 		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
 		$decoded = json_decode((string)file_get_contents($path), true);
-		$this->assertIsArray($decoded);
+		$this->assertIsArray(actual: $decoded);
 		$this->register = $decoded;
 	}//end setUp()
 
@@ -111,9 +111,9 @@ class PublishGateRbacTest extends TestCase {
 	 */
 	public function testEveryPublishableSchemaHasTheGate(): void {
 		foreach (['catalogService', 'module', 'connection', 'organization'] as $schema) {
-			$match = $this->publicPublishGate($schema);
-			$this->assertNotNull($match, $schema . ' must have a public publicatiedatum gate');
-			$this->assertSame('$now', $match['publicationDate']['$lte'], $schema . ' gate must be $lte $now');
+			$match = $this->publicPublishGate(schemaName: $schema);
+			$this->assertNotNull(actual: $match, message: $schema . ' must have a public publicatiedatum gate');
+			$this->assertSame(expected: '$now', actual: $match['publicationDate']['$lte'], message: $schema . ' gate must be $lte $now');
 		}
 	}//end testEveryPublishableSchemaHasTheGate()
 
@@ -125,27 +125,27 @@ class PublishGateRbacTest extends TestCase {
 	 */
 	public function testAnonReadVisibleOnlyWhenPublicatiedatumInThePast(): void {
 		foreach (['catalogService', 'module', 'connection', 'organization'] as $schema) {
-			$match = $this->publicPublishGate($schema);
-			$this->assertNotNull($match);
+			$match = $this->publicPublishGate(schemaName: $schema);
+			$this->assertNotNull(actual: $match);
 
 			// Not published (no publicatiedatum) → invisible to public.
 			$this->assertFalse(
-				$this->publicCanRead($match, ['name' => 'Draft']),
-				$schema . ': unpublished entry must NOT be anon-visible'
+				condition: $this->publicCanRead(match: $match, object: ['name' => 'Draft']),
+				message: $schema . ': unpublished entry must NOT be anon-visible'
 			);
 
 			// Published in the future → still invisible until that moment.
 			$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
 			$this->assertFalse(
-				$this->publicCanRead($match, ['publicationDate' => $future]),
-				$schema . ': future-dated entry must NOT be anon-visible yet'
+				condition: $this->publicCanRead(match: $match, object: ['publicationDate' => $future]),
+				message: $schema . ': future-dated entry must NOT be anon-visible yet'
 			);
 
 			// Published in the past → anon-visible.
 			$past = gmdate('Y-m-d\TH:i:sP', (time() - 3600));
 			$this->assertTrue(
-				$this->publicCanRead($match, ['publicationDate' => $past]),
-				$schema . ': past-published entry MUST be anon-visible'
+				condition: $this->publicCanRead(match: $match, object: ['publicationDate' => $past]),
+				message: $schema . ': past-published entry MUST be anon-visible'
 			);
 		}
 	}//end testAnonReadVisibleOnlyWhenPublicatiedatumInThePast()
@@ -158,9 +158,41 @@ class PublishGateRbacTest extends TestCase {
 	public function testPublishGateFieldsPresent(): void {
 		foreach (['catalogService', 'module', 'connection', 'organization'] as $schema) {
 			$props = $this->register['components']['schemas'][$schema]['properties'] ?? [];
-			$this->assertArrayHasKey('publicationDate', $props, $schema . ' needs publicatiedatum');
-			$this->assertArrayHasKey('depublicationDate', $props, $schema . ' needs depublicatiedatum');
-			$this->assertSame('date-time', $props['publicationDate']['format']);
+			$this->assertArrayHasKey(key: 'publicationDate', array: $props, message: $schema . ' needs publicatiedatum');
+			$this->assertArrayHasKey(key: 'depublicationDate', array: $props, message: $schema . ' needs depublicatiedatum');
+			$this->assertSame(expected: 'date-time', actual: $props['publicationDate']['format']);
 		}
 	}//end testPublishGateFieldsPresent()
+
+	/**
+	 * Every public read rule on module waits for the publication date: an
+	 * unpublished supplier module is not returned to an anonymous reader
+	 * (capability-rows-the-code-does-not-yet-meet task 20).
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-20-anonymous-readers-get-only-published-applications
+	 *
+	 * @return void
+	 */
+	public function testAnUnpublishedSupplierModuleIsNotPublic(): void {
+		$read   = $this->register['components']['schemas']['module']['authorization']['read'];
+		$public = array_values(array_filter($read, static fn ($rule): bool => is_array($rule) === true && ($rule['group'] ?? null) === 'public'));
+
+		$this->assertNotEmpty(actual: $public, message: 'published modules stay public');
+		foreach ($public as $rule) {
+			$this->assertFalse(
+				condition: $this->publicCanRead(match: $rule['match'] ?? [], object: ['registeredBy' => 'Supplier', 'publicationDate' => null]),
+				message: 'a public read rule returns an unpublished supplier module: ' . json_encode($rule)
+			);
+		}
+
+		$this->assertTrue(
+			condition: $this->publicCanRead(
+				match: $public[0]['match'],
+				object: ['registeredBy' => 'Supplier', 'publicationDate' => date('c', time() - 3600)]
+			),
+			message: 'a published supplier module is public'
+		);
+
+	}//end testAnUnpublishedSupplierModuleIsNotPublic()
+
 }//end class

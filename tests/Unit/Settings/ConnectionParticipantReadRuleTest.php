@@ -100,7 +100,7 @@ final class ConnectionParticipantReadRuleTest extends TestCase {
 	public function testTheFieldIsDeclaredAndTheVersionMovesSoTheImportApplies(): void {
 		$connection = $this->connection();
 
-		$this->assertSame(expected: '0.3.7', actual: $connection['version']);
+		$this->assertTrue(condition: version_compare($connection['version'], '0.3.7', '>='));
 		$this->assertSame(expected: 'array', actual: $connection['properties'][ConnectionShareSync::FIELD]['type']);
 		$this->assertTrue(condition: $connection['properties'][ConnectionShareSync::FIELD]['readOnly']);
 	}

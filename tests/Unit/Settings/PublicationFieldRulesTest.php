@@ -172,7 +172,7 @@ class PublicationFieldRulesTest extends TestCase {
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
 	/**
-	 * A version is public under the same two conditions as its module, and signed-in users read every version.
+	 * A version is public under the same condition as its module, its publication date, and signed-in users read every version.
 	 *
 	 * @return void
 	 */
@@ -185,15 +185,15 @@ class PublicationFieldRulesTest extends TestCase {
 			needle: ['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
 			haystack: $module
 		);
-		$this->assertContains(
+		$this->assertNotContains(
 			needle: ['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true],
-			haystack: $module
+			haystack: $module,
+			message: 'an unpublished supplier module is not public'
 		);
 		$this->assertSame(
 			expected: [
 				'authenticated',
 				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier'], 'crossOrganisation' => true],
 			],
 			actual: $version
 		);
@@ -221,9 +221,8 @@ class PublicationFieldRulesTest extends TestCase {
 			condition: version_compare($schemas['usage']['version'], '1.5.8', '>='),
 			message: 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it'
 		);
-		// Application-interfaces.json (connections-api-catalogue) adds connection.interface at 0.3.6;
-		// shared-usage-visible-to-participants-connections.json adds sharedWithOrganisations at 0.3.7.
-		$this->assertSame(expected: '0.3.7', actual: $schemas['connection']['version']);
-		$this->assertSame(expected: '0.1.7', actual: $schemas['moduleVersion']['version']);
+		// Application-interfaces.json (connections-api-catalogue) adds connection.interface at 0.3.6; later fragments may raise it.
+		$this->assertTrue(condition: version_compare($schemas['connection']['version'], '0.3.6', '>='));
+		$this->assertSame(expected: '0.1.8', actual: $schemas['moduleVersion']['version']);
 	}//end testAFragmentNeverLowersAVersion()
 }//end class

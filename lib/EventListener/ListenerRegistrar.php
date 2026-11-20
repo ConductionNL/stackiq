@@ -107,6 +107,12 @@ final class ListenerRegistrar {
 		// A contract becomes Active only through an approved decision (REQ-SCCD-007).
 		$context->registerEventListener(ObjectCreatingEvent::class, ContractApprovalListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContractApprovalListener::class);
+		// Only the verify action marks a compliance claim verified; changed evidence resets it (REQ-CLR-022).
+		$context->registerEventListener(ObjectCreatingEvent::class, ComplianceVerificationGuard::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ComplianceVerificationGuard::class);
+		// A usage carries its application's supplier as provider, so the supplier sees it (REQ-APG-002).
+		$context->registerEventListener(ObjectCreatingEvent::class, UsageProviderListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, UsageProviderListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
