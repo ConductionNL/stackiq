@@ -36,6 +36,10 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\Kernel\Contracts\ModuleVersionPublicationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
@@ -260,6 +264,7 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	 * @param ModuleVersionCopyRun   $run     The copy in progress.
 	 *
 	 * @return array<int, mixed>|null The versions, or null when the search failed.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function readVersionPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): ?array {
 		try {
@@ -379,8 +384,10 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 		try {
 			$module = $objects->find(
 				id: $moduleId,
-				register: $this->settingsService->getRegisterIdForObjectType('module'),
-				schema: $this->settingsService->getSchemaIdForObjectType('module'),
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterIdForObjectType('module'),
+					schema: $this->settingsService->getSchemaIdForObjectType('module')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -439,13 +446,13 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 		try {
 			$objects->saveObject(
 				object: array_merge($data, $mirror),
-				extend: [],
-				register: $version->getRegister(),
-				schema: $version->getSchema(),
-				uuid: $version->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $version->getRegister(), schema: $version->getSchema()),
+					uuid: $version->getUuid(),
+					policy: new SavePolicy(validation: false)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				_validation: false
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logFailure(

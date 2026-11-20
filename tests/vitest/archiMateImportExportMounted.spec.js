@@ -146,7 +146,7 @@ describe('ArchiMateImportExport mounted', () => {
 		await wrapper.vm.$nextTick()
 		const block = wrapper.find('.import-progress')
 		expect([block.text().includes('Saving objects'), block.text().includes('480 of 1200'), block.find('[data-testid="bar"]').attributes('value')]).toEqual([true, true, '40'])
-		expect(button(wrapper, 'Importing...').attributes('disabled')).toBe('')
+		expect(button(wrapper, 'Importing…').attributes('disabled')).toBe('')
 	})
 
 	it('reveals the include switches only when an organisation is chosen and gates the org export', async () => {
@@ -157,7 +157,12 @@ describe('ArchiMateImportExport mounted', () => {
 		expect(button(wrapper, 'Organization Export').attributes('disabled')).toBe('')
 
 		await wrapper.find('[data-testid="org-select"]').setValue('1')
-		expect(wrapper.findAll('.switch')).toHaveLength(3)
+		const switches = wrapper.findAll('.switch')
+		expect(switches).toHaveLength(4)
+		// The fourth switch carries the organisation's connections (REQ-CDX-004).
+		expect(switches[3].text()).toBe('Connections')
+		await switches[3].find('input').setValue(true)
+		expect(wrapper.vm.includeConnections).toBe(true)
 		expect(button(wrapper, 'Organization Export').attributes('disabled')).toBeUndefined()
 	})
 

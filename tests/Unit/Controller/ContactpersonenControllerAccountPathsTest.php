@@ -46,6 +46,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Account paths of the contact persons controller.
@@ -414,7 +415,13 @@ class ContactpersonenControllerAccountPathsTest extends TestCase {
 	public function testUserInfoDescribesTheLinkedAccount(): void {
 		$this->signInAdmin();
 		$this->objectService->expects($this->once())->method('find')
-			->with('cp-1', [], false, 'stackiq', 'contactPerson')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'cp-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'stackiq',
+				'schema' => 'contactPerson',
+			]))
 			->willReturn($this->entity(['username' => 'jan']));
 
 		$account = $this->user('jan', false);

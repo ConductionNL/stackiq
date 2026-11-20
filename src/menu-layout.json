@@ -4,7 +4,10 @@
 	},
 	"relocations": {
 		"Komplianties": "ReportsCompliance",
-		"ComplianceMatrix": "ReportsCompliance"
+		"ComplianceMatrix": "ReportsCompliance",
+		"Standaarden": "Architecture",
+		"Views": "Architecture",
+		"Gegevensmodel": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []
