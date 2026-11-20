@@ -44,6 +44,7 @@ use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\StackiqEventListener;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UsageClassificationSubscriber;
+use OCA\Stackiq\EventListener\ConnectionShareSubscriber;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\User\Events\UserLoggedInEvent;
@@ -96,6 +97,9 @@ final class ListenerRegistrarTest extends TestCase {
 				[ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class],
 				[ObjectCreatedEvent::class, UsageClassificationSubscriber::class],
 				[ObjectUpdatedEvent::class, UsageClassificationSubscriber::class],
+				[ObjectCreatedEvent::class, ConnectionShareSubscriber::class],
+				[ObjectUpdatedEvent::class, ConnectionShareSubscriber::class],
+				[ObjectDeletedEvent::class, ConnectionShareSubscriber::class],
 				[ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class],
 				[ObjectCreatingEvent::class, AnonymousRegistrationListener::class],
 				[ObjectCreatingEvent::class, ContactPersonOrganisationListener::class],
