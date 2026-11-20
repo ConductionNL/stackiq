@@ -121,6 +121,21 @@ class ConnectionSuggestionControllerTest extends TestCase {
 	}
 
 	/**
+	 * A failing accept answers 500 with a generic message and records nothing.
+	 *
+	 * @return void
+	 */
+	public function testAFailingAcceptAnswers500(): void {
+		$this->store->saveFailure = new \RuntimeException('OpenRegister is not available');
+
+		$response = $this->controller(organisation: 'org-a', ids: ['c-xy'])->accept('u-x');
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'Connection suggestions failed'], $response->getData());
+		$this->assertSame([], $this->store->objects['u-x']['data']['koppelingen']);
+	}
+
+	/**
 	 * The controller with this active organisation and these request ids.
 	 *
 	 * @param string|null $organisation The active organisation, or null.

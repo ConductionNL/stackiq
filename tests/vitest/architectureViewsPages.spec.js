@@ -24,7 +24,7 @@ const dir = path.resolve(__dirname, '../../src/manifest.d')
 function load (skip = null) {
   return fs
 	.readdirSync(dir)
-	.filter((f) => f.endsWith('.json') && f !== skip)
+	.filter((f) => f.endsWith('.json') && ![].concat(skip).includes(f))
 	.sort()
 	.map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')))
 }
@@ -61,7 +61,8 @@ describe('the Views page and the Architecture group', () => {
 		expect(group.children.map((child) => child.id)).toEqual(expect.arrayContaining(['Standaarden', 'Views']))
 		expect(merged.menu.find((entry) => entry.id === 'Standaarden')).toBeUndefined()
 
-		const without = buildManifest(base, load('architecture-views.json'), { ...menuLayout, relocations: { ...menuLayout.relocations, Standaarden: undefined, Views: undefined } })
+		// The data model fragment adds its own entry to the group; leave it out too, so only this change's effect is counted.
+		const without = buildManifest(base, load(['architecture-views.json', 'architecture-data-model.json']), { ...menuLayout, relocations: { ...menuLayout.relocations, Standaarden: undefined, Views: undefined, Gegevensmodel: undefined } })
 		expect(merged.menu.length).toBe(without.menu.length)
 	})
 
