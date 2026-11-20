@@ -1797,6 +1797,7 @@ class SettingsController extends Controller {
 				'modules' => $this->request->getParam('modules', 'true') === 'true',
 				'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
 				'usage' => $this->request->getParam('usage', 'false') === 'true',
+				'connections' => $this->request->getParam('connections', 'false') === 'true',
 			];
 
 			$result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);
@@ -1816,13 +1817,43 @@ class SettingsController extends Controller {
 			$fileName = $result['file_name'] ?? 'archimate_org_export_' . date('Y-m-d_H-i-s') . '.xml';
 			$xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-			return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			$response = $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			// Connections with an end outside the exported model were skipped (REQ-CDX-004).
+			$response->addHeader('X-Stackiq-Connections-Skipped', (string)($result['connections_skipped'] ?? 0));
+
+			return $response;
 		} catch (\Exception $e) {
 			$this->logger->error('Organization ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 			$statusCode = $this->getHttpStatusForException(e: $e);
 			return new JSONResponse(['success' => false, 'message' => 'Export failed: ' . $e->getMessage(), 'error' => $e->getMessage()], $statusCode);
 		}//end try
 	}//end exportOrgArchiMate()
+
+	/**
+	 * Whether the caller may export one organisation as ArchiMate.
+	 *
+	 * The detail page's Export as ArchiMate action asks this before it shows
+	 * itself, so the action and the export answer from the same rule. No
+	 * export work runs here.
+	 *
+	 * @param string $organizationUuid The organisation UUID.
+	 *
+	 * @return JSONResponse `{mayExport: bool}`, or 401 without a session.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 */
+	public function orgExportAccess(string $organizationUuid): JSONResponse {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$refusal = $this->verifyOrgScope(currentUser: $currentUser, organizationUuid: $organizationUuid);
+
+		return new JSONResponse(['mayExport' => $refusal === null]);
+	}//end orgExportAccess()
 
 	/**
 	 * Refuse the full ArchiMate export to anyone but a Nextcloud admin.

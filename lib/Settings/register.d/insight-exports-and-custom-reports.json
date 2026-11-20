@@ -1,0 +1,18 @@
+{
+  "components": {
+    "schemas": {
+      "catalogContract": {
+        "exportable": true
+      },
+      "organization": {
+        "exportable": true
+      },
+      "compliancy": {
+        "exportable": true
+      },
+      "moduleVersion": {
+        "exportable": true
+      }
+    }
+  }
+}

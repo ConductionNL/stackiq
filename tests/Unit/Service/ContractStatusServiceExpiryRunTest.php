@@ -20,11 +20,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/MainApiObjectService.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\MainApiObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -71,7 +74,7 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$this->container = $this->createMock(originalClassName: ContainerInterface::class);
 		$this->locator = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
 		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->objects = $this->createMock(originalClassName: MainApiObjectService::class);
 	}//end setUp()
 
 	/**

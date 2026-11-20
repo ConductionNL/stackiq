@@ -7,7 +7,8 @@
 - **files**: `src/dialogs/EntryWizardDialog.vue`, `src/manifest.json`, `src/manifest.d/connections.json`
 - **acceptance_criteria**:
   - GIVEN the Applications page WHEN a supplier chooses Add THEN a wizard opens on its first step
-- [ ] Implement
+- [x] Implement
+  > Built: `src/dialogs/EntryWizardDialog.vue` is a generic wizard over the shared `CnWizardDialog` (details, related records, summary; a step with a required field left empty stays open and names it; a failed save keeps the summary open with the error), driven by `src/utils/entryWizard.js`, which declares three kinds. `connection`: the Connections page (`src/manifest.d/connections.json`, page `Koppelingen`) opens it from Add through `actionsComponent: ConnectionWizardAction` with `showAdd: false`. `module`: details, then the reference components (schema `element`, `gemmaType=referentiecomponent`, several). `catalogService`: details including its required service types and provider, then the applications it runs on (several). The Applications and Services pages (`FacetedCatalogIndexView`, manifest `config.addWizard`) replace the list's Add with the wizard's. After the save the application's page opens; services have no page yet, so the Services list stays open. Tests: `tests/vitest/entryWizard.spec.js` (22).
 - [ ] Test (Playwright `tests/e2e/workflows/entry-wizard.spec.ts`)
 
 ### Task 2: Contact conversion reads the email from the linked contact
@@ -23,8 +24,8 @@
 - **files**: `lib/Settings/register.d/contracts-to-decidesk.json`, `lib/Settings/softwarecatalogus_register.json`
 - **acceptance_criteria**:
   - GIVEN a contract without an approved decision WHEN a user saves it as Active THEN the save is refused
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ContractApprovalGuardTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ContractApprovalGuardTest.php`)
 
 ### Task 4: Record the requirements in the capability matrix
 - **spec_ref**: openspec/changes/capability-requirements-from-the-matrix/proposal.md

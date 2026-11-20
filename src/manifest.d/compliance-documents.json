@@ -1,0 +1,74 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "sharing-compliance-documents: the compliance documents organisations publish about an application (DPIA, processing agreement, pentest report, assurance report, certificate, ENSIA statement), each with an audience. The schema's read rules decide who reads a document (public, government, or the named organisations), so these pages list only what the user may read. The menu entry is a child of Applications (ADR-097: no new top-level entry). The list on the application page sorts on validity so the documents that expire first come first; a relative 'expiring within 90 days' quick filter needs a relative-date token the manifest filter does not have.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{ "id": "ComplianceDocuments", "label": "Compliance documents", "icon": "FileCertificateOutline", "route": "ComplianceDocuments", "order": 10 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "ComplianceDocuments",
+			"route": "/compliance-documents",
+			"type": "index",
+			"title": "Compliance documents",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "complianceDocument",
+				"description": "The compliance documents about applications that you may read, with who published them and how long they are valid.",
+				"columns": [
+					"title",
+					"documentType",
+					{ "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
+					{ "key": "publisher", "label": "Publisher", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "organisation", "labelField": "name" } },
+					"issuedOn",
+					"validUntil",
+					"audience"
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "DPIA", "filter": { "documentType": "DPIA" } },
+					{ "label": "Processing agreements", "filter": { "documentType": "processing agreement" } },
+					{ "label": "Pentest reports", "filter": { "documentType": "pentest report" } },
+					{ "label": "Assurance reports", "filter": { "documentType": "assurance report" } },
+					{ "label": "Certificates", "filter": { "documentType": "certificate" } },
+					{ "label": "ENSIA statements", "filter": { "documentType": "ENSIA statement" } }
+				],
+				"detailRoute": "ComplianceDocumentDetail",
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ComplianceDocumentDetail",
+			"route": "/compliance-documents/:id",
+			"type": "detail",
+			"title": "Compliance document",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "complianceDocument",
+				"_note": "A compliance document is read for what it says and who may read it: data 8 wide (type, title, summary, application, dates, publisher, audience and the named organisations), the file 4 wide at the right.",
+				"widgets": [
+					{ "id": "cd-data", "type": "data", "title": "Compliance document", "icon": "ClipboardCheckOutline", "content": { "columns": 2, "include": [ "documentType", "title", "summary", "module", "publisher", "issuedOn", "validUntil", "audience", "sharedWithOrganisations" ] } },
+					{ "id": "cd-files", "type": "integration", "integrationId": "files", "title": "Document", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "cd-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "cd-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

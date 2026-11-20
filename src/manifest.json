@@ -400,6 +400,15 @@
 				"cardComponent": "OrganisatieCard",
 				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Draft", "Active", "Inactive"] },
+				"headerActions": [
+					{
+						"id": "find-duplicates",
+						"label": "Find duplicates",
+						"icon": "ContentDuplicate",
+						"href": "/apps/openregister/duplicates",
+						"visibleWhen": { "endpoint": "/apps/stackiq/api/me", "field": "mayFindDuplicates", "op": "eq", "value": true }
+					}
+				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
 			},
@@ -410,6 +419,7 @@
 			"route": "/organisaties/:id",
 			"type": "detail",
 			"title": "Organisation",
+			"actionsComponent": "OrganisationExportAction",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "organization",
@@ -435,6 +445,7 @@
 					{ "id": "9", "widgetId": "org-usages", "gridX": 0, "gridY": 14, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "org-claimed-usage", "component": "ClaimedUsageList", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
@@ -520,7 +531,7 @@
 				"schema": "module",
 				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "shortDescription", "longDescription", "website", "provider", "contactPerson", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
+					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "shortDescription", "longDescription", "website", "provider", "partOf", "contactPerson", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
 					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
 					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
 					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMeasure", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
@@ -529,7 +540,10 @@
 					{ "id": "md-connections-out", "type": "object-list", "title": "Connections from this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleA": "@objectId" }, "columns": [ { "key": "moduleB", "label": "To application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "nonMunicipalProvision", "label": "To national provision" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleA": "@objectId" }, "allowCreate": false, "emptyText": "No connections start at this application" } },
 					{ "id": "md-connections-in", "type": "object-list", "title": "Connections to this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleB": "@objectId" }, "columns": [ { "key": "moduleA", "label": "From application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleB": "@objectId" }, "allowCreate": false, "emptyText": "No connections end at this application" } },
 					{ "id": "md-ai-systems", "type": "object-list", "title": "AI systems", "icon": "RobotOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "aiSystem", "filter": { "module": "@objectId" }, "columns": [ { "key": "kind", "label": "Kind" }, { "key": "aiActRiskCategory", "label": "AI Act risk category" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "AiSystemDetail", "viewAllRoute": "AiSystems", "viewAllQuery": { "module": "@objectId" }, "allowCreate": false, "emptyText": "No AI systems registered for this application" } },
-					{ "id": "md-maintenance", "type": "object-list", "title": "Planned maintenance", "icon": "Calendar", "content": { "register": "@resolve:voorzieningen_register", "schema": "maintenanceWindow", "filter": { "module": "@objectId" }, "sort": { "field": "startsAt", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "startsAt", "label": "Starts at" }, { "key": "endsAt", "label": "Ends at" }, { "key": "impact", "label": "Impact" }, { "key": "status", "label": "Status" } ], "limit": 25, "addLabel": "Announce maintenance", "formIncludeFields": [ "title", "description", "moduleVersion", "startsAt", "endsAt", "impact" ], "emptyText": "No maintenance planned on this application" } }
+					{ "id": "md-maintenance", "type": "object-list", "title": "Planned maintenance", "icon": "Calendar", "content": { "register": "@resolve:voorzieningen_register", "schema": "maintenanceWindow", "filter": { "module": "@objectId" }, "sort": { "field": "startsAt", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "startsAt", "label": "Starts at" }, { "key": "endsAt", "label": "Ends at" }, { "key": "impact", "label": "Impact" }, { "key": "status", "label": "Status" } ], "limit": 25, "addLabel": "Announce maintenance", "formIncludeFields": [ "title", "description", "moduleVersion", "startsAt", "endsAt", "impact" ], "emptyText": "No maintenance planned on this application" } },
+					{ "id": "md-compliance-documents", "type": "object-list", "title": "Compliance documents", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "complianceDocument", "filter": { "module": "@objectId" }, "sort": { "field": "validUntil", "dir": "asc" }, "columns": [ { "key": "documentType", "label": "Type" }, { "key": "title", "label": "Title" }, { "key": "validUntil", "label": "Valid until" }, { "key": "audience", "label": "Audience" } ], "limit": 25, "addLabel": "Publish a compliance document", "formIncludeFields": [ "documentType", "title", "summary", "issuedOn", "validUntil", "audience", "sharedWithOrganisations" ], "rowRoute": "ComplianceDocumentDetail", "viewAllRoute": "ComplianceDocuments", "viewAllQuery": { "module": "@objectId" }, "emptyText": "No compliance documents you may read for this application yet" } },
+					{ "id": "md-components", "type": "object-list", "title": "Components", "icon": "Sitemap", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "partOf": "@objectId" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "shortDescription", "label": "Description" } ], "limit": 25, "rowRoute": "ModuleDetail", "allowCreate": true, "addLabel": "Add component", "formIncludeFields": [ "name", "shortDescription", "provider", "partOf" ], "emptyText": "This application has no components" } },
+					{ "id": "md-apis", "type": "object-list", "title": "APIs", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "applicationInterface", "filter": { "module": "@objectId" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "style", "label": "Style" }, { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ApiDetail", "viewAllRoute": "Apis", "viewAllQuery": { "module": "@objectId" }, "addLabel": "Add API", "formIncludeFields": [ "name", "shortDescription", "style", "version", "specificationUrl", "documentationUrl", "status" ], "emptyText": "No APIs registered for this application" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
@@ -541,12 +555,19 @@
 					{ "id": "7", "widgetId": "md-connections-out", "gridX": 0, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "md-connections-in", "gridX": 6, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "9", "widgetId": "md-ai-systems", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "md-compliance-documents", "gridX": 0, "gridY": 28, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "12", "widgetId": "md-apis", "gridX": 0, "gridY": 32, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "13", "widgetId": "md-components", "gridX": 0, "gridY": 36, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "md-merged", "component": "MergedRecordBanner", "props": { "objectId": "@objectId", "objectType": "module", "detailRoute": "ModuleDetail" }, "placement": "before-body", "colSpan": 12 },
 					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "md-connection-map", "component": "ConnectionMapWidget", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
-					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
+					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 },
+					{ "id": "md-entry-type", "_note": "landscape-change-entry-type REQ-ETC-002: change this application into a service or system software, with a preview of what carries over, what is dropped and what blocks the change.", "component": "ChangeEntryTypePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "md-classification", "component": "ModuleClassificationSummary", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -581,12 +602,14 @@
 					"startDate",
 					"endDate",
 					"cost",
-					"status"
+					"status",
+					"responsibleUser"
 				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "Active", "filter": { "status": "Active" }, "icon": "CheckCircle" },
-					{ "label": "Expiring / expired", "filter": { "status": "Expired" }, "icon": "AlertCircle" },
+					{ "label": "Expiring", "filter": { "status": "Expiring" }, "icon": "AlertCircle" },
+					{ "label": "Expired", "filter": { "status": "Expired" }, "icon": "Calendar" },
 					{ "label": "In negotiation", "filter": { "status": "In negotiation" }, "icon": "Handshake" }
 				],
 				"sidebar": {
@@ -666,6 +689,7 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
 				"detailRoute": "ModuleDetail",
+				"addWizard": "module",
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [
@@ -679,9 +703,15 @@
 				],
 				"quickFilters": [
 					{
-						"label": "All",
-						"filter": {},
+						"label": "Whole applications",
+						"filter": {
+							"partOf": "IS NULL"
+						},
 						"default": true
+					},
+					{
+						"label": "All, including components",
+						"filter": {}
 					},
 					{
 						"label": "BBN1",
@@ -741,6 +771,7 @@
 				},
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
+				"addWizard": "catalogService",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [
@@ -951,6 +982,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "compliancy",
+				"allowExport": true,
 				"columns": [
 					"module",
 					"standardVersion",
@@ -1009,6 +1041,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersion",
+				"allowExport": true,
 				"columns": [
 					{ "key": "version", "label": "Version" },
 					{ "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
@@ -1127,6 +1160,13 @@
 						"description": "Overlapping and ageing software across the portfolio.",
 						"icon": "BriefcaseOutline",
 						"route": "PortfolioReport"
+					},
+					{
+						"id": "CustomReports",
+						"label": "Custom reports",
+						"description": "Your own reports over the catalogue, as a CSV or JSON file.",
+						"icon": "FileTableOutline",
+						"route": "CustomReports"
 					}
 				]
 			},

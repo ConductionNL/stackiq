@@ -87,8 +87,79 @@ export async function resolveConfig(
 }
 
 /**
+ * The states to pass through, in order, from one lifecycle state to another.
+ *
+ * @param lifecycle The schema's `x-openregister-lifecycle` block.
+ * @param from The state the object is in.
+ * @param to The state it should reach.
+ * @return The states after `from`, ending in `to`; null when none leads there.
+ */
+export function lifecyclePath(
+	lifecycle: { transitions?: Record<string, { from?: string[], to?: string }> },
+	from: string,
+	to: string,
+): string[] | null {
+	const queue: string[][] = [[from]]
+	const seen = new Set([from])
+	while (queue.length > 0) {
+		const path = queue.shift() as string[]
+		const state = path[path.length - 1]
+		if (state === to) {
+			return path.slice(1)
+		}
+		for (const transition of Object.values(lifecycle.transitions ?? {})) {
+			const next = transition.to
+			if (next && !seen.has(next) && (transition.from ?? []).includes(state)) {
+				seen.add(next)
+				queue.push([...path, next])
+			}
+		}
+	}
+	return null
+}
+
+/**
+ * Create an object that OpenRegister refused because its lifecycle starts in
+ * another state: create it in the initial state, then walk the declared
+ * transitions to the state asked for.
+ *
+ * @param ctx The admin API context.
+ * @param register The register.
+ * @param schema The schema slug.
+ * @param data The object as asked.
+ * @param refusal The `lifecycle-invalid-initial` error OpenRegister returned.
+ * @return The created object's id.
+ */
+async function createThroughLifecycle(
+	ctx: APIRequestContext,
+	register: string,
+	schema: string,
+	data: Record<string, unknown>,
+	refusal: { field: string, initial: string, attempted: string },
+): Promise<string> {
+	const schemaRes = await ctx.get(`/index.php/apps/openregister/api/schemas/${schema}`)
+	const lifecycle = (await schemaRes.json())?.configuration?.['x-openregister-lifecycle'] ?? {}
+	const path = lifecyclePath(lifecycle, refusal.initial, refusal.attempted)
+	if (path === null) {
+		throw new Error(`createObject(${register}/${schema}): no transition path from ${refusal.initial} to ${refusal.attempted}`)
+	}
+	const id = await createObject(ctx, register, schema, { ...data, [refusal.field]: refusal.initial })
+	for (const state of path) {
+		const res = await ctx.patch(
+			`/index.php/apps/openregister/api/objects/${register}/${schema}/${id}`,
+			{ data: { [refusal.field]: state } },
+		)
+		if (!res.ok()) {
+			throw new Error(`createObject(${register}/${schema}) moving to ${state} ${res.status()}: ${await res.text()}`)
+		}
+	}
+	return id
+}
+
+/**
  * Create one object in a register/schema via the OR createObject verb (POST).
- * Returns the created object's id.
+ * Returns the created object's id. An object asked in a later lifecycle state
+ * is created in the initial state and moved there.
  */
 export async function createObject(
 	ctx: APIRequestContext,
@@ -100,6 +171,12 @@ export async function createObject(
 		`/index.php/apps/openregister/api/objects/${register}/${schema}`,
 		{ data },
 	)
+	if (res.status() === 422) {
+		const refusal = (await res.json().catch(() => null))?.errors
+		if (refusal?.code === 'lifecycle-invalid-initial') {
+			return await createThroughLifecycle(ctx, register, schema, data, refusal)
+		}
+	}
 	if (!res.ok()) {
 		throw new Error(
 			`createObject(${register}/${schema}) ${res.status()}: ${await res.text()}`,

@@ -28,11 +28,13 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonEmailInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersonenControllerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -65,7 +67,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-5
  */
-class ContactpersonenController extends Controller {
+class ContactpersonenController extends Controller implements ContactpersonenControllerInterface {
 
 	/**
 	 * Settings service for configuration access.
@@ -140,7 +142,7 @@ class ContactpersonenController extends Controller {
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
 	 * @param ContactPersonOrganisationGuardInterface $organisationGuard Decides whether the caller may add the contact to its organisation
- * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
+ * @param ContactPersonEmailInterface|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
@@ -158,7 +160,7 @@ class ContactpersonenController extends Controller {
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
 		private readonly ContactPersonOrganisationGuardInterface $organisationGuard,
-		private readonly ?ContactPersonEmail $contactPersonEmail = null,
+		private readonly ?ContactPersonEmailInterface $contactPersonEmail = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -1622,6 +1624,9 @@ class ContactpersonenController extends Controller {
 			// Initialize response with user data from Nextcloud.
 			$response = $this->buildEmptyMeResponse(userEmail: $userEmail);
 			$response['isBeheerder'] = $this->groupManager->isInGroup($userId, 'maintainer');
+			// A hint for the catalogue pages' Find duplicates; OpenRegister's
+			// candidates page checks access itself.
+			$response['mayFindDuplicates'] = (new SyncAccessPolicy(groupManager: $this->groupManager))->isAdministrator(uid: $userId);
 
 			// Try to get contactpersoon data for additional profile info.
 			$this->enrichMeWithContactPersonData(
@@ -1735,6 +1740,9 @@ class ContactpersonenController extends Controller {
 			// "granting or revoking organisation access must be restricted to
 			// a beheerder of that organisation" (req-004).
 			'isBeheerder' => false,
+			// A Nextcloud admin or functional administrator: may open
+			// OpenRegister's duplicate candidates (operations-record-reconciliation).
+			'mayFindDuplicates' => false,
 		];
 	}//end buildEmptyMeResponse()
 

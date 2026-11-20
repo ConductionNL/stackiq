@@ -30,6 +30,7 @@ use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Controller\ViewController;
 use OCA\Stackiq\Service\SearchBounds;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ViewOrigin;
 use OCA\Stackiq\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -52,6 +53,7 @@ use Psr\Log\LoggerInterface;
 #[CoversClass(ViewController::class)]
 #[UsesClass(ViewService::class)]
 #[UsesClass(SearchBounds::class)]
+#[UsesClass(ViewOrigin::class)]
 class ViewControllerProductsEnrichmentTest extends TestCase {
 
 	/**
