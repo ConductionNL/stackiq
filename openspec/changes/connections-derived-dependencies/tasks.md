@@ -32,7 +32,7 @@
 - [x] Implement
   - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
 - [ ] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes)
-  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404). Owed: the Newman requests.
+  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions"). Owed: a run of those requests against a live instance.
 
 ### Task 4: Suggested connections panel
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
@@ -40,8 +40,10 @@
 - **acceptance_criteria**:
   - GIVEN one suggestion WHEN the user clicks Accept THEN it leaves the panel and appears in the usage's connections
   - GIVEN one suggestion WHEN the user clicks Dismiss and reloads THEN it stays gone
-- [ ] Implement
+- [x] Implement
+  - `ConnectionSuggestionsPanel` registered in `src/customComponents.js` and placed after the data on `GebruikDetail` (`src/manifest.d/usages.json`); English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`. Unit spec `tests/vitest/connectionSuggestionsPanel.spec.js` (listing, empty state, refusals, accept, dismiss, accept all).
 - [ ] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`)
+  - Owed: a browser run against a live instance.
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
@@ -49,6 +51,7 @@
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Connection suggestions THEN both sources of suggestions are explained with a screenshot
 - [ ] Implement
+  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. Owed: `docs/images/connection-suggestions.png`, a screenshot from a live instance.
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification

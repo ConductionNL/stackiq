@@ -14,13 +14,13 @@
 
 ### Task 2: A copy starts unpublished
 
-Open: no `@conduction/nextcloud-vue` release (checked 2.74.0 to 2.180.0) lets a page set copy overrides; `selfModeActions` passes only the name field to `useObjectCopy().copy()`. The library needs a `copy.overrides` config first.
+Unblocked (17 Nov): `@conduction/nextcloud-vue` 2.181.0, the release stackiq resolves, reads `config.copy.overrides` and applies it to the single, mass, with-links and fields-only copy (`selfModeActions.js` `copyOverridesOf`). The Modules and Diensten pages set `publicationDate` and `depublicationDate` to null.
 - **spec_ref**: openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
 - **files**: `src/manifest.json`, `tests/vitest/facetedIndexCopy.spec.js`
 - **acceptance_criteria**:
   - GIVEN a copy WHEN created THEN the overrides clear `publicationDate` and `depublicationDate` (the library's copy overrides config), so the copy is not published with the source
-- [ ] Implement
-- [ ] Test (vitest `facetedIndexCopy.spec.js`)
+- [x] Implement
+- [x] Test (vitest `facetedIndexCopy.spec.js`)
 
 ### Task 3: Live check once OpenRegister's copy endpoint lands
 - **spec_ref**: openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
@@ -28,5 +28,5 @@ Open: no `@conduction/nextcloud-vue` release (checked 2.74.0 to 2.180.0) lets a 
 - **acceptance_criteria**:
   - GIVEN an instance with the OpenRegister copy endpoint WHEN a user copies an application with connections ticked THEN the copy holds the same connections
   - GIVEN an instance without it WHEN the dialog opens THEN the links show read only with the note
-- [ ] Implement
+- [x] Implement (17 Nov: `tests/e2e/spec-coverage/application-copy.spec.ts` written, one test per scenario, each skipping with the reason when the instance offers the other; OpenRegister main now has the copy endpoint)
 - [ ] Test (Playwright `application-copy.spec.ts`)

@@ -8,7 +8,11 @@
  * with each reference component's coverage on its node, the state in text as
  * well as in a CSS-variable border colour, and no state on other elements.
  *
+ * With "Show products" on, the view is fetched with include_products=true and
+ * a node lists its linked products.
+ *
  * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -95,6 +99,17 @@ describe('coverageMapGraph', () => {
 		expect(graph.edges).toEqual([{ id: 'r1', source: 'n-child', target: 'n-doc' }])
 	})
 
+	it('carries a node\'s products only when the view was fetched with them', () => {
+		expect(byId['n-child'].data.products).toBeNull()
+
+		const enriched = coverageMapGraph([
+			{ viewNodeId: 'p1', elementRef: 'zrc', products: [{ name: 'Zaakdienst' }] },
+			{ viewNodeId: 'p2', elementRef: 'doc', products: [] },
+			{ viewNodeId: 'p3', elementRef: 'fin', products: 'not a list' },
+		], [], components)
+		expect(enriched.nodes.map((node) => node.data.products)).toEqual([[{ name: 'Zaakdienst' }], [], null])
+	})
+
 	it('answers an empty graph for a view without nodes', () => {
 		expect(coverageMapGraph(undefined, null, components)).toEqual({ nodes: [], edges: [] })
 	})
@@ -121,6 +136,11 @@ describe('CoverageViewMap', () => {
 		NcLoadingIcon: { template: '<i class="loading" />' },
 		NcNoteCard: { props: ['type'], template: '<div class="note" :data-type="type"><slot /></div>' },
 		NcSelect: true,
+		NcCheckboxRadioSwitch: {
+			props: ['modelValue', 'disabled'],
+			emits: ['update:modelValue'],
+			template: '<button class="switch" :disabled="disabled" @click="$emit(\'update:modelValue\', !modelValue)"><slot /></button>',
+		},
 	}
 
 	it('draws the picked view read-only with every component state in text', async () => {
@@ -137,8 +157,9 @@ describe('CoverageViewMap', () => {
 		await wrapper.vm.loadView()
 		await flushPromises()
 
-		expect(http.get).toHaveBeenLastCalledWith('/index.php/apps/stackiq/api/views/v1')
+		expect(http.get).toHaveBeenLastCalledWith('/index.php/apps/stackiq/api/views/v1', { params: {} })
 		expect(wrapper.find('.canvas').attributes('data-readonly')).toBe('true')
+		expect(wrapper.find('[data-testid="coverage-view-map-node-products"]').exists()).toBe(false)
 
 		const zrc = wrapper.find('[data-id="n-child"]')
 		expect(zrc.find('[data-state]').attributes('data-state')).toBe('overlap')
@@ -157,6 +178,36 @@ describe('CoverageViewMap', () => {
 		const group = wrapper.find('[data-id="n-group"]')
 		expect(group.find('.badge').exists()).toBe(false)
 		expect(group.find('[data-state]').exists()).toBe(false)
+	})
+
+	it('fetches the view with include_products when Show products is on, and lists the products per node', async () => {
+		const productNodes = [
+			{ viewNodeId: 'n-zrc', elementRef: 'id-zrc', modelNodeId: 'id-zrc', name: 'Zaken', products: [{ name: 'Zaakdienst' }, { title: 'Archiefdienst' }] },
+			{ viewNodeId: 'n-doc', elementRef: 'id-doc', modelNodeId: 'id-doc', name: 'Documenten', products: [] },
+			{ viewNodeId: 'n-label', elementRef: null, name: 'Legenda' },
+		]
+		http.get.mockImplementation((url, config) => Promise.resolve(url.endsWith('/api/views')
+			? { data: { views: [{ id: 'v1', name: 'Mid-office' }] } }
+			: { data: { success: true, view: { viewNodes: config?.params?.include_products ? productNodes : viewNodes, viewRelationships: [] } } }))
+
+		const wrapper = mount(CoverageViewMap, { props: { components }, global: { stubs } })
+		await flushPromises()
+		expect(wrapper.find('.switch').attributes('disabled')).toBeDefined()
+
+		wrapper.vm.selectedView = { id: 'v1', label: 'Mid-office' }
+		await flushPromises()
+		await wrapper.find('.switch').trigger('click')
+		await flushPromises()
+
+		expect(http.get).toHaveBeenLastCalledWith('/index.php/apps/stackiq/api/views/v1', { params: { include_products: true } })
+		const products = wrapper.findAll('[data-testid="coverage-view-map-node-products"]')
+		expect(products.map((node) => node.text())).toEqual(['Products (2): Zaakdienst, Archiefdienst', 'No product'])
+		expect(wrapper.find('[data-id="n-label"]').text()).toBe('Legenda')
+
+		await wrapper.find('.switch').trigger('click')
+		await flushPromises()
+		expect(http.get).toHaveBeenLastCalledWith('/index.php/apps/stackiq/api/views/v1', { params: {} })
+		expect(wrapper.find('[data-testid="coverage-view-map-node-products"]').exists()).toBe(false)
 	})
 
 	it('says so when the view cannot be loaded', async () => {
