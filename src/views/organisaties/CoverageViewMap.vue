@@ -7,7 +7,11 @@
  state as a border colour and, so colour is never the only signal, as a text
  badge with the number and names of its applications.
 
+ With "Show products" on, the view is fetched with `include_products=true`
+ and each node also lists the products (diensten) linked to its element.
+
  @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
 -->
 <template>
 	<section class="coverage-view-map" data-testid="coverage-view-map">
@@ -25,6 +29,15 @@
 			label="label"
 			data-testid="coverage-view-map-picker"
 			@update:modelValue="loadView" />
+
+		<NcCheckboxRadioSwitch
+			v-model="showProducts"
+			type="switch"
+			:disabled="!selectedView"
+			data-testid="coverage-view-map-products"
+			@update:modelValue="loadView">
+			{{ t('stackiq', 'Show products') }}
+		</NcCheckboxRadioSwitch>
 
 		<NcLoadingIcon v-if="loading" :size="44" />
 
@@ -62,6 +75,12 @@
 							size="small" />
 						<span class="coverage-view-map__apps">{{ applicationsText(node.data.component) }}</span>
 					</template>
+					<span
+						v-if="showProducts && node.data.products"
+						class="coverage-view-map__products"
+						data-testid="coverage-view-map-node-products">
+						{{ productsText(node.data.products) }}
+					</span>
 				</div>
 			</template>
 		</CnGraphCanvas>
@@ -73,7 +92,7 @@ import { CnGraphCanvas, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { coverageMapGraph, viewOptions } from '../../utils/referenceComponentCoverage.js'
 
 /**
@@ -91,6 +110,7 @@ export default {
 	components: {
 		CnGraphCanvas,
 		CnStatusBadge,
+		NcCheckboxRadioSwitch,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -109,6 +129,7 @@ export default {
 		return {
 			views: [],
 			selectedView: null,
+			showProducts: false,
 			view: null,
 			loading: false,
 			error: null,
@@ -177,8 +198,11 @@ export default {
 			}
 			this.loading = true
 			try {
+				// Only a switched-on filter adds its enrichment parameter.
+				const params = this.showProducts ? { include_products: true } : {}
 				const response = await axios.get(
 					generateUrl('/apps/stackiq/api/views/{viewId}', { viewId: this.selectedView.id }),
+					{ params },
 				)
 				this.view = response.data?.view || null
 				if (!this.view) {
@@ -253,6 +277,24 @@ export default {
 				names: names.join(', '),
 			})
 		},
+
+		/**
+		 * The number and names of the products linked to a node's element.
+		 *
+		 * @param {Array<object>} products The node's products.
+		 * @return {string} The text.
+		 * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
+		 */
+		productsText(products) {
+			const names = products.map((product) => product?.name || product?.title || '').filter(Boolean)
+			if (!products.length) {
+				return t('stackiq', 'No product')
+			}
+			return t('stackiq', 'Products ({count}): {names}', {
+				count: products.length,
+				names: names.join(', '),
+			})
+		},
 	},
 }
 </script>
@@ -305,7 +347,8 @@ export default {
 	border-color: var(--color-warning);
 }
 
-.coverage-view-map__apps {
+.coverage-view-map__apps,
+.coverage-view-map__products {
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);
 }

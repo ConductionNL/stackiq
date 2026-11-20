@@ -19109,6 +19109,335 @@
 							}
 						}
 					]
+				},
+				{
+					"name": "Connection suggestions (connections-derived-dependencies)",
+					"item": [
+						{
+							"name": "Pick a usage for the suggestion requests",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_gebruik}}?_limit=1",
+									"host": [
+										"{{openregister_api}}"
+									],
+									"path": [
+										"objects",
+										"{{register_name}}",
+										"{{schema_gebruik}}?_limit=1"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"A usage listing answers 200\", function() {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"const body = pm.response.json();",
+											"const first = (body.results || [])[0];",
+											"const id = first ? (first.id || (first['@self'] || {}).id || first.uuid) : '00000000-0000-0000-0000-000000000000';",
+											"pm.collectionVariables.set('suggestion_usage_id', id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "GET suggestions answers a list or refuses another organisation",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"The listing is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Every suggestion has an id and a known reason\", function() {",
+											"        const results = pm.response.json().results;",
+											"        pm.expect(results).to.be.an('array');",
+											"        results.forEach(function (s) {",
+											"            pm.expect(s.id).to.be.a('string').and.not.empty;",
+											"            pm.expect(s.reason).to.be.oneOf(['shared-landscape', 'carry-over']);",
+											"        });",
+											"    });",
+											"}",
+											"if (pm.response.code === 403) {",
+											"    pm.test(\"A refusal says why\", function() {",
+											"        pm.expect(pm.response.json().error).to.be.a('string');",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST dismiss with no ids changes nothing",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions/dismiss",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions",
+										"dismiss"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": []}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Dismiss is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Nothing is dismissed\", function() {",
+											"        pm.expect(pm.response.json().dismissed).to.eql([]);",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST accept with no ids changes nothing",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions/accept",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions",
+										"accept"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": []}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Accept is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Nothing is accepted\", function() {",
+											"        pm.expect(pm.response.json().accepted).to.eql([]);",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST accept for an unknown usage is 404",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/00000000-0000-0000-0000-000000000000/connection-suggestions/accept",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"00000000-0000-0000-0000-000000000000",
+										"connection-suggestions",
+										"accept"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": [\"x\"]}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"An unknown usage is not found\", function() {",
+											"    pm.response.to.have.status(404);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						}
+					]
 				}
 			]
 		},
@@ -23636,6 +23965,398 @@
 									"pm.test(\"Cancel needs a running cmdb_import operation\", function () {",
 									"    pm.response.to.have.status(404);",
 									"    pm.expect(pm.response.json().error).to.eql(\"OPERATION_NOT_FOUND\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "13 - Move between organisations",
+			"description": "landscape-move-between-organisations REQ-MBO-002 and REQ-MBO-003: only an administrator of both organisations moves entries, a refused call changes nothing, and the dry run answers what moves and what stays behind without moving anything.",
+			"item": [
+				{
+					"name": "MBO setup: remember the application's owner",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_applicatie}}/{{lever_app_uuid}}",
+							"host": [
+								"{{openregister_api}}"
+							],
+							"path": [
+								"objects",
+								"{{register_name}}",
+								"{{schema_applicatie}}",
+								"{{lever_app_uuid}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The application can be read\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var self = pm.response.json()['@self'] || {};",
+									"var owner = JSON.stringify([self.organisation || null, pm.response.json().provider || null]);",
+									"pm.collectionVariables.set(\"mbo_owner_before\", owner);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO-002: an administrator of one organisation is refused the plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/ownership-transfers/plan",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"ownership-transfers",
+								"plan"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"objects\": [\n    {\n      \"schema\": \"module\",\n      \"id\": \"{{lever_app_uuid}}\"\n    }\n  ],\n  \"sourceOrganisation\": \"{{lever_nc_uuid}}\",\n  \"targetOrganisation\": \"{{lever2_nc_uuid}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "jan.pietersen@test.nl"
+								},
+								{
+									"key": "password",
+									"value": "{{test_password}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"MBO-002: 403 for an administrator of one side only\", function() {",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(pm.response.json().message).to.eql(\"Only an administrator of both organisations may move entries\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO-002: an administrator of one organisation is refused the move",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/ownership-transfers/execute",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"ownership-transfers",
+								"execute"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"objects\": [\n    {\n      \"schema\": \"module\",\n      \"id\": \"{{lever_app_uuid}}\"\n    }\n  ],\n  \"sourceOrganisation\": \"{{lever_nc_uuid}}\",\n  \"targetOrganisation\": \"{{lever2_nc_uuid}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "jan.pietersen@test.nl"
+								},
+								{
+									"key": "password",
+									"value": "{{test_password}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"MBO-002: 403 and no move\", function() {",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(pm.response.json()).to.not.have.property(\"moved\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO-002: the refused move changed nothing",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_applicatie}}/{{lever_app_uuid}}",
+							"host": [
+								"{{openregister_api}}"
+							],
+							"path": [
+								"objects",
+								"{{register_name}}",
+								"{{schema_applicatie}}",
+								"{{lever_app_uuid}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The application can be read\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var self = pm.response.json()['@self'] || {};",
+									"var owner = JSON.stringify([self.organisation || null, pm.response.json().provider || null]);",
+									"pm.test(\"MBO: the application's organisation and supplier are unchanged\", function() {",
+									"    pm.expect(owner).to.eql(pm.collectionVariables.get(\"mbo_owner_before\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO: a request without entries is rejected",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/ownership-transfers/plan",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"ownership-transfers",
+								"plan"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"objects\": [],\n  \"sourceOrganisation\": \"{{lever_nc_uuid}}\",\n  \"targetOrganisation\": \"{{lever2_nc_uuid}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"MBO: 400 without entries\", function() {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO-003: the administrator's dry run lists each entry and what stays behind",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/ownership-transfers/plan",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"ownership-transfers",
+								"plan"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"objects\": [\n    {\n      \"schema\": \"module\",\n      \"id\": \"{{lever_app_uuid}}\"\n    },\n    {\n      \"schema\": \"organization\",\n      \"id\": \"{{lever_reg_uuid}}\"\n    }\n  ],\n  \"sourceOrganisation\": \"{{lever_nc_uuid}}\",\n  \"targetOrganisation\": \"{{lever2_nc_uuid}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"MBO-003: the plan answers every entry with its action\", function() {",
+									"    pm.response.to.have.status(200);",
+									"    var plan = pm.response.json();",
+									"    pm.expect(plan.items).to.be.an(\"array\").with.lengthOf(2);",
+									"    pm.expect(plan.staysBehind).to.be.an(\"array\");",
+									"    plan.items.forEach(function (item) { pm.expect([\"move\", \"skip\"]).to.include(item.action); });",
+									"});",
+									"pm.test(\"MBO-003: an organisation itself is skipped with the reason\", function() {",
+									"    var org = pm.response.json().items[1];",
+									"    pm.expect(org.action).to.eql(\"skip\");",
+									"    pm.expect(org.reason).to.eql(\"This kind of entry cannot move between organisations\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "MBO-003: the dry run moved nothing",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_applicatie}}/{{lever_app_uuid}}",
+							"host": [
+								"{{openregister_api}}"
+							],
+							"path": [
+								"objects",
+								"{{register_name}}",
+								"{{schema_applicatie}}",
+								"{{lever_app_uuid}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The application can be read\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var self = pm.response.json()['@self'] || {};",
+									"var owner = JSON.stringify([self.organisation || null, pm.response.json().provider || null]);",
+									"pm.test(\"MBO: the application's organisation and supplier are unchanged\", function() {",
+									"    pm.expect(owner).to.eql(pm.collectionVariables.get(\"mbo_owner_before\"));",
 									"});"
 								],
 								"type": "text/javascript"

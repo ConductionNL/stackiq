@@ -69,6 +69,14 @@ describe('the compliance documents pages', () => {
 		expect(index.detailRoute).toBe('ComplianceDocumentDetail')
 	})
 
+	it('filters on the documents that expire within 90 days', () => {
+		const index = page('ComplianceDocuments').config
+		const expiring = index.quickFilters.find((q) => q.label === 'Expiring within 90 days')
+		expect(expiring.filter).toEqual({ expiresWithin90Days: true })
+		expect(schema.properties).toHaveProperty('expiresWithin90Days')
+		expect(schema.configuration['x-openregister-calculations']).toHaveProperty('expiresWithin90Days')
+	})
+
 	it('shows the audience and the named organisations on the detail page', () => {
 		const data = page('ComplianceDocumentDetail').config.widgets.find((w) => w.id === 'cd-data')
 		expect(data.content.include).toEqual(expect.arrayContaining(['audience', 'sharedWithOrganisations', 'validUntil', 'publisher']))
