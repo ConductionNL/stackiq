@@ -1874,7 +1874,6 @@ OC.L10N.register(
         "Publish {count} file": "Publish {count} file",
         "Publish {count} files": "Publish {count} files",
         "Reason": "Reason",
-        "Reference": "Reference",
         "Register": "Register",
         "Register:": "Register:",
         "Related": "Related",
@@ -1931,7 +1930,6 @@ OC.L10N.register(
         "Target Register": "Target Register",
         "Target Schema": "Target Schema",
         "Target:": "Target:",
-        "Text": "Text",
         "Themes": "Themes",
         "Total Errors": "Total Errors",
         "Total Time": "Total Time",
@@ -1947,17 +1945,50 @@ OC.L10N.register(
         "View Object": "View Object",
         "What will happen:": "What will happen:",
         "XML Parsing": "XML Parsing",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Choose the destination register and schema for the {count} selected object:","Choose the destination register and schema for the {count} selected objects:"],
-        "_Delete {count} file_::_Delete {count} files_": ["Delete {count} file","Delete {count} files"],
-        "_Depublish {count} file_::_Depublish {count} files_": ["Depublish {count} file","Depublish {count} files"],
-        "_Migrate {count} object_::_Migrate {count} objects_": ["Migrate {count} object","Migrate {count} objects"],
-        "_Publish {count} file_::_Publish {count} files_": ["Publish {count} file","Publish {count} files"],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan all {count} compliance object","Scan all {count} compliance objects"],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Show details for {count} import error","Show details for {count} import errors"],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["Successfully imported {count} object in {time}","Successfully imported {count} objects in {time}"],
-        "_{count} error_::_{count} errors_": ["{count} error","{count} errors"],
-        "_{count} object_::_{count} objects_": ["{count} object","{count} objects"],
-        "_{count} occurrence_::_{count} occurrences_": ["{count} occurrence","{count} occurrences"],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
+            "Choose the destination register and schema for the {count} selected object:",
+            "Choose the destination register and schema for the {count} selected objects:"
+        ],
+        "_Delete {count} file_::_Delete {count} files_": [
+            "Delete {count} file",
+            "Delete {count} files"
+        ],
+        "_Depublish {count} file_::_Depublish {count} files_": [
+            "Depublish {count} file",
+            "Depublish {count} files"
+        ],
+        "_Migrate {count} object_::_Migrate {count} objects_": [
+            "Migrate {count} object",
+            "Migrate {count} objects"
+        ],
+        "_Publish {count} file_::_Publish {count} files_": [
+            "Publish {count} file",
+            "Publish {count} files"
+        ],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
+            "Scan all {count} compliance object",
+            "Scan all {count} compliance objects"
+        ],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": [
+            "Show details for {count} import error",
+            "Show details for {count} import errors"
+        ],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
+            "Successfully imported {count} object in {time}",
+            "Successfully imported {count} objects in {time}"
+        ],
+        "_{count} error_::_{count} errors_": [
+            "{count} error",
+            "{count} errors"
+        ],
+        "_{count} object_::_{count} objects_": [
+            "{count} object",
+            "{count} objects"
+        ],
+        "_{count} occurrence_::_{count} occurrences_": [
+            "{count} occurrence",
+            "{count} occurrences"
+        ],
         "ArchiMate type": "ArchiMate type",
         "Asset tag": "Asset tag",
         "Class": "Class",
@@ -2038,7 +2069,15 @@ OC.L10N.register(
         "This entry is system software.": "This entry is system software.",
         "Show products": "Show products",
         "No product": "No product",
-        "Products ({count}): {names}": "Products ({count}): {names}"
+        "Products ({count}): {names}": "Products ({count}): {names}",
+        "Entry published": "Entry published",
+        "Entry withdrawn": "Entry withdrawn",
+        "Not published": "Not published",
+        "Publication date and time": "Publication date and time",
+        "Publish now": "Publish now",
+        "Publish on a date": "Publish on a date",
+        "Scheduled": "Scheduled",
+        "Withdraw": "Withdraw"
     },
     "nplurals=2; plural=(n != 1);"
 )

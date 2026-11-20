@@ -1938,7 +1938,6 @@ OC.L10N.register(
         "Publish {count} file": "{count} bestand publiceren",
         "Publish {count} files": "{count} bestanden publiceren",
         "Reason": "Reden",
-        "Reference": "Verwijzing",
         "Register": "Register",
         "Register:": "Register:",
         "Relationship": "Relatie",
@@ -1994,7 +1993,6 @@ OC.L10N.register(
         "Target Register": "Doelregister",
         "Target Schema": "Doelschema",
         "Target:": "Doel:",
-        "Text": "Tekst",
         "Themes": "Thema's",
         "Total Errors": "Totaal aantal fouten",
         "Total Time": "Totale tijd",
@@ -2010,17 +2008,50 @@ OC.L10N.register(
         "View Object": "Object bekijken",
         "What will happen:": "Wat er gebeurt:",
         "XML Parsing": "XML verwerken",
-        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": ["Kies het doelregister en -schema voor het {count} geselecteerde object:","Kies het doelregister en -schema voor de {count} geselecteerde objecten:"],
-        "_Delete {count} file_::_Delete {count} files_": ["{count} bestand verwijderen","{count} bestanden verwijderen"],
-        "_Depublish {count} file_::_Depublish {count} files_": ["{count} bestand depubliceren","{count} bestanden depubliceren"],
-        "_Migrate {count} object_::_Migrate {count} objects_": ["{count} object migreren","{count} objecten migreren"],
-        "_Publish {count} file_::_Publish {count} files_": ["{count} bestand publiceren","{count} bestanden publiceren"],
-        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": ["Scan {count} compliance-object","Scan alle {count} compliance-objecten"],
-        "_Show details for {count} import error_::_Show details for {count} import errors_": ["Details tonen voor {count} importfout","Details tonen voor {count} importfouten"],
-        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": ["{count} object geïmporteerd in {time}","{count} objecten geïmporteerd in {time}"],
-        "_{count} error_::_{count} errors_": ["{count} fout","{count} fouten"],
-        "_{count} object_::_{count} objects_": ["{count} object","{count} objecten"],
-        "_{count} occurrence_::_{count} occurrences_": ["{count} keer","{count} keer"],
+        "_Choose the destination register and schema for the {count} selected object:_::_Choose the destination register and schema for the {count} selected objects:_": [
+            "Kies het doelregister en -schema voor het {count} geselecteerde object:",
+            "Kies het doelregister en -schema voor de {count} geselecteerde objecten:"
+        ],
+        "_Delete {count} file_::_Delete {count} files_": [
+            "{count} bestand verwijderen",
+            "{count} bestanden verwijderen"
+        ],
+        "_Depublish {count} file_::_Depublish {count} files_": [
+            "{count} bestand depubliceren",
+            "{count} bestanden depubliceren"
+        ],
+        "_Migrate {count} object_::_Migrate {count} objects_": [
+            "{count} object migreren",
+            "{count} objecten migreren"
+        ],
+        "_Publish {count} file_::_Publish {count} files_": [
+            "{count} bestand publiceren",
+            "{count} bestanden publiceren"
+        ],
+        "_Scan all {count} compliance object_::_Scan all {count} compliance objects_": [
+            "Scan {count} compliance-object",
+            "Scan alle {count} compliance-objecten"
+        ],
+        "_Show details for {count} import error_::_Show details for {count} import errors_": [
+            "Details tonen voor {count} importfout",
+            "Details tonen voor {count} importfouten"
+        ],
+        "_Successfully imported {count} object in {time}_::_Successfully imported {count} objects in {time}_": [
+            "{count} object geïmporteerd in {time}",
+            "{count} objecten geïmporteerd in {time}"
+        ],
+        "_{count} error_::_{count} errors_": [
+            "{count} fout",
+            "{count} fouten"
+        ],
+        "_{count} object_::_{count} objects_": [
+            "{count} object",
+            "{count} objecten"
+        ],
+        "_{count} occurrence_::_{count} occurrences_": [
+            "{count} keer",
+            "{count} keer"
+        ],
         "ArchiMate type": "ArchiMate-type",
         "Asset tag": "Inventarisnummer",
         "Class": "Klasse",
@@ -2101,7 +2132,15 @@ OC.L10N.register(
         "This entry is system software.": "Deze registratie is systeemsoftware.",
         "Show products": "Producten tonen",
         "No product": "Geen product",
-        "Products ({count}): {names}": "Producten ({count}): {names}"
+        "Products ({count}): {names}": "Producten ({count}): {names}",
+        "Entry published": "Vermelding gepubliceerd",
+        "Entry withdrawn": "Vermelding ingetrokken",
+        "Not published": "Niet gepubliceerd",
+        "Publication date and time": "Publicatiedatum en -tijd",
+        "Publish now": "Nu publiceren",
+        "Publish on a date": "Op een datum publiceren",
+        "Scheduled": "Gepland",
+        "Withdraw": "Intrekken"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -39,6 +39,7 @@ import OrganisationExportAction from './components/organisations/OrganisationExp
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
+import PublicationAction from './components/publication/PublicationAction.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
@@ -327,6 +328,15 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+
+	// --- Publish and withdraw on an entry's page (REQ-ODP-011). ---
+	// ModuleDetail's `actionsComponent`: the publication badge plus Publish
+	// (now or on a date) and Withdraw, calling stackiq's guarded publication
+	// endpoint. No built-in header action can call a non-object-service
+	// endpoint per record and show its refusal, so it stays custom.
+	// @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+	PublicationAction,
+
 	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
 	// The library's roadmap and store pages are one page type each; this puts
 	// both under one page as two tabs, so the footer Store entry and the

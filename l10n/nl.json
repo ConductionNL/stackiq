@@ -2136,6 +2136,14 @@
         "Unknown (no claim)": "Onbekend (geen claim)",
         "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Geverifieerd: {verified} · Geclaimd: {claimed} · Voldoet niet: {notMet} · Onbekend: {none}",
         "Result": "Resultaat",
-        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Of de applicatie aan de standaard of BIO-maatregel voldoet. Geen claim betekent onbekend, niet dat ze niet voldoet."
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Of de applicatie aan de standaard of BIO-maatregel voldoet. Geen claim betekent onbekend, niet dat ze niet voldoet.",
+        "Entry published": "Vermelding gepubliceerd",
+        "Entry withdrawn": "Vermelding ingetrokken",
+        "Not published": "Niet gepubliceerd",
+        "Publication date and time": "Publicatiedatum en -tijd",
+        "Publish now": "Nu publiceren",
+        "Publish on a date": "Op een datum publiceren",
+        "Scheduled": "Gepland",
+        "Withdraw": "Intrekken"
     }
 }
