@@ -314,4 +314,24 @@ class GebruikControllerContractTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 
 	}//end testDeelnemerEndpointForcesTheCallersOwnOrganisation()
+	/**
+	 * GET /api/gebruik/deelnemer reports a service failure as a 500 with the
+	 * error message, not as an uncaught exception.
+	 *
+	 * @return void
+	 */
+	public function testDeelnemerEndpointReportsAServiceFailureAs500(): void {
+		$controller = $this->makeController();
+		$this->withUserInGroups([], 'org-alice');
+
+		$this->gebruikService->expects($this->once())
+			->method('getGebruiken')
+			->willThrowException(new \Exception('register down'));
+
+		$response = $controller->getGebruikenForDeelnemer();
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'register down'], $response->getData());
+
+	}//end testDeelnemerEndpointReportsAServiceFailureAs500()
 }//end class

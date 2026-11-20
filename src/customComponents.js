@@ -46,6 +46,8 @@ import UsageClassificationPanel from './components/usages/UsageClassificationPan
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
+import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
+import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
@@ -128,6 +130,14 @@ export default {
 	// a page type or widget the library has.
 	ArchitectureViewEditor,
 	ViewVersionCompare,
+
+	// The relations of a data entity drawn around it with a text table, and its
+	// attributes with keys, edited on an own entity
+	// (architecture-data-model-and-ggm D4, D5): no built-in widget reads a
+	// relation by ArchiMate identifier at either end or edits one list
+	// property of an object in place.
+	DataEntityRelations,
+	DataEntityAttributes,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual

@@ -15,7 +15,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const http = vi.hoisted(() => ({ get: vi.fn() }))
-const store = vi.hoisted(() => ({ organisations: [] }))
+const store = vi.hoisted(() => ({ organisations: [], fetches: [] }))
 
 vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => `/index.php${path}` }))
@@ -24,7 +24,12 @@ vi.mock('@nextcloud/l10n', () => ({
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
 vi.mock('../../src/store/store.js', () => ({
-	objectStore: { getCollection: () => ({ results: store.organisations }) },
+	objectStore: {
+		settings: {},
+		objectTypeRegistry: { organization: {} },
+		getCollection: () => ({ results: store.organisations }),
+		fetchCollection: (...args) => store.fetches.push(args),
+	},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
@@ -81,6 +86,13 @@ beforeEach(() => {
 })
 
 describe('GemmaPlate rendering', () => {
+	it('loads the organisations itself when it mounts', async () => {
+		mount(GemmaPlate, { global: { stubs } })
+		await flushPromises()
+
+		expect(store.fetches).toContainEqual(['organization', { _limit: 1000 }])
+	})
+
 	it('asks for an organisation when none is chosen', async () => {
 		const wrapper = mount(GemmaPlate, { global: { stubs } })
 		await flushPromises()
