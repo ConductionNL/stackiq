@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Failure-path cases for PublicationService.
@@ -195,7 +196,13 @@ class PublicationServiceFailurePathsTest extends TestCase {
 		$this->locator->method('getRegisterIdForObjectType')->willReturn(2);
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('u-4', [], false, '2', '8')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'u-4',
+					'_extend' => [],
+					'files' => false,
+					'register' => '2',
+					'schema' => '8',
+				]))
 			->willReturn(null);
 
 		$this->assertNull($this->service->resolveEntry(objectType: 'module', uuid: 'u-4'));
@@ -246,13 +253,13 @@ class PublicationServiceFailurePathsTest extends TestCase {
 		$this->entryExists(['name' => 'X', 'depublicationDate' => '2020-01-01T00:00:00+00:00']);
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(
-				['name' => 'X', 'depublicationDate' => null, 'publicationDate' => '2030-05-01T10:00:00+00:00'],
-				[],
-				2,
-				8,
-				'u-7'
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['name' => 'X', 'depublicationDate' => null, 'publicationDate' => '2030-05-01T10:00:00+00:00'],
+					'extend' => [],
+					'register' => 2,
+					'schema' => 8,
+					'uuid' => 'u-7',
+				]));
 
 		$result = $this->service->publish(objectType: 'module', uuid: 'u-7', when: '2030-05-01T12:00:00+02:00');
 

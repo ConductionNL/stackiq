@@ -56,11 +56,18 @@
 
 ## 3. Frontend / manifest
 
-- [ ] 3.1 Verify the leaf tabs render from schema `linkedTypes` on the
+- [x] 3.1 Verify the leaf tabs render from schema `linkedTypes` on the
   affected detail pages (`ContactpersoonDetail`, `OrganisatieDetail`,
   `ContractDetail`, `ModuleversieDetail`, `ReviewDetail`, `ModuleDetail`,
   service detail) — expected zero per-page wiring via the shared object
   sidebar; if a page suppresses sidebar tabs, wire it there.
+  - All six pages list their own sidebar `tabs` (History, Components), and
+    `CnObjectSidebar` renders the registry's leaf tabs only when no `tabs`
+    are given, so every page suppressed its leaves. Each page now declares
+    its leaf as a tab drawn by `src/components/integrations/IntegrationLeafTab.vue`,
+    which renders the registered provider's own tab (or its mount host).
+    The services list has no detail page. Rendering on a running instance is
+    part of 4.3.
 - [x] 3.2 Rewrite the `_note` strings on `ContractDetail` and
   `ContactpersoonDetail` in `src/manifest.json` that currently assert
   "declares NO email/calendar linkedType" — keep the comms hard-rule (no
@@ -80,6 +87,11 @@
   `endDate`; deck card create-and-link on a pending review; bookmark
   link + render on a module detail page — per the @e2e-tagged scenarios
   (gate-19 traceability).
+  - Written: `tests/e2e/workflows/integration-leaves.spec.ts` (one test per
+    @e2e scenario; links made through OpenRegister's contacts/new,
+    integrations/deck and an `or:<uuid>`-tagged bookmark; a leaf whose app
+    is not installed is skipped with that reason). Not run against a live
+    instance yet, so the box stays open.
 
 ## 5. Spec + docs
 

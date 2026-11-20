@@ -21,7 +21,7 @@ vi.mock('@nextcloud/dialogs', () => ({
 	showError: (m) => toasts.push(['error', m]),
 	showSuccess: (m) => toasts.push(['success', m]),
 }))
-vi.mock('@conduction/nextcloud-vue', () => ({ CnChartWidget: {}, CnKpiGrid: {}, CnStatsBlock: {}, CnStatusBadge: {} }))
+vi.mock('@conduction/nextcloud-vue', () => ({ CnChartWidget: {}, CnGraphCanvas: {}, CnKpiGrid: {}, CnStatsBlock: {}, CnStatusBadge: {} }))
 vi.mock('../../src/components/portfolio/ValueFitPlot.vue', () => ({ default: {} }))
 vi.mock('../../src/components/AlwaysVisibleSection.vue', () => ({ default: {} }))
 vi.mock('../../src/components/StandardTabs.vue', () => ({ default: {} }))

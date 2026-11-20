@@ -25,8 +25,13 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Support\RegisteredByFromOrganisation;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -489,8 +494,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			return $request['objectService']->searchObjectsPaginated(
 				query: $searchQuery,
 				_rbac: false,
-				_multitenancy: false,
-				deleted: false
+				_multitenancy: false
 			);
 		}//end if
 
@@ -502,11 +506,10 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 		$this->logger->debug('Executing koppelingen-gebruik by suite/module UUID', ['uuid' => $uuid, 'query' => $searchQuery]);
 
 		return $request['objectService']->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false,
-			uses: $uuid
+			...array_merge(
+				['query' => $searchQuery, '_rbac' => false, '_multitenancy' => false],
+				SearchSelection::uses(service: $request['objectService'], method: 'searchObjectsPaginated', uses: $uuid, older: ['deleted' => false])
+			)
 		);
 	}//end searchKoppelingen()
 
@@ -636,9 +639,8 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 				// Disable RBAC to access all objects.
 				_rbac: false,
 				// Disable multitenancy to access objects from all organisations.
-				_multitenancy: false,
-				// Exclude deleted objects.
-				deleted: false
+				// Deleted objects are excluded by default.
+				_multitenancy: false
 			);
 
 			$this->logger->debug(
@@ -727,16 +729,14 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 			// Execute search following PublicationsController.php used() method pattern.
 			// Use database source and uses parameter for relationship filtering.
+			// RBAC and multitenancy off to reach any object of any organisation.
+			// Deleted objects are excluded by default; uses finds the objects
+			// that have this UUID in their relations array.
 			$searchResult = $objectService->searchObjectsPaginated(
-				query: $query,
-				_rbac: false,
-				// Disable RBAC to access any object.
-				_multitenancy: false,
-				// Disable multitenancy to access objects from any organisation.
-				deleted: false,
-				// Exclude deleted objects.
-				uses: $suiteId
-				// Find objects that have this UUID in their relations array.
+				...array_merge(
+					['query' => $query, '_rbac' => false, '_multitenancy' => false],
+					SearchSelection::uses(service: $objectService, method: 'searchObjectsPaginated', uses: $suiteId, older: ['deleted' => false])
+				)
 			);
 
 			$this->logger->debug(
@@ -998,7 +998,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			$gebruikData['@self'] = $selfData;
 
 			// Update registeredBy based on the accepting organisation's type.
-			$gebruikData = $this->updateRegisteredBy(
+			$gebruikData = (new RegisteredByFromOrganisation(settingsService: $this->settingsService, logger: $this->logger))->apply(
 				objectService: $objectService,
 				objectData: $gebruikData,
 				organisationUuid: $currentOrg
@@ -1011,9 +1011,13 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			// so $gebruikData already carries every unchanged field forward.
 			$updatedGebruik = $objectService->saveObject(
 				object: $gebruikData,
-				register: $existingGebruik->getRegister(),
-				schema: $existingGebruik->getSchema(),
-				uuid: $gebruikId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $existingGebruik->getRegister(),
+							schema: $existingGebruik->getSchema()
+						),
+					uuid: $gebruikId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1091,8 +1095,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			try {
 				$object = $objectService->find(
 					id: $objectId,
-					register: $registerId,
-					schema: $schemaId,
+					options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1219,82 +1222,6 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 		throw new Exception(ucfirst($labelForLogs) . ' configuration not found. Please configure the schemas in the admin panel.');
 	}//end resolveVoorzieningenSchemaConfig()
-
-	/**
-	 * Mapping from organisatie.type to registeredBy value
-	 */
-	private const TYPE_MAP = [
-		'Municipality' => 'Municipality',
-		'Supplier' => 'Supplier',
-		'Collaboration' => 'Collaboration',
-		'Community' => 'Community',
-	];
-
-	/**
-	 * Update registeredBy on object data based on the organisation's type
-	 *
-	 * Looks up the organisation object by UUID, reads its type, and maps it
-	 * to the appropriate registeredBy value using TYPE_MAP.
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param array $objectData The object data to update
-	 * @param string $organisationUuid The UUID of the organisation to look up
-	 *
-	 * @return array The updated object data
-	 */
-	private function updateRegisteredBy(
-		ObjectServiceInterface $objectService,
-		array $objectData,
-		string $organisationUuid,
-	): array {
-		try {
-			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			if ($organisationSchemaId === null || $registerId === null) {
-				return $objectData;
-			}
-
-			$organisationObject = $objectService->find(
-				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId,
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			if ($organisationObject === null) {
-				return $objectData;
-			}
-
-			$organisationData = $organisationObject->getObject();
-			$orgType = $organisationData['type'] ?? null;
-
-			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['registeredBy'] = self::TYPE_MAP[$orgType];
-
-				$this->logger->info(
-					'Updated registeredBy during transfer',
-					[
-						'organisationUuid' => $organisationUuid,
-						'orgType' => $orgType,
-						'registeredBy' => self::TYPE_MAP[$orgType],
-					]
-				);
-			}
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'Failed to update registeredBy during transfer',
-				[
-					'organisationUuid' => $organisationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-		}//end try
-
-		return $objectData;
-	}//end updateGeregistreerdDoor()
 
 	/**
 	 * Add query filters from options to the base query
@@ -1465,11 +1392,9 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			$objectService->setSchema($existingGebruik->getSchema());
 
 			$deleteResult = $objectService->deleteObject(
-				uuid: $gebruikId,
+				new ObjectDeletion(uuid: $gebruikId),
 				_rbac: false,
-				// Disable RBAC to allow cross-organisation deletion.
 				_multitenancy: false
-				// Disable multitenancy to allow deletion from different organisations.
 			);
 
 			$this->logger->info(

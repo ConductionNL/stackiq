@@ -16,6 +16,14 @@
 			"type": "index",
 			"title": "Applications in use",
 			"config": {
+				"bulkActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"handler": "moveUsagesToOrganisation"
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "usage",
 				"description": "The applications your organisation uses, with the version it runs, where it stands and who owns it.",
@@ -26,6 +34,7 @@
 					{ "key": "businessOwner", "label": "Business owner", "widget": "contactName" },
 					{ "key": "technicalOwner", "label": "Technical owner", "widget": "contactName" },
 					"timeClassification",
+					{ "key": "bbnLevel", "label": "BBN level" },
 					"serviceDeskRecordId"
 				],
 				"filterMenu": true,
@@ -36,7 +45,11 @@
 					{ "label": "In production", "filter": { "status": "In production" }, "icon": "CheckCircle" },
 					{ "label": "To be phased out", "filter": { "status": "To be phased out" }, "icon": "AlertCircle" },
 					{ "label": "Phased out", "filter": { "status": "Phased out" } },
-					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" }
+					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" },
+					{ "label": "BBN1", "filter": { "bbnLevel": "BBN1" } },
+					{ "label": "BBN2", "filter": { "bbnLevel": "BBN2" } },
+					{ "label": "BBN3", "filter": { "bbnLevel": "BBN3" } },
+					{ "label": "Not classified", "filter": { "bbnLevel": "IS NULL" } }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -48,12 +61,22 @@
 			"type": "detail",
 			"title": "Application in use",
 			"config": {
+				"headerActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"type": "open-modal",
+						"target": "MoveToOrganisationLauncher",
+						"props": { "schema": "usage" }
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "usage",
 				"_note": "A usage is read for what runs where and who owns it (lifecycle-application-value-assessment added the value assessment section with the scores and the suggested TIME class, and the risk signals after it): data 8 wide (application, organisation, version, status, owners, phase dates, cloud model, annotation), documents 4 wide at the right (DPIA, contract, processing agreement), then the related panel. Status transitions come from the schema's x-openregister-lifecycle.",
 				"lifecycleActions": { "field": "status" },
 				"widgets": [
-					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "interneAnnotation", "installedVersion", "publicationDate" ] } },
+					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "interneAnnotation", "installedVersion", "publicationDate", "dataEntities" ] } },
 					{ "id": "gb-service-desk", "type": "data", "title": "Service desk", "icon": "Sitemap", "content": { "columns": 2, "include": [ "serviceDeskSystem", "serviceDeskRecordId", "serviceDeskUrl", "serviceDeskSyncedAt" ] } },
 					{ "id": "gb-assessment", "type": "data", "title": "Value assessment", "icon": "ScaleBalance", "content": { "columns": 2, "include": [ "businessValue", "technicalFit", "riskScore", "scoredOn", "timeClassification", "suggestedTimeClassification", "timeRationale", "timeReviewDate" ] } },
 					{ "id": "gb-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
@@ -69,7 +92,10 @@
 					{ "id": "6", "widgetId": "usage-process-steps", "gridX": 0, "gridY": 13, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"bodyWidgets": [
-					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
+					{ "id": "gb-claim-answer", "component": "ClaimAnswerNotice", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
+					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
+					{ "id": "gb-runs-on", "component": "UsageRunsOnPanel", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
+					{ "id": "gb-classification", "component": "UsageClassificationPanel", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,

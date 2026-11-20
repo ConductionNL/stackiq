@@ -15,7 +15,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const http = vi.hoisted(() => ({ get: vi.fn() }))
-const store = vi.hoisted(() => ({ organisations: [] }))
+const store = vi.hoisted(() => ({ organisations: [], fetches: [] }))
 
 vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => `/index.php${path}` }))
@@ -24,17 +24,25 @@ vi.mock('@nextcloud/l10n', () => ({
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
 vi.mock('../../src/store/store.js', () => ({
-	objectStore: { getCollection: () => ({ results: store.organisations }) },
+	objectStore: {
+		settings: {},
+		objectTypeRegistry: { organization: {} },
+		getCollection: () => ({ results: store.organisations }),
+		fetchCollection: (...args) => store.fetches.push(args),
+	},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
 	CnStatsBlock: { props: ['title', 'count', 'countLabel'], template: '<div class="stat">{{ title }}={{ count }}<span v-if="countLabel"> ({{ countLabel }})</span></div>' },
 	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+	// The coverage map below the plate (REQ-RCC-003) has its own spec, coverageViewMap.spec.js.
+	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 
 const { default: GemmaPlate } = await import('../../src/views/organisaties/GemmaPlate.vue')
 
 const stubs = {
+	CoverageViewMap: { props: ['components'], template: '<div class="coverage-map" :data-count="components.length" />' },
 	NcButton: {
 		props: ['href', 'variant', 'pressed'],
 		emits: ['click'],
@@ -78,6 +86,13 @@ beforeEach(() => {
 })
 
 describe('GemmaPlate rendering', () => {
+	it('loads the organisations itself when it mounts', async () => {
+		mount(GemmaPlate, { global: { stubs } })
+		await flushPromises()
+
+		expect(store.fetches).toContainEqual(['organization', { _limit: 1000 }])
+	})
+
 	it('asks for an organisation when none is chosen', async () => {
 		const wrapper = mount(GemmaPlate, { global: { stubs } })
 		await flushPromises()
@@ -98,6 +113,14 @@ describe('GemmaPlate rendering', () => {
 		const wrapper = await mountWith(async () => ({ data: { ...coverage, components: [] } }))
 
 		expect(wrapper.find('[data-testid="gemma-plate-no-model"]').text()).toBe('No GEMMA model')
+	})
+
+	it('hands the coverage to the map on a GEMMA view, and draws no map without a model', async () => {
+		const loaded = await mountWith(async () => ({ data: coverage }))
+		expect(loaded.find('.coverage-map').attributes('data-count')).toBe('3')
+
+		const empty = await mountWith(async () => ({ data: { ...coverage, components: [] } }))
+		expect(empty.find('.coverage-map').exists()).toBe(false)
 	})
 
 	it('renders the summary, warnings, download link and grouped components', async () => {

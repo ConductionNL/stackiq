@@ -65,6 +65,10 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Kernel\Contracts\CmdbExportImportServiceInterface;
@@ -2184,8 +2188,10 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 		try {
 			$organisation = $coordinates['objectService']->find(
 				id: $uuid,
-				register: $coordinates['register'],
-				schema: $coordinates['organization'],
+				options: new ObjectFindOptions(
+					register: $coordinates['register'],
+					schema: $coordinates['organization']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2306,6 +2312,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @param array<string, string> $lens The lens, [] for working objects.
 	 *
 	 * @return array<int, object>
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function searchPage(array $query, array $lens): array {
 		$page = $this->coordinates()['objectService']->searchObjects(
@@ -2458,9 +2465,10 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 		$coordinates = $this->coordinates();
 		$entity = $coordinates['objectService']->saveObject(
 			object: $data,
-			register: $coordinates['register'],
-			schema: $coordinates[$schemaKey],
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $coordinates['register'], schema: $coordinates[$schemaKey]),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -3174,6 +3182,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @param array<string, mixed> $query The search, with its lens.
 	 *
 	 * @return array<int, object>
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function lensResults(array $coordinates, array $query): array {
 		$results = $coordinates['objectService']->searchObjects(
@@ -3434,9 +3443,13 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 		if ($step === 'delete') {
 			$coordinates = $this->coordinates();
 			$deleted = $coordinates['objectService']->deleteObject(
-				uuid: $uuid,
-				register: $coordinates['register'],
-				schema: $coordinates[$item['schemaKey']],
+				new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(
+							register: $coordinates['register'],
+							schema: $coordinates[$item['schemaKey']]
+						)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

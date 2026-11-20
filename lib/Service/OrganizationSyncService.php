@@ -25,6 +25,10 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -434,8 +438,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			try {
 				$object = $this->objectService->find(
 					id: $row['uuid'],
-					register: $register,
-					schema: $organizationSchema,
+					options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -556,8 +559,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			try {
 				$contactEntity = $this->objectService->find(
 					id: $contact['uuid'],
-					register: $register,
-					schema: $contactSchema,
+					options: new ObjectFindOptions(register: $register, schema: $contactSchema),
 					_rbac: false
 				);
 				$contactEntityObject = $contactEntity->getObject();
@@ -573,9 +575,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 				// $contactEntityObject already carries every unchanged field.
 				$this->objectService->saveObject(
 					object: $contactEntityObject,
-					register: $register,
-					schema: $contactSchema,
-					uuid: $contactEntity->getUuid(),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $contactSchema),
+						uuid: $contactEntity->getUuid()
+					),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1215,8 +1218,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		try {
 			$fullObject = $this->objectService->find(
 				id: $organisationId,
-				register: $organisationObject->getRegister(),
-				schema: $organisationObject->getSchema(),
+				options: new ObjectFindOptions(
+					register: $organisationObject->getRegister(),
+					schema: $organisationObject->getSchema()
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1567,8 +1572,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		try {
 			return $this->objectService->find(
 				id: $uuid,
-				register: $run['register'],
-				schema: $run['organizationSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['organizationSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2696,8 +2700,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 						// Fetch the contact person object using the UUID.
 						$contactObject = $this->objectService->find(
 							id: $contactData,
-							register: $register,
-							schema: $contactSchema,
+							options: new ObjectFindOptions(register: $register, schema: $contactSchema),
 							_rbac: false,
 							_multitenancy: false
 						);
@@ -3057,8 +3060,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$rawOrgObject = $this->objectService->find(
 				id: $organizationUuid,
-				register: ($voorzieningenConfig['register'] ?? ''),
-				schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+				options: new ObjectFindOptions(
+					register: $voorzieningenConfig['register'] ?? '',
+					schema: $voorzieningenConfig['organisatie_schema'] ?? ''
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -3114,8 +3119,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		try {
 			return $this->objectService->find(
 				id: $contactUuid,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -3158,11 +3162,14 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 				// ContactpersonenController for the reasoning.
 				$this->objectService->saveObject(
 					object: $contactData,
-					register: $contactObject->getRegister(),
-					schema: $contactObject->getSchema(),
-					uuid: $contactObject->getUuid(),
-					silent: true,
-					_validation: false
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contactObject->getRegister(),
+								schema: $contactObject->getSchema()
+							),
+						uuid: $contactObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false)
+					)
 				);
 				$this->logger->info(
 					'[FLOW] Set missing organisatie field on related contact',
@@ -3239,8 +3246,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		try {
 			$fullContactObject = $this->objectService->find(
 				id: $contactUuid,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -3338,8 +3344,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		try {
 			return $this->objectService->find(
 				id: $contactId,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -3388,8 +3393,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 
 		$contactObject = $this->objectService->saveObject(
 			object: $contactData,
-			register: $run['register'],
-			schema: $run['contactSchema'],
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $run['register'], schema: $run['contactSchema'])),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -3561,8 +3565,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$orgObject = $this->objectService->find(
 				id: $organizationUuid,
-				register: ($voorzieningenConfig['register'] ?? ''),
-				schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
+				options: new ObjectFindOptions(
+					register: $voorzieningenConfig['register'] ?? '',
+					schema: $voorzieningenConfig['organisatie_schema'] ?? ''
+				)
 			);
 			if (empty($orgObject) === false) {
 				$backupStats = [
@@ -3773,11 +3779,14 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		// passed explicitly, as `setObject()` is not on ObjectEntityInterface (ADR-084).
 		$this->objectService->saveObject(
 			object: $object,
-			register: $contactObject->getRegister(),
-			schema: $contactObject->getSchema(),
-			uuid: $contactObject->getUuid(),
-			silent: true,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $contactObject->getRegister(),
+						schema: $contactObject->getSchema()
+					),
+				uuid: $contactObject->getUuid(),
+				policy: new SavePolicy(silent: true, validation: false)
+			)
 		);
 
 	}//end persistContactObject()
@@ -3852,8 +3861,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 						$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 						$orgObject = $this->objectService->find(
 							id: $organizationUuid,
-							register: ($voorzieningenConfig['register'] ?? ''),
-							schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
+							options: new ObjectFindOptions(
+								register: $voorzieningenConfig['register'] ?? '',
+								schema: $voorzieningenConfig['organisatie_schema'] ?? ''
+							)
 						);
 						if (empty($orgObject) === false) {
 							$backupStats = [
@@ -3918,9 +3929,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 								// carries every unchanged field.
 								$this->objectService->saveObject(
 									object: $contactEntityObject,
-									register: $register,
-									schema: $contactSchema,
-									uuid: $contactObject->getUuid(),
+									options: new ObjectSaveOptions(
+										target: new ObjectFindTarget(register: $register, schema: $contactSchema),
+										uuid: $contactObject->getUuid()
+									),
 									_rbac: false,
 									_multitenancy: false
 								);
@@ -4427,11 +4439,14 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 					$organisationObject->getObject(),
 					['@self' => ['organisation' => $organisationObject->getOrganisation()]]
 				),
-				register: $organisationObject->getRegister(),
-				schema: $organisationObject->getSchema(),
-				uuid: $organisationObject->getUuid(),
-				silent: true,
-				_validation: false
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $organisationObject->getRegister(),
+							schema: $organisationObject->getSchema()
+						),
+					uuid: $organisationObject->getUuid(),
+					policy: new SavePolicy(silent: true, validation: false)
+				)
 			);
 
 			$this->logger->info(

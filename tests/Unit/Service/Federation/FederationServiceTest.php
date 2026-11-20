@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Peer management, the SSRF guard, provenance and the pull of one peer.
@@ -618,7 +619,10 @@ class FakeFederationObjectService {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function saveObject(array $object, int $register, int $schema, string $uuid): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->attempted[] = $object;
 		if ($this->failSaves === true) {
 			throw new RuntimeException('save refused');
