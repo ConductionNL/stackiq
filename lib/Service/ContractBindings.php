@@ -127,6 +127,18 @@ final class ContractBindings {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function register(IRegistrationContext $context): void {
+		$this->registerFirstHalf(context: $context);
+		$this->registerSecondHalf(context: $context);
+	}//end register()
+
+	/**
+	 * Alias the contracts from AanbodServiceInterface up to GemmaStandardLinkerInterface.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 */
+	private function registerFirstHalf(IRegistrationContext $context): void {
 		$context->registerServiceAlias(AanbodServiceInterface::class, AanbodService::class);
 		$context->registerServiceAlias(AangebodenGebruikServiceInterface::class, AangebodenGebruikService::class);
 		$context->registerServiceAlias(ArchiMateImportControlInterface::class, ArchiMateImportControl::class);
@@ -158,6 +170,16 @@ final class ContractBindings {
 		$context->registerServiceAlias(FederationServiceInterface::class, FederationService::class);
 		$context->registerServiceAlias(GebruikServiceInterface::class, GebruikService::class);
 		$context->registerServiceAlias(GebruikSyncServiceInterface::class, GebruikSyncService::class);
+	}//end registerFirstHalf()
+
+	/**
+	 * Alias the contracts from GemmaStandardLinkerInterface on, in alphabetical order.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 */
+	private function registerSecondHalf(IRegistrationContext $context): void {
 		$context->registerServiceAlias(GemmaStandardLinkerInterface::class, GemmaStandardLinker::class);
 		$context->registerServiceAlias(IntakeServiceInterface::class, IntakeService::class);
 		$context->registerServiceAlias(ItsmExchangeServiceInterface::class, ItsmExchangeService::class);
@@ -190,5 +212,5 @@ final class ContractBindings {
 		$context->registerServiceAlias(StackiqContactSyncServiceInterface::class, StackiqContactSyncService::class);
 		$context->registerServiceAlias(SyncProgressInterface::class, SyncProgress::class);
 		$context->registerServiceAlias(ViewServiceInterface::class, ViewService::class);
-	}//end register()
+	}//end registerSecondHalf()
 }//end class

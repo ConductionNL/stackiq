@@ -162,7 +162,8 @@ class AanbodController extends Controller {
 		// (deny-before-grant, REQ-001): an anonymous caller reads only the
 		// published entries, and is rejected when that reader is missing.
 		$listing = $this->objectListing(name: 'aanbod', idContext: []);
-		if ($this->userSession->getUser() === null) {
+		$user    = $this->userSession->getUser();
+		if ($user === null) {
 			if ($this->publishedAanbod === null) {
 				return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
 			}
