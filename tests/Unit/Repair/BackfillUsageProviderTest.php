@@ -32,27 +32,45 @@ use Psr\Log\LoggerInterface;
  */
 final class BackfillUsageProviderTest extends TestCase {
 
+	/**
+	 * It reports how many usages it wrote.
+	 *
+	 * @return void
+	 */
 	public function testItReportsHowManyUsagesItWrote(): void {
-		$sync = $this->createMock(UsageProviderSync::class);
+		$sync = $this->createMock(originalClassName: UsageProviderSync::class);
 		$sync->expects($this->once())->method('backfill')->willReturn(4);
-		$output = $this->createMock(IOutput::class);
+		$output = $this->createMock(originalClassName: IOutput::class);
 		$output->expects($this->once())->method('info')->with("BackfillUsageProvider: 4 usage(s) now carry their application's supplier.");
 
-		(new BackfillUsageProvider(sync: $sync, logger: $this->createMock(LoggerInterface::class)))->run($output);
+		(new BackfillUsageProvider(sync: $sync, logger: $this->createMock(originalClassName: LoggerInterface::class)))->run($output);
 	}
 
+	/**
+	 * Afailure is logged and does not escape.
+	 *
+	 * @return void
+	 */
 	public function testAFailureIsLoggedAndDoesNotEscape(): void {
-		$sync = $this->createMock(UsageProviderSync::class);
+		$sync = $this->createMock(originalClassName: UsageProviderSync::class);
 		$sync->method('backfill')->willThrowException(new \RuntimeException('down'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
 
-		(new BackfillUsageProvider(sync: $sync, logger: $logger))->run($this->createMock(IOutput::class));
+		(new BackfillUsageProvider(sync: $sync, logger: $logger))->run($this->createMock(originalClassName: IOutput::class));
 	}
 
+	/**
+	 * It runs after the register import on upgrade.
+	 *
+	 * @return void
+	 */
 	public function testItRunsAfterTheRegisterImportOnUpgrade(): void {
 		$info = (string)file_get_contents(__DIR__ . '/../../../appinfo/info.xml');
 
-		$this->assertGreaterThan(strpos($info, '<step>OCA\Stackiq\Repair\InitializeSettings</step>'), strpos($info, '<step>OCA\Stackiq\Repair\BackfillUsageProvider</step>'));
+		$this->assertGreaterThan(
+			expected: strpos($info, '<step>OCA\Stackiq\Repair\InitializeSettings</step>'),
+			actual: strpos($info, '<step>OCA\Stackiq\Repair\BackfillUsageProvider</step>')
+		);
 	}
 }

@@ -44,12 +44,16 @@ final class UsageProviderListenerTest extends TestCase {
 	 * @return UsageProviderListener
 	 */
 	private function listener(): UsageProviderListener {
-		$sync = $this->createMock(UsageProviderSync::class);
-		$sync->method('supplierFor')->willReturnCallback(fn (array $usage) => ($usage['module'] ?? null) === 'm1' ? 'org-s' : null);
-		$types = $this->createMock(ObjectTypeLocatorInterface::class);
-		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => $t === 'usage' ? 12 : null);
-		$services = [UsageProviderSync::class => $sync, ObjectTypeLocatorInterface::class => $types, LoggerInterface::class => $this->createMock(LoggerInterface::class)];
-		$container = $this->createMock(ContainerInterface::class);
+		$sync = $this->createMock(originalClassName: UsageProviderSync::class);
+		$sync->method('supplierFor')->willReturnCallback(fn (array $usage) => ['m1' => 'org-s'][(string)($usage['module'] ?? '')] ?? null);
+		$types = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
+		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => ['usage' => 12][$t] ?? null);
+		$services = [
+			UsageProviderSync::class => $sync,
+			ObjectTypeLocatorInterface::class => $types,
+			LoggerInterface::class => $this->createMock(originalClassName: LoggerInterface::class),
+		];
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn (string $id) => $services[$id]);
 
 		return new UsageProviderListener(container: $container);
@@ -64,26 +68,44 @@ final class UsageProviderListenerTest extends TestCase {
 	 * @return ObjectEntity
 	 */
 	private function object(array $data, int $schema=12): ObjectEntity {
-		$entity = $this->getMockBuilder(ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$entity = $this->getMockBuilder(className: ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
 		$entity->method('getSchema')->willReturn((string)$schema);
 		$entity->method('getObject')->willReturn($data);
 		return $entity;
 	}//end object()
 
+	/**
+	 * Ausage created on the form gets the supplier as provider.
+	 *
+	 * @return void
+	 */
 	public function testAUsageCreatedOnTheFormGetsTheSupplierAsProvider(): void {
 		$event = new ObjectCreatingEvent($this->object(data: ['module' => 'm1', 'consumer' => 'org-gemeente']));
 		$this->listener()->handle($event);
 
-		$this->assertSame(['provider' => 'org-s'], $event->getModifiedData());
+		$this->assertSame(expected: ['provider' => 'org-s'], actual: $event->getModifiedData());
 	}
 
+	/**
+	 * An update that moves the usage to another application follows it.
+	 *
+	 * @return void
+	 */
 	public function testAnUpdateThatMovesTheUsageToAnotherApplicationFollowsIt(): void {
-		$event = new ObjectUpdatingEvent($this->object(data: ['module' => 'm1', 'provider' => 'org-old']), $this->object(data: ['module' => 'm0', 'provider' => 'org-old']));
+		$event = new ObjectUpdatingEvent(
+			$this->object(data: ['module' => 'm1', 'provider' => 'org-old']),
+			$this->object(data: ['module' => 'm0', 'provider' => 'org-old'])
+		);
 		$this->listener()->handle($event);
 
-		$this->assertSame(['provider' => 'org-s'], $event->getModifiedData());
+		$this->assertSame(expected: ['provider' => 'org-s'], actual: $event->getModifiedData());
 	}
 
+	/**
+	 * Amatching provider an unknown supplier and other schemas are left alone.
+	 *
+	 * @return void
+	 */
 	public function testAMatchingProviderAnUnknownSupplierAndOtherSchemasAreLeftAlone(): void {
 		$events = [
 			new ObjectCreatingEvent($this->object(data: ['module' => 'm1', 'provider' => 'org-s'])),
@@ -94,6 +116,6 @@ final class UsageProviderListenerTest extends TestCase {
 			$this->listener()->handle($event);
 		}
 
-		$this->assertSame([[], [], []], array_map(static fn (ObjectCreatingEvent $e): array => $e->getModifiedData(), $events));
+		$this->assertSame(expected: [[], [], []], actual: array_map(static fn (ObjectCreatingEvent $e): array => $e->getModifiedData(), $events));
 	}
 }

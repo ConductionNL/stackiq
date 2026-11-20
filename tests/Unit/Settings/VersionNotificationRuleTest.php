@@ -54,6 +54,11 @@ final class VersionNotificationRuleTest extends TestCase {
 		return self::schema()['x-openregister-notifications']['module-version-published'];
 	}//end rule()
 
+	/**
+	 * The owners of the usages are recipients.
+	 *
+	 * @return void
+	 */
 	public function testTheOwnersOfTheUsagesAreRecipients(): void {
 		$resolvers = [];
 		foreach (self::rule()['recipients'] as $entry) {
@@ -62,33 +67,52 @@ final class VersionNotificationRuleTest extends TestCase {
 			}
 		}
 
-		$this->assertSame([UsageOwnerRecipientResolver::class], $resolvers);
-		$this->assertTrue(is_subclass_of(UsageOwnerRecipientResolver::class, RecipientResolverInterface::class));
+		$this->assertSame(expected: [UsageOwnerRecipientResolver::class], actual: $resolvers);
+		$this->assertTrue(condition: is_subclass_of(UsageOwnerRecipientResolver::class, RecipientResolverInterface::class));
 	}
 
+	/**
+	 * The resolver reads the application from afield this schema has.
+	 *
+	 * @return void
+	 */
 	public function testTheResolverReadsTheApplicationFromAFieldThisSchemaHas(): void {
 		$property = self::schema()['properties']['module'] ?? null;
 
-		$this->assertIsArray($property);
-		$this->assertContains('module', UsageOwnerRecipientResolver::APPLICATION_FIELDS);
+		$this->assertIsArray(actual: $property);
+		$this->assertContains(needle: 'module', haystack: UsageOwnerRecipientResolver::APPLICATION_FIELDS);
 		$ref = $property['$ref'] ?? ($property['items']['$ref'] ?? null);
-		$this->assertSame('#/components/schemas/module', $ref);
+		$this->assertSame(expected: '#/components/schemas/module', actual: $ref);
 	}
 
+	/**
+	 * The rule still fires on create.
+	 *
+	 * @return void
+	 */
 	public function testTheRuleStillFiresOnCreate(): void {
 		$rule = self::rule();
 
-		$this->assertTrue($rule['enabled']);
-		$this->assertSame(['type' => 'created'], $rule['trigger']);
+		$this->assertTrue(condition: $rule['enabled']);
+		$this->assertSame(expected: ['type' => 'created'], actual: $rule['trigger']);
 	}
 
+	/**
+	 * Every subject placeholder names aproperty of the schema.
+	 *
+	 * @return void
+	 */
 	public function testEverySubjectPlaceholderNamesAPropertyOfTheSchema(): void {
 		$properties = array_keys(self::schema()['properties']);
 		foreach (self::rule()['subject'] as $language => $subject) {
 			preg_match_all('/\{\{\s*([\w.]+)\s*\}\}/', $subject, $matches);
-			$this->assertNotSame([], $matches[1], "the $language subject names a field");
+			$this->assertNotSame(expected: [], actual: $matches[1], message: "the $language subject names a field");
 			foreach ($matches[1] as $placeholder) {
-				$this->assertContains(explode('.', $placeholder)[0], $properties, "$language subject placeholder {$placeholder}");
+				$this->assertContains(
+					needle: explode('.', $placeholder)[0],
+					haystack: $properties,
+					message: "$language subject placeholder {$placeholder}"
+				);
 			}
 		}
 	}

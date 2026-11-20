@@ -41,8 +41,8 @@ final class ComplianceVerificationGuardTest extends TestCase {
 	 * @return ComplianceVerificationGuard
 	 */
 	private function guard(): ComplianceVerificationGuard {
-		$types = $this->createMock(ObjectTypeLocatorInterface::class);
-		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => $t === 'compliancy' ? 20 : null);
+		$types = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
+		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => ['compliancy' => 20][$t] ?? null);
 
 		return new ComplianceVerificationGuard(types: $types);
 	}//end guard()
@@ -56,36 +56,62 @@ final class ComplianceVerificationGuardTest extends TestCase {
 	 * @return ObjectEntity
 	 */
 	private function object(array $data, int $schema=20): ObjectEntity {
-		$entity = $this->getMockBuilder(ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$entity = $this->getMockBuilder(className: ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
 		$entity->method('getSchema')->willReturn((string)$schema);
 		$entity->method('getObject')->willReturn($data);
 		return $entity;
 	}//end object()
 
+	/**
+	 * Asupplier cannot create aclaim that already reads verified.
+	 *
+	 * @return void
+	 */
 	public function testASupplierCannotCreateAClaimThatAlreadyReadsVerified(): void {
 		$event = new ObjectCreatingEvent($this->object(data: ['url' => 'https://a', 'verifiedBy' => 'Supplier']));
 		$this->guard()->handle($event);
 
-		$this->assertSame(['message' => ComplianceVerificationGuard::REFUSED_MESSAGE], $event->getErrors());
-		$this->assertTrue($event->isPropagationStopped());
+		$this->assertSame(expected: ['message' => ComplianceVerificationGuard::REFUSED_MESSAGE], actual: $event->getErrors());
+		$this->assertTrue(condition: $event->isPropagationStopped());
 	}
 
+	/**
+	 * An update that sets the verification is refused.
+	 *
+	 * @return void
+	 */
 	public function testAnUpdateThatSetsTheVerificationIsRefused(): void {
-		$event = new ObjectUpdatingEvent($this->object(data: ['url' => 'https://a', 'verifiedBy' => 'Me', 'verifiedAt' => 'now']), $this->object(data: ['url' => 'https://a']));
+		$event = new ObjectUpdatingEvent(
+			$this->object(data: ['url' => 'https://a', 'verifiedBy' => 'Me', 'verifiedAt' => 'now']),
+			$this->object(data: ['url' => 'https://a'])
+		);
 		$this->guard()->handle($event);
 
-		$this->assertSame(['message' => ComplianceVerificationGuard::REFUSED_MESSAGE], $event->getErrors());
+		$this->assertSame(expected: ['message' => ComplianceVerificationGuard::REFUSED_MESSAGE], actual: $event->getErrors());
 	}
 
+	/**
+	 * Changed evidence on averified claim returns it to claimed.
+	 *
+	 * @return void
+	 */
 	public function testChangedEvidenceOnAVerifiedClaimReturnsItToClaimed(): void {
 		$old = ['url' => 'https://a', 'verifiedBy' => 'Rita', 'verifiedAt' => '2026-11-17T10:00:00Z', 'verifiedByOrganisation' => 'org-g'];
 		$event = new ObjectUpdatingEvent($this->object(data: ['url' => 'https://b'] + $old), $this->object(data: $old));
 		$this->guard()->handle($event);
 
-		$this->assertSame([], $event->getErrors());
-		$this->assertSame(['verifiedBy' => null, 'verifiedAt' => null, 'verifiedByOrganisation' => null], $event->getModifiedData());
+		$this->assertSame(expected: [], actual: $event->getErrors());
+		$this->assertSame(
+			expected: ['verifiedBy' => null, 'verifiedAt' => null, 'verifiedByOrganisation' => null],
+			actual: $event->getModifiedData()
+		);
 	}
 
+	/**
+	 * An ordinary edit keeping the verification and other schemas pass.
+	 *
+	 * @return void
+	 */
 	public function testAnOrdinaryEditKeepingTheVerificationAndOtherSchemasPass(): void {
 		$old = ['url' => 'https://a', 'verifiedBy' => 'Rita'];
 		$edit = new ObjectUpdatingEvent($this->object(data: $old + ['standardGemma' => 'x']), $this->object(data: $old));
@@ -93,6 +119,9 @@ final class ComplianceVerificationGuardTest extends TestCase {
 		$this->guard()->handle($edit);
 		$this->guard()->handle($other);
 
-		$this->assertSame([[], [], [], []], [$edit->getErrors(), $edit->getModifiedData(), $other->getErrors(), $other->getModifiedData()]);
+		$this->assertSame(
+			expected: [[], [], [], []],
+			actual: [$edit->getErrors(), $edit->getModifiedData(), $other->getErrors(), $other->getModifiedData()]
+		);
 	}
 }

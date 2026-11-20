@@ -44,20 +44,20 @@ final class ModerationServiceTest extends TestCase {
 	 * @return ModerationService
 	 */
 	private function moderation(array $entry): ModerationService {
-		$entity = $this->createMock(ObjectEntity::class);
+		$entity = $this->createMock(originalClassName: ObjectEntity::class);
 		$entity->method('getObject')->willReturn($entry);
 		$entity->method('getUuid')->willReturn((string) $entry['id']);
 
-		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('find')->willReturn($entity);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (array $object) {
 				$this->saved[] = $object;
-				return $this->createStub(ObjectEntity::class);
+				return $this->createStub(originalClassName: ObjectEntity::class);
 			}
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($objectService) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
@@ -68,46 +68,73 @@ final class ModerationServiceTest extends TestCase {
 			}
 		);
 
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->method('getRegisterIdForObjectType')->willReturn(1);
 		$settings->method('getSchemaIdForObjectType')->willReturn(2);
 
-		return new ModerationService($container, $settings, new NullLogger());
+		return new ModerationService(container: $container, settingsService: $settings, logger: new NullLogger());
 	}//end moderation()
 
+	/**
+	 * An approved registration and its status both read active in one save.
+	 *
+	 * @return void
+	 */
 	public function testAnApprovedRegistrationAndItsStatusBothReadActiveInOneSave(): void {
-		$moderation = $this->moderation(['id' => 'gemeente-voorbeeld', 'name' => 'Gemeente Voorbeeld', 'registrationStatus' => 'pending', 'status' => 'Draft']);
+		$moderation = $this->moderation(
+			entry: ['id' => 'gemeente-voorbeeld', 'name' => 'Gemeente Voorbeeld', 'registrationStatus' => 'pending', 'status' => 'Draft']
+		);
 
 		$result = $moderation->approve('gemeente-voorbeeld');
 
-		$this->assertSame(['ok' => true, 'reason' => 'approved', 'status' => 'active'], $result);
-		$this->assertCount(1, $this->saved);
-		$this->assertSame('active', $this->saved[0]['registrationStatus']);
-		$this->assertSame('Active', $this->saved[0]['status']);
-		$this->assertSame('Gemeente Voorbeeld', $this->saved[0]['name']);
+		$this->assertSame(expected: ['ok' => true, 'reason' => 'approved', 'status' => 'active'], actual: $result);
+		$this->assertCount(expectedCount: 1, haystack: $this->saved);
+		$this->assertSame(expected: 'active', actual: $this->saved[0]['registrationStatus']);
+		$this->assertSame(expected: 'Active', actual: $this->saved[0]['status']);
+		$this->assertSame(expected: 'Gemeente Voorbeeld', actual: $this->saved[0]['name']);
 	}
 
+	/**
+	 * Arejected registration keeps its status.
+	 *
+	 * @return void
+	 */
 	public function testARejectedRegistrationKeepsItsStatus(): void {
-		$moderation = $this->moderation(['id' => 'gemeente-voorbeeld', 'name' => 'Gemeente Voorbeeld', 'registrationStatus' => 'pending', 'status' => 'Draft']);
+		$moderation = $this->moderation(
+			entry: ['id' => 'gemeente-voorbeeld', 'name' => 'Gemeente Voorbeeld', 'registrationStatus' => 'pending', 'status' => 'Draft']
+		);
 
 		$moderation->reject('gemeente-voorbeeld');
 
-		$this->assertSame('rejected', $this->saved[0]['registrationStatus']);
-		$this->assertSame('Draft', $this->saved[0]['status']);
+		$this->assertSame(expected: 'rejected', actual: $this->saved[0]['registrationStatus']);
+		$this->assertSame(expected: 'Draft', actual: $this->saved[0]['status']);
 	}
 
+	/**
+	 * An approved review is not given an organisation status.
+	 *
+	 * @return void
+	 */
 	public function testAnApprovedReviewIsNotGivenAnOrganisationStatus(): void {
-		$moderation = $this->moderation(['id' => 'review-1', 'rating' => 4, 'status' => 'pending']);
+		$moderation = $this->moderation(entry: ['id' => 'review-1', 'rating' => 4, 'status' => 'pending']);
 
 		$moderation->approve('review-1', ModerationService::MODERATED_TYPE_REVIEW);
 
-		$this->assertSame('approved', $this->saved[0]['status']);
-		$this->assertArrayNotHasKey('registrationStatus', $this->saved[0]);
+		$this->assertSame(expected: 'approved', actual: $this->saved[0]['status']);
+		$this->assertArrayNotHasKey(key: 'registrationStatus', array: $this->saved[0]);
 	}
 
+	/**
+	 * The active value is one the organisation schema allows.
+	 *
+	 * @return void
+	 */
 	public function testTheActiveValueIsOneTheOrganisationSchemaAllows(): void {
 		$register = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
 
-		$this->assertContains(ModerationService::ORGANISATION_STATUS_ACTIVE, $register['components']['schemas']['organization']['properties']['status']['enum']);
+		$this->assertContains(
+			needle: ModerationService::ORGANISATION_STATUS_ACTIVE,
+			haystack: $register['components']['schemas']['organization']['properties']['status']['enum']
+		);
 	}
 }

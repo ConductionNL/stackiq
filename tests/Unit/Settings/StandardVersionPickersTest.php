@@ -66,37 +66,67 @@ final class StandardVersionPickersTest extends TestCase {
 			}
 		}
 
-		self::fail($page . ' not found in ' . $file);
+		self::fail(message: $page . ' not found in ' . $file);
 	}//end page()
 
+	/**
+	 * The connection picker lists the gemma standard versions.
+	 *
+	 * @return void
+	 */
 	public function testTheConnectionPickerListsTheGemmaStandardVersions(): void {
 		$items = $this->schemas()['connection']['properties']['standardVersions']['items'];
 
-		$this->assertSame('vng-gemma', $items['x-external-register']);
-		$this->assertSame('name', $items['x-label-field']);
-		$this->assertSame('gemmaType=standaardversie', $items['objectConfiguration']['queryParams']);
-		$this->assertSame('#/components/schemas/element', $items['$ref']);
+		$this->assertSame(expected: 'vng-gemma', actual: $items['x-external-register']);
+		$this->assertSame(expected: 'name', actual: $items['x-label-field']);
+		$this->assertSame(expected: 'gemmaType=standaardversie', actual: $items['objectConfiguration']['queryParams']);
+		$this->assertSame(expected: '#/components/schemas/element', actual: $items['$ref']);
 	}
 
+	/**
+	 * The compliance picker lists the gemma standard versions.
+	 *
+	 * @return void
+	 */
 	public function testTheCompliancePickerListsTheGemmaStandardVersions(): void {
 		$field = $this->schemas()['compliancy']['properties']['standardVersion'];
 
-		$this->assertSame('vng-gemma', $field['x-external-register']);
-		$this->assertSame('gemmaType=standaardversie', $field['objectConfiguration']['queryParams']);
+		$this->assertSame(expected: 'vng-gemma', actual: $field['x-external-register']);
+		$this->assertSame(expected: 'gemmaType=standaardversie', actual: $field['objectConfiguration']['queryParams']);
 	}
 
+	/**
+	 * The connection page shows the picked standard version.
+	 *
+	 * @return void
+	 */
 	public function testTheConnectionPageShowsThePickedStandardVersion(): void {
-		$data = array_values(array_filter($this->page(file: 'manifest.d/connections.json', page: 'KoppelingDetail')['widgets'], static fn (array $w): bool => $w['id'] === 'kp-data'))[0];
+		$data = array_values(
+			array_filter(
+				$this->page(file: 'manifest.d/connections.json', page: 'KoppelingDetail')['widgets'],
+				static fn (array $w): bool => $w['id'] === 'kp-data'
+			)
+		)[0];
 
-		$this->assertContains('standardVersions', $data['content']['include']);
+		$this->assertContains(needle: 'standardVersions', haystack: $data['content']['include']);
 	}
 
+	/**
+	 * The application page offers to declare astandard for this application.
+	 *
+	 * @return void
+	 */
 	public function testTheApplicationPageOffersToDeclareAStandardForThisApplication(): void {
-		$list = array_values(array_filter($this->page(file: 'manifest.json', page: 'ModuleDetail')['widgets'], static fn (array $w): bool => $w['id'] === 'md-compliance'))[0]['content'];
+		$list = array_values(
+			array_filter(
+				$this->page(file: 'manifest.json', page: 'ModuleDetail')['widgets'],
+				static fn (array $w): bool => $w['id'] === 'md-compliance'
+			)
+		)[0]['content'];
 
-		$this->assertArrayNotHasKey('allowCreate', $list);
-		$this->assertSame('Declare a standard', $list['addLabel']);
-		$this->assertSame(['module' => '@objectId'], $list['filter']);
-		$this->assertContains('standardVersion', $list['formIncludeFields']);
+		$this->assertArrayNotHasKey(key: 'allowCreate', array: $list);
+		$this->assertSame(expected: 'Declare a standard', actual: $list['addLabel']);
+		$this->assertSame(expected: ['module' => '@objectId'], actual: $list['filter']);
+		$this->assertContains(needle: 'standardVersion', haystack: $list['formIncludeFields']);
 	}
 }

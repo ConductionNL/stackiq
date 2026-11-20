@@ -64,14 +64,14 @@ final class ComplianceVerificationServiceTest extends TestCase {
 	 * @return ComplianceVerificationService
 	 */
 	private function service(array $stored): ComplianceVerificationService {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (int|string $id, ?ObjectFindOptions $options) use ($stored) {
 				if (isset($stored[$id]) === false) {
 					return null;
 				}
 
-				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 				$entity->method('getObject')->willReturn($stored[$id]);
 				return $entity;
 			}
@@ -80,19 +80,28 @@ final class ComplianceVerificationServiceTest extends TestCase {
 			function (array $object, ObjectSaveOptions $options, bool $_rbac) {
 				$this->saves[] = ['object' => $object, 'schema' => $options->target->schema, 'uuid' => $options->uuid, 'rbac' => $_rbac];
 				$this->writingDuringSave[] = ComplianceVerificationService::isWriting();
-				return $this->createMock(ObjectEntityInterface::class);
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
 			}
 		);
-		$apps = $this->createMock(IAppManager::class);
+		$apps = $this->createMock(originalClassName: IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
-		$orContainer = $this->createMock(ContainerInterface::class);
+		$orContainer = $this->createMock(originalClassName: ContainerInterface::class);
 		$orContainer->method('get')->willReturn($objects);
-		$lookup = new OpenRegisterLookup(appManager: $apps, container: $orContainer, userSession: $this->createMock(IUserSession::class), logger: $this->createMock(LoggerInterface::class));
-		$types = $this->createMock(ObjectTypeLocatorInterface::class);
+		$lookup = new OpenRegisterLookup(
+			appManager: $apps,
+			container: $orContainer,
+			userSession: $this->createMock(originalClassName: IUserSession::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+		$types = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
 		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => ['compliancy' => 20, 'module' => 21][$t] ?? null);
 		$types->method('getRegisterIdForObjectType')->willReturn(3);
 
-		return new ComplianceVerificationService(lookup: $lookup, types: $types, logger: $this->createMock(LoggerInterface::class));
+		return new ComplianceVerificationService(
+			lookup: $lookup,
+			types: $types,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 	}//end service()
 
 	/**
@@ -107,26 +116,64 @@ final class ComplianceVerificationServiceTest extends TestCase {
 		];
 	}//end stored()
 
+	/**
+	 * Areviewer of another organisation verifies and only the stamp is written.
+	 *
+	 * @return void
+	 */
 	public function testAReviewerOfAnotherOrganisationVerifiesAndOnlyTheStampIsWritten(): void {
-		$result = $this->service(stored: $this->stored())->verify(id: 'c1', reviewer: 'Rita Reviewer', groups: ['functioneel-beheerder'], organisation: 'org-g', now: '2026-11-17T10:00:00Z');
+		$result = $this->service(stored: $this->stored())->verify(
+			id: 'c1',
+			reviewer: 'Rita Reviewer',
+			groups: ['functioneel-beheerder'],
+			organisation: 'org-g',
+			now: '2026-11-17T10:00:00Z'
+		);
 
 		$stamp = ['verifiedBy' => 'Rita Reviewer', 'verifiedAt' => '2026-11-17T10:00:00Z', 'verifiedByOrganisation' => 'org-g'];
-		$this->assertSame(['status' => 200, 'body' => $stamp], $result);
-		$this->assertSame([['object' => ['module' => 'm1', 'url' => 'https://example.org/report.pdf'] + $stamp, 'schema' => 20, 'uuid' => 'c1', 'rbac' => false]], $this->saves);
-		$this->assertSame([true], $this->writingDuringSave);
-		$this->assertFalse(ComplianceVerificationService::isWriting());
+		$this->assertSame(expected: ['status' => 200, 'body' => $stamp], actual: $result);
+		$this->assertSame(
+			expected: [
+				['object' => ['module' => 'm1', 'url' => 'https://example.org/report.pdf'] + $stamp, 'schema' => 20, 'uuid' => 'c1', 'rbac' => false],
+			],
+			actual: $this->saves
+		);
+		$this->assertSame(expected: [true], actual: $this->writingDuringSave);
+		$this->assertFalse(condition: ComplianceVerificationService::isWriting());
 	}
 
+	/**
+	 * The supplier is refused before any write.
+	 *
+	 * @return void
+	 */
 	public function testTheSupplierIsRefusedBeforeAnyWrite(): void {
 		$result = $this->service(stored: $this->stored())->verify(id: 'c1', reviewer: 'Sam', groups: ['admin'], organisation: 'org-s', now: 'now');
 
-		$this->assertSame(403, $result['status']);
-		$this->assertSame([], $this->saves);
+		$this->assertSame(expected: 403, actual: $result['status']);
+		$this->assertSame(expected: [], actual: $this->saves);
 	}
 
+	/**
+	 * An unknown claim or an unreadable module is refused.
+	 *
+	 * @return void
+	 */
 	public function testAnUnknownClaimOrAnUnreadableModuleIsRefused(): void {
-		$this->assertSame(404, $this->service(stored: [])->verify(id: 'c9', reviewer: 'R', groups: ['admin'], organisation: 'org-g', now: 'now')['status']);
-		$this->assertSame(409, $this->service(stored: ['c1' => ['module' => 'gone', 'url' => 'x']])->verify(id: 'c1', reviewer: 'R', groups: ['admin'], organisation: 'org-g', now: 'now')['status']);
-		$this->assertSame([], $this->saves);
+		$this->assertSame(
+			expected: 404,
+			actual: $this->service(stored: [])->verify(id: 'c9', reviewer: 'R', groups: ['admin'], organisation: 'org-g', now: 'now')['status']
+		);
+		$this->assertSame(
+			expected: 409,
+			actual: $this->service(stored: ['c1' => ['module' => 'gone', 'url' => 'x']])->verify(
+				id: 'c1',
+				reviewer: 'R',
+				groups: ['admin'],
+				organisation: 'org-g',
+				now: 'now'
+			)['status']
+		);
+		$this->assertSame(expected: [], actual: $this->saves);
 	}
 }

@@ -179,20 +179,20 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 * @return ModuleVersionPublicationService
 	 */
 	private function service(): ModuleVersionPublicationService {
-		$settings = $this->getMockBuilder(SettingsService::class)
+		$settings = $this->getMockBuilder(className: SettingsService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType'])
 			->getMock();
 		$settings->method('getSchemaIdForObjectType')->willReturnMap([['module', 43], ['moduleVersion', 46]]);
 		$settings->method('getRegisterIdForObjectType')->willReturn(20);
 
-		$this->objects = $this->createMock(ObjectServiceInterface::class);
-		$container     = $this->createMock(ContainerInterface::class);
+		$this->objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$container     = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($this->objects);
 
-		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$jobList = $this->createMock(IJobList::class);
+		$jobList = $this->createMock(originalClassName: IJobList::class);
 		$jobList->method('add')->willReturnCallback(
 			function (string $job, mixed $argument): void {
 				$this->queued[] = [$job, $argument];
@@ -200,7 +200,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		);
 		$jobList->method('scheduleAfter')->willReturnCallback(
 			function (string $job, int $runAfter, mixed $argument): void {
-				$this->assertSame(ModuleVersionPublicationJob::class, $job);
+				$this->assertSame(expected: ModuleVersionPublicationJob::class, actual: $job);
 				$this->retries[] = [$argument, $runAfter];
 			}
 		);
@@ -208,7 +208,12 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 
 		$this->settings    = $settings;
 		$this->container   = $container;
-		$this->publication = new ModuleVersionPublicationService(settingsService: $settings, container: $container, logger: $this->logger, jobList: $jobList);
+		$this->publication = new ModuleVersionPublicationService(
+			settingsService: $settings,
+			container: $container,
+			logger: $this->logger,
+			jobList: $jobList
+		);
 		return $this->publication;
 	}//end service()
 
@@ -219,10 +224,17 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	private function runQueuedJobs(): void {
 		foreach ($this->queued as [$class, $argument]) {
-			$this->assertSame(ModuleVersionPublicationJob::class, $class);
-			$time = $this->createMock(ITimeFactory::class);
+			$this->assertSame(expected: ModuleVersionPublicationJob::class, actual: $class);
+			$time = $this->createMock(originalClassName: ITimeFactory::class);
 			$time->method('getTime')->willReturn(1000);
-			$job = new ModuleVersionPublicationJob($time, $this->publication, $this->settings, $this->container, $this->logger, $this->jobList);
+			$job = new ModuleVersionPublicationJob(
+				time: $time,
+				publication: $this->publication,
+				settingsService: $this->settings,
+				container: $this->container,
+				logger: $this->logger,
+				jobList: $this->jobList
+			);
 			$run = new \ReflectionMethod($job, 'run');
 			$run->invoke($job, $argument);
 		}
@@ -237,8 +249,17 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAPublishedModuleReachesTheVersionsThatDiffer(): void {
 		$service = $this->service();
-		$stale   = self::entity('v-1', '46', ['module' => 'm-1', 'version' => '1.0']);
-		$current = self::entity('v-2', '46', ['module' => 'm-1', 'version' => '2.0', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality']);
+		$stale   = self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1', 'version' => '1.0']);
+		$current = self::entity(
+			uuid: 'v-2',
+			schema: '46',
+			data: [
+				'module' => 'm-1',
+				'version' => '2.0',
+				'modulePublicationDate' => '2026-09-01T00:00:00+00:00',
+				'moduleRegisteredBy' => 'Municipality',
+			]
+		);
 		$this->objects->method('searchObjects')->willReturn([$stale, $current]);
 
 		$written = [];
@@ -250,19 +271,27 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 			}
 		);
 
-		$module = self::entity('m-1', '43', ['name' => 'Zaaksysteem', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']);
+		$module = self::entity(
+			uuid: 'm-1',
+			schema: '43',
+			data: ['name' => 'Zaaksysteem', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']
+		);
 		$this->objects->method('find')->willReturn($module);
-		$this->assertSame(0, $service->objectSaved(object: $module), 'the request that saved the module writes no version');
-		$this->assertSame([], $written);
-		$this->assertSame([[ModuleVersionPublicationJob::class, ['module' => 'm-1', 'deleted' => false]]], $this->queued);
+		$this->assertSame(
+			expected: 0,
+			actual: $service->objectSaved(object: $module),
+			message: 'the request that saved the module writes no version'
+		);
+		$this->assertSame(expected: [], actual: $written);
+		$this->assertSame(expected: [[ModuleVersionPublicationJob::class, ['module' => 'm-1', 'deleted' => false]]], actual: $this->queued);
 
 		$this->runQueuedJobs();
 
-		$this->assertSame('v-1', $written[0][4], 'only the stale version is written');
-		$this->assertSame('2026-09-01T00:00:00+00:00', $written[0][0]['modulePublicationDate']);
-		$this->assertSame('Municipality', $written[0][0]['moduleRegisteredBy']);
-		$this->assertSame('1.0', $written[0][0]['version'], 'the version keeps its own data');
-		$this->assertFalse($written[0][8], 'saved without validation, so older version data never blocks the mirror');
+		$this->assertSame(expected: 'v-1', actual: $written[0][4], message: 'only the stale version is written');
+		$this->assertSame(expected: '2026-09-01T00:00:00+00:00', actual: $written[0][0]['modulePublicationDate']);
+		$this->assertSame(expected: 'Municipality', actual: $written[0][0]['moduleRegisteredBy']);
+		$this->assertSame(expected: '1.0', actual: $written[0][0]['version'], message: 'the version keeps its own data');
+		$this->assertFalse(condition: $written[0][8], message: 'saved without validation, so older version data never blocks the mirror');
 	}//end testAPublishedModuleReachesTheVersionsThatDiffer()
 
 	/**
@@ -272,11 +301,19 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testADepublishedModuleClearsItsVersions(): void {
 		$service = $this->service();
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality'])]);
+		$this->objects->method('searchObjects')->willReturn(
+			[
+				self::entity(
+					uuid: 'v-1',
+					schema: '46',
+					data: ['module' => 'm-1', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality']
+				),
+			]
+		);
 		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
-				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null),
+				'object' => $this->callback(callback: static fn (array $data): bool => $data['modulePublicationDate'] === null),
 			]));
-		$module = self::entity('m-1', '43', ['registeredBy' => 'Municipality']);
+		$module = self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Municipality']);
 		$this->objects->method('find')->willReturn($module);
 
 		$service->objectSaved(object: $module);
@@ -290,14 +327,27 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAVersionReadsItsModuleAndStopsWhenInStep(): void {
 		$service = $this->service();
-		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$this->objects->method('find')->willReturn(self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']));
 		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
-				'object' => $this->callback(static fn (array $data): bool => $data['moduleRegisteredBy'] === 'Supplier'),
+				'object' => $this->callback(callback: static fn (array $data): bool => $data['moduleRegisteredBy'] === 'Supplier'),
 			]));
 
-		$this->assertSame(1, $service->objectSaved(object: self::entity('v-9', '46', ['module' => 'm-1'])));
-		$this->assertSame(0, $service->objectSaved(object: self::entity('v-9', '46', ['module' => 'm-1', 'modulePublicationDate' => null, 'moduleRegisteredBy' => 'Supplier'])));
-		$this->assertSame(0, $service->objectSaved(object: self::entity('x-1', '99', ['module' => 'm-1'])), 'other schemas are ignored');
+		$this->assertSame(expected: 1, actual: $service->objectSaved(object: self::entity(uuid: 'v-9', schema: '46', data: ['module' => 'm-1'])));
+		$this->assertSame(
+			expected: 0,
+			actual: $service->objectSaved(
+				object: self::entity(
+					uuid: 'v-9',
+					schema: '46',
+					data: ['module' => 'm-1', 'modulePublicationDate' => null, 'moduleRegisteredBy' => 'Supplier']
+				)
+			)
+		);
+		$this->assertSame(
+			expected: 0,
+			actual: $service->objectSaved(object: self::entity(uuid: 'x-1', schema: '99', data: ['module' => 'm-1'])),
+			message: 'other schemas are ignored'
+		);
 	}//end testAVersionReadsItsModuleAndStopsWhenInStep()
 
 	/**
@@ -309,7 +359,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$service = $this->service();
 		$page    = [];
 		for ($i = 0; $i < ModuleVersionPublicationService::VERSION_LIMIT; $i++) {
-			$page[] = self::entity('v-' . $i, '46', ['module' => 'm-1']);
+			$page[] = self::entity(uuid: 'v-' . $i, schema: '46', data: ['module' => 'm-1']);
 		}
 
 		$offsets = [];
@@ -318,17 +368,19 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 				$offsets[] = $query['_offset'];
 				return match ($query['_offset']) {
 					0 => $page,
-					ModuleVersionPublicationService::VERSION_LIMIT => [self::entity('v-last', '46', ['module' => 'm-1'])],
+					ModuleVersionPublicationService::VERSION_LIMIT => [self::entity(uuid: 'v-last', schema: '46', data: ['module' => 'm-1'])],
 					default => [],
 				};
 			}
 		);
-		$this->objects->expects($this->exactly(ModuleVersionPublicationService::VERSION_LIMIT + 1))->method('saveObject')->willReturn($page[0]);
+		$this->objects->expects(
+			$this->exactly(count: ModuleVersionPublicationService::VERSION_LIMIT + 1)
+		)->method('saveObject')->willReturn($page[0]);
 
-		$written = $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier']))['written'];
+		$written = $service->backfillModule(module: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']))['written'];
 
-		$this->assertSame(ModuleVersionPublicationService::VERSION_LIMIT + 1, $written);
-		$this->assertSame([0, ModuleVersionPublicationService::VERSION_LIMIT], $offsets);
+		$this->assertSame(expected: ModuleVersionPublicationService::VERSION_LIMIT + 1, actual: $written);
+		$this->assertSame(expected: [0, ModuleVersionPublicationService::VERSION_LIMIT], actual: $offsets);
 	}//end testAModuleWithManyVersionsIsReadPageByPage()
 
 	/**
@@ -340,11 +392,19 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$service = $this->service();
 		$this->objects->expects($this->never())->method('searchObjects');
 
-		$before = self::entity('m-1', '43', ['name' => 'Zaaksysteem', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']);
-		$after  = self::entity('m-1', '43', ['name' => 'Zaaksysteem 2', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']);
+		$before = self::entity(
+			uuid: 'm-1',
+			schema: '43',
+			data: ['name' => 'Zaaksysteem', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']
+		);
+		$after  = self::entity(
+			uuid: 'm-1',
+			schema: '43',
+			data: ['name' => 'Zaaksysteem 2', 'publicationDate' => '2026-09-01T00:00:00+00:00', 'registeredBy' => 'Municipality']
+		);
 
-		$this->assertSame(0, $service->objectSaved(object: $after, previous: $before));
-		$this->assertSame([], $this->queued, 'nothing is queued');
+		$this->assertSame(expected: 0, actual: $service->objectSaved(object: $after, previous: $before));
+		$this->assertSame(expected: [], actual: $this->queued, message: 'nothing is queued');
 	}//end testAModuleUpdateWithoutAPublicationChangeLeavesTheVersions()
 
 	/**
@@ -354,16 +414,27 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testADeletedModuleClearsItsVersions(): void {
 		$service = $this->service();
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
+		$this->objects->method('searchObjects')->willReturn(
+			[self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]
+		);
 		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
-				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null),
+				'object' => $this->callback(
+					callback: static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null
+				),
 			]));
 
 		$this->objects->expects($this->never())->method('find');
 
-		$this->assertSame(0, $service->objectDeleted(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier'])));
-		$this->assertSame(0, $service->objectDeleted(object: self::entity('v-1', '46', ['module' => 'm-1'])), 'only a module clears versions');
-		$this->assertSame([[ModuleVersionPublicationJob::class, ['module' => 'm-1', 'deleted' => true]]], $this->queued);
+		$this->assertSame(
+			expected: 0,
+			actual: $service->objectDeleted(object: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']))
+		);
+		$this->assertSame(
+			expected: 0,
+			actual: $service->objectDeleted(object: self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1'])),
+			message: 'only a module clears versions'
+		);
+		$this->assertSame(expected: [[ModuleVersionPublicationJob::class, ['module' => 'm-1', 'deleted' => true]]], actual: $this->queued);
 
 		$this->runQueuedJobs();
 	}//end testADeletedModuleClearsItsVersions()
@@ -377,15 +448,19 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$service = $this->service();
 		// OpenRegister's find() throws for a missing object; it does not return null.
 		$this->objects->method('find')->willThrowException(new DoesNotExistException('gone'));
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
+		$this->objects->method('searchObjects')->willReturn(
+			[self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]
+		);
 		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
-				'object' => $this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null),
+				'object' => $this->callback(
+					callback: static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null
+				),
 			]));
 
-		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$service->objectSaved(object: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();
 
-		$this->assertSame([], $this->retries, 'a module that is gone is not a failure');
+		$this->assertSame(expected: [], actual: $this->retries, message: 'a module that is gone is not a failure');
 	}//end testAModuleGoneByTheTimeTheJobRunsClearsItsVersions()
 
 	/**
@@ -398,20 +473,29 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$this->objects->method('find')->willThrowException(new \RuntimeException('database went away'));
 		$this->objects->expects($this->never())->method('searchObjects');
 		$this->objects->expects($this->never())->method('saveObject');
-		$this->logger->expects($this->exactly(ModuleVersionPublicationJob::MAX_ATTEMPTS))->method('error')->with($this->stringContains('tried again later'));
-		$this->logger->expects($this->once())->method('critical')->with($this->stringContains('gave up'));
+		$this->logger->expects(
+			$this->exactly(count: ModuleVersionPublicationJob::MAX_ATTEMPTS)
+		)->method('error')->with($this->stringContains(string: 'tried again later'));
+		$this->logger->expects($this->once())->method('critical')->with($this->stringContains(string: 'gave up'));
 
-		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$service->objectSaved(object: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();
 
-		$this->assertSame([[['module' => 'm-1', 'deleted' => false, 'attempt' => 2], 1000 + ModuleVersionPublicationJob::RETRY_DELAY]], $this->retries);
+		$this->assertSame(
+			expected: [[['module' => 'm-1', 'deleted' => false, 'attempt' => 2], 1000 + ModuleVersionPublicationJob::RETRY_DELAY]],
+			actual: $this->retries
+		);
 
 		for ($attempt = 2; $attempt <= ModuleVersionPublicationJob::MAX_ATTEMPTS; $attempt++) {
 			$this->queued  = [[ModuleVersionPublicationJob::class, $this->retries[array_key_last($this->retries)][0]]];
 			$this->runQueuedJobs();
 		}
 
-		$this->assertCount(ModuleVersionPublicationJob::MAX_ATTEMPTS - 1, $this->retries, 'no retry after the last try');
+		$this->assertCount(
+			expectedCount: ModuleVersionPublicationJob::MAX_ATTEMPTS - 1,
+			haystack: $this->retries,
+			message: 'no retry after the last try'
+		);
 	}//end testAModuleThatCannotBeReadIsTriedAgain()
 
 	/**
@@ -421,14 +505,16 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAFailedVersionWriteInTheJobIsTriedAgain(): void {
 		$service = $this->service();
-		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Municipality']));
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
+		$this->objects->method('find')->willReturn(self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Municipality']));
+		$this->objects->method('searchObjects')->willReturn(
+			[self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]
+		);
 		$this->objects->method('saveObject')->willThrowException(new \RuntimeException('lock wait timeout'));
 
-		$service->objectDeleted(object: self::entity('m-1', '43', []));
+		$service->objectDeleted(object: self::entity(uuid: 'm-1', schema: '43', data: []));
 		$this->runQueuedJobs();
 
-		$this->assertSame([['module' => 'm-1', 'deleted' => true, 'attempt' => 2]], array_column($this->retries, 0));
+		$this->assertSame(expected: [['module' => 'm-1', 'deleted' => true, 'attempt' => 2]], actual: array_column($this->retries, 0));
 	}//end testAFailedVersionWriteInTheJobIsTriedAgain()
 
 	/**
@@ -438,14 +524,14 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAFailedBackfillInTheJobIsTriedAgain(): void {
 		$service = $this->service();
-		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1'])]);
+		$this->objects->method('find')->willReturn(self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']));
+		$this->objects->method('searchObjects')->willReturn([self::entity(uuid: 'v-1', schema: '46', data: ['module' => 'm-1'])]);
 		$this->objects->method('saveObject')->willThrowException(new \RuntimeException('lock wait timeout'));
 
-		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$service->objectSaved(object: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();
 
-		$this->assertSame([['module' => 'm-1', 'deleted' => false, 'attempt' => 2]], array_column($this->retries, 0));
+		$this->assertSame(expected: [['module' => 'm-1', 'deleted' => false, 'attempt' => 2]], actual: array_column($this->retries, 0));
 	}//end testAFailedBackfillInTheJobIsTriedAgain()
 
 	/**
@@ -455,11 +541,22 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAFailedDepublicationIsCritical(): void {
 		$service = $this->service();
-		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality'])]);
+		$this->objects->method('searchObjects')->willReturn(
+			[
+				self::entity(
+					uuid: 'v-1',
+					schema: '46',
+					data: ['module' => 'm-1', 'modulePublicationDate' => '2026-09-01T00:00:00+00:00', 'moduleRegisteredBy' => 'Municipality']
+				),
+			]
+		);
 		$this->objects->method('saveObject')->willThrowException(new \RuntimeException('database went away'));
-		$this->logger->expects($this->once())->method('critical')->with($this->stringContains('stays public'));
+		$this->logger->expects($this->once())->method('critical')->with($this->stringContains(string: 'stays public'));
 		$this->logger->expects($this->never())->method('error');
-		$this->assertSame(['written' => 0, 'failed' => 1], $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Municipality'])));
+		$this->assertSame(
+			expected: ['written' => 0, 'failed' => 1],
+			actual: $service->backfillModule(module: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Municipality']))
+		);
 	}//end testAFailedDepublicationIsCritical()
 
 	/**
@@ -471,7 +568,10 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$service = $this->service();
 		$this->objects->method('searchObjects')->willThrowException(new \RuntimeException('index offline'));
 
-		$this->assertSame(['written' => 0, 'failed' => 1], $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier'])));
+		$this->assertSame(
+			expected: ['written' => 0, 'failed' => 1],
+			actual: $service->backfillModule(module: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier']))
+		);
 	}//end testTheBackfillCountsFailures()
 
 	/**
@@ -483,7 +583,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$service = $this->service();
 		$page    = [];
 		for ($i = 0; $i < ModuleVersionPublicationService::VERSION_LIMIT; $i++) {
-			$page[] = self::entity('v-' . $i, '46', ['module' => 'm-1']);
+			$page[] = self::entity(uuid: 'v-' . $i, schema: '46', data: ['module' => 'm-1']);
 		}
 
 		$calls = [];
@@ -504,15 +604,17 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 			['module' => 'm-1', 'error' => 'index offline']
 		);
 
-		$result = $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier', 'publicationDate' => '2026-01-01T00:00:00+00:00']));
+		$result = $service->backfillModule(
+			module: self::entity(uuid: 'm-1', schema: '43', data: ['registeredBy' => 'Supplier', 'publicationDate' => '2026-01-01T00:00:00+00:00'])
+		);
 
-		$this->assertSame(['written' => ModuleVersionPublicationService::VERSION_LIMIT, 'failed' => 1], $result);
+		$this->assertSame(expected: ['written' => ModuleVersionPublicationService::VERSION_LIMIT, 'failed' => 1], actual: $result);
 		$this->assertSame(
-			[
+			expected: [
 				[['register' => 20, 'schema' => 46, 'module' => 'm-1', '_limit' => 500, '_offset' => 0], false, false],
 				[['register' => 20, 'schema' => 46, 'module' => 'm-1', '_limit' => 500, '_offset' => 500], false, false],
 			],
-			$calls
+			actual: $calls
 		);
 	}//end testAFailedLaterPageKeepsTheEarlierWrites()
 
@@ -530,7 +632,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 			['module' => 'm-1', 'error' => 'index offline']
 		);
 
-		$this->assertSame(['written' => 0, 'failed' => 1], $service->clearVersions(moduleUuid: 'm-1'));
+		$this->assertSame(expected: ['written' => 0, 'failed' => 1], actual: $service->clearVersions(moduleUuid: 'm-1'));
 	}//end testAFailedSearchWhileClearingIsCritical()
 
 	/**
@@ -539,16 +641,21 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutTheVersionSchemaNothingIsSearched(): void {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->method('getSchemaIdForObjectType')->willReturn(null);
 		$settings->method('getRegisterIdForObjectType')->willReturn(20);
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->expects($this->never())->method('searchObjects');
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objects);
-		$service = new ModuleVersionPublicationService(settingsService: $settings, container: $container, logger: $this->createMock(LoggerInterface::class), jobList: $this->createMock(IJobList::class));
+		$service = new ModuleVersionPublicationService(
+			settingsService: $settings,
+			container: $container,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			jobList: $this->createMock(originalClassName: IJobList::class)
+		);
 
-		$this->assertSame(['written' => 0, 'failed' => 0], $service->clearVersions(moduleUuid: 'm-1'));
+		$this->assertSame(expected: ['written' => 0, 'failed' => 0], actual: $service->clearVersions(moduleUuid: 'm-1'));
 	}//end testWithoutTheVersionSchemaNothingIsSearched()
 
 	/**
@@ -557,22 +664,22 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheListenerPassesUpdatesAndDeletes(): void {
-		$service = $this->getMockBuilder(ModuleVersionPublicationService::class)
+		$service = $this->getMockBuilder(className: ModuleVersionPublicationService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['objectSaved', 'objectDeleted'])
 			->getMock();
-		$new = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
-		$old = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$new = $this->getMockBuilder(className: \OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$old = $this->getMockBuilder(className: \OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
 		$service->expects($this->once())->method('objectSaved')->with($new, $old)->willReturn(0);
 		$service->expects($this->once())->method('objectDeleted')->with($old)->willReturn(0);
 
-		$listener = new ModuleVersionPublicationListener(publication: $service, logger: $this->createMock(LoggerInterface::class));
+		$listener = new ModuleVersionPublicationListener(publication: $service, logger: $this->createMock(originalClassName: LoggerInterface::class));
 		$listener->handle(new ObjectUpdatedEvent($new, $old));
 		$listener->handle(new ObjectDeletedEvent($old));
 
 		$this->assertStringContainsString(
-			'registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class)',
-			(string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php')
+			needle: 'registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class)',
+			haystack: (string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php')
 		);
 	}//end testTheListenerPassesUpdatesAndDeletes()
 
@@ -582,18 +689,30 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheListenerReachesTheService(): void {
-		$service = $this->getMockBuilder(ModuleVersionPublicationService::class)
+		$service = $this->getMockBuilder(className: ModuleVersionPublicationService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['objectSaved'])
 			->getMock();
-		$object = $this->getMockBuilder(\OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$object = $this->getMockBuilder(className: \OCA\OpenRegister\Db\ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
 		$service->expects($this->once())->method('objectSaved')->with($object)->willReturn(0);
 
-		(new ModuleVersionPublicationListener(publication: $service, logger: $this->createMock(LoggerInterface::class)))->handle(new ObjectCreatedEvent($object));
+		(new ModuleVersionPublicationListener(
+			publication: $service,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		))->handle(new ObjectCreatedEvent($object));
 
 		$app = (string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
-		$this->assertStringContainsString('registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class)', $app);
-		$this->assertStringContainsString('registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class)', $app);
-		$this->assertStringContainsString('OCA\\Stackiq\\Repair\\BackfillModuleVersionPublication', (string) file_get_contents(__DIR__ . '/../../../appinfo/info.xml'));
+		$this->assertStringContainsString(
+			needle: 'registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class)',
+			haystack: $app
+		);
+		$this->assertStringContainsString(
+			needle: 'registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class)',
+			haystack: $app
+		);
+		$this->assertStringContainsString(
+			needle: 'OCA\\Stackiq\\Repair\\BackfillModuleVersionPublication',
+			haystack: (string) file_get_contents(__DIR__ . '/../../../appinfo/info.xml')
+		);
 	}//end testTheListenerReachesTheService()
 }//end class

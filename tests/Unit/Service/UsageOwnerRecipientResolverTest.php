@@ -37,7 +37,7 @@ final class UsageOwnerRecipientResolverTest extends TestCase {
 	 * @return ObjectEntity
 	 */
 	private function object(array $data): ObjectEntity {
-		$entity = $this->createMock(ObjectEntity::class);
+		$entity = $this->createMock(originalClassName: ObjectEntity::class);
 		$entity->method('getObject')->willReturn($data);
 		return $entity;
 	}//end object()
@@ -51,67 +51,110 @@ final class UsageOwnerRecipientResolverTest extends TestCase {
 	 * @return UsageOwnerRecipientResolver
 	 */
 	private function resolver(MaintenanceRecipientService $owners, bool $available = true): UsageOwnerRecipientResolver {
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		if ($available === true) {
-			$container->method('get')->with(ObjectServiceInterface::class)->willReturn($this->createMock(ObjectServiceInterface::class));
+			$container->method('get')->with(ObjectServiceInterface::class)->willReturn(
+				$this->createMock(originalClassName: ObjectServiceInterface::class)
+			);
 		} else {
 			$container->method('get')->willThrowException(new RuntimeException('OpenRegister is not installed'));
 		}
 
-		return new UsageOwnerRecipientResolver($owners, $container, new NullLogger());
+		return new UsageOwnerRecipientResolver(owners: $owners, container: $container, logger: new NullLogger());
 	}//end resolver()
 
+	/**
+	 * It is an open register recipient resolver.
+	 *
+	 * @return void
+	 */
 	public function testItIsAnOpenRegisterRecipientResolver(): void {
-		$this->assertInstanceOf(RecipientResolverInterface::class, $this->resolver($this->createMock(MaintenanceRecipientService::class)));
+		$this->assertInstanceOf(
+			expected: RecipientResolverInterface::class,
+			actual: $this->resolver(owners: $this->createMock(originalClassName: MaintenanceRecipientService::class))
+		);
 	}
 
+	/**
+	 * Avulnerability reaches the owners of the usages of each affected application.
+	 *
+	 * @return void
+	 */
 	public function testAVulnerabilityReachesTheOwnersOfTheUsagesOfEachAffectedApplication(): void {
-		$owners = $this->createMock(MaintenanceRecipientService::class);
-		$owners->expects($this->exactly(2))->method('ownerUserIds')
+		$owners = $this->createMock(originalClassName: MaintenanceRecipientService::class);
+		$owners->expects($this->exactly(count: 2))->method('ownerUserIds')
 			->willReturnCallback(static fn (ObjectServiceInterface $service, string $moduleId): array => match ($moduleId) {
 				'zaaksysteem-x' => ['anna', 'bert'],
 				'archief-y' => ['bert', 'carla'],
 			});
 
-		$uids = $this->resolver($owners)->resolve(
-			$this->object(['name' => 'CVE-2026-1234', 'modules' => ['zaaksysteem-x', ['id' => 'archief-y', 'name' => 'Archief Y']]]),
+		$uids = $this->resolver(owners: $owners)->resolve(
+			$this->object(data: ['name' => 'CVE-2026-1234', 'modules' => ['zaaksysteem-x', ['id' => 'archief-y', 'name' => 'Archief Y']]]),
 			[]
 		);
 
-		$this->assertSame(['anna', 'bert', 'carla'], $uids);
+		$this->assertSame(expected: ['anna', 'bert', 'carla'], actual: $uids);
 	}
 
+	/**
+	 * Amodule version reaches the owners of the usages of its application.
+	 *
+	 * @return void
+	 */
 	public function testAModuleVersionReachesTheOwnersOfTheUsagesOfItsApplication(): void {
-		$owners = $this->createMock(MaintenanceRecipientService::class);
+		$owners = $this->createMock(originalClassName: MaintenanceRecipientService::class);
 		$owners->expects($this->once())->method('ownerUserIds')
-			->with($this->isInstanceOf(ObjectServiceInterface::class), 'zaaksysteem-x')
+			->with($this->isInstanceOf(className: ObjectServiceInterface::class), 'zaaksysteem-x')
 			->willReturn(['anna']);
 
-		$uids = $this->resolver($owners)->resolve($this->object(['version' => '5.2', 'module' => ['uuid' => 'zaaksysteem-x']]), []);
+		$uids = $this->resolver(owners: $owners)->resolve($this->object(data: ['version' => '5.2', 'module' => ['uuid' => 'zaaksysteem-x']]), []);
 
-		$this->assertSame(['anna'], $uids);
+		$this->assertSame(expected: ['anna'], actual: $uids);
 	}
 
+	/**
+	 * An object naming no application reaches nobody.
+	 *
+	 * @return void
+	 */
 	public function testAnObjectNamingNoApplicationReachesNobody(): void {
-		$owners = $this->createMock(MaintenanceRecipientService::class);
+		$owners = $this->createMock(originalClassName: MaintenanceRecipientService::class);
 		$owners->expects($this->never())->method('ownerUserIds');
 
-		$this->assertSame([], $this->resolver($owners)->resolve($this->object(['name' => 'CVE-2026-1234', 'modules' => []]), []));
+		$this->assertSame(
+			expected: [],
+			actual: $this->resolver(owners: $owners)->resolve($this->object(data: ['name' => 'CVE-2026-1234', 'modules' => []]), [])
+		);
 	}
 
+	/**
+	 * Without open register nobody is resolved.
+	 *
+	 * @return void
+	 */
 	public function testWithoutOpenRegisterNobodyIsResolved(): void {
-		$owners = $this->createMock(MaintenanceRecipientService::class);
+		$owners = $this->createMock(originalClassName: MaintenanceRecipientService::class);
 		$owners->expects($this->never())->method('ownerUserIds');
 
-		$this->assertSame([], $this->resolver($owners, false)->resolve($this->object(['modules' => ['zaaksysteem-x']]), []));
+		$this->assertSame(
+			expected: [],
+			actual: $this->resolver(owners: $owners, available: false)->resolve($this->object(data: ['modules' => ['zaaksysteem-x']]), [])
+		);
 	}
 
+	/**
+	 * The application ids are read from modules then module once each.
+	 *
+	 * @return void
+	 */
 	public function testTheApplicationIdsAreReadFromModulesThenModuleOnceEach(): void {
 		$this->assertSame(
-			['a', 'b', 'c'],
-			UsageOwnerRecipientResolver::applicationIds(['modules' => ['a', ['id' => 'b'], 'a', '', null, ['name' => 'no id']], 'module' => 'c'])
+			expected: ['a', 'b', 'c'],
+			actual: UsageOwnerRecipientResolver::applicationIds(
+				['modules' => ['a', ['id' => 'b'], 'a', '', null, ['name' => 'no id']], 'module' => 'c']
+			)
 		);
-		$this->assertSame(['c'], UsageOwnerRecipientResolver::applicationIds(['module' => ['id' => 'c']]));
-		$this->assertSame([], UsageOwnerRecipientResolver::applicationIds([]));
+		$this->assertSame(expected: ['c'], actual: UsageOwnerRecipientResolver::applicationIds(['module' => ['id' => 'c']]));
+		$this->assertSame(expected: [], actual: UsageOwnerRecipientResolver::applicationIds([]));
 	}
 }

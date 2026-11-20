@@ -64,7 +64,7 @@ final class UsageProviderSyncTest extends TestCase {
 	 * @return UsageProviderSync
 	 */
 	private function sync(array $modules, array $usages=[]): UsageProviderSync {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (int|string $id) use ($modules) {
 				$this->reads[$id] = ($this->reads[$id] ?? 0) + 1;
@@ -72,7 +72,7 @@ final class UsageProviderSyncTest extends TestCase {
 					return null;
 				}
 
-				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 				$entity->method('getObject')->willReturn($modules[$id]);
 				return $entity;
 			}
@@ -81,43 +81,71 @@ final class UsageProviderSyncTest extends TestCase {
 		$objects->method('saveObject')->willReturnCallback(
 			function (array $object, ObjectSaveOptions $options, bool $_rbac) {
 				$this->saves[] = ['object' => $object, 'schema' => $options->target->schema, 'uuid' => $options->uuid, 'rbac' => $_rbac];
-				return $this->createMock(ObjectEntityInterface::class);
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
 			}
 		);
-		$apps = $this->createMock(IAppManager::class);
+		$apps = $this->createMock(originalClassName: IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
-		$orContainer = $this->createMock(ContainerInterface::class);
+		$orContainer = $this->createMock(originalClassName: ContainerInterface::class);
 		$orContainer->method('get')->willReturn($objects);
-		$lookup = new OpenRegisterLookup(appManager: $apps, container: $orContainer, userSession: $this->createMock(IUserSession::class), logger: $this->createMock(LoggerInterface::class));
-		$types = $this->createMock(ObjectTypeLocatorInterface::class);
+		$lookup = new OpenRegisterLookup(
+			appManager: $apps,
+			container: $orContainer,
+			userSession: $this->createMock(originalClassName: IUserSession::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+		$types = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
 		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $t) => ['usage' => 12, 'module' => 13][$t] ?? null);
 		$types->method('getRegisterIdForObjectType')->willReturn(3);
 
-		return new UsageProviderSync(lookup: $lookup, types: $types, logger: $this->createMock(LoggerInterface::class));
+		return new UsageProviderSync(lookup: $lookup, types: $types, logger: $this->createMock(originalClassName: LoggerInterface::class));
 	}//end sync()
 
+	/**
+	 * The provider becomes the modules supplier.
+	 *
+	 * @return void
+	 */
 	public function testTheProviderBecomesTheModulesSupplier(): void {
-		$this->assertSame(['provider' => 'org-s'], UsageProviderSync::patch(usage: ['module' => 'm1'], supplier: 'org-s'));
-		$this->assertSame(['provider' => 'org-s'], UsageProviderSync::patch(usage: ['module' => 'm1', 'provider' => 'org-old'], supplier: 'org-s'));
+		$this->assertSame(expected: ['provider' => 'org-s'], actual: UsageProviderSync::patch(usage: ['module' => 'm1'], supplier: 'org-s'));
+		$this->assertSame(
+			expected: ['provider' => 'org-s'],
+			actual: UsageProviderSync::patch(usage: ['module' => 'm1', 'provider' => 'org-old'], supplier: 'org-s')
+		);
 	}
 
+	/**
+	 * Nothing changes when it already matches or the supplier is unknown.
+	 *
+	 * @return void
+	 */
 	public function testNothingChangesWhenItAlreadyMatchesOrTheSupplierIsUnknown(): void {
-		$this->assertSame([], UsageProviderSync::patch(usage: ['provider' => ['id' => 'org-s']], supplier: 'org-s'));
-		$this->assertSame([], UsageProviderSync::patch(usage: ['provider' => 'org-hand'], supplier: null));
-		$this->assertSame([], UsageProviderSync::patch(usage: [], supplier: ''));
+		$this->assertSame(expected: [], actual: UsageProviderSync::patch(usage: ['provider' => ['id' => 'org-s']], supplier: 'org-s'));
+		$this->assertSame(expected: [], actual: UsageProviderSync::patch(usage: ['provider' => 'org-hand'], supplier: null));
+		$this->assertSame(expected: [], actual: UsageProviderSync::patch(usage: [], supplier: ''));
 	}
 
+	/**
+	 * The supplier is read from the module once and null without one.
+	 *
+	 * @return void
+	 */
 	public function testTheSupplierIsReadFromTheModuleOnceAndNullWithoutOne(): void {
 		$sync = $this->sync(modules: ['m1' => ['provider' => ['id' => 'org-s']], 'm2' => ['name' => 'no supplier']]);
 
-		$this->assertSame('org-s', $sync->supplierFor(usage: ['module' => 'm1']));
-		$this->assertSame('org-s', $sync->supplierFor(usage: ['module' => ['id' => 'm1']]));
-		$this->assertNull($sync->supplierFor(usage: ['module' => 'm2']));
-		$this->assertNull($sync->supplierFor(usage: ['module' => 'gone']));
-		$this->assertNull($sync->supplierFor(usage: []));
-		$this->assertSame(1, $this->reads['m1']);
+		$this->assertSame(expected: 'org-s', actual: $sync->supplierFor(usage: ['module' => 'm1']));
+		$this->assertSame(expected: 'org-s', actual: $sync->supplierFor(usage: ['module' => ['id' => 'm1']]));
+		$this->assertNull(actual: $sync->supplierFor(usage: ['module' => 'm2']));
+		$this->assertNull(actual: $sync->supplierFor(usage: ['module' => 'gone']));
+		$this->assertNull(actual: $sync->supplierFor(usage: []));
+		$this->assertSame(expected: 1, actual: $this->reads['m1']);
 	}
 
+	/**
+	 * Backfill writes only the usages whose provider is wrong.
+	 *
+	 * @return void
+	 */
 	public function testBackfillWritesOnlyTheUsagesWhoseProviderIsWrong(): void {
 		$sync = $this->sync(
 			modules: ['m1' => ['provider' => 'org-s']],
@@ -129,7 +157,10 @@ final class UsageProviderSyncTest extends TestCase {
 			]
 		);
 
-		$this->assertSame(1, $sync->backfill());
-		$this->assertSame([['object' => ['id' => 'u1', 'module' => 'm1', 'provider' => 'org-s'], 'schema' => 12, 'uuid' => 'u1', 'rbac' => false]], $this->saves);
+		$this->assertSame(expected: 1, actual: $sync->backfill());
+		$this->assertSame(
+			expected: [['object' => ['id' => 'u1', 'module' => 'm1', 'provider' => 'org-s'], 'schema' => 12, 'uuid' => 'u1', 'rbac' => false]],
+			actual: $this->saves
+		);
 	}
 }

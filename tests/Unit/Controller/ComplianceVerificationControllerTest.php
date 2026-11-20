@@ -45,37 +45,60 @@ final class ComplianceVerificationControllerTest extends TestCase {
 	 * @return ComplianceVerificationController
 	 */
 	private function controller(ComplianceVerificationService $service, bool $signedIn=true): ComplianceVerificationController {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('rita');
 		$user->method('getDisplayName')->willReturn('Rita Reviewer');
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($signedIn === true ? $user : null);
-		$group = $this->createMock(IGroup::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$current = null;
+		if ($signedIn === true) {
+			$current = $user;
+		}
+
+		$session->method('getUser')->willReturn($current);
+		$group = $this->createMock(originalClassName: IGroup::class);
 		$group->method('getGID')->willReturn('functioneel-beheerder');
-		$groups = $this->createMock(IGroupManager::class);
+		$groups = $this->createMock(originalClassName: IGroupManager::class);
 		$groups->method('getUserGroups')->willReturn([$group]);
-		$config = $this->createMock(IConfig::class);
+		$config = $this->createMock(originalClassName: IConfig::class);
 		$config->method('getUserValue')->with('rita', 'core', 'organisation')->willReturn('org-g');
 
-		return new ComplianceVerificationController(request: $this->createMock(IRequest::class), verification: $service, userSession: $session, groupManager: $groups, config: $config);
+		return new ComplianceVerificationController(
+			request: $this->createMock(originalClassName: IRequest::class),
+			verification: $service,
+			userSession: $session,
+			groupManager: $groups,
+			config: $config
+		);
 	}//end controller()
 
+	/**
+	 * The reviewer groups and organisation reach the action.
+	 *
+	 * @return void
+	 */
 	public function testTheReviewerGroupsAndOrganisationReachTheAction(): void {
-		$service = $this->createMock(ComplianceVerificationService::class);
+		$service = $this->createMock(originalClassName: ComplianceVerificationService::class);
 		$service->expects($this->once())->method('verify')
-			->with('c1', 'Rita Reviewer', ['functioneel-beheerder'], 'org-g', $this->matchesRegularExpression('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/'))
+			->with('c1', 'Rita Reviewer', ['functioneel-beheerder'], 'org-g', $this->matchesRegularExpression(
+				pattern: '/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/'
+			))
 			->willReturn(['status' => 403, 'body' => ['message' => 'A supplier cannot verify its own claim']]);
 
 		$response = $this->controller(service: $service)->verify(id: 'c1');
 
-		$this->assertSame(403, $response->getStatus());
-		$this->assertSame(['message' => 'A supplier cannot verify its own claim'], $response->getData());
+		$this->assertSame(expected: 403, actual: $response->getStatus());
+		$this->assertSame(expected: ['message' => 'A supplier cannot verify its own claim'], actual: $response->getData());
 	}
 
+	/**
+	 * Without asession nothing is asked.
+	 *
+	 * @return void
+	 */
 	public function testWithoutASessionNothingIsAsked(): void {
-		$service = $this->createMock(ComplianceVerificationService::class);
+		$service = $this->createMock(originalClassName: ComplianceVerificationService::class);
 		$service->expects($this->never())->method('verify');
 
-		$this->assertSame(401, $this->controller(service: $service, signedIn: false)->verify(id: 'c1')->getStatus());
+		$this->assertSame(expected: 401, actual: $this->controller(service: $service, signedIn: false)->verify(id: 'c1')->getStatus());
 	}
 }

@@ -58,18 +58,18 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			(string)file_get_contents($root.'/lib/Settings/softwarecatalogus_register.json'),
 			true
 		);
-		$this->assertIsArray($base, 'the register JSON must parse');
+		$this->assertIsArray(actual: $base, message: 'the register JSON must parse');
 
 		$method = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
 		$method->setAccessible(true);
 
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
-		$this->assertNotEmpty($fragments, 'there must be fragments to merge');
+		$this->assertNotEmpty(actual: $fragments, message: 'there must be fragments to merge');
 
 		sort($fragments);
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
-			$this->assertIsArray($overlay, basename($fragment).' must parse');
+			$this->assertIsArray(actual: $overlay, message: basename($fragment).' must parse');
 			$base = $method->invoke(null, $base, $overlay);
 		}
 
@@ -97,7 +97,7 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$declared = array_keys($base['components']['schemas']);
 
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
-		$this->assertNotEmpty($fragments);
+		$this->assertNotEmpty(actual: $fragments);
 
 		// A fragment may also add a schema of its own, provided it registers it
 		// in a register's schema list (ADR-037); an overlay of a misspelt slug
@@ -127,7 +127,7 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			}
 		}
 
-		$this->assertSame([], $orphans, 'a fragment overlays a schema the register does not declare');
+		$this->assertSame(expected: [], actual: $orphans, message: 'a fragment overlays a schema the register does not declare');
 
 	}//end testEveryFragmentOverlaysASchemaThatExists()
 
@@ -143,30 +143,30 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 	public function testTheReviewSchemaPublicReadIsGatedOnApproved(): void {
 		$slug = ReviewService::REVIEW_TYPE;
 		$this->assertSame(
-			$slug,
-			ModerationService::MODERATED_TYPE_REVIEW,
-			'the write path and the moderation queue must name the same schema'
+			expected: $slug,
+			actual: ModerationService::MODERATED_TYPE_REVIEW,
+			message: 'the write path and the moderation queue must name the same schema'
 		);
 
 		$schemas = $this->mergedRegister()['components']['schemas'];
-		$this->assertArrayHasKey($slug, $schemas);
+		$this->assertArrayHasKey(key: $slug, array: $schemas);
 
 		$read = $schemas[$slug]['authorization']['read'];
 
 		$this->assertNotContains(
-			'public',
-			$read,
-			'a bare public read makes every pending and rejected review world-readable'
+			needle: 'public',
+			haystack: $read,
+			message: 'a bare public read makes every pending and rejected review world-readable'
 		);
 		$this->assertNotContains(
-			['group' => 'public', 'crossOrganisation' => true],
-			$read,
-			'an unconditional public read makes every pending and rejected review world-readable'
+			needle: ['group' => 'public', 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'an unconditional public read makes every pending and rejected review world-readable'
 		);
 		$this->assertContains(
-			['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
-			$read,
-			'anonymous readers must see approved reviews and only those'
+			needle: ['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'anonymous readers must see approved reviews and only those'
 		);
 
 	}//end testTheReviewSchemaPublicReadIsGatedOnApproved()
@@ -188,9 +188,9 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$read = $base['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
 
 		$this->assertContains(
-			['group' => 'public', 'crossOrganisation' => true],
-			$read,
-			'the base is expected to carry the unconditional public read that the fragment removes; '
+			needle: ['group' => 'public', 'crossOrganisation' => true],
+			haystack: $read,
+			message: 'the base is expected to carry the unconditional public read that the fragment removes; '
 			.'if the base has been gated directly, this test and the fragment are now redundant'
 		);
 
@@ -208,7 +208,7 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 	public function testOnlyTheAdminsReadAReviewThatIsNotApproved(): void {
 		$read = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
 
-		$this->assertContains('software-catalog-admins', $read, 'the moderators must read every review');
+		$this->assertContains(needle: 'software-catalog-admins', haystack: $read, message: 'the moderators must read every review');
 
 		$ungated = [];
 		foreach ($read as $rule) {
@@ -221,11 +221,11 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			}
 		}
 
-		$this->assertSame([], $ungated, 'a group outside the admins would read pending and rejected reviews');
+		$this->assertSame(expected: [], actual: $ungated, message: 'a group outside the admins would read pending and rejected reviews');
 
-		$groups = array_map(static fn ($rule): string => is_array($rule) ? (string)$rule['group'] : (string)$rule, $read);
-		$this->assertContains('software-catalog-users', $groups, 'catalogue users still read approved reviews');
-		$this->assertContains('public', $groups, 'anonymous readers still read approved reviews');
+		$groups = array_map(static fn ($rule): string => (string)($rule['group'] ?? $rule), $read);
+		$this->assertContains(needle: 'software-catalog-users', haystack: $groups, message: 'catalogue users still read approved reviews');
+		$this->assertContains(needle: 'public', haystack: $groups, message: 'anonymous readers still read approved reviews');
 
 	}//end testOnlyTheAdminsReadAReviewThatIsNotApproved()
 
@@ -240,8 +240,8 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 	public function testTheReviewFormDoesNotOfferTheStatus(): void {
 		$status = $this->mergedRegister()['components']['schemas'][ReviewService::REVIEW_TYPE]['properties']['status'];
 
-		$this->assertTrue(($status['hideOnForm'] ?? false), 'the author must not set the status on the form');
-		$this->assertSame('pending', $status['default']);
+		$this->assertTrue(condition: ($status['hideOnForm'] ?? false), message: 'the author must not set the status on the form');
+		$this->assertSame(expected: 'pending', actual: $status['default']);
 
 	}//end testTheReviewFormDoesNotOfferTheStatus()
 

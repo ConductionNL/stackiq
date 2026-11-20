@@ -42,32 +42,54 @@ final class ViewControllerTest extends TestCase {
 	 * @return ViewController
 	 */
 	private function controller(ViewService $views): ViewController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn([]);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, $default=null) => $default);
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($this->createMock(IUser::class));
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
 
-		return new ViewController('stackiq', $request, $views, $this->createMock(LoggerInterface::class), $session);
+		return new ViewController(
+			appName: 'stackiq',
+			request: $request,
+			viewService: $views,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			userSession: $session
+		);
 	}//end controller()
 
+	/**
+	 * Asigned in client gets the imported views with their id and name.
+	 *
+	 * @return void
+	 */
 	public function testASignedInClientGetsTheImportedViewsWithTheirIdAndName(): void {
-		$views = $this->createMock(ViewService::class);
+		$views = $this->createMock(originalClassName: ViewService::class);
 		$views->expects($this->once())->method('getAllViews')->willReturn([
 			'success' => true,
-			'views' => [['id' => 'id-gemma-1', 'name' => 'GEMMA Gemeentelijke processen'], ['id' => 'id-gemma-2', 'name' => 'GEMMA Referentiecomponenten']],
+			'views' => [
+				['id' => 'id-gemma-1', 'name' => 'GEMMA Gemeentelijke processen'],
+				['id' => 'id-gemma-2', 'name' => 'GEMMA Referentiecomponenten'],
+			],
 			'count' => 2,
 		]);
 
 		$response = $this->controller(views: $views)->getAllViews();
 
-		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$this->assertSame(
-			[['id' => 'id-gemma-1', 'name' => 'GEMMA Gemeentelijke processen'], ['id' => 'id-gemma-2', 'name' => 'GEMMA Referentiecomponenten']],
-			array_map(static fn (array $view): array => ['id' => $view['id'], 'name' => $view['name']], $response->getData()['views'])
+			expected: [
+				['id' => 'id-gemma-1', 'name' => 'GEMMA Gemeentelijke processen'],
+				['id' => 'id-gemma-2', 'name' => 'GEMMA Referentiecomponenten'],
+			],
+			actual: array_map(static fn (array $view): array => ['id' => $view['id'], 'name' => $view['name']], $response->getData()['views'])
 		);
 	}
 
+	/**
+	 * Aview without enrichment parameters is asked with none and returned as imported.
+	 *
+	 * @return void
+	 */
 	public function testAViewWithoutEnrichmentParametersIsAskedWithNoneAndReturnedAsImported(): void {
 		$imported = [
 			'success' => true,
@@ -79,12 +101,12 @@ final class ViewControllerTest extends TestCase {
 			],
 			'enrichments_applied' => [],
 		];
-		$views = $this->createMock(ViewService::class);
+		$views = $this->createMock(originalClassName: ViewService::class);
 		$views->expects($this->once())->method('getView')->with('id-gemma-2', [])->willReturn($imported);
 
 		$response = $this->controller(views: $views)->getView(viewId: 'id-gemma-2');
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame($imported, $response->getData());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: $imported, actual: $response->getData());
 	}
 }

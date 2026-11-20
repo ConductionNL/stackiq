@@ -50,20 +50,30 @@ final class HostingModelFieldsTest extends TestCase {
 		return $merged['components']['schemas']['module']['properties'];
 	}//end properties()
 
+	/**
+	 * Hosting offers iaas and paas next to on premises and saas and is filterable.
+	 *
+	 * @return void
+	 */
 	public function testHostingOffersIaasAndPaasNextToOnPremisesAndSaasAndIsFilterable(): void {
 		$hosting = $this->properties()['cloudDienstverleningsmodel'];
 
-		$this->assertSame('Hosting', $hosting['title']);
-		$this->assertSame(['On-premises (self-managed)', 'IaaS', 'PaaS', 'SaaS'], $hosting['items']['enum']);
-		$this->assertTrue($hosting['facetable']);
+		$this->assertSame(expected: 'Hosting', actual: $hosting['title']);
+		$this->assertSame(expected: ['On-premises (self-managed)', 'IaaS', 'PaaS', 'SaaS'], actual: $hosting['items']['enum']);
+		$this->assertTrue(condition: $hosting['facetable']);
 	}
 
+	/**
+	 * The hosting location and jurisdiction record where the party runs it.
+	 *
+	 * @return void
+	 */
 	public function testTheHostingLocationAndJurisdictionRecordWhereThePartyRunsIt(): void {
 		$properties = $this->properties();
 
 		foreach (['hostingLocation', 'hostingJurisdiction'] as $field) {
-			$this->assertContains('NL', $properties[$field]['enum'], $field);
-			$this->assertTrue($properties[$field]['visible'], $field);
+			$this->assertContains(needle: 'NL', haystack: $properties[$field]['enum'], message: $field);
+			$this->assertTrue(condition: $properties[$field]['visible'], message: $field);
 		}
 	}
 }

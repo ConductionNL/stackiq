@@ -45,7 +45,7 @@ class ReferenceComponentPlacementTest extends TestCase {
 	private function register(bool $withFragments = true): array {
 		$dir    = __DIR__ . '/../../../lib/Settings';
 		$merged = json_decode((string) file_get_contents($dir . '/softwarecatalogus_register.json'), true);
-		$this->assertIsArray($merged);
+		$this->assertIsArray(actual: $merged);
 		if ($withFragments === false) {
 			return $merged;
 		}
@@ -73,19 +73,27 @@ class ReferenceComponentPlacementTest extends TestCase {
 		$register = $this->register();
 		$field    = $register['components']['schemas']['module']['properties']['referenceComponents'];
 
-		$this->assertFalse($field['hideOnForm'], 'the application form must offer the reference components');
-		$this->assertSame('#/components/schemas/element', $field['items']['$ref']);
-		$this->assertSame('vng-gemma', $field['items']['x-external-register'], 'the picker must read the register that holds the GEMMA elements');
-		$this->assertSame('name', $field['items']['x-label-field']);
+		$this->assertFalse(condition: $field['hideOnForm'], message: 'the application form must offer the reference components');
+		$this->assertSame(expected: '#/components/schemas/element', actual: $field['items']['$ref']);
 		$this->assertSame(
-			'gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden',
-			$field['items']['objectConfiguration']['queryParams'],
-			'the picker must still list reference components only'
+			expected: 'vng-gemma',
+			actual: $field['items']['x-external-register'],
+			message: 'the picker must read the register that holds the GEMMA elements'
+		);
+		$this->assertSame(expected: 'name', actual: $field['items']['x-label-field']);
+		$this->assertSame(
+			expected: 'gemmaType=referentiecomponent&_extend=aanbevolenStandaarden,verplichteStandaarden',
+			actual: $field['items']['objectConfiguration']['queryParams'],
+			message: 'the picker must still list reference components only'
 		);
 
 		$registers = array_column($register['components']['registers'], 'schemas', 'slug');
-		$this->assertContains('element', $registers['vng-gemma'], 'the vng-gemma register must declare the element schema');
-		$this->assertArrayHasKey('name', $register['components']['schemas']['element']['properties']);
+		$this->assertContains(
+			needle: 'element',
+			haystack: $registers['vng-gemma'],
+			message: 'the vng-gemma register must declare the element schema'
+		);
+		$this->assertArrayHasKey(key: 'name', array: $register['components']['schemas']['element']['properties']);
 
 	}//end testTheApplicationFormOffersTheReferenceComponentsFromTheGemmaRegister()
 
@@ -97,8 +105,8 @@ class ReferenceComponentPlacementTest extends TestCase {
 	public function testTheBaseRegisterAloneHidesTheField(): void {
 		$field = $this->register(withFragments: false)['components']['schemas']['module']['properties']['referenceComponents'];
 
-		$this->assertTrue($field['hideOnForm']);
-		$this->assertArrayNotHasKey('x-external-register', $field['items']);
+		$this->assertTrue(condition: $field['hideOnForm']);
+		$this->assertArrayNotHasKey(key: 'x-external-register', array: $field['items']);
 
 	}//end testTheBaseRegisterAloneHidesTheField()
 
@@ -111,7 +119,7 @@ class ReferenceComponentPlacementTest extends TestCase {
 	 */
 	public function testTheApplicationPageShowsThePickedComponents(): void {
 		$manifest = json_decode((string) file_get_contents(__DIR__ . '/../../../src/manifest.json'), true);
-		$this->assertIsArray($manifest);
+		$this->assertIsArray(actual: $manifest);
 
 		$pages  = array_column($manifest['pages'], null, 'id');
 		$widget = null;
@@ -121,8 +129,8 @@ class ReferenceComponentPlacementTest extends TestCase {
 			}
 		}
 
-		$this->assertNotNull($widget, 'ModuleDetail must carry its md-data widget');
-		$this->assertContains('referenceComponents', $widget['content']['include']);
+		$this->assertNotNull(actual: $widget, message: 'ModuleDetail must carry its md-data widget');
+		$this->assertContains(needle: 'referenceComponents', haystack: $widget['content']['include']);
 
 	}//end testTheApplicationPageShowsThePickedComponents()
 }//end class
