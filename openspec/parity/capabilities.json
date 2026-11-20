@@ -9480,15 +9480,15 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "building",
-				"evidence": "Building: openspec/changes/cmdb-import-mapping-view has 14 of 16 tasks ticked; the mapping packs live in OpenRegister's pack store (lib/Repair/SeedCmdbImportPacks.php).",
+				"state": "built",
+				"evidence": "The four sheet packs are seeded into OpenRegister's migration-pack store on install and upgrade (lib/Repair/SeedCmdbImportPacks.php), the import runs the stored packs and refuses an invalid one (lib/Service/Cmdb/CmdbImportPackStore.php, CmdbImportPackRules.php), GET /api/settings/cmdb-import/mapping answers per pack its source and editor link (lib/Controller/SettingsController.php), and the CMDB import section shows them (src/views/settings/sections/CmdbImportMapping.vue). Tests: tests/Unit/Service/Cmdb/CmdbImportPackStoreTest.php, tests/Unit/Repair/SeedCmdbImportPacksTest.php, tests/Unit/Controller/SettingsControllerCmdbImportMappingTest.php, tests/vitest/cmdbImportMapping.spec.js.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/cmdb-import-mapping-view",
+				"change": "2026-11-20-cmdb-import-mapping-view",
 				"requirement": [
-					"openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import :: The admin settings SHALL show the mapping the import uses (REQ-CMDB-020)",
-					"openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import :: The import SHALL run the mapping packs stored in OpenRegister (REQ-CMDB-021)"
+					"openspec/specs/cmdb-export-import :: The admin settings SHALL show the mapping the import uses (REQ-CMDB-020)",
+					"openspec/specs/cmdb-export-import :: The import SHALL run the mapping packs stored in OpenRegister (REQ-CMDB-021)"
 				],
-				"plan": "openspec/changes/cmdb-import-mapping-view"
+				"readOn": "2026-11-20"
 			},
 			"reachedOn": "",
 			"provider": "stackiq",
@@ -9496,7 +9496,7 @@
 			"feature": "landscape-import",
 			"note": "An admin sees the mapping the CMDB import uses and edits it in OpenRegister's pack editor. Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
-				"stackiq": "Building: openspec/changes/cmdb-import-mapping-view has 14 of 16 tasks ticked; the mapping packs live in OpenRegister's pack store (lib/Repair/SeedCmdbImportPacks.php)."
+				"stackiq": "The four sheet packs are seeded into OpenRegister's migration-pack store on install and upgrade (lib/Repair/SeedCmdbImportPacks.php), the import runs the stored packs and refuses an invalid one (lib/Service/Cmdb/CmdbImportPackStore.php, CmdbImportPackRules.php), GET /api/settings/cmdb-import/mapping answers per pack its source and editor link (lib/Controller/SettingsController.php), and the CMDB import section shows them (src/views/settings/sections/CmdbImportMapping.vue). Tests: tests/Unit/Service/Cmdb/CmdbImportPackStoreTest.php, tests/Unit/Repair/SeedCmdbImportPacksTest.php, tests/Unit/Controller/SettingsControllerCmdbImportMappingTest.php, tests/vitest/cmdbImportMapping.spec.js."
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {

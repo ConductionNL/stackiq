@@ -31,7 +31,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Seeds, finds and updates the CMDB import packs in OpenRegister.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	/**
@@ -107,7 +107,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
 	 * @param string $controllerClass The controller whose write methods must be guarded.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -133,7 +133,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isAvailable(): bool {
 		return $this->service() !== null;
@@ -147,7 +147,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return array<string, int>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function recordedPackIds(): array {
 		$config = $this->appConfig();
@@ -192,7 +192,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE naming the packs the store held.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function assertShippedFallbackAllowed(): void {
 		$named = [];
@@ -227,7 +227,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is missing or fails,
 	 *                             or when the pack was renamed in OpenRegister.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function find(array $shipped): ?array {
 		$service = $this->requireService();
@@ -260,7 +260,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function updateWouldRun(object $entity, array $shipped): bool {
 		return $entity->getUpdatedAt() !== null
@@ -284,7 +284,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *                             that fails because another request seeded the pack
 	 *                             first is no failure: that pack is used.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function resolve(array $shipped): array {
 		$service = $this->requireService();
@@ -332,7 +332,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the update fails otherwise.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function updateUnedited(object $service, object $entity, string $slug, array $shipped): array {
 		$id = (int)$entity->getId();
@@ -368,7 +368,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function describe(object $entity, string $slug, array $shipped, string $outcome): array {
 		$definition = self::definitionOf(entity: $entity);
@@ -393,7 +393,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is not available.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function requireService(): object {
 		$service = $this->service();
@@ -414,7 +414,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function definitionOf(object $entity): array {
 		$definition = $entity->getDefinitionArray();
@@ -435,7 +435,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the lookup fails otherwise.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function findBySlug(object $service, string $slug): ?object {
 		try {
@@ -465,7 +465,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack was renamed or the lookup fails.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function assertNotRenamed(object $service, string $slug): void {
 		$id = ($this->recordedPackIds()[$slug] ?? null);
@@ -506,7 +506,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the call fails.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function write(string $slug, string $action, callable $call): object {
 		try {
@@ -529,7 +529,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function record(string $slug, int $id): void {
 		$config = $this->appConfig();
@@ -552,7 +552,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function service(): ?object {
 		return $this->probe->service();
@@ -563,7 +563,7 @@ class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	 *
 	 * @return IAppConfig|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function appConfig(): ?IAppConfig {
 		if ($this->appConfig !== null) {

@@ -126,7 +126,7 @@ class SettingsController extends Controller {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function __construct(
 		$appName,
@@ -3489,8 +3489,8 @@ class SettingsController extends Controller {
 	 *
 	 * @auth admin-only the import's configuration; the import writes with RBAC and multitenancy off, so its view keeps that posture.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function getCmdbImportMapping(): JSONResponse {
 		$profile = ($this->cmdbImportProfile ?? (new HelperFactory())->cmdbImportProfile(container: $this->container));
@@ -3552,7 +3552,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return string|null Null when the pack is not stored in OpenRegister or the link cannot be built.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	private function packEditUrl(?int $packId): ?string {
 		if ($packId === null || $this->urlGenerator === null) {
@@ -3582,7 +3582,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	private static function boundedReason(string $message): string {
 		$firstLine = strtok($message, "\r\n");

@@ -13,7 +13,7 @@
  * the `loaded` event the section takes its sheet names from, and the error
  * state of a 503.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

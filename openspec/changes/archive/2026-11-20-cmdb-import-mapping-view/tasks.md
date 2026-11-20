@@ -89,5 +89,6 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **files**: `openspec/specs/cmdb-export-import/spec.md`
 - **acceptance_criteria**:
   - GIVEN the change is archived WHEN this was the last open change of `cmdb-export-import` THEN the canonical spec's front matter `status:` and its `**Status**` line read `done` again, and the change's entry links the archive
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
+  > Done 20 Nov: REQ-CMDB-020 to 022 added and REQ-CMDB-005 and 014 replaced in `openspec/specs/cmdb-export-import/spec.md`, each block checked identical to the delta and every earlier requirement heading kept. The change's entry links the archive. `status:` stays `in-progress` because `cmdb-import-archive-reconciliation` is still open; it carries the same REQ-CMDB-014 block, so archiving it later keeps this one whole.

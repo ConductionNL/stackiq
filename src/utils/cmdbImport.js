@@ -1261,7 +1261,7 @@ export function reportRows(rows) {
  * The URL of the mapping overview endpoint.
  *
  * @return {string} The URL
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function mappingUrl() {
 	return generateUrl('/apps/stackiq/api/settings/cmdb-import/mapping')
@@ -1273,7 +1273,7 @@ export function mappingUrl() {
  * @param {object} options The options
  * @param {object} options.http An axios-like client with get
  * @return {Promise<{profile: object, packs: Array<object>}>} The server's answer
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export async function loadCmdbMapping({ http }) {
 	const response = await http.get(mappingUrl())
@@ -1288,7 +1288,7 @@ export async function loadCmdbMapping({ http }) {
  *
  * @param {object|null} mapping The mapping endpoint's answer, or null
  * @return {Array<string>} The sheet names, never empty
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function mappingSheetNames(mapping) {
 	const sheets = mapping?.profile?.sheets
@@ -1307,7 +1307,7 @@ export function mappingSheetNames(mapping) {
  *
  * @param {object|null} mapping The mapping endpoint's answer, or null
  * @return {string|null} The sheet name, or null
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function mappingArchiveSheet(mapping) {
 	const profile = mapping?.profile
@@ -1324,7 +1324,7 @@ export function mappingArchiveSheet(mapping) {
  *
  * @param {Array<string>} names The sheet names
  * @return {string} The list
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function quotedSheetList(names) {
 	return names.map((name) => `"${name}"`).join(', ')
@@ -1338,7 +1338,7 @@ export function quotedSheetList(names) {
  * @param {Array<string>} names The sheet names, from mappingSheetNames()
  * @param {number} maxFileBytes The default size limit in bytes
  * @return {string} The text
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function fileHelpText(names, maxFileBytes) {
 	const values = {
@@ -1368,7 +1368,7 @@ export function fileHelpText(names, maxFileBytes) {
  * @param {Array<string>} names The sheet names, from mappingSheetNames()
  * @param {string|null} [archive] The archive sheet, from mappingArchiveSheet(); the shipped name when left out, null when the profile names none
  * @return {string} The text
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function sheetsReadText(names, archive = mappingArchiveSheet(null)) {
@@ -1472,7 +1472,7 @@ export function missingRecordsTexts(archive = mappingArchiveSheet(null)) {
  *
  * @param {string} target The target as the profile names it (module, manufacturer, …)
  * @return {string} The translated name, or the target itself when it is unknown
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packTargetLabel(target) {
 	switch (target) {
@@ -1496,7 +1496,7 @@ export function packTargetLabel(target) {
  *
  * @param {object} pack One entry of the endpoint's `packs`
  * @return {Array<{source: string, target: string, required: boolean, transform: string}>} One row per mapping, in the pack's order
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packFieldRows(pack) {
 	const mappings = Array.isArray(pack?.fieldMappings) ? pack.fieldMappings : []
@@ -1553,7 +1553,7 @@ function lookupSize(map) {
  *
  * @param {object} pack One entry of the endpoint's `packs`
  * @return {Array<{key: string, label: string, values: Array<string>}>} One row per rule that has values
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packWriteRules(pack) {
 	const pairs = (value) =>
@@ -1599,7 +1599,7 @@ export function packWriteRules(pack) {
  *
  * @param {string} source The pack's `source` from the endpoint (`openregister` or `file`)
  * @return {string} The translated name, or the source itself when it is unknown
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packSourceLabel(source) {
 	switch (source) {
@@ -1652,7 +1652,7 @@ function storedPackVersionText(versions) {
  *
  * @param {object} pack One entry of the endpoint's `packs`
  * @return {string} The text, empty when the pack names no version
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packVersionText(pack) {
 	const versions = packVersions(pack)
@@ -1672,7 +1672,7 @@ export function packVersionText(pack) {
  *
  * @param {unknown} url The address the server gave
  * @return {string|null} The address, or null for no link
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function editorUrl(url) {
 	if (typeof url !== 'string') {
@@ -1687,7 +1687,7 @@ export function editorUrl(url) {
  *
  * @param {object} pack One entry of the endpoint's `packs`
  * @return {string|null} The address, or null for no link
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packEditUrl(pack) {
 	if (pack?.editable !== true) {
