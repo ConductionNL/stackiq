@@ -68,6 +68,7 @@ export function isPublishableType(objectType) {
  *
  * @param {object} entry A catalogue object.
  * @return {string} The uuid, or ''.
+ * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function entryId(entry) {
 	if (!entry || typeof entry !== 'object') {

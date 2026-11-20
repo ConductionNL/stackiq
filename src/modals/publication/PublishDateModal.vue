@@ -40,6 +40,11 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog } from '@nextcloud/vue'
 
+/**
+ * Asks for the moment a catalogue entry is published and emits it as an ISO-8601 string.
+ *
+ * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ */
 export default {
 	name: 'PublishDateModal',
 	components: { NcButton, NcDialog },
