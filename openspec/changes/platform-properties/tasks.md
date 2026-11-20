@@ -54,8 +54,9 @@
   - GIVEN an administrator WHEN they add a webhook with an address and the events "Applicatie gewijzigd" and "Contract gewijzigd" THEN it is created through OpenRegister's webhooks API, filtered to the module and contract schemas
   - GIVEN a listed webhook WHEN the administrator edits or removes it from its actions menu THEN OpenRegister holds the new state
   - GIVEN no webhook WHEN the section loads THEN it shows an empty state with "Add webhook"
-- [ ] Implement
-- [ ] Test (vitest `catalogueWebhooks.spec.js`)
+- [x] Implement
+- [x] Test (vitest `catalogueWebhooks.spec.js`)
+  > Built 20 Nov: `src/utils/catalogueWebhooks.js` reads the catalogue register and the module and contract schema ids from the voorzieningen config. It lists the OpenRegister webhooks whose `filters.register` is the catalogue register, and builds a webhook on `ObjectCreatedEvent` and `ObjectUpdatedEvent`, filtered to the register and the chosen events' schemas ("Application changed", "Contract changed"). `CatalogueWebhooks.vue` (in StackiqSettings after the service desk exchange) lists address, events and last delivery (the later of the last success and failure). Its actions menu edits and removes through `/apps/openregister/api/webhooks`; without webhooks it shows an empty state with "Add webhook". `src/modals/webhook/EditWebhookModal.vue` takes the address, a name and the events. Test: `catalogueWebhooks.spec.js` (7).
 
 ### Task 6: Matrix
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md
