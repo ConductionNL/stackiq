@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "software-review": {
+        "version": "0.1.5",
         "properties": {
           "auteur": {
             "type": "string",
