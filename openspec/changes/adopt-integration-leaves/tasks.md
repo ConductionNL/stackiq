@@ -87,6 +87,11 @@
   `endDate`; deck card create-and-link on a pending review; bookmark
   link + render on a module detail page — per the @e2e-tagged scenarios
   (gate-19 traceability).
+  - Written: `tests/e2e/workflows/integration-leaves.spec.ts` (one test per
+    @e2e scenario; links made through OpenRegister's contacts/new,
+    integrations/deck and an `or:<uuid>`-tagged bookmark; a leaf whose app
+    is not installed is skipped with that reason). Not run against a live
+    instance yet, so the box stays open.
 
 ## 5. Spec + docs
 

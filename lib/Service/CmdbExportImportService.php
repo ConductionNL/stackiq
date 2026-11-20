@@ -2312,6 +2312,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @param array<string, string> $lens The lens, [] for working objects.
 	 *
 	 * @return array<int, object>
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function searchPage(array $query, array $lens): array {
 		$page = $this->coordinates()['objectService']->searchObjects(
@@ -3181,6 +3182,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @param array<string, mixed> $query The search, with its lens.
 	 *
 	 * @return array<int, object>
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function lensResults(array $coordinates, array $query): array {
 		$results = $coordinates['objectService']->searchObjects(

@@ -415,7 +415,9 @@ export default {
 		/**
 		 * Copy settings, forwarded to `CnIndexPage` (manifest `config.copy`):
 		 * `include` lists the links a copy may take along, which the single and
-		 * mass copy dialogs then offer, ticked.
+		 * mass copy dialogs then offer, ticked; `overrides` holds the field
+		 * values a copy starts with (the publication dates cleared, so a copy is
+		 * never published with its source).
 		 *
 		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
 		 */

@@ -1,10 +1,9 @@
-# features-roadmap Specification (delta)
+# features-roadmap Specification
 
 ## Purpose
-
 The page where a user sees what stackiq can do, what is in beta, what is coming and which extensions can be added. Covers rows ins-feature-roadmap and the visible half of ops-plugins.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: The Features and roadmap page groups the app's features by status (REQ-FRM-001)
 

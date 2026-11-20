@@ -10,8 +10,8 @@
   - GIVEN the merged register WHEN it loads THEN `element.attributes` has name, dataType, isKey and description, and `relation` has both cardinality enums
   - GIVEN the fragment WHEN it is compared with development THEN `usage`, `element` and `relation` carry bumped versions
   - GIVEN a fresh install WHEN the seed runs THEN the two own entities, their relation and the usage link exist
-- [ ] Implement
-- [ ] Test (PHPUnit `DataModelRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `DataModelRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Data model index and entity page
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
@@ -21,7 +21,7 @@
   - GIVEN the add dialog WHEN it opens THEN it asks only for name, documentation and attributes and creates type BusinessObject with origin drawn
   - GIVEN the effective menu WHEN it renders THEN Data model sits under the Architecture group
   - GIVEN an entity page WHEN it renders THEN "Applications that hold this data" lists usages filtered on `dataEntities`
-- [ ] Implement
+- [x] Implement
 - [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`)
 
 ### Task 3: Relations drawn around an entity
@@ -31,7 +31,7 @@
   - GIVEN an imported and a drawn entity WHEN their relations load THEN both are found through the identifier field
   - GIVEN a relation with cardinalities WHEN it is drawn THEN the edge label holds its name and both cardinalities
   - GIVEN the graph WHEN it renders THEN every colour prop is a CSS variable and a text table lists the same relations
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario)
 
 ### Task 4: Attributes with keys
@@ -40,7 +40,7 @@
 - **acceptance_criteria**:
   - GIVEN a drawn entity WHEN its page renders THEN key attributes come first, marked key in text, and can be edited
   - GIVEN an imported entity WHEN its page renders THEN no edit control shows and the notice about the GGM file does
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `dataEntityAttributes.spec.js`, Playwright new entity scenario)
 
 ### Task 5: Data entities on the usage page
@@ -48,7 +48,7 @@
 - **files**: `src/manifest.d/usages.json`
 - **acceptance_criteria**:
   - GIVEN a usage page WHEN it is edited THEN the data entities picker offers business objects only, and the saved list shows on the page
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright usage link scenario)
 
 ### Task 6: Documentation and translations
@@ -59,6 +59,11 @@
   - GIVEN a Dutch instance WHEN the Data model page renders THEN every new label reads in Dutch
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+
+## Round 2 notes
+
+- The Playwright spec `tests/e2e/workflows/data-model.spec.ts` now exists, with the four `@e2e` scenarios (find an own entity, the relation to Melder, the usage link, a new entity with a key). The Playwright Test boxes stay open until it has run against a live instance.
+- Task 6: the feature page and the English and Dutch strings are in place; the screenshots need a live instance and are still to be captured.
 
 ## Verification
 

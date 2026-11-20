@@ -197,7 +197,11 @@ function setStores(state = {}) {
 async function mountView() {
 	const wrapper = mount(ViewObject, {
 		attachTo: document.body,
-		global: { stubs, directives: { tooltip: {} } },
+		global: {
+			stubs,
+			directives: { tooltip: {} },
+			mocks: { n: (app, one, many, count, vars = {}) => String(count === 1 ? one : many).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) },
+		},
 	})
 	await flushPromises()
 	return wrapper
@@ -720,7 +724,7 @@ describe('ViewObject mounted: an existing object', () => {
 		const wrapper = await mountView()
 		expect(wrapper.findComponent({ name: 'NcCounterBubble' }).exists()).toBe(false)
 		const loading = wrapper.findAllComponents({ name: 'NcEmptyContent' })
-		expect(loading.map((c) => c.props('title'))).toEqual(['Loading files...'])
+		expect(loading.map((c) => c.props('title'))).toEqual(['Loading files…'])
 
 		objectStore.state.loading = false
 		objectStore.state.files = []

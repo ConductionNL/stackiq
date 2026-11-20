@@ -28,19 +28,27 @@ import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vu
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
+import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
+import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationExportAction from './components/organisations/OrganisationExportAction.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import PublicationAction from './components/publication/PublicationAction.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
+import UsageClassificationPanel from './components/usages/UsageClassificationPanel.vue'
+import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
+import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
+import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
@@ -124,6 +132,14 @@ export default {
 	ArchitectureViewEditor,
 	ViewVersionCompare,
 
+	// The relations of a data entity drawn around it with a text table, and its
+	// attributes with keys, edited on an own entity
+	// (architecture-data-model-and-ggm D4, D5): no built-in widget reads a
+	// relation by ArchiMate identifier at either end or edits one list
+	// property of an object in place.
+	DataEntityRelations,
+	DataEntityAttributes,
+
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
 	// widget rendering but not the multi-tab navigation pattern + ArchiMate
@@ -172,11 +188,25 @@ export default {
 	// it reads the module and its versions, which no built-in widget combines.
 	ProductRoadmap,
 
+	// Change an application into a service or system software and back
+	// (landscape-change-entry-type), a bodyWidgets section on ModuleDetail: it
+	// previews the change through stackiq's type-change route before confirming,
+	// which no built-in widget does.
+	ChangeEntryTypePanel,
+
 	// End of support of the version a usage runs and the vulnerabilities of its
 	// application, next to the risk score on the usage page
 	// (lifecycle-application-value-assessment): it joins the usage, its version
 	// and the vulnerabilities, which no built-in widget does.
 	UsageRiskSignals,
+	UsageClassificationPanel,
+	ModuleClassificationSummary,
+
+	// The technology components an application in use runs on, with each one's
+	// end of support and the worst support state one level down
+	// (operations-technology-components D5): a state derived per row is not
+	// something a built-in object list shows.
+	UsageRunsOnPanel,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
@@ -193,6 +223,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
+	ClaimedUsageList,
+	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
+	ClaimAnswerNotice,
 
 	// The Merged into banner on a merged application's page
 	// (operations-record-reconciliation D4): it shows the survivor only when

@@ -39,6 +39,13 @@ final class ConnectionSuggestionStore {
 	public array $saves = [];
 
 	/**
+	 * When set, saveObject throws this instead of saving.
+	 *
+	 * @var \Throwable|null
+	 */
+	public ?\Throwable $saveFailure = null;
+
+	/**
 	 * Add an object.
 	 *
 	 * @param string               $uuid   Its uuid.
@@ -105,6 +112,10 @@ final class ConnectionSuggestionStore {
 		);
 		$service->method('saveObject')->willReturnCallback(
 			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				if ($this->saveFailure !== null) {
+					throw $this->saveFailure;
+				}
+
 				$extend = $options->extend ?? [];
 				$register = $options->target->register;
 				$schema = $options->target->schema;
