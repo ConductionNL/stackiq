@@ -25,6 +25,7 @@ import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
+import ConnectionSuggestionsPanel from './components/connections/ConnectionSuggestionsPanel.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
@@ -39,6 +40,7 @@ import OrganisationExportAction from './components/organisations/OrganisationExp
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
+import PublicationAction from './components/publication/PublicationAction.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
@@ -46,6 +48,8 @@ import UsageClassificationPanel from './components/usages/UsageClassificationPan
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
+import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
+import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
@@ -130,6 +134,14 @@ export default {
 	ArchitectureViewEditor,
 	ViewVersionCompare,
 
+	// The relations of a data entity drawn around it with a text table, and its
+	// attributes with keys, edited on an own entity
+	// (architecture-data-model-and-ggm D4, D5): no built-in widget reads a
+	// relation by ArchiMate identifier at either end or edits one list
+	// property of an object in place.
+	DataEntityRelations,
+	DataEntityAttributes,
+
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
 	// widget rendering but not the multi-tab navigation pattern + ArchiMate
@@ -202,6 +214,11 @@ export default {
 	// (operations-technology-components D5): a state derived per row is not
 	// something a built-in object list shows.
 	UsageRunsOnPanel,
+
+	// The connections suggested for a usage (connections-derived-dependencies D3):
+	// derived on the server from the organisation's landscape and earlier
+	// usages, with accept and dismiss, which no built-in widget does.
+	ConnectionSuggestionsPanel,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,
@@ -323,6 +340,15 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+
+	// --- Publish and withdraw on an entry's page (REQ-ODP-011). ---
+	// ModuleDetail's `actionsComponent`: the publication badge plus Publish
+	// (now or on a date) and Withdraw, calling stackiq's guarded publication
+	// endpoint. No built-in header action can call a non-object-service
+	// endpoint per record and show its refusal, so it stays custom.
+	// @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+	PublicationAction,
+
 	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
 	// The library's roadmap and store pages are one page type each; this puts
 	// both under one page as two tabs, so the footer Store entry and the

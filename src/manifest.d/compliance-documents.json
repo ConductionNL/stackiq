@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "sharing-compliance-documents: the compliance documents organisations publish about an application (DPIA, processing agreement, pentest report, assurance report, certificate, ENSIA statement), each with an audience. The schema's read rules decide who reads a document (public, government, or the named organisations), so these pages list only what the user may read. The menu entry is a child of Applications (ADR-097: no new top-level entry). The list on the application page sorts on validity so the documents that expire first come first; a relative 'expiring within 90 days' quick filter needs a relative-date token the manifest filter does not have.",
+	"_note": "sharing-compliance-documents: the compliance documents organisations publish about an application (DPIA, processing agreement, pentest report, assurance report, certificate, ENSIA statement), each with an audience. The schema's read rules decide who reads a document (public, government, or the named organisations), so these pages list only what the user may read. The menu entry is a child of Applications (ADR-097: no new top-level entry). The list on the application page sorts on validity so the documents that expire first come first. 'Expiring within 90 days' filters on the materialised expiresWithin90Days calculation (REQ-SCD-001), which OpenRegister's temporal sweep keeps current because it reads today.",
 	"menu": [
 		{
 			"id": "Modules",
@@ -36,7 +36,8 @@
 					{ "label": "Pentest reports", "filter": { "documentType": "pentest report" } },
 					{ "label": "Assurance reports", "filter": { "documentType": "assurance report" } },
 					{ "label": "Certificates", "filter": { "documentType": "certificate" } },
-					{ "label": "ENSIA statements", "filter": { "documentType": "ENSIA statement" } }
+					{ "label": "ENSIA statements", "filter": { "documentType": "ENSIA statement" } },
+					{ "label": "Expiring within 90 days", "filter": { "expiresWithin90Days": true } }
 				],
 				"detailRoute": "ComplianceDocumentDetail",
 				"sidebar": { "enabled": true, "showMetadata": true },

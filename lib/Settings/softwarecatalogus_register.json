@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.6.4",
-    "changelog": "2.6.4: usage gains providerResponse, providerResponseAt and providerResponseBy, the supplier's answer to a claimed usage, written by Stackiq when the supplier accepts or declines it (supplier-accepts-claimed-usage); written as 2.6.2 on its branch, moved past development's 2.6.3 at merge time. The fragment that carries usage's effective version (operations-technology-components.json) moves to 1.6.1, so the new fields deploy on an install that already holds 1.6.0. 2.6.3: joins two 2.6.2 lines, both kept. module 0.3.15 shows its type (Application or System software) on the form, for landscape-change-entry-type (register.d/landscape-change-entry-type.json); written as 2.6.0 on its branch, moved past development's 2.6.1 at merge time. 2.6.1: the attestationRound (0.1.0) and attestationRequest (0.1.0) schemas join the stackiq register (2.1.1), for confirmation rounds in which owners confirm or correct their entries by a deadline (landscape-owner-attestation). 2.6.0: catalogContract gains the Expiring status, set and cleared by the daily contract job inside the notice window, the approach and extend transitions and an expire transition from Expiring as well (contracts-expiry-and-owner); catalogContract version 0.1.7, because OpenRegister does not compare configuration and a lifecycle-only edit would never deploy. 2.5.10: the complianceDocument schema (0.1.0) joins the stackiq register, for the compliance documents an organisation publishes about a product (a DPIA, a processing agreement, a pentest report) with an audience that decides who reads them: public, every government group, or only the organisations it is shared with; the publishing organisation always reads and edits its own (sharing-compliance-documents). 2.5.9: the contract-expiry warning on catalogContract (0.1.6) never fired: its filter asked for status Actief, a value no contract has held since the status enum became English, and OpenRegister compares strictly. It now matches status in Active and Expiring (Expiring is the status contracts-expiry-and-owner adds; until then it matches nothing) with the end date within 90 days, and names endDate in dedupeFields so a contract warns once per end date and again when it is extended into the window. The first daily run after the upgrade warns about every contract already in the window (contracts-expiry-warning-fires). 2.5.8: schema properties no longer carry null validation keywords (minimum, maximum, multipleOf, minItems, maxItems, minLength, maxLength). OpenRegister's JSON Schema validator rejects a null there ('minimum must contain a valid number'), so no object could be created on a schema with hardValidation, such as element, and the E2E seed failed. Bumped: catalogService (0.2.2), contactPerson (0.0.29), organization (0.5.3), usage (1.5.3), element (0.0.12), view (0.0.8), model (0.0.44), property-definition (0.0.9), relation (0.0.9), module (0.3.4). The loader keeps the highest version per schema, so the fragments that carry the effective version of catalogService and organization (publication-field-rules.json: 0.2.3, 0.5.4) and of usage and module (topdesk-cmdb-import.json: 1.5.7, 0.3.9) are bumped too; an equal version is skipped on upgrade. 2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files. And: the technologyComponent schema (0.1.0) joins the stackiq register, for the servers, databases, network devices and other technology an organisation runs, with a lifecycle status and an end of support the end-of-life sync stamps from the software version it runs (operations-technology-components). 2.6.1: the attestationRound (0.1.0) and attestationRequest (0.1.0) schemas join the stackiq register (2.1.1), for confirmation rounds in which owners confirm or correct their entries by a deadline (landscape-owner-attestation). 2.6.0: catalogContract gains the Expiring status, set and cleared by the daily contract job inside the notice window, the approach and extend transitions and an expire transition from Expiring as well (contracts-expiry-and-owner); catalogContract version 0.1.7, because OpenRegister does not compare configuration and a lifecycle-only edit would never deploy. 2.5.10: the complianceDocument schema (0.1.0) joins the stackiq register, for the compliance documents an organisation publishes about a product (a DPIA, a processing agreement, a pentest report) with an audience that decides who reads them: public, every government group, or only the organisations it is shared with; the publishing organisation always reads and edits its own (sharing-compliance-documents). 2.5.9: the contract-expiry warning on catalogContract (0.1.6) never fired: its filter asked for status Actief, a value no contract has held since the status enum became English, and OpenRegister compares strictly. It now matches status in Active and Expiring (Expiring is the status contracts-expiry-and-owner adds; until then it matches nothing) with the end date within 90 days, and names endDate in dedupeFields so a contract warns once per end date and again when it is extended into the window. The first daily run after the upgrade warns about every contract already in the window (contracts-expiry-warning-fires). 2.5.8: schema properties no longer carry null validation keywords (minimum, maximum, multipleOf, minItems, maxItems, minLength, maxLength). OpenRegister's JSON Schema validator rejects a null there ('minimum must contain a valid number'), so no object could be created on a schema with hardValidation, such as element, and the E2E seed failed. Bumped: catalogService (0.2.2), contactPerson (0.0.29), organization (0.5.3), usage (1.5.3), element (0.0.12), view (0.0.8), model (0.0.44), property-definition (0.0.9), relation (0.0.9), module (0.3.4). The loader keeps the highest version per schema, so the fragments that carry the effective version of catalogService and organization (publication-field-rules.json: 0.2.3, 0.5.4) and of usage and module (topdesk-cmdb-import.json: 1.5.7, 0.3.9) are bumped too; an equal version is skipped on upgrade. 2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.6.6",
+    "changelog": "2.6.6: the architectureDecision schema (0.1.0) joins the stackiq register, for the architecture decisions an organisation records, with a review lifecycle guarded by OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard and notifications to the reviewer and the owners (architecture-decision-register). Written as 2.5.10 on its branch, moved past development's 2.6.5 at merge time. 2.6.5: compliancy gains result (meets, does-not-meet; default meets), so a claim can record that an application does not meet a standard or BIO measure (bio-measures-shipped-and-not-met). Written as 2.6.0 on its branch, moved past development's 2.6.4 at merge time. 2.6.4: usage gains providerResponse, providerResponseAt and providerResponseBy, the supplier's answer to a claimed usage, written by Stackiq when the supplier accepts or declines it (supplier-accepts-claimed-usage); written as 2.6.2 on its branch, moved past development's 2.6.3 at merge time. The fragment that carries usage's effective version (operations-technology-components.json) moves to 1.6.1, so the new fields deploy on an install that already holds 1.6.0. 2.6.3: joins two 2.6.2 lines, both kept. module 0.3.15 shows its type (Application or System software) on the form, for landscape-change-entry-type (register.d/landscape-change-entry-type.json); written as 2.6.0 on its branch, moved past development's 2.6.1 at merge time. 2.6.1: the attestationRound (0.1.0) and attestationRequest (0.1.0) schemas join the stackiq register (2.1.1), for confirmation rounds in which owners confirm or correct their entries by a deadline (landscape-owner-attestation). 2.6.0: catalogContract gains the Expiring status, set and cleared by the daily contract job inside the notice window, the approach and extend transitions and an expire transition from Expiring as well (contracts-expiry-and-owner); catalogContract version 0.1.7, because OpenRegister does not compare configuration and a lifecycle-only edit would never deploy. 2.5.10: the complianceDocument schema (0.1.0) joins the stackiq register, for the compliance documents an organisation publishes about a product (a DPIA, a processing agreement, a pentest report) with an audience that decides who reads them: public, every government group, or only the organisations it is shared with; the publishing organisation always reads and edits its own (sharing-compliance-documents). 2.5.9: the contract-expiry warning on catalogContract (0.1.6) never fired: its filter asked for status Actief, a value no contract has held since the status enum became English, and OpenRegister compares strictly. It now matches status in Active and Expiring (Expiring is the status contracts-expiry-and-owner adds; until then it matches nothing) with the end date within 90 days, and names endDate in dedupeFields so a contract warns once per end date and again when it is extended into the window. The first daily run after the upgrade warns about every contract already in the window (contracts-expiry-warning-fires). 2.5.8: schema properties no longer carry null validation keywords (minimum, maximum, multipleOf, minItems, maxItems, minLength, maxLength). OpenRegister's JSON Schema validator rejects a null there ('minimum must contain a valid number'), so no object could be created on a schema with hardValidation, such as element, and the E2E seed failed. Bumped: catalogService (0.2.2), contactPerson (0.0.29), organization (0.5.3), usage (1.5.3), element (0.0.12), view (0.0.8), model (0.0.44), property-definition (0.0.9), relation (0.0.9), module (0.3.4). The loader keeps the highest version per schema, so the fragments that carry the effective version of catalogService and organization (publication-field-rules.json: 0.2.3, 0.5.4) and of usage and module (topdesk-cmdb-import.json: 1.5.7, 0.3.9) are bumped too; an equal version is skipped on upgrade. 2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files. And: the technologyComponent schema (0.1.0) joins the stackiq register, for the servers, databases, network devices and other technology an organisation runs, with a lifecycle status and an end of support the end-of-life sync stamps from the software version it runs (operations-technology-components). 2.6.1: the attestationRound (0.1.0) and attestationRequest (0.1.0) schemas join the stackiq register (2.1.1), for confirmation rounds in which owners confirm or correct their entries by a deadline (landscape-owner-attestation). 2.6.0: catalogContract gains the Expiring status, set and cleared by the daily contract job inside the notice window, the approach and extend transitions and an expire transition from Expiring as well (contracts-expiry-and-owner); catalogContract version 0.1.7, because OpenRegister does not compare configuration and a lifecycle-only edit would never deploy. 2.5.10: the complianceDocument schema (0.1.0) joins the stackiq register, for the compliance documents an organisation publishes about a product (a DPIA, a processing agreement, a pentest report) with an audience that decides who reads them: public, every government group, or only the organisations it is shared with; the publishing organisation always reads and edits its own (sharing-compliance-documents). 2.5.9: the contract-expiry warning on catalogContract (0.1.6) never fired: its filter asked for status Actief, a value no contract has held since the status enum became English, and OpenRegister compares strictly. It now matches status in Active and Expiring (Expiring is the status contracts-expiry-and-owner adds; until then it matches nothing) with the end date within 90 days, and names endDate in dedupeFields so a contract warns once per end date and again when it is extended into the window. The first daily run after the upgrade warns about every contract already in the window (contracts-expiry-warning-fires). 2.5.8: schema properties no longer carry null validation keywords (minimum, maximum, multipleOf, minItems, maxItems, minLength, maxLength). OpenRegister's JSON Schema validator rejects a null there ('minimum must contain a valid number'), so no object could be created on a schema with hardValidation, such as element, and the E2E seed failed. Bumped: catalogService (0.2.2), contactPerson (0.0.29), organization (0.5.3), usage (1.5.3), element (0.0.12), view (0.0.8), model (0.0.44), property-definition (0.0.9), relation (0.0.9), module (0.3.4). The loader keeps the highest version per schema, so the fragments that carry the effective version of catalogService and organization (publication-field-rules.json: 0.2.3, 0.5.4) and of usage and module (topdesk-cmdb-import.json: 1.5.7, 0.3.9) are bumped too; an equal version is skipped on upgrade. 2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -841,7 +841,8 @@
           "attestationRound",
           "attestationRequest",
           "complianceDocument",
-          "technologyComponent"
+          "technologyComponent",
+          "architectureDecision"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -917,6 +918,10 @@
               "autoCreateTable": true
             },
             "technologyComponent": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "architectureDecision": {
               "magicMapping": true,
               "autoCreateTable": true
             }
@@ -7184,7 +7189,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.12",
+        "version": "0.0.13",
         "omschrijving": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7270,6 +7275,16 @@
             "title": "Evidence (Nextcloud Files)",
             "visible": true,
             "facetable": false
+          },
+          "result": {
+            "description": "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.",
+            "type": "string",
+            "enum": ["meets", "does-not-meet"],
+            "default": "meets",
+            "order": 7,
+            "title": "Result",
+            "visible": true,
+            "facetable": true
           }
         },
         "archive": [],
@@ -8147,6 +8162,583 @@
           ]
         }
       },
+      "architectureDecision": {
+        "uri": null,
+        "slug": "architectureDecision",
+        "title": "Architecture decision",
+        "description": "An architecture decision of the organisation: its context, the decision, the options not chosen and the consequences, reviewed by a second person.",
+        "version": "0.1.0",
+        "icon": "ScaleBalance",
+        "required": [
+          "title"
+        ],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "configuration": {
+          "objectNameField": "title",
+          "objectDescriptionField": "decision",
+          "allowFiles": true,
+          "autoPublish": false,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "final": [
+              "rejected",
+              "superseded",
+              "deprecated"
+            ],
+            "transitions": {
+              "submit": {
+                "from": [
+                  "draft"
+                ],
+                "to": "in review",
+                "requires": "OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard",
+                "description": "Submit the decision to its reviewer."
+              },
+              "accept": {
+                "from": [
+                  "in review"
+                ],
+                "to": "accepted",
+                "requires": "OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard",
+                "description": "Accept the decision."
+              },
+              "reject": {
+                "from": [
+                  "in review"
+                ],
+                "to": "rejected",
+                "requires": "OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard",
+                "description": "Reject the decision."
+              },
+              "rework": {
+                "from": [
+                  "in review",
+                  "rejected"
+                ],
+                "to": "draft",
+                "description": "Send the decision back to draft."
+              },
+              "supersede": {
+                "from": [
+                  "accepted"
+                ],
+                "to": "superseded",
+                "requires": "OCA\\Stackiq\\Lifecycle\\ArchitectureDecisionReviewGuard",
+                "description": "Mark the decision as superseded by a later accepted decision."
+              },
+              "deprecate": {
+                "from": [
+                  "accepted"
+                ],
+                "to": "deprecated",
+                "description": "Mark the decision as no longer in force."
+              }
+            }
+          },
+          "x-openregister-notifications": {
+            "review-requested": {
+              "trigger": {
+                "type": "updated",
+                "condition": {
+                  "field": "status",
+                  "operator": "equals",
+                  "value": "in review",
+                  "from": "draft"
+                }
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "field",
+                  "field": "reviewer"
+                }
+              ],
+              "subject": {
+                "nl": "Architectuurbesluit ter beoordeling: {{title}}",
+                "en": "Architecture decision to review: {{title}}"
+              }
+            },
+            "review-accepted": {
+              "trigger": {
+                "type": "updated",
+                "condition": {
+                  "field": "status",
+                  "operator": "equals",
+                  "value": "accepted",
+                  "from": "in review"
+                }
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "object-acl",
+                  "permission": "manage"
+                }
+              ],
+              "subject": {
+                "nl": "Architectuurbesluit geaccepteerd: {{title}}",
+                "en": "Architecture decision accepted: {{title}}"
+              }
+            },
+            "review-rejected": {
+              "trigger": {
+                "type": "updated",
+                "condition": {
+                  "field": "status",
+                  "operator": "equals",
+                  "value": "rejected",
+                  "from": "in review"
+                }
+              },
+              "enabled": true,
+              "channels": [
+                "nc-notification",
+                "email"
+              ],
+              "recipients": [
+                {
+                  "kind": "object-acl",
+                  "permission": "manage"
+                }
+              ],
+              "subject": {
+                "nl": "Architectuurbesluit afgewezen: {{title}}",
+                "en": "Architecture decision rejected: {{title}}"
+              }
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            {
+              "group": "vng-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-users",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-admins",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "ambtenaar",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            {
+              "group": "vng-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-users",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-admins",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "ambtenaar",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            {
+              "group": "vng-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-users",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "software-catalog-admins",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "ambtenaar",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        },
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "A short name for the decision.",
+            "maxLength": 255,
+            "order": 1,
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "context": {
+            "type": "string",
+            "format": "text",
+            "title": "Context",
+            "description": "Why a decision is needed.",
+            "order": 2,
+            "facetable": false
+          },
+          "decision": {
+            "type": "string",
+            "format": "text",
+            "title": "Decision",
+            "description": "What was decided.",
+            "order": 3,
+            "facetable": false
+          },
+          "alternatives": {
+            "type": "array",
+            "title": "Alternatives",
+            "description": "The options that were not chosen, each with the reason.",
+            "order": 4,
+            "facetable": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "option": {
+                  "type": "string",
+                  "title": "Option",
+                  "description": "An option that was considered and not chosen."
+                },
+                "reasonRejected": {
+                  "type": "string",
+                  "title": "Reason rejected",
+                  "description": "Why this option was not chosen."
+                }
+              },
+              "required": [
+                "option"
+              ]
+            }
+          },
+          "consequences": {
+            "type": "string",
+            "format": "text",
+            "title": "Consequences",
+            "description": "What follows from the decision.",
+            "order": 5,
+            "facetable": false
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "application",
+              "data",
+              "integration",
+              "infrastructure",
+              "security",
+              "standards"
+            ],
+            "x-enum-labels": {
+              "application": "Application",
+              "data": "Data",
+              "integration": "Integration",
+              "infrastructure": "Infrastructure",
+              "security": "Security",
+              "standards": "Standards"
+            },
+            "title": "Category",
+            "description": "The architecture area the decision is about.",
+            "facetable": true,
+            "order": 6,
+            "table": {
+              "default": true
+            }
+          },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "x-enum-labels": {
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High"
+            },
+            "title": "Impact",
+            "description": "How far the decision reaches.",
+            "facetable": true,
+            "order": 7,
+            "table": {
+              "default": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "in review",
+              "accepted",
+              "rejected",
+              "superseded",
+              "deprecated"
+            ],
+            "x-enum-labels": {
+              "draft": "Draft",
+              "in review": "In review",
+              "accepted": "Accepted",
+              "rejected": "Rejected",
+              "superseded": "Superseded",
+              "deprecated": "Deprecated"
+            },
+            "default": "draft",
+            "title": "Status",
+            "description": "Where the decision stands in its review.",
+            "facetable": true,
+            "order": 8,
+            "table": {
+              "default": true
+            }
+          },
+          "reviewer": {
+            "type": "string",
+            "title": "Reviewer",
+            "description": "The Nextcloud user id of the colleague who reviews the decision. Required to submit it.",
+            "order": 9,
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "decidedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Decided on",
+            "description": "The date the decision was accepted.",
+            "order": 10,
+            "facetable": false
+          },
+          "applications": {
+            "type": "array",
+            "title": "Applications in use",
+            "description": "The applications in use the decision affects.",
+            "order": 11,
+            "facetable": false,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/usage"
+            }
+          },
+          "elements": {
+            "type": "array",
+            "title": "Elements",
+            "description": "The GEMMA reference components, standards or other elements the decision affects.",
+            "order": 12,
+            "facetable": false,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/element"
+            }
+          },
+          "supersedes": {
+            "type": "object",
+            "title": "Supersedes",
+            "description": "The earlier decision this decision replaces.",
+            "order": 13,
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/architectureDecision"
+          },
+          "supersededBy": {
+            "type": "object",
+            "title": "Superseded by",
+            "description": "The later accepted decision that replaces this one.",
+            "order": 14,
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/architectureDecision"
+          },
+          "boardDecisions": {
+            "type": "array",
+            "title": "Board decisions",
+            "description": "Decisions a board took on this in decidiq. References decidesk Decision objects; decidiq owns the making and signing.",
+            "x-external-register": "decidesk",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "x-external-register": "decidesk"
+            },
+            "referenceType": "decision",
+            "x-allow-create": true,
+            "order": 15
+          }
+        }
+      },
       "maintenanceWindow": {
         "uri": null,
         "slug": "maintenanceWindow",
@@ -9001,7 +9593,7 @@
       "complianceDocument": {
         "slug": "complianceDocument",
         "title": "Compliance document",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "A compliance document an organisation publishes about a product, such as a DPIA, a processing agreement or a pentest report, shared with the readers its audience names.",
         "required": [
           "module",
@@ -9022,7 +9614,33 @@
           ],
           "objectNameField": "title",
           "objectDescriptionField": "summary",
-          "autoPublish": false
+          "autoPublish": false,
+          "x-openregister-calculations": {
+            "daysUntilExpiry": {
+              "type": "integer",
+              "materialise": true,
+              "description": "Days from today until the document's validity ends; empty when it does not expire.",
+              "expression": {
+                "if": [
+                  { "eq": [ { "prop": "validUntil" }, null ] },
+                  null,
+                  { "dateDiff": { "from": "now", "to": { "prop": "validUntil" }, "unit": "days" } }
+                ]
+              }
+            },
+            "expiresWithin90Days": {
+              "type": "boolean",
+              "materialise": true,
+              "description": "True while the validity ends today or within the next 90 days. Depends on today, so OpenRegister's temporal sweep keeps it current.",
+              "expression": {
+                "and": [
+                  { "ne": [ { "prop": "validUntil" }, null ] },
+                  { "gte": [ { "prop": "daysUntilExpiry" }, 0 ] },
+                  { "lte": [ { "prop": "daysUntilExpiry" }, 90 ] }
+                ]
+              }
+            }
+          }
         },
         "properties": {
           "module": {
@@ -9115,6 +9733,25 @@
             "title": "Shared with",
             "description": "The organisations that read the document when its audience is named. The publisher always reads it.",
             "order": 9
+          },
+          "daysUntilExpiry": {
+            "type": "integer",
+            "nullable": true,
+            "readOnly": true,
+            "hideOnForm": true,
+            "title": "Days until it expires",
+            "description": "Calculated from Valid until; it cannot be edited.",
+            "order": 10
+          },
+          "expiresWithin90Days": {
+            "type": "boolean",
+            "nullable": true,
+            "readOnly": true,
+            "hideOnForm": true,
+            "facetable": true,
+            "title": "Expires within 90 days",
+            "description": "Calculated from Valid until; it cannot be edited.",
+            "order": 11
           }
         },
         "authorization": {
@@ -9885,6 +10522,9 @@
         "participants": [
           "@ref:organization:gemeente-leiden",
           "@ref:organization:gemeente-leiderdorp"
+        ],
+        "dataEntities": [
+          "@ref:element:seed-el-melding"
         ]
       },
       {

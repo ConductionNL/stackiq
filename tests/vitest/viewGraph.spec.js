@@ -8,7 +8,7 @@
  * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 import { describe, expect, it } from 'vitest'
-import { fromCanvas, toCanvas } from '../../src/utils/viewGraph.js'
+import { fromCanvas, layoutUnplacedNodes, toCanvas } from '../../src/utils/viewGraph.js'
 
 // The import's shape: absolute positions, a grouping with a nested child and a grandchild.
 const VIEW_NODES = [
@@ -54,6 +54,50 @@ describe('viewGraph', () => {
 
 		expect(viewNodes.find((node) => node.viewNodeId === 'c')).toEqual({
 			viewNodeId: 'c', parent: 'g', elementRef: 'id-c', x: 70, y: 80, width: 120, height: 55, name: 'Nieuw', type: 'Element',
+		})
+	})
+
+	describe('layoutUnplacedNodes', () => {
+		const drafted = [
+			{ viewNodeId: 'a', parent: null, elementRef: 'id-a', width: 120, height: 55, name: 'Zaaksysteem', type: 'ApplicationComponent' },
+			{ viewNodeId: 'b', parent: null, elementRef: 'id-b', width: 120, height: 55, name: 'Documentbeheer', type: 'ApplicationComponent' },
+			{ viewNodeId: 'c', parent: null, elementRef: 'id-c', width: 120, height: 55, name: 'Archief', type: 'ApplicationComponent' },
+		]
+		const relations = [
+			{ viewRelationshipId: 'r1', sourceId: 'a', targetId: 'b', type: 'Flow' },
+			{ viewRelationshipId: 'r2', sourceId: 'b', targetId: 'c', type: 'Flow' },
+		]
+
+		it('places every node of a drafted view at a point of its own, along its relations', () => {
+			const { viewNodes, laidOut } = layoutUnplacedNodes(drafted, relations)
+
+			expect(laidOut).toBe(true)
+			expect(new Set(viewNodes.map((n) => `${n.x},${n.y}`)).size).toBe(3)
+			expect(viewNodes[0].x).toBeLessThan(viewNodes[1].x)
+			expect(viewNodes[1].x).toBeLessThan(viewNodes[2].x)
+			expect(viewNodes.map(({ x, y, ...rest }) => rest)).toEqual(drafted)
+			expect(drafted[0]).not.toHaveProperty('x')
+		})
+
+		it('keeps the points through the canvas and back, so a save stores them', () => {
+			const { viewNodes } = layoutUnplacedNodes(drafted, relations)
+			const { nodes, edges } = toCanvas(viewNodes, relations)
+
+			expect(fromCanvas(nodes, edges).viewNodes.map((n) => [n.x, n.y])).toEqual(viewNodes.map((n) => [n.x, n.y]))
+		})
+
+		it('leaves a view whose nodes are placed as it is', () => {
+			const placed = drafted.map((node, i) => ({ ...node, x: 10 + i * 200, y: 20 }))
+			const result = layoutUnplacedNodes(placed, relations)
+
+			expect(result.laidOut).toBe(false)
+			expect(result.viewNodes).toBe(placed)
+		})
+
+		it('lays out a cycle without a start and an empty view without failing', () => {
+			const cycle = [...relations, { viewRelationshipId: 'r3', sourceId: 'c', targetId: 'a', type: 'Flow' }]
+			expect(new Set(layoutUnplacedNodes(drafted, cycle).viewNodes.map((n) => `${n.x},${n.y}`)).size).toBe(3)
+			expect(layoutUnplacedNodes([], [])).toEqual({ viewNodes: [], laidOut: false })
 		})
 	})
 })

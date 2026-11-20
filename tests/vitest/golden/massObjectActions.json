@@ -9,7 +9,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -48,7 +49,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -80,7 +82,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -116,7 +119,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -145,7 +149,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -178,7 +183,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -204,7 +210,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -237,7 +244,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -263,7 +271,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -296,7 +305,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -322,7 +332,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -355,7 +366,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[]
 			],
 			[
@@ -381,7 +393,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massPublishObjects",
+				"objectStore.publication.publish",
+				"module",
 				[
 					{
 						"id": "a"
@@ -420,7 +433,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -459,7 +473,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -491,7 +506,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -527,7 +543,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -556,7 +573,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -589,7 +607,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -615,7 +634,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -648,7 +668,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -674,7 +695,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -707,7 +729,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -733,7 +756,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"
@@ -766,7 +790,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[]
 			],
 			[
@@ -792,7 +817,8 @@
 		},
 		"trace": [
 			[
-				"objectStore.massDepublishObjects",
+				"objectStore.publication.withdraw",
+				"module",
 				[
 					{
 						"id": "a"

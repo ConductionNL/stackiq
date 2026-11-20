@@ -37,6 +37,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
  */
 class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
+	use ParsesStoredDates;
+
 	/**
 	 * The most applications the list reads.
 	 */
@@ -185,12 +187,12 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	 * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
 	 */
 	public function isPublished(array $module, DateTimeImmutable $now): bool {
-		$published = $this->date(value: $module['publicationDate'] ?? null);
+		$published = $this->storedDate(value: $module['publicationDate'] ?? null);
 		if ($published === null || $published > $now) {
 			return false;
 		}
 
-		$withdrawn = $this->date(value: $module['depublicationDate'] ?? null);
+		$withdrawn = $this->storedDate(value: $module['depublicationDate'] ?? null);
 
 		return $withdrawn === null || $withdrawn > $now;
 	}//end isPublished()
@@ -302,23 +304,4 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	private function objectId(array $object): string {
 		return $this->relations->resolveRelationId(value: $object['id'] ?? ($object['@self']['id'] ?? null));
 	}//end objectId()
-
-	/**
-	 * A date value, or null.
-	 *
-	 * @param mixed $value The stored value.
-	 *
-	 * @return DateTimeImmutable|null The date.
-	 */
-	private function date(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception $e) {
-			return null;
-		}
-	}//end date()
 }//end class

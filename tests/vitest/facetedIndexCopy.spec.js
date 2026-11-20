@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Vitest: an application is copied with the links the user picks
- * (applications-copy-with-links, task 1). The Modules and Diensten pages
+ * (applications-copy-with-links, tasks 1 and 2). The Modules and Diensten pages
  * declare which links a copy may take along, and FacetedCatalogIndexView hands
  * that `copy` config to its embedded CnIndexPage, whose single and mass copy
  * dialogs then list the links.
@@ -63,7 +63,21 @@ describe('applications are copied with their links', () => {
 		const page = manifest.pages.find((p) => p.id === id)
 
 		expect(page.component).toBe('FacetedCatalogIndexView')
-		expect(page.config.copy).toEqual({ include: LINKS })
+		expect(page.config.copy.include).toEqual(LINKS)
+	})
+
+	it.each(['Modules', 'Diensten'])('a copy on the %s page starts unpublished', (id) => {
+		const page = manifest.pages.find((p) => p.id === id)
+
+		// The library applies copy.overrides to every copy, single or mass, with links or fields only.
+		expect(page.config.copy.overrides).toEqual({ publicationDate: null, depublicationDate: null })
+	})
+
+	it('hands the copy overrides to the embedded index page', () => {
+		const copy = { include: LINKS, overrides: { publicationDate: null, depublicationDate: null } }
+		const wrapper = mountView({ copy })
+
+		expect(wrapper.findComponent({ name: 'CnIndexPage' }).props('copy')).toEqual(copy)
 	})
 
 	it('hands the page copy config to the embedded index page', () => {
