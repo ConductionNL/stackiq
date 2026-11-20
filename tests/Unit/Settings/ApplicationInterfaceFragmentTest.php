@@ -94,11 +94,46 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 		self::assertSame('gemmaType=standaardversie', $api['properties']['standardVersions']['items']['objectConfiguration']['queryParams']);
 		self::assertSame(['REST', 'SOAP', 'GraphQL', 'event or message', 'file', 'other'], $api['properties']['style']['enum']);
 		self::assertTrue($api['properties']['style']['facetable']);
-		self::assertSame($schemas['module']['authorization'], $api['authorization']);
+		$moduleRead = array_values(
+			array_filter(
+				$schemas['module']['authorization']['read'],
+				static fn ($rule): bool => isset($rule['match']['registeredBy']) === false
+			)
+		);
+		self::assertSame($moduleRead, $api['authorization']['read']);
+		self::assertSame(
+			array_diff_key($schemas['module']['authorization'], ['read' => true]),
+			array_diff_key($api['authorization'], ['read' => true])
+		);
 		foreach ($api['properties'] as $name => $property) {
 			self::assertNotEmpty($property['title'] ?? '', $name . ' has no title');
 		}
 	}//end testTheSchemaDescribesAnApiOfAnApplication()
+
+	/**
+	 * Every condition in a read rule of the merged register names a property of
+	 * its schema or record metadata; OpenRegister refuses the whole schema otherwise.
+	 *
+	 * @return void
+	 */
+	public function testEveryReadRuleConditionNamesAProperty(): void {
+		$unknown = [];
+		foreach ($this->merged()['components']['schemas'] as $slug => $schema) {
+			foreach (($schema['authorization']['read'] ?? []) as $rule) {
+				if (is_array($rule) === false) {
+					continue;
+				}
+
+				foreach (array_keys($rule['match'] ?? []) as $field) {
+					if (str_starts_with((string)$field, '_') === false && isset($schema['properties'][$field]) === false) {
+						$unknown[] = $slug . '.' . $field;
+					}
+				}
+			}
+		}
+
+		self::assertSame([], $unknown);
+	}//end testEveryReadRuleConditionNamesAProperty()
 
 	/**
 	 * Every lifecycle state is a value of the status enum, the connection's own states.
