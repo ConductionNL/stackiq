@@ -127,10 +127,10 @@ class FederationService implements FederationServiceInterface {
 			$state = $this->config->getPeerState(peerUrl: $peerUrl);
 			$peers[] = [
 				'url' => $peerUrl,
-				'name' => $this->peerName(peerUrl: $peerUrl, name: $state['name']),
-				'lastPulledAt' => $state['lastPulledAt'],
-				'objectCount' => $state['objectCount'],
-				'lastError' => $state['lastError'],
+				'name' => $this->peerName(peerUrl: $peerUrl, name: (string)($state['name'] ?? '')),
+				'lastPulledAt' => ($state['lastPulledAt'] ?? null),
+				'objectCount' => (int)($state['objectCount'] ?? 0),
+				'lastError' => ($state['lastError'] ?? null),
 				'failures' => $failures,
 				'stale' => ($failures >= $staleAfter),
 				'allowed' => $this->isPeerHostAllowed(url: $peerUrl),
