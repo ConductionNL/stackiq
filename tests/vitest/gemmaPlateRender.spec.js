@@ -23,6 +23,10 @@ vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)),
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
+// The view picker's store is not under test here; it holds no views.
+vi.mock('../../src/store/modules/view.js', () => ({
+	useViewStore: () => ({ views: [], activeView: null, loading: false, setIncludeGebruik: vi.fn(), fetchViews: vi.fn(async () => {}), fetchView: vi.fn(async () => {}) }),
+}))
 vi.mock('../../src/store/store.js', () => ({
 	objectStore: {
 		settings: {},

@@ -34,7 +34,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Data quality](./data-quality.md) | A data quality score on every application and usage, a confirm-current action and a Data quality page per organisation |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
-| [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap |
+| [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap, per GEMMA view, with what comparable organisations use |
 | [Catalogue Exports and Custom Reports](catalogue-exports-and-reports.md) | Export lists, faceted lists and one organisation as ArchiMate, and define your own reports |
 
 ## Software Registration

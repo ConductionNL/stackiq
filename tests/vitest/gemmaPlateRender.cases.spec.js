@@ -27,6 +27,10 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
+// The view picker's store is not under test here; it holds no views.
+vi.mock('../../src/store/modules/view.js', () => ({
+	useViewStore: () => ({ views: [], activeView: null, loading: false, setIncludeGebruik: vi.fn(), fetchViews: vi.fn(async () => {}), fetchView: vi.fn(async () => {}) }),
+}))
 const store = vi.hoisted(() => ({ objectStore: { collections: {}, getCollection(type) { return this.collections[type] } } }))
 vi.mock('../../src/store/store.js', () => store)
 
