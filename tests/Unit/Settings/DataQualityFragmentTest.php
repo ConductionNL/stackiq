@@ -62,18 +62,23 @@ final class DataQualityFragmentTest extends TestCase {
 		self::assertArrayHasKey('qualityScore', $schemas['module']['properties']);
 	}//end testTheMergedVersionsRiseSoTheImportRuns()
 
+	/**
+	 * The module rules gain freshness on last confirmed at.
+	 *
+	 * @return void
+	 */
 	public function testTheModuleRulesGainFreshnessOnLastConfirmedAt(): void {
 		$module = $this->merged()['components']['schemas']['module'];
 		$rules = $module['configuration']['x-openregister-quality']['rules'];
 
 		// The base register's required rules stay; the fragment appends freshness.
-		self::assertContains('name', array_column($rules, 'field'));
-		self::assertContains(['type' => 'freshness', 'field' => 'lastConfirmedAt', 'halfLifeDays' => 365, 'weight' => 3], $rules);
+		self::assertContains(needle: 'name', haystack: array_column(array: $rules, column_key: 'field'));
+		self::assertContains(needle: ['type' => 'freshness', 'field' => 'lastConfirmedAt', 'halfLifeDays' => 365, 'weight' => 3], haystack: $rules);
 		foreach ($rules as $rule) {
-			self::assertArrayHasKey($rule['field'], $module['properties'], 'rule on a field module does not declare: ' . $rule['field']);
+			self::assertArrayHasKey(key: $rule['field'], array: $module['properties'], message: 'rule on a field module does not declare: ' . $rule['field']);
 		}
 
-		self::assertSame('date-time', $module['properties']['lastConfirmedAt']['format']);
-		self::assertTrue(version_compare($module['version'], '0.3.13', '>='));
+		self::assertSame(expected: 'date-time', actual: $module['properties']['lastConfirmedAt']['format']);
+		self::assertTrue(condition: version_compare(version1: $module['version'], version2: '0.3.13', operator: '>='));
 	}//end testTheModuleRulesGainFreshnessOnLastConfirmedAt()
 }//end class

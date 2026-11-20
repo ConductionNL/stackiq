@@ -24,37 +24,72 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Stackiq\Service\EntryConfirmationRefused
  */
 final class EntryConfirmationControllerTest extends TestCase {
+	/**
+	 * The controller.
+	 *
+	 * @param EntryConfirmationServiceInterface $service  The service.
+	 * @param bool                              $signedIn The signed in.
+	 *
+	 * @return EntryConfirmationController
+	 */
 	private function controller(EntryConfirmationServiceInterface $service, bool $signedIn = true): EntryConfirmationController {
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($signedIn ? $this->createMock(IUser::class) : null);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$user = null;
+		if ($signedIn === true) {
+			$user = $this->createMock(originalClassName: IUser::class);
+		}
 
-		return new EntryConfirmationController('stackiq', $this->createMock(IRequest::class), $service, $session);
+		$session->method('getUser')->willReturn($user);
+
+		return new EntryConfirmationController(
+			appName: 'stackiq',
+			request: $this->createMock(originalClassName: IRequest::class),
+			confirmation: $service,
+			userSession: $session
+		);
 	}//end controller()
 
+	/**
+	 * The route confirms the entry.
+	 *
+	 * @return void
+	 */
 	public function testTheRouteConfirmsTheEntry(): void {
-		$service = $this->createMock(EntryConfirmationServiceInterface::class);
+		$service = $this->createMock(originalClassName: EntryConfirmationServiceInterface::class);
 		$service->expects(self::once())->method('confirm')->with('usage', 'u-1')->willReturn(['lastConfirmedAt' => '2026-11-14T09:30:00+00:00']);
 
-		$response = $this->controller($service)->confirm('usage', 'u-1');
+		$response = $this->controller(service: $service)->confirm('usage', 'u-1');
 
-		self::assertSame(200, $response->getStatus());
-		self::assertSame(['lastConfirmedAt' => '2026-11-14T09:30:00+00:00'], $response->getData());
+		self::assertSame(expected: 200, actual: $response->getStatus());
+		self::assertSame(expected: ['lastConfirmedAt' => '2026-11-14T09:30:00+00:00'], actual: $response->getData());
 	}//end testTheRouteConfirmsTheEntry()
 
+	/**
+	 * The route answers the refusal.
+	 *
+	 * @return void
+	 */
 	public function testTheRouteAnswersTheRefusal(): void {
-		$service = $this->createMock(EntryConfirmationServiceInterface::class);
-		$service->method('confirm')->willThrowException(new EntryConfirmationRefused('forbidden', 403, 'You may not change this entry.'));
+		$service = $this->createMock(originalClassName: EntryConfirmationServiceInterface::class);
+		$refusal = new EntryConfirmationRefused(reason: 'forbidden', status: 403, message: 'You may not change this entry.');
+		$service->method('confirm')->willThrowException($refusal);
 
-		$response = $this->controller($service)->confirm('module', 'm-1');
+		$response = $this->controller(service: $service)->confirm('module', 'm-1');
 
-		self::assertSame(403, $response->getStatus());
-		self::assertSame(['error' => 'forbidden', 'message' => 'You may not change this entry.'], $response->getData());
+		self::assertSame(expected: 403, actual: $response->getStatus());
+		self::assertSame(expected: ['error' => 'forbidden', 'message' => 'You may not change this entry.'], actual: $response->getData());
 	}//end testTheRouteAnswersTheRefusal()
 
+	/**
+	 * Without a session nothing is confirmed.
+	 *
+	 * @return void
+	 */
 	public function testWithoutASessionNothingIsConfirmed(): void {
-		$service = $this->createMock(EntryConfirmationServiceInterface::class);
+		$service = $this->createMock(originalClassName: EntryConfirmationServiceInterface::class);
 		$service->expects(self::never())->method('confirm');
 
-		self::assertSame(401, $this->controller($service, signedIn: false)->confirm('module', 'm-1')->getStatus());
+		$response = $this->controller(service: $service, signedIn: false)->confirm(kind: 'module', id: 'm-1');
+		self::assertSame(expected: 401, actual: $response->getStatus());
 	}//end testWithoutASessionNothingIsConfirmed()
 }//end class
