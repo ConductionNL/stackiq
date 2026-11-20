@@ -9001,7 +9001,7 @@
       "complianceDocument": {
         "slug": "complianceDocument",
         "title": "Compliance document",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "A compliance document an organisation publishes about a product, such as a DPIA, a processing agreement or a pentest report, shared with the readers its audience names.",
         "required": [
           "module",
@@ -9022,7 +9022,33 @@
           ],
           "objectNameField": "title",
           "objectDescriptionField": "summary",
-          "autoPublish": false
+          "autoPublish": false,
+          "x-openregister-calculations": {
+            "daysUntilExpiry": {
+              "type": "integer",
+              "materialise": true,
+              "description": "Days from today until the document's validity ends; empty when it does not expire.",
+              "expression": {
+                "if": [
+                  { "eq": [ { "prop": "validUntil" }, null ] },
+                  null,
+                  { "dateDiff": { "from": "now", "to": { "prop": "validUntil" }, "unit": "days" } }
+                ]
+              }
+            },
+            "expiresWithin90Days": {
+              "type": "boolean",
+              "materialise": true,
+              "description": "True while the validity ends today or within the next 90 days. Depends on today, so OpenRegister's temporal sweep keeps it current.",
+              "expression": {
+                "and": [
+                  { "ne": [ { "prop": "validUntil" }, null ] },
+                  { "gte": [ { "prop": "daysUntilExpiry" }, 0 ] },
+                  { "lte": [ { "prop": "daysUntilExpiry" }, 90 ] }
+                ]
+              }
+            }
+          }
         },
         "properties": {
           "module": {
@@ -9115,6 +9141,25 @@
             "title": "Shared with",
             "description": "The organisations that read the document when its audience is named. The publisher always reads it.",
             "order": 9
+          },
+          "daysUntilExpiry": {
+            "type": "integer",
+            "nullable": true,
+            "readOnly": true,
+            "hideOnForm": true,
+            "title": "Days until it expires",
+            "description": "Calculated from Valid until; it cannot be edited.",
+            "order": 10
+          },
+          "expiresWithin90Days": {
+            "type": "boolean",
+            "nullable": true,
+            "readOnly": true,
+            "hideOnForm": true,
+            "facetable": true,
+            "title": "Expires within 90 days",
+            "description": "Calculated from Valid until; it cannot be edited.",
+            "order": 11
           }
         },
         "authorization": {
@@ -9885,6 +9930,9 @@
         "participants": [
           "@ref:organization:gemeente-leiden",
           "@ref:organization:gemeente-leiderdorp"
+        ],
+        "dataEntities": [
+          "@ref:element:seed-el-melding"
         ]
       },
       {

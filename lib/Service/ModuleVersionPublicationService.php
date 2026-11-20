@@ -264,6 +264,7 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	 * @param ModuleVersionCopyRun   $run     The copy in progress.
 	 *
 	 * @return array<int, mixed>|null The versions, or null when the search failed.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function readVersionPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): ?array {
 		try {
