@@ -67,7 +67,7 @@ class ContractBindingsTest extends TestCase {
 		$aliases = $this->aliases();
 		$names   = array_column($aliases, 0);
 
-		$this->assertCount(expectedCount: 63, haystack: $aliases);
+		$this->assertCount(expectedCount: 64, haystack: $aliases);
 		$this->assertSame(expected: $names, actual: array_values(array: array_unique(array: $names)));
 
 	}//end testEveryContractIsBoundExactlyOnce()

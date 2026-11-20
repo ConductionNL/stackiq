@@ -82,7 +82,7 @@ class ServiceRegistrarTest extends TestCase {
 		$this->assertSame(expected: CatalogueLocator::class, actual: $aliases[ObjectTypeLocatorInterface::class]);
 		$this->assertSame(expected: SettingsService::class, actual: $aliases[RegisterConfigReaderInterface::class]);
 		$this->assertSame(expected: SettingsService::class, actual: $aliases[SettingsServiceInterface::class]);
-		$this->assertCount(expectedCount: 66, haystack: $aliases);
+		$this->assertCount(expectedCount: 67, haystack: $aliases);
 		$this->assertSame(
 			expected: [
 				'OCA\Stackiq\Service\Stackiq\OrganizationHandler',
