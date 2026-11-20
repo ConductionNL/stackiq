@@ -3,6 +3,7 @@
 		"description": "settings-foldout layout"
 	},
 	"relocations": {
+		"SyncStatusMenu": "Organisaties",
 		"Komplianties": "ReportsCompliance",
 		"ComplianceMatrix": "ReportsCompliance",
 		"Ask": "ReportsCompliance",

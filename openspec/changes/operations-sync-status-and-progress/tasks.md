@@ -52,8 +52,11 @@
   - GIVEN a running sync WHEN the page is open THEN it polls every three seconds and shows the phase and percentage, and stops polling when the run ends
   - GIVEN a regular user WHEN the menu renders THEN the entry is hidden, and the Integrations entry is hidden for non-admins
   - GIVEN a Dutch instance WHEN the page renders THEN every label is Dutch
-- [ ] Implement
+- [x] Implement
+  - `src/manifest.d/operations-sync-status-and-progress.json` (page `SyncStatus`, menu entry `SyncStatusMenu` with `permission: sync.view`), relocated under Organisations in `src/menu-layout.json`; `src/views/sync/SyncStatusView.vue` registered in `src/customComponents.js`; `DashboardController::page()` provides initial state `permissions` (`user`, `admin`, `sync.view`) and `src/App.vue` reads it; English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`.
 - [ ] Test (vitest tests/vitest/syncStatusView.spec.js and Playwright tests/e2e/spec-coverage/sync-status.spec.ts)
+  - 17 Nov: `tests/e2e/spec-coverage/sync-status.spec.ts` written (3 tests: the admin's page, the three-second polling that stops when the run ends, a regular user without the entries and refused with 403); vitest passes; the Playwright run needs a live instance.
+  - Done: `tests/vitest/syncStatusView.spec.js` (schedule and last run, polling every three seconds and stopping, refusal) and `tests/Unit/Controller/DashboardControllerPermissionsTest.php`. Owed: the Playwright spec, which needs a live instance.
 
 ### Task 6: Document the Synchronisation page
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
@@ -61,6 +64,7 @@
 - **acceptance_criteria**:
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the page with a last run and with a running sync, and says who can see it
 - [ ] Implement
+  - Done: `docs/features/sync-status-and-progress.md` (who can see it, schedule, last run, running sync, the API) and its entry in `docs/features/README.md`. Owed: the screenshots of the page with a last run and with a running sync, which need a live instance.
 - [ ] Test (docs build and a manual read against the running app)
 
 ## Verification
