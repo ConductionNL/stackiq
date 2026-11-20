@@ -37,6 +37,8 @@ use DateTimeImmutable;
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
  */
 class PortfolioReportDerivation {
+	use ParsesStoredDates;
+
 	/**
 	 * End-of-support "approaching" look-ahead window in days, matching
 	 * `application-lifecycle-tracking`'s default `eol_warning_window_days`.
@@ -252,15 +254,7 @@ class PortfolioReportDerivation {
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 	 */
 	public function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception $e) {
-			return null;
-		}
+		return $this->storedDate(value: $value);
 	}//end parseDate()
 
 	/**
