@@ -8,6 +8,7 @@
 		"Standaarden": "Architecture",
 		"Views": "Architecture",
 		"Gegevensmodel": "Architecture",
+		"KnowledgeBaseMenu": "Modules",
 		"Architectuurbesluiten": "Architecture"
 	},
 	"removals": [],
