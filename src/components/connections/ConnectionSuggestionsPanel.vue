@@ -127,6 +127,12 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Reload the suggestions when the page moves to another usage.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 */
 		objectId() {
 			this.load()
 		},
@@ -211,6 +217,7 @@ export default {
 		 * @param {string[]} ids The suggestion ids.
 		 * @param {string} key The reply key that lists what was handled.
 		 * @return {Promise<Array|null>} What the server handled, or null on failure.
+		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
 		 */
 		async post(action, ids, key) {
 			this.busy = true
@@ -235,6 +242,7 @@ export default {
 		 *
 		 * @param {object} suggestion The suggestion.
 		 * @return {string} The type and direction, or ''.
+		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
 		 */
 		describe(suggestion) {
 			return [suggestion.type, suggestion.direction]
