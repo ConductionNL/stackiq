@@ -32,6 +32,7 @@ use InvalidArgumentException;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
+use OCA\Stackiq\Service\Itsm\ItsmSendFrom;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
@@ -59,6 +60,13 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	public const ENABLED_KEY = 'itsm_exchange_enabled';
 
 	/**
+	 * The app setting holding the lifecycle state applications are sent from.
+	 *
+	 * @var string
+	 */
+	public const SEND_FROM_KEY = 'itsm_exchange_send_from';
+
+	/**
 	 * The register every stackiq flow writes to.
 	 *
 	 * @var string
@@ -71,19 +79,6 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @var string
 	 */
 	public const CRON = '0 2 * * *';
-
-	/**
-	 * The usage lifecycle states in their order (the usage schema's `status`
-	 * enum). The outbound flow sends an application from the chosen state on.
-	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
-	 */
-	public const LIFECYCLE_STATES = ['Acquisition', 'Planned', 'In production', 'To be phased out', 'Phased out'];
-
-	/**
-	 * The lifecycle state from which an application is sent when none is chosen.
-	 */
-	public const DEFAULT_SEND_FROM = 'In production';
 
 	/**
 	 * One profile per service desk: integriq's slugs and the outbound endpoints.
@@ -193,8 +188,8 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 			'flows'        => ($config['flows'] ?? []),
 			'setUpAt'      => ($config['setUpAt'] ?? null),
 			'desks'        => $desks,
-			'sendFrom'     => ($config['sendFrom'] ?? self::DEFAULT_SEND_FROM),
-			'lifecycleStates' => self::LIFECYCLE_STATES,
+			'sendFrom'     => $this->sendFrom(),
+			'lifecycleStates' => ItsmSendFrom::STATES,
 		];
 	}//end status()
 
@@ -206,28 +201,21 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string $runAs        The user the scheduled imports run as.
 	 * @param string $location     The desk source's location; its scheme and host make the record links.
 	 * @param string $templateId   The desk's asset template for a new record (TOPdesk needs one), or empty.
-	 * @param string $sendFrom     The lifecycle state from which the outbound flow sends an application.
 	 *
 	 * @return array<string, array<string, mixed>> The filled flow documents, by flow key.
 	 *
-	 * @throws InvalidArgumentException When the desk or the lifecycle state is unknown or a template is missing.
+	 * The outbound flow sends an application from the chosen lifecycle state on
+	 * ({@see self::chooseSendFrom()}).
+	 *
+	 * @throws InvalidArgumentException When the desk is unknown or a template is missing.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	public function buildFlows(
-		string $desk,
-		string $organisation,
-		string $runAs,
-		string $location,
-		string $templateId = '',
-		string $sendFrom = self::DEFAULT_SEND_FROM
-	): array {
+	public function buildFlows(string $desk, string $organisation, string $runAs, string $location, string $templateId = ''): array {
 		if (isset(self::DESKS[$desk]) === false) {
 			throw new InvalidArgumentException('Unknown service desk "' . $desk . '". Choose one of: ' . implode(', ', array_keys(self::DESKS)) . '.');
 		}
-
-		$sendStates = self::statesFrom(state: $sendFrom);
 
 		$profile = self::DESKS[$desk];
 		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/');
@@ -261,7 +249,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				'DESK_BASE'       => $base,
 				'TEMPLATE_ID'     => $templateId,
 				'CALL_QUERY'      => $profile['callQuery'],
-				'SEND_STATES'     => $sendStates,
+				'SEND_STATES'     => ItsmSendFrom::statesFrom(state: $this->sendFrom()),
 			];
 			if ($key === 'file') {
 				$values['SYNC']   = 'itsm-file-applications';
@@ -280,6 +268,45 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	}//end buildFlows()
 
 	/**
+	 * Choose the lifecycle state from which applications are sent; empty means
+	 * the default. The next set-up writes it into the outbound flow.
+	 *
+	 * @param string $state The lifecycle state, or empty.
+	 *
+	 * @return string|null Why the state is refused, or null when it is stored.
+	 *
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	public function chooseSendFrom(string $state): ?string {
+		if ($state === '') {
+			$state = ItsmSendFrom::DEFAULT;
+		}
+
+		if (ItsmSendFrom::isState(state: $state) === false) {
+			return 'Nothing was created. ' . ItsmSendFrom::unknown(state: $state);
+		}
+
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::SEND_FROM_KEY, $state);
+		return null;
+	}//end chooseSendFrom()
+
+	/**
+	 * The lifecycle state applications are sent from: the stored choice, else the default.
+	 *
+	 * @return string The state.
+	 *
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	private function sendFrom(): string {
+		$state = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SEND_FROM_KEY, ItsmSendFrom::DEFAULT);
+		if (ItsmSendFrom::isState(state: $state) === false) {
+			return ItsmSendFrom::DEFAULT;
+		}
+
+		return $state;
+	}//end sendFrom()
+
+	/**
 	 * Set up the exchange: check every flow, then create or update them all.
 	 *
 	 * Nothing is saved unless every flow passes preflight, so the instance never
@@ -289,24 +316,12 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
 	 * @param string $runAs        The user the scheduled imports run as.
 	 * @param string $templateId   The desk's asset template for new records, when the desk needs one.
-	 * @param string $sendFrom     The lifecycle state from which applications are sent; empty for the default.
 	 *
 	 * @return array<string, mixed> `created`, and either `flows` or `blocking` per flow key.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = '', string $sendFrom = ''): array {
-		if ($sendFrom === '') {
-			$sendFrom = self::DEFAULT_SEND_FROM;
-		}
-
-		if (in_array($sendFrom, self::LIFECYCLE_STATES, true) === false) {
-			return $this->refuse(
-				message: 'Nothing was created. Unknown lifecycle state "' . $sendFrom . '". Choose one of: ' . implode(', ', self::LIFECYCLE_STATES) . '.'
-			);
-		}
-
+	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
 		$found = $this->preconditions(desk: $desk, organisation: $organisation);
 		if (is_string($found) === true) {
 			return $this->refuse(message: $found);
@@ -321,8 +336,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				organisation: $organisation,
 				runAs: $runAs,
 				location: (string) ($found['source']['location'] ?? ''),
-				templateId: $templateId,
-				sendFrom: $sendFrom
+				templateId: $templateId
 			);
 
 			$blocking = $this->blockingFindings(flows: $flows);
@@ -349,11 +363,11 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 			}
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmExchangeService] Saving the exchange flows failed', ['exception' => $e]);
-			$this->storeConfig(desk: $desk, organisation: $organisation, flows: array_merge($stored, $saved), sendFrom: $sendFrom);
+			$this->storeConfig(desk: $desk, organisation: $organisation, flows: array_merge($stored, $saved));
 			return $this->refuse(message: 'Saving the flows failed after ' . count($saved) . ' of ' . count($flows) . ': ' . $e->getMessage());
 		}
 
-		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved, sendFrom: $sendFrom);
+		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
 		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true);
 		$this->connectionReports?->itsmSetUp(
 			created: true,
@@ -587,41 +601,16 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string                $desk         The desk key.
 	 * @param string                $organisation The organisation uuid.
 	 * @param array<string, string> $flows        The flow uuids by key.
-	 * @param string                $sendFrom     The lifecycle state applications are sent from.
 	 *
 	 * @return void
-	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	private function storeConfig(string $desk, string $organisation, array $flows, string $sendFrom): void {
+	private function storeConfig(string $desk, string $organisation, array $flows): void {
 		$this->appConfig->setValueString(
 			AppIdentity::APP_ID,
 			self::CONFIG_KEY,
-			(string) json_encode(
-				['desk' => $desk, 'organisation' => $organisation, 'flows' => $flows, 'sendFrom' => $sendFrom, 'setUpAt' => date(DATE_ATOM)]
-			)
+			(string) json_encode(['desk' => $desk, 'organisation' => $organisation, 'flows' => $flows, 'setUpAt' => date(DATE_ATOM)])
 		);
 	}//end storeConfig()
-
-	/**
-	 * The lifecycle states from a state on, in lifecycle order.
-	 *
-	 * @param string $state The first state to send from.
-	 *
-	 * @return array<int, string> That state and every later one.
-	 *
-	 * @throws InvalidArgumentException When the state is not a usage lifecycle state.
-	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
-	 */
-	public static function statesFrom(string $state): array {
-		$index = array_search($state, self::LIFECYCLE_STATES, true);
-		if ($index === false) {
-			throw new InvalidArgumentException('Unknown lifecycle state "' . $state . '". Choose one of: ' . implode(', ', self::LIFECYCLE_STATES) . '.');
-		}
-
-		return array_slice(self::LIFECYCLE_STATES, $index);
-	}//end statesFrom()
 
 	/**
 	 * A refused set-up, reported to the Integrations page.

@@ -122,13 +122,12 @@ class ItsmExchangeController extends Controller {
 			return new JSONResponse(['created' => false, 'message' => 'Sign in first.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$result = $this->exchange->setUp(
-			desk: $desk,
-			organisation: $organisation,
-			runAs: $user->getUID(),
-			templateId: trim($templateId),
-			sendFrom: trim($sendFrom)
-		);
+		$refusal = $this->exchange->chooseSendFrom(state: trim($sendFrom));
+		if ($refusal !== null) {
+			return new JSONResponse(['created' => false, 'message' => $refusal], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$result = $this->exchange->setUp(desk: $desk, organisation: $organisation, runAs: $user->getUID(), templateId: trim($templateId));
 		if ($result['created'] !== true) {
 			return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
