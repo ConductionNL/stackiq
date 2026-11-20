@@ -56,9 +56,9 @@ class SharedUsageScopeTest extends TestCase {
 	public function testAParticipantGetsTheUsageMarked(): void {
 		$shared = SharedUsageScope::sharedWith(usages: [self::mozard()], organisation: 'org-alb');
 
-		$this->assertCount(1, $shared);
-		$this->assertSame('u-mozard', $shared[0]['id']);
-		$this->assertSame(['cooperation' => 'org-zd', 'participantCount' => 3], $shared[0]['_shared']);
+		$this->assertCount(expectedCount: 1, haystack: $shared);
+		$this->assertSame(expected: 'u-mozard', actual: $shared[0]['id']);
+		$this->assertSame(expected: ['cooperation' => 'org-zd', 'participantCount' => 3], actual: $shared[0]['_shared']);
 	}//end testAParticipantGetsTheUsageMarked()
 
 	/**
@@ -69,9 +69,9 @@ class SharedUsageScopeTest extends TestCase {
 	public function testOutsidersOwnersAndJunkGetNothing(): void {
 		$usages = [self::mozard(), 'not-a-record', null];
 
-		$this->assertSame([], SharedUsageScope::sharedWith(usages: $usages, organisation: 'org-oostmaas'));
-		$this->assertSame([], SharedUsageScope::sharedWith(usages: $usages, organisation: 'org-zd'));
-		$this->assertSame([], SharedUsageScope::sharedWith(usages: $usages, organisation: ''));
+		$this->assertSame(expected: [], actual: SharedUsageScope::sharedWith(usages: $usages, organisation: 'org-oostmaas'));
+		$this->assertSame(expected: [], actual: SharedUsageScope::sharedWith(usages: $usages, organisation: 'org-zd'));
+		$this->assertSame(expected: [], actual: SharedUsageScope::sharedWith(usages: $usages, organisation: ''));
 	}//end testOutsidersOwnersAndJunkGetNothing()
 
 	/**
@@ -81,12 +81,12 @@ class SharedUsageScopeTest extends TestCase {
 	 */
 	public function testTheMarkerCountsEachOrganisationOnce(): void {
 		$this->assertSame(
-			['cooperation' => 'org-zd', 'participantCount' => 2],
-			SharedUsageScope::marker(usage: ['consumer' => 'org-zd', 'participants' => ['org-zd', 'org-alb', 'org-alb']])
+			expected: ['cooperation' => 'org-zd', 'participantCount' => 2],
+			actual: SharedUsageScope::marker(usage: ['consumer' => 'org-zd', 'participants' => ['org-zd', 'org-alb', 'org-alb']])
 		);
 		$this->assertSame(
-			['cooperation' => null, 'participantCount' => 1],
-			SharedUsageScope::marker(usage: ['participants' => ['org-alb']])
+			expected: ['cooperation' => null, 'participantCount' => 1],
+			actual: SharedUsageScope::marker(usage: ['participants' => ['org-alb']])
 		);
 	}//end testTheMarkerCountsEachOrganisationOnce()
 
@@ -100,10 +100,10 @@ class SharedUsageScopeTest extends TestCase {
 
 		$merged = SharedUsageScope::merge(own: $own, shared: [['id' => 'u-mozard', '_shared' => []], ['id' => 'u-new', '_shared' => []]]);
 
-		$this->assertSame(['u-own', 'u-mozard', 'u-new'], array_column($merged['results'], 'id'));
-		$this->assertArrayNotHasKey('_shared', $merged['results'][1]);
-		$this->assertSame(8, $merged['total']);
-		$this->assertSame(1, $merged['page']);
+		$this->assertSame(expected: ['u-own', 'u-mozard', 'u-new'], actual: array_column($merged['results'], 'id'));
+		$this->assertArrayNotHasKey(key: '_shared', array: $merged['results'][1]);
+		$this->assertSame(expected: 8, actual: $merged['total']);
+		$this->assertSame(expected: 1, actual: $merged['page']);
 	}//end testMergeAddsOnlyNewUsagesAndRaisesTheTotal()
 
 	/**
@@ -114,8 +114,8 @@ class SharedUsageScopeTest extends TestCase {
 	public function testMergeIntoAnEmptyResult(): void {
 		$merged = SharedUsageScope::merge(own: [], shared: [['@self' => ['id' => 'u-1']], ['@self' => ['id' => 'u-1']]]);
 
-		$this->assertCount(1, $merged['results']);
-		$this->assertSame(1, $merged['total']);
+		$this->assertCount(expectedCount: 1, haystack: $merged['results']);
+		$this->assertSame(expected: 1, actual: $merged['total']);
 	}//end testMergeIntoAnEmptyResult()
 
 	/**
@@ -125,15 +125,15 @@ class SharedUsageScopeTest extends TestCase {
 	 */
 	public function testConnectionsListWithWhomEachIsShared(): void {
 		$this->assertSame(
-			[
+			expected: [
 				'c-iburger' => ['sharedWith' => ['org-alb', 'org-pap'], 'usages' => ['u-mozard']],
 				'c-zaak' => ['sharedWith' => ['org-alb', 'org-pap'], 'usages' => ['u-mozard']],
 			],
-			SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-zd')
+			actual: SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-zd')
 		);
 		$this->assertSame(
-			['org-zd', 'org-alb'],
-			SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-pap')['c-iburger']['sharedWith']
+			expected: ['org-zd', 'org-alb'],
+			actual: SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-pap')['c-iburger']['sharedWith']
 		);
 	}//end testConnectionsListWithWhomEachIsShared()
 
@@ -147,8 +147,8 @@ class SharedUsageScopeTest extends TestCase {
 
 		$result = SharedUsageScope::connections(usages: [self::mozard(), $second, self::mozard()], organisation: 'org-zd');
 
-		$this->assertSame(['org-alb', 'org-pap', 'org-hen'], $result['c-iburger']['sharedWith']);
-		$this->assertSame(['u-mozard', 'u-2'], $result['c-iburger']['usages']);
+		$this->assertSame(expected: ['org-alb', 'org-pap', 'org-hen'], actual: $result['c-iburger']['sharedWith']);
+		$this->assertSame(expected: ['u-mozard', 'u-2'], actual: $result['c-iburger']['usages']);
 	}//end testConnectionsCombineSeveralUsages()
 
 	/**
@@ -159,8 +159,8 @@ class SharedUsageScopeTest extends TestCase {
 	public function testUnsharedAndForeignUsagesGiveNoConnections(): void {
 		$unshared = ['id' => 'u-3', 'consumer' => 'org-zd', 'participants' => [], 'koppelingen' => ['c-x']];
 
-		$this->assertSame([], SharedUsageScope::connections(usages: [$unshared], organisation: 'org-zd'));
-		$this->assertSame([], SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-oostmaas'));
-		$this->assertSame([], SharedUsageScope::connections(usages: [self::mozard()], organisation: ''));
+		$this->assertSame(expected: [], actual: SharedUsageScope::connections(usages: [$unshared], organisation: 'org-zd'));
+		$this->assertSame(expected: [], actual: SharedUsageScope::connections(usages: [self::mozard()], organisation: 'org-oostmaas'));
+		$this->assertSame(expected: [], actual: SharedUsageScope::connections(usages: [self::mozard()], organisation: ''));
 	}//end testUnsharedAndForeignUsagesGiveNoConnections()
 }//end class

@@ -51,10 +51,10 @@ final class UsageParticipantReadRuleTest extends TestCase {
 			static fn (mixed $rule): bool => is_array($rule) && isset($rule['match']['participants'])
 		));
 
-		$this->assertSame(['gebruik-beheerder', 'gebruik-raadpleger'], array_column($participantRules, 'group'));
+		$this->assertSame(expected: ['gebruik-beheerder', 'gebruik-raadpleger'], actual: array_column($participantRules, 'group'));
 		foreach ($participantRules as $rule) {
-			$this->assertSame(['$contains' => '$organisation'], $rule['match']['participants']);
-			$this->assertTrue($rule['crossOrganisation'], 'a participant is another organisation than the owner');
+			$this->assertSame(expected: ['$contains' => '$organisation'], actual: $rule['match']['participants']);
+			$this->assertTrue(condition: $rule['crossOrganisation'], message: 'a participant is another organisation than the owner');
 		}
 	}//end testAParticipantManagerAndReaderMayReadTheUsage()
 
@@ -67,10 +67,16 @@ final class UsageParticipantReadRuleTest extends TestCase {
 		$read = $this->merged()['components']['schemas']['usage']['authorization']['read'];
 		$encoded = array_map(static fn (mixed $rule): string => (string)json_encode($rule), $read);
 
-		$this->assertContains('{"group":"gebruik-beheerder","match":{"_organisation":"$organisation"}}', $encoded);
-		$this->assertContains('{"group":"gebruik-beheerder","match":{"consumer":"$organisation"},"crossOrganisation":true}', $encoded);
-		$this->assertContains('{"group":"aanbod-beheerder","match":{"provider":"$organisation"},"crossOrganisation":true}', $encoded);
-		$this->assertContains('{"group":"public","match":{"publicationDate":{"$lte":"$now"}},"crossOrganisation":true}', $encoded);
+		$this->assertContains(needle: '{"group":"gebruik-beheerder","match":{"_organisation":"$organisation"}}', haystack: $encoded);
+		$this->assertContains(
+			needle: '{"group":"gebruik-beheerder","match":{"consumer":"$organisation"},"crossOrganisation":true}',
+			haystack: $encoded
+		);
+		$this->assertContains(
+			needle: '{"group":"aanbod-beheerder","match":{"provider":"$organisation"},"crossOrganisation":true}',
+			haystack: $encoded
+		);
+		$this->assertContains(needle: '{"group":"public","match":{"publicationDate":{"$lte":"$now"}},"crossOrganisation":true}', haystack: $encoded);
 	}//end testTheEarlierReadRulesAreKept()
 
 	/**
@@ -81,7 +87,11 @@ final class UsageParticipantReadRuleTest extends TestCase {
 	public function testAParticipantDoesNotChangeOrDeleteTheUsage(): void {
 		$authorization = $this->merged()['components']['schemas']['usage']['authorization'];
 		foreach (['update', 'delete'] as $action) {
-			$this->assertStringNotContainsString('participants', (string)json_encode($authorization[$action] ?? []), $action);
+			$this->assertStringNotContainsString(
+				needle: 'participants',
+				haystack: (string)json_encode($authorization[$action] ?? []),
+				message: $action
+			);
 		}
 	}//end testAParticipantDoesNotChangeOrDeleteTheUsage()
 
@@ -91,6 +101,6 @@ final class UsageParticipantReadRuleTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVersionMovesSoTheImportApplies(): void {
-		$this->assertSame('1.6.3', $this->merged()['components']['schemas']['usage']['version']);
+		$this->assertSame(expected: '1.6.3', actual: $this->merged()['components']['schemas']['usage']['version']);
 	}//end testTheVersionMovesSoTheImportApplies()
 }//end class

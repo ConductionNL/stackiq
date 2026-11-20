@@ -65,13 +65,17 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 	public function testTheRegisterListsTheSchemaAndItsTable(): void {
 		$stackiq = $this->merged()['components']['registers']['stackiq'];
 
-		self::assertSame(1, count(array_keys($stackiq['schemas'], 'applicationInterface', true)));
-		self::assertContains('maintenanceWindow', $stackiq['schemas'], 'The list is appended to, not replaced.');
+		self::assertSame(expected: 1, actual: count(array_keys($stackiq['schemas'], 'applicationInterface', true)));
+		self::assertContains(needle: 'maintenanceWindow', haystack: $stackiq['schemas'], message: 'The list is appended to, not replaced.');
 		self::assertSame(
-			['magicMapping' => true, 'autoCreateTable' => true],
-			$stackiq['configuration']['schemas']['applicationInterface']
+			expected: ['magicMapping' => true, 'autoCreateTable' => true],
+			actual: $stackiq['configuration']['schemas']['applicationInterface']
 		);
-		self::assertArrayHasKey('module', $stackiq['configuration']['schemas'], 'The other schemas keep their table configuration.');
+		self::assertArrayHasKey(
+			key: 'module',
+			array: $stackiq['configuration']['schemas'],
+			message: 'The other schemas keep their table configuration.'
+		);
 	}//end testTheRegisterListsTheSchemaAndItsTable()
 
 	/**
@@ -83,30 +87,46 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 		$schemas = $this->merged()['components']['schemas'];
 		$api = $schemas['applicationInterface'];
 
-		self::assertSame('API', $api['title']);
-		self::assertSame(['name', 'module'], $api['required']);
+		self::assertSame(expected: 'API', actual: $api['title']);
+		self::assertSame(expected: ['name', 'module'], actual: $api['required']);
 		self::assertSame(
-			['name', 'shortDescription', 'longDescription', 'module', 'style', 'version', 'specificationUrl', 'documentationUrl', 'standardVersions', 'status', 'publicationDate', 'depublicationDate'],
-			array_keys($api['properties'])
+			expected: [
+				'name',
+				'shortDescription',
+				'longDescription',
+				'module',
+				'style',
+				'version',
+				'specificationUrl',
+				'documentationUrl',
+				'standardVersions',
+				'status',
+				'publicationDate',
+				'depublicationDate',
+			],
+			actual: array_keys($api['properties'])
 		);
-		self::assertSame('#/components/schemas/module', $api['properties']['module']['$ref']);
-		self::assertSame('interfaces', $api['properties']['module']['inversedBy']);
-		self::assertSame('gemmaType=standaardversie', $api['properties']['standardVersions']['items']['objectConfiguration']['queryParams']);
-		self::assertSame(['REST', 'SOAP', 'GraphQL', 'event or message', 'file', 'other'], $api['properties']['style']['enum']);
-		self::assertTrue($api['properties']['style']['facetable']);
+		self::assertSame(expected: '#/components/schemas/module', actual: $api['properties']['module']['$ref']);
+		self::assertSame(expected: 'interfaces', actual: $api['properties']['module']['inversedBy']);
+		self::assertSame(
+			expected: 'gemmaType=standaardversie',
+			actual: $api['properties']['standardVersions']['items']['objectConfiguration']['queryParams']
+		);
+		self::assertSame(expected: ['REST', 'SOAP', 'GraphQL', 'event or message', 'file', 'other'], actual: $api['properties']['style']['enum']);
+		self::assertTrue(condition: $api['properties']['style']['facetable']);
 		$moduleRead = array_values(
 			array_filter(
 				$schemas['module']['authorization']['read'],
 				static fn ($rule): bool => isset($rule['match']['registeredBy']) === false
 			)
 		);
-		self::assertSame($moduleRead, $api['authorization']['read']);
+		self::assertSame(expected: $moduleRead, actual: $api['authorization']['read']);
 		self::assertSame(
-			array_diff_key($schemas['module']['authorization'], ['read' => true]),
-			array_diff_key($api['authorization'], ['read' => true])
+			expected: array_diff_key($schemas['module']['authorization'], ['read' => true]),
+			actual: array_diff_key($api['authorization'], ['read' => true])
 		);
 		foreach ($api['properties'] as $name => $property) {
-			self::assertNotEmpty($property['title'] ?? '', $name . ' has no title');
+			self::assertNotEmpty(actual: $property['title'] ?? '', message: $name . ' has no title');
 		}
 	}//end testTheSchemaDescribesAnApiOfAnApplication()
 
@@ -132,7 +152,7 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 			}
 		}
 
-		self::assertSame([], $unknown);
+		self::assertSame(expected: [], actual: $unknown);
 	}//end testEveryReadRuleConditionNamesAProperty()
 
 	/**
@@ -149,8 +169,8 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 			$states = [...$states, ...$transition['from'], $transition['to']];
 		}
 
-		self::assertSame([], array_values(array_diff(array_unique($states), $api['properties']['status']['enum'])));
-		self::assertSame($schemas['connection']['properties']['status']['enum'], $api['properties']['status']['enum']);
+		self::assertSame(expected: [], actual: array_values(array_diff(array_unique($states), $api['properties']['status']['enum'])));
+		self::assertSame(expected: $schemas['connection']['properties']['status']['enum'], actual: $api['properties']['status']['enum']);
 	}//end testTheLifecycleUsesTheStatusValues()
 
 	/**
@@ -162,12 +182,12 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 		$connection = $this->merged()['components']['schemas']['connection'];
 		$interface = $connection['properties']['interface'];
 
-		self::assertSame('#/components/schemas/applicationInterface', $interface['$ref']);
-		self::assertFalse($interface['required']);
-		self::assertSame(['module' => '@object.moduleB'], $interface['x-relation-filter']);
-		// shared-usage-visible-to-participants-connections.json moves it to 0.3.7 (sharedWithOrganisations).
-		self::assertTrue(version_compare($connection['version'], '0.3.6', '>='));
-		self::assertArrayHasKey('moduleB', $connection['properties'], 'The merge keeps the connection\'s own fields.');
+		self::assertSame(expected: '#/components/schemas/applicationInterface', actual: $interface['$ref']);
+		self::assertFalse(condition: $interface['required']);
+		self::assertSame(expected: ['module' => '@object.moduleB'], actual: $interface['x-relation-filter']);
+		// The shared-usage-visible-to-participants-connections.json fragment moves it to 0.3.7 (sharedWithOrganisations).
+		self::assertTrue(condition: version_compare($connection['version'], '0.3.6', '>='));
+		self::assertArrayHasKey(key: 'moduleB', array: $connection['properties'], message: 'The merge keeps the connection\'s own fields.');
 	}//end testAConnectionCanNameTheApiItCalls()
 
 	/**
@@ -178,14 +198,16 @@ final class ApplicationInterfaceFragmentTest extends TestCase {
 	public function testTheDemoApisFitTheSchema(): void {
 		$api = $this->merged()['components']['schemas']['applicationInterface'];
 		$demo = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/stackiq_mock_register.json'), true);
-		$apis = array_values(array_filter($demo['components']['objects'], static fn (array $o): bool => ($o['@self']['schema'] ?? '') === 'applicationInterface'));
+		$apis = array_values(
+			array_filter($demo['components']['objects'], static fn (array $o): bool => ($o['@self']['schema'] ?? '') === 'applicationInterface')
+		);
 
-		self::assertCount(2, $apis);
+		self::assertCount(expectedCount: 2, haystack: $apis);
 		foreach ($apis as $object) {
 			unset($object['@self']);
-			self::assertSame([], array_values(array_diff(array_keys($object), array_keys($api['properties']))));
-			self::assertContains($object['style'], $api['properties']['style']['enum']);
-			self::assertContains($object['status'], $api['properties']['status']['enum']);
+			self::assertSame(expected: [], actual: array_values(array_diff(array_keys($object), array_keys($api['properties']))));
+			self::assertContains(needle: $object['style'], haystack: $api['properties']['style']['enum']);
+			self::assertContains(needle: $object['status'], haystack: $api['properties']['status']['enum']);
 		}
 	}//end testTheDemoApisFitTheSchema()
 }//end class

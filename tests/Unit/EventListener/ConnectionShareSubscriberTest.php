@@ -54,7 +54,7 @@ final class ConnectionShareSubscriberTest extends TestCase {
 	 * @return ConnectionShareSubscriber
 	 */
 	private function subscriber(bool $syncFails=false): ConnectionShareSubscriber {
-		$sync = $this->createMock(ConnectionShareSync::class);
+		$sync = $this->createMock(originalClassName: ConnectionShareSync::class);
 		$sync->method('sync')->willReturnCallback(
 			function (array $connections, ?string $deletedUsage=null) use ($syncFails) {
 				if ($syncFails === true) {
@@ -65,15 +65,15 @@ final class ConnectionShareSubscriberTest extends TestCase {
 				return count($connections);
 			}
 		);
-		$types = $this->createMock(ObjectTypeLocatorInterface::class);
-		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $type) => $type === 'usage' ? 12 : null);
-		$logger = $this->createMock(LoggerInterface::class);
+		$types = $this->createMock(originalClassName: ObjectTypeLocatorInterface::class);
+		$types->method('getSchemaIdForObjectType')->willReturnCallback(fn (string $type) => ['usage' => 12][$type] ?? null);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		if ($syncFails === true) {
 			$logger->expects($this->once())->method('error');
 		}
 
 		$services = [ConnectionShareSync::class => $sync, ObjectTypeLocatorInterface::class => $types, LoggerInterface::class => $logger];
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn (string $id) => $services[$id]);
 
 		return new ConnectionShareSubscriber(container: $container);
@@ -88,53 +88,88 @@ final class ConnectionShareSubscriberTest extends TestCase {
 	 * @return ObjectEntity
 	 */
 	private function usage(array $data, int $schema=12): ObjectEntity {
-		$entity = $this->getMockBuilder(ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
+		$entity = $this->getMockBuilder(className: ObjectEntity::class)->disableOriginalConstructor()->getMockForAbstractClass();
 		$entity->method('getUuid')->willReturn('usage-1');
 		$entity->method('getSchema')->willReturn((string)$schema);
 		$entity->method('getObject')->willReturn($data);
 		return $entity;
 	}//end usage()
 
+	/**
+	 * Ashared usage created syncs its connections.
+	 *
+	 * @return void
+	 */
 	public function testASharedUsageCreatedSyncsItsConnections(): void {
 		$this->subscriber()->handle(new ObjectCreatedEvent($this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']])));
 
-		$this->assertSame([[['c1'], null]], $this->calls);
+		$this->assertSame(expected: [[['c1'], null]], actual: $this->calls);
 	}
 
+	/**
+	 * An update syncs the connections listed before and after.
+	 *
+	 * @return void
+	 */
 	public function testAnUpdateSyncsTheConnectionsListedBeforeAndAfter(): void {
 		$this->subscriber()->handle(new ObjectUpdatedEvent(
 			$this->usage(data: ['koppelingen' => ['c2'], 'participants' => ['org-b']]),
 			$this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']])
 		));
 
-		$this->assertSame([[['c2', 'c1'], null]], $this->calls);
+		$this->assertSame(expected: [[['c2', 'c1'], null]], actual: $this->calls);
 	}
 
+	/**
+	 * Adeleted shared usage syncs without itself.
+	 *
+	 * @return void
+	 */
 	public function testADeletedSharedUsageSyncsWithoutItself(): void {
 		$this->subscriber()->handle(new ObjectDeletedEvent($this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']])));
 
-		$this->assertSame([[['c1'], 'usage-1']], $this->calls);
+		$this->assertSame(expected: [[['c1'], 'usage-1']], actual: $this->calls);
 	}
 
+	/**
+	 * An unshared usage and another schema do nothing.
+	 *
+	 * @return void
+	 */
 	public function testAnUnsharedUsageAndAnotherSchemaDoNothing(): void {
 		$subscriber = $this->subscriber();
 		$subscriber->handle(new ObjectCreatedEvent($this->usage(data: ['koppelingen' => ['c1']])));
 		$subscriber->handle(new ObjectCreatedEvent($this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']], schema: 99)));
 
-		$this->assertSame([], $this->calls);
+		$this->assertSame(expected: [], actual: $this->calls);
 	}
 
+	/**
+	 * Afailing sync is logged and does not escape.
+	 *
+	 * @return void
+	 */
 	public function testAFailingSyncIsLoggedAndDoesNotEscape(): void {
-		$this->subscriber(syncFails: true)->handle(new ObjectCreatedEvent($this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']])));
+		$this->subscriber(syncFails: true)->handle(
+			new ObjectCreatedEvent($this->usage(data: ['koppelingen' => ['c1'], 'participants' => ['org-b']]))
+		);
 
-		$this->assertSame([], $this->calls);
+		$this->assertSame(expected: [], actual: $this->calls);
 	}
 
+	/**
+	 * It is registered for create update and delete.
+	 *
+	 * @return void
+	 */
 	public function testItIsRegisteredForCreateUpdateAndDelete(): void {
 		$registrar = (string)file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 
 		foreach (['ObjectCreatedEvent', 'ObjectUpdatedEvent', 'ObjectDeletedEvent'] as $event) {
-			$this->assertStringContainsString('registerEventListener(' . $event . '::class, ConnectionShareSubscriber::class)', $registrar);
+			$this->assertStringContainsString(
+				needle: 'registerEventListener(' . $event . '::class, ConnectionShareSubscriber::class)',
+				haystack: $registrar
+			);
 		}
 	}
 }

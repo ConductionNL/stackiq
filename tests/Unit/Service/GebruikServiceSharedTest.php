@@ -42,8 +42,18 @@ use Psr\Log\LoggerInterface;
 #[UsesClass(RelationRefs::class)]
 class GebruikServiceSharedTest extends TestCase {
 
+	/**
+	 * Object Service.
+	 *
+	 * @var ObjectServiceInterface&MockObject
+	 */
 	private ObjectServiceInterface&MockObject $objectService;
 
+	/**
+	 * Service.
+	 *
+	 * @var GebruikService
+	 */
 	private GebruikService $service;
 
 	/**
@@ -54,10 +64,10 @@ class GebruikServiceSharedTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$catalogue  = $this->createMock(CatalogueLocator::class);
-		$appManager = $this->createMock(IAppManager::class);
-		$container  = $this->createMock(ContainerInterface::class);
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$catalogue  = $this->createMock(originalClassName: CatalogueLocator::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$container  = $this->createMock(originalClassName: ContainerInterface::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($this->objectService);
@@ -65,7 +75,12 @@ class GebruikServiceSharedTest extends TestCase {
 			['register' => 'reg-1', 'gebruik_schema' => 'gebruik-schema', 'module_schema' => 'module-schema']
 		);
 
-		$this->service = new GebruikService($catalogue, $appManager, $container, $this->createMock(LoggerInterface::class));
+		$this->service = new GebruikService(
+			catalogue: $catalogue,
+			appManager: $appManager,
+			container: $container,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 	}//end setUp()
 
 	/**
@@ -110,8 +125,8 @@ class GebruikServiceSharedTest extends TestCase {
 			'org-alb'
 		);
 
-		$this->assertSame(['u-shared'], array_column($shared, 'id'));
-		$this->assertSame(['cooperation' => 'org-zd', 'participantCount' => 2], $shared[0]['_shared']);
+		$this->assertSame(expected: ['u-shared'], actual: array_column($shared, 'id'));
+		$this->assertSame(expected: ['cooperation' => 'org-zd', 'participantCount' => 2], actual: $shared[0]['_shared']);
 	}//end testSharedSearchForcesTheScopeAndRechecksEveryRecord()
 
 	/**
@@ -122,8 +137,8 @@ class GebruikServiceSharedTest extends TestCase {
 	public function testNoOrganisationIssuesNoQuery(): void {
 		$this->objectService->expects($this->never())->method('searchObjectsPaginated');
 
-		$this->assertSame([], $this->service->getSharedGebruiken([], ''));
-		$this->assertSame([], $this->service->getSharedConnections(''));
+		$this->assertSame(expected: [], actual: $this->service->getSharedGebruiken([], ''));
+		$this->assertSame(expected: [], actual: $this->service->getSharedConnections(''));
 	}//end testNoOrganisationIssuesNoQuery()
 
 	/**
@@ -133,7 +148,7 @@ class GebruikServiceSharedTest extends TestCase {
 	 */
 	public function testSharedConnectionsCombineOwnedAndSharedUsages(): void {
 		$queries = [];
-		$this->objectService->expects($this->exactly(2))->method('searchObjectsPaginated')
+		$this->objectService->expects($this->exactly(count: 2))->method('searchObjectsPaginated')
 			->willReturnCallback(
 				static function (array $query) use (&$queries): array {
 					$queries[] = array_intersect_key($query, ['consumer' => 1, 'participants' => 1, '_limit' => 1]);
@@ -148,18 +163,18 @@ class GebruikServiceSharedTest extends TestCase {
 		$connections = $this->service->getSharedConnections('org-pap');
 
 		$this->assertSame(
-			[
+			expected: [
 				['consumer' => 'org-pap', '_limit' => 500],
 				['participants' => 'org-pap', '_limit' => 500],
 			],
-			$queries
+			actual: $queries
 		);
 		$this->assertSame(
-			[
+			expected: [
 				'c-1' => ['sharedWith' => ['org-alb', 'org-zd'], 'usages' => ['u-1', 'u-2']],
 				'c-2' => ['sharedWith' => ['org-zd'], 'usages' => ['u-2']],
 			],
-			$connections
+			actual: $connections
 		);
 	}//end testSharedConnectionsCombineOwnedAndSharedUsages()
 }//end class

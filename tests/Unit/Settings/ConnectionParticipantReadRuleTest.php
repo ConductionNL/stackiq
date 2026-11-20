@@ -50,34 +50,58 @@ final class ConnectionParticipantReadRuleTest extends TestCase {
 		return $merged['components']['schemas']['connection'];
 	}//end connection()
 
+	/**
+	 * Aparticipant manager and reader may read the connection.
+	 *
+	 * @return void
+	 */
 	public function testAParticipantManagerAndReaderMayReadTheConnection(): void {
 		$read = $this->connection()['authorization']['read'];
-		$rules = array_values(array_filter($read, static fn (mixed $rule): bool => is_array($rule) && isset($rule['match'][ConnectionShareSync::FIELD])));
+		$rules = array_values(
+			array_filter($read, static fn (mixed $rule): bool => is_array($rule) && isset($rule['match'][ConnectionShareSync::FIELD]))
+		);
 
-		$this->assertSame(['gebruik-beheerder', 'gebruik-raadpleger'], array_column($rules, 'group'));
+		$this->assertSame(expected: ['gebruik-beheerder', 'gebruik-raadpleger'], actual: array_column($rules, 'group'));
 		foreach ($rules as $rule) {
-			$this->assertSame(['$contains' => '$organisation'], $rule['match'][ConnectionShareSync::FIELD]);
-			$this->assertTrue($rule['crossOrganisation']);
+			$this->assertSame(expected: ['$contains' => '$organisation'], actual: $rule['match'][ConnectionShareSync::FIELD]);
+			$this->assertTrue(condition: $rule['crossOrganisation']);
 		}
 	}
 
+	/**
+	 * The earlier read rules are kept and writes get no participant rule.
+	 *
+	 * @return void
+	 */
 	public function testTheEarlierReadRulesAreKeptAndWritesGetNoParticipantRule(): void {
 		$authorization = $this->connection()['authorization'];
 		$encoded = array_map(static fn (mixed $rule): string => (string)json_encode($rule), $authorization['read']);
 
-		$this->assertContains('{"group":"gebruik-beheerder","match":{"_organisation":"$organisation"}}', $encoded);
-		$this->assertContains('{"group":"public","match":{"publicationDate":{"$lte":"$now"}},"crossOrganisation":true}', $encoded);
-		$this->assertContains('{"group":"aanbod-beheerder","match":{"provider":"$organisation"},"crossOrganisation":true}', $encoded);
+		$this->assertContains(needle: '{"group":"gebruik-beheerder","match":{"_organisation":"$organisation"}}', haystack: $encoded);
+		$this->assertContains(needle: '{"group":"public","match":{"publicationDate":{"$lte":"$now"}},"crossOrganisation":true}', haystack: $encoded);
+		$this->assertContains(
+			needle: '{"group":"aanbod-beheerder","match":{"provider":"$organisation"},"crossOrganisation":true}',
+			haystack: $encoded
+		);
 		foreach (['update', 'delete'] as $action) {
-			$this->assertStringNotContainsString(ConnectionShareSync::FIELD, (string)json_encode($authorization[$action]), $action);
+			$this->assertStringNotContainsString(
+				needle: ConnectionShareSync::FIELD,
+				haystack: (string)json_encode($authorization[$action]),
+				message: $action
+			);
 		}
 	}
 
+	/**
+	 * The field is declared and the version moves so the import applies.
+	 *
+	 * @return void
+	 */
 	public function testTheFieldIsDeclaredAndTheVersionMovesSoTheImportApplies(): void {
 		$connection = $this->connection();
 
-		$this->assertSame('0.3.7', $connection['version']);
-		$this->assertSame('array', $connection['properties'][ConnectionShareSync::FIELD]['type']);
-		$this->assertTrue($connection['properties'][ConnectionShareSync::FIELD]['readOnly']);
+		$this->assertSame(expected: '0.3.7', actual: $connection['version']);
+		$this->assertSame(expected: 'array', actual: $connection['properties'][ConnectionShareSync::FIELD]['type']);
+		$this->assertTrue(condition: $connection['properties'][ConnectionShareSync::FIELD]['readOnly']);
 	}
 }

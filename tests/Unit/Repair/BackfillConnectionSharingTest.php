@@ -32,32 +32,49 @@ use Psr\Log\LoggerInterface;
  */
 final class BackfillConnectionSharingTest extends TestCase {
 
+	/**
+	 * It reports how many connections it wrote.
+	 *
+	 * @return void
+	 */
 	public function testItReportsHowManyConnectionsItWrote(): void {
-		$sync = $this->createMock(ConnectionShareSync::class);
+		$sync = $this->createMock(originalClassName: ConnectionShareSync::class);
 		$sync->expects($this->once())->method('backfill')->willReturn(3);
-		$output = $this->createMock(IOutput::class);
-		$output->expects($this->once())->method('info')->with('BackfillConnectionSharing: 3 connection(s) now readable to the participants of their usages.');
+		$output = $this->createMock(originalClassName: IOutput::class);
+		$output->expects($this->once())->method('info')->with(
+			'BackfillConnectionSharing: 3 connection(s) now readable to the participants of their usages.'
+		);
 
-		(new BackfillConnectionSharing(sync: $sync, logger: $this->createMock(LoggerInterface::class)))->run($output);
+		(new BackfillConnectionSharing(sync: $sync, logger: $this->createMock(originalClassName: LoggerInterface::class)))->run($output);
 	}
 
+	/**
+	 * Afailure is logged and does not escape.
+	 *
+	 * @return void
+	 */
 	public function testAFailureIsLoggedAndDoesNotEscape(): void {
-		$sync = $this->createMock(ConnectionShareSync::class);
+		$sync = $this->createMock(originalClassName: ConnectionShareSync::class);
 		$sync->method('backfill')->willThrowException(new \RuntimeException('down'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
-		$output = $this->createMock(IOutput::class);
+		$output = $this->createMock(originalClassName: IOutput::class);
 		$output->expects($this->once())->method('info')->with('BackfillConnectionSharing: could not read the shared usages; nothing done.');
 
 		(new BackfillConnectionSharing(sync: $sync, logger: $logger))->run($output);
 	}
 
+	/**
+	 * It runs after the register import on upgrade.
+	 *
+	 * @return void
+	 */
 	public function testItRunsAfterTheRegisterImportOnUpgrade(): void {
 		$info = (string)file_get_contents(__DIR__ . '/../../../appinfo/info.xml');
 		$import = strpos($info, '<step>OCA\Stackiq\Repair\InitializeSettings</step>');
 		$backfill = strpos($info, '<step>OCA\Stackiq\Repair\BackfillConnectionSharing</step>');
 
-		$this->assertNotFalse($backfill);
-		$this->assertGreaterThan($import, $backfill);
+		$this->assertNotFalse(condition: $backfill);
+		$this->assertGreaterThan(expected: $import, actual: $backfill);
 	}
 }

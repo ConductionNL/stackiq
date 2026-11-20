@@ -85,15 +85,22 @@ class GebruikControllerParticipantTest extends TestCase {
 	 * @return GebruikController
 	 */
 	private function makeController(array $params = []): GebruikController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn($params);
 
-		$this->gebruikService = $this->createMock(GebruikService::class);
-		$this->userSession    = $this->createMock(IUserSession::class);
-		$this->groupManager   = $this->createMock(IGroupManager::class);
-		$this->config         = $this->createMock(IConfig::class);
+		$this->gebruikService = $this->createMock(originalClassName: GebruikService::class);
+		$this->userSession    = $this->createMock(originalClassName: IUserSession::class);
+		$this->groupManager   = $this->createMock(originalClassName: IGroupManager::class);
+		$this->config         = $this->createMock(originalClassName: IConfig::class);
 
-		return new GebruikController('stackiq', $request, $this->userSession, $this->groupManager, $this->config, $this->gebruikService);
+		return new GebruikController(
+			appName: 'stackiq',
+			request: $request,
+			userSession: $this->userSession,
+			groupManager: $this->groupManager,
+			config: $this->config,
+			gebruikService: $this->gebruikService
+		);
 	}//end makeController()
 
 	/**
@@ -105,13 +112,13 @@ class GebruikControllerParticipantTest extends TestCase {
 	 * @return void
 	 */
 	private function login(array $groups, string $orgUuid): void {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('alice');
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$mocks = [];
 		foreach ($groups as $gid) {
-			$group = $this->createMock(IGroup::class);
+			$group = $this->createMock(originalClassName: IGroup::class);
 			$group->method('getGID')->willReturn($gid);
 			$mocks[] = $group;
 		}
@@ -126,13 +133,18 @@ class GebruikControllerParticipantTest extends TestCase {
 	 * @return void
 	 */
 	public function testAParticipantGetsItsOwnAndTheSharedUsages(): void {
-		$controller = $this->makeController(['_limit' => 20]);
-		$this->login(['gebruik-beheerder'], 'org-alb');
+		$controller = $this->makeController(params: ['_limit' => 20]);
+		$this->login(groups: ['gebruik-beheerder'], orgUuid: 'org-alb');
 
 		$this->gebruikService->method('getGebruiken')->willReturn(
 			['results' => [['id' => 'u-own', 'consumer' => 'org-alb']], 'total' => 1]
 		);
-		$shared = ['id' => 'u-mozard', 'consumer' => 'org-zd', 'participants' => ['org-alb', 'org-pap'], '_shared' => ['cooperation' => 'org-zd', 'participantCount' => 3]];
+		$shared = [
+			'id' => 'u-mozard',
+			'consumer' => 'org-zd',
+			'participants' => ['org-alb', 'org-pap'],
+			'_shared' => ['cooperation' => 'org-zd', 'participantCount' => 3],
+		];
 		$this->gebruikService->expects($this->once())
 			->method('getSharedGebruiken')
 			->with(['_limit' => 20, 'consumer' => 'org-alb'], 'org-alb')
@@ -141,11 +153,11 @@ class GebruikControllerParticipantTest extends TestCase {
 		$response = $controller->getGebruiken();
 		$data     = $response->getData();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(2, $data['total']);
-		$this->assertSame(['u-own', 'u-mozard'], array_column($data['results'], 'id'));
-		$this->assertArrayNotHasKey('_shared', $data['results'][0]);
-		$this->assertSame(['cooperation' => 'org-zd', 'participantCount' => 3], $data['results'][1]['_shared']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 2, actual: $data['total']);
+		$this->assertSame(expected: ['u-own', 'u-mozard'], actual: array_column($data['results'], 'id'));
+		$this->assertArrayNotHasKey(key: '_shared', array: $data['results'][0]);
+		$this->assertSame(expected: ['cooperation' => 'org-zd', 'participantCount' => 3], actual: $data['results'][1]['_shared']);
 	}//end testAParticipantGetsItsOwnAndTheSharedUsages()
 
 	/**
@@ -175,14 +187,14 @@ class GebruikControllerParticipantTest extends TestCase {
 	 * @dataProvider noSharedProvider
 	 */
 	public function testNoSharedUsagesAreAddedOutsideTheParticipantsFirstPage(array $groups, array $params): void {
-		$controller = $this->makeController($params);
-		$this->login($groups, 'org-alb');
+		$controller = $this->makeController(params: $params);
+		$this->login(groups: $groups, orgUuid: 'org-alb');
 
 		$this->gebruikService->method('getApplicationIds')->willReturn(['app-1']);
 		$this->gebruikService->method('getGebruiken')->willReturn(['results' => [], 'total' => 0]);
 		$this->gebruikService->expects($this->never())->method('getSharedGebruiken');
 
-		$this->assertSame(0, $controller->getGebruiken()->getData()['total']);
+		$this->assertSame(expected: 0, actual: $controller->getGebruiken()->getData()['total']);
 	}//end testNoSharedUsagesAreAddedOutsideTheParticipantsFirstPage()
 
 	/**
@@ -192,7 +204,7 @@ class GebruikControllerParticipantTest extends TestCase {
 	 */
 	public function testNoOrganisationMeansNoSharedUsages(): void {
 		$controller = $this->makeController();
-		$this->login(['gebruik-beheerder'], '');
+		$this->login(groups: ['gebruik-beheerder'], orgUuid: '');
 
 		$this->gebruikService->method('getGebruiken')->willReturn(['results' => [], 'total' => 0]);
 		$this->gebruikService->expects($this->never())->method('getSharedGebruiken');
@@ -207,15 +219,15 @@ class GebruikControllerParticipantTest extends TestCase {
 	 */
 	public function testASharedReadFailureIsA500(): void {
 		$controller = $this->makeController();
-		$this->login(['gebruik-beheerder'], 'org-alb');
+		$this->login(groups: ['gebruik-beheerder'], orgUuid: 'org-alb');
 
 		$this->gebruikService->method('getGebruiken')->willReturn(['results' => [], 'total' => 0]);
 		$this->gebruikService->method('getSharedGebruiken')->willThrowException(new \Exception('register down'));
 
 		$response = $controller->getGebruiken();
 
-		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-		$this->assertSame(['error' => 'register down'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_INTERNAL_SERVER_ERROR, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'register down'], actual: $response->getData());
 	}//end testASharedReadFailureIsA500()
 
 	/**
@@ -228,7 +240,7 @@ class GebruikControllerParticipantTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn(null);
 		$this->gebruikService->expects($this->never())->method('getSharedConnections');
 
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->getSharedConnections()->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $controller->getSharedConnections()->getStatus());
 	}//end testSharedConnectionsRefusesAnonymous()
 
 	/**
@@ -255,10 +267,10 @@ class GebruikControllerParticipantTest extends TestCase {
 	 */
 	public function testSharedConnectionsRefusesWithoutRoleOrOrganisation(array $groups, string $orgUuid): void {
 		$controller = $this->makeController();
-		$this->login($groups, $orgUuid);
+		$this->login(groups: $groups, orgUuid: $orgUuid);
 		$this->gebruikService->expects($this->never())->method('getSharedConnections');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->getSharedConnections()->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $controller->getSharedConnections()->getStatus());
 	}//end testSharedConnectionsRefusesWithoutRoleOrOrganisation()
 
 	/**
@@ -267,8 +279,8 @@ class GebruikControllerParticipantTest extends TestCase {
 	 * @return void
 	 */
 	public function testSharedConnectionsUsesTheCallersOrganisation(): void {
-		$controller = $this->makeController(['organisation' => 'org-other']);
-		$this->login(['gebruik-raadpleger'], 'org-pap');
+		$controller = $this->makeController(params: ['organisation' => 'org-other']);
+		$this->login(groups: ['gebruik-raadpleger'], orgUuid: 'org-pap');
 
 		$this->gebruikService->expects($this->once())
 			->method('getSharedConnections')
@@ -277,7 +289,7 @@ class GebruikControllerParticipantTest extends TestCase {
 
 		$response = $controller->getSharedConnections();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['connections' => ['c-1' => ['sharedWith' => ['org-zd'], 'usages' => ['u-1']]]], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['connections' => ['c-1' => ['sharedWith' => ['org-zd'], 'usages' => ['u-1']]]], actual: $response->getData());
 	}//end testSharedConnectionsUsesTheCallersOrganisation()
 }//end class
