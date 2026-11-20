@@ -2087,7 +2087,10 @@ OC.L10N.register(
         "The type could not be changed.": "Het type kon niet worden gewijzigd.",
         "The type was changed.": "Het type is gewijzigd.",
         "This entry is an application.": "Deze registratie is een applicatie.",
-        "This entry is system software.": "Deze registratie is systeemsoftware."
+        "This entry is system software.": "Deze registratie is systeemsoftware.",
+        "Show products": "Producten tonen",
+        "No product": "Geen product",
+        "Products ({count}): {names}": "Producten ({count}): {names}"
     },
     "nplurals=2; plural=(n != 1);"
 )
