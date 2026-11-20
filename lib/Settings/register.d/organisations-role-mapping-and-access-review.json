@@ -1,0 +1,40 @@
+{
+  "_comment": "organisations-role-mapping-and-access-review. The access review lives on the contact person: Keep access writes when it was confirmed and by whom through OpenRegister, so the audit trail records the decision. Only the access review endpoint writes them (after its own reviewer check); through the plain object API only an admin may set them, so nobody can mark their own access as reviewed. A person is due for review when accessReviewedAt is empty or older than the interval in the admin role mapping.",
+  "components": {
+    "schemas": {
+      "contactPerson": {
+        "version": "0.0.30",
+        "properties": {
+          "accessReviewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Access reviewed at",
+            "description": "When a functional administrator or Nextcloud admin last confirmed or changed this person's access.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 20,
+            "authorization": {
+              "create": ["admin"],
+              "update": ["admin"]
+            }
+          },
+          "accessReviewedBy": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Access reviewed by",
+            "description": "The user id of the reviewer who last confirmed or changed this person's access.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 21,
+            "authorization": {
+              "create": ["admin"],
+              "update": ["admin"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

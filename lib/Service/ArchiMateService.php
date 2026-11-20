@@ -320,7 +320,13 @@ class ArchiMateService implements ArchiMateServiceInterface {
 				$gebruikData,
 				$modulesData,
 				$deelnamesData,
-				$options
+				$options,
+				$this->orgConnections(
+					objectService: $objectService,
+					orgScope: ['register' => $orgRegisterId, 'organisation' => $organizationUuid],
+					schemaId: $voorzConfig['koppeling_schema'] ?? null,
+					options: $options
+				)
 			);
 
 			// Generate file name: DD-MM-YYYY_Stackiq_AMEFF_export_OrgName.xml.
@@ -330,6 +336,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 				'success' => true,
 				'xml' => $xml,
 				'file_name' => $fileName,
+				'connections_skipped' => $this->exportService->lastSkippedConnections(),
 			];
 		} catch (\Exception $e) {
 			return $this->exportFailure(message: 'Organization ArchiMate export failed', exception: $e);
@@ -407,6 +414,30 @@ class ArchiMateService implements ArchiMateServiceInterface {
 
 		return $registerId;
 	}//end requireAmefRegisterId()
+
+	/**
+	 * The organisation's connections the export may write as flows, when it is asked to (REQ-CDX-004).
+	 *
+	 * Only the connections the exported organisation owns are read, like its
+	 * gebruik and modules; the flow writer keeps those whose ends are both in
+	 * the exported model and counts the rest.
+	 *
+	 * @param ObjectServiceInterface $objectService The object service.
+	 * @param array                  $orgScope      The organisation register id ('register') and UUID ('organisation').
+	 * @param mixed                  $schemaId      The connection schema, or null when none is configured.
+	 * @param array<string, bool>    $options       The export options.
+	 *
+	 * @return array<int, mixed> The connections, or none.
+	 *
+	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 */
+	private function orgConnections(ObjectServiceInterface $objectService, array $orgScope, mixed $schemaId, array $options): array {
+		if (($options['connections'] ?? false) !== true) {
+			return [];
+		}
+
+		return $this->searchOrgObjects(objectService: $objectService, orgScope: $orgScope, schemaId: $schemaId);
+	}//end orgConnections()
 
 	/**
 	 * The organization's gebruik, modules and deelname gebruik from the Voorzieningen register
@@ -523,6 +554,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 * @param array                  $modulesData   The modules found so far
 	 *
 	 * @return array The merged modules
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function mergeAllModules(ObjectServiceInterface $objectService, array $query, array $modulesData): array {
 		$allModules = $objectService->searchObjects(
@@ -794,6 +826,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 * @param array $query Optional query criteria and pagination parameters
 	 *
 	 * @return array Array of objects matching the criteria
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function getObjectsWithPagination(string $schemaType, array $query = []): array {
 		try {

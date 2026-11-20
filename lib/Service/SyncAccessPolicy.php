@@ -60,6 +60,22 @@ class SyncAccessPolicy {
 	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 	 */
 	public function mayViewSync(?string $uid): bool {
+		return $this->isAdministrator(uid: $uid);
+	}//end mayViewSync()
+
+	/**
+	 * Whether a user is a Nextcloud admin or a functional administrator.
+	 *
+	 * The same rule decides who may open OpenRegister's duplicate candidates
+	 * from the catalogue pages (operations-record-reconciliation).
+	 *
+	 * @param string|null $uid The user, or null when nobody is signed in.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+	 */
+	public function isAdministrator(?string $uid): bool {
 		if ($uid === null || $uid === '') {
 			return false;
 		}
@@ -69,5 +85,5 @@ class SyncAccessPolicy {
 		}
 
 		return $this->groupManager->isInGroup($uid, self::FUNCTIONAL_ADMIN_GROUP) === true;
-	}//end mayViewSync()
+	}//end isAdministrator()
 }//end class

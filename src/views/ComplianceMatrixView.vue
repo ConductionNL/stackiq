@@ -143,10 +143,17 @@
 					{{ t('stackiq', 'Claimed (no evidence)') }}</span
 				>
 				<span class="cmv-legendItem"
+					><CloseCircle :size="16" class="cmv-iconNotMet" />
+					{{ t('stackiq', 'Does not meet') }}</span
+				>
+				<span class="cmv-legendItem"
 					><MinusCircle :size="16" class="cmv-iconNone" />
-					{{ t('stackiq', 'None') }}</span
+					{{ t('stackiq', 'Unknown (no claim)') }}</span
 				>
 			</div>
+			<p class="cmv-summary" data-testid="cmv-summary">
+				{{ t('stackiq', 'Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}', cellCounts) }}
+			</p>
 
 			<table class="cmv-table">
 				<thead>
@@ -200,6 +207,12 @@
 									"
 									:size="18"
 									class="cmv-iconVerified" />
+								<CloseCircle
+									v-else-if="
+										row.cells[column.uuid].state === 'not-met'
+									"
+									:size="18"
+									class="cmv-iconNotMet" />
 								<HelpCircle
 									v-else
 									:size="18"
@@ -208,6 +221,19 @@
 									stateLabel(row.cells[column.uuid].state)
 								}}</span>
 							</button>
+							<span
+								v-if="row.cells[column.uuid].state === 'verified'"
+								class="cmv-cellReviewer">
+								{{ verifiedLine(row.cells[column.uuid].record) }}
+							</span>
+							<NcButton
+								v-else-if="canAskVerification(row.cells[column.uuid])"
+								variant="tertiary"
+								class="cmv-verifyButton"
+								:disabled="verifying === recordId(row.cells[column.uuid].record)"
+								@click="markVerified(row.cells[column.uuid].record)">
+								{{ t('stackiq', 'Mark as verified') }}
+							</NcButton>
 							<span
 								v-else
 								class="cmv-cellNone"
@@ -256,7 +282,10 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -267,6 +296,7 @@ import {
 } from '@nextcloud/vue'
 import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import HelpCircle from 'vue-material-design-icons/HelpCircle.vue'
 import MinusCircle from 'vue-material-design-icons/MinusCircle.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -277,7 +307,9 @@ import {
 	buildComplianceMatrix,
 	COLUMN_SOURCE,
 	columnLabel,
+	countCellStates,
 	dataOf,
+	hasEvidence,
 	resolveUuid,
 } from '../utils/complianceMatrix.js'
 import { registerObjectTypeFromConfig } from '../utils/objectTypeCollection.js'
@@ -295,7 +327,7 @@ import {
  *
  * Filter-first compliance matrix: modules × a selected column source
  * (GEMMA standard versions, or — since bio-compliance-assessment — BIO 2.0
- * measures), with verified / claimed / none cell states. The buyer-facing
+ * measures), with verified / claimed / does-not-meet / unknown cell states. The buyer-facing
  * answer to "does this application support standard/measure X, and is that
  * a claim or a fact?". In the BIO scope, optionally narrowed to a single
  * organisation's in-use applications, with each row also showing the
@@ -315,6 +347,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		Refresh,
 		CheckCircle,
+		CloseCircle,
 		HelpCircle,
 		MinusCircle,
 		TableLarge,
@@ -347,6 +380,7 @@ export default {
 	data() {
 		return {
 			loading: true,
+			verifying: '',
 			columnSource: COLUMN_SOURCE.STANDAARDVERSIE,
 			selectedStandards: [],
 			selectedBioMeasures: [],
@@ -566,6 +600,16 @@ export default {
 		},
 
 		/**
+		 * How many cells are in each state, for the summary under the legend.
+		 *
+		 * @return {{verified: number, claimed: number, notMet: number, none: number}} The counts.
+		 * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+		 */
+		cellCounts() {
+			return countCellStates(this.matrix)
+		},
+
+		/**
 		 * The computed matrix for the current selection.
 		 *
 		 * @return {object} { rows, columns, unresolved, conflicted }.
@@ -612,6 +656,69 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * The uuid of a compliancy record.
+		 *
+		 * @param {object} record The record.
+		 * @return {string} The uuid, or ''.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		recordId(record) {
+			return record?.['@self']?.id || record?.id || resolveUuid(record) || ''
+		},
+
+		/**
+		 * Whether a cell offers Mark as verified: a claimed record with evidence.
+		 * Who may verify is decided by the server (a reviewer outside the supplier).
+		 *
+		 * @param {{state: string, record: object}} cell The cell.
+		 * @return {boolean} True when the action is offered.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		canAskVerification(cell) {
+			return cell?.state === 'claimed' && Boolean(cell.record) && hasEvidence(dataOf(cell.record))
+		},
+
+		/**
+		 * "Verified by <name> on <date>" for a verified cell.
+		 *
+		 * @param {object} record The record.
+		 * @return {string} The line, or '' without a reviewer.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		verifiedLine(record) {
+			const data = dataOf(record)
+			if (!data?.verifiedBy) {
+				return ''
+			}
+			const date = data.verifiedAt ? new Date(data.verifiedAt).toLocaleDateString() : ''
+			return t('stackiq', 'Verified by {name} on {date}', { name: data.verifiedBy, date })
+		},
+
+		/**
+		 * Ask the server to mark a claim verified, then reload the compliance records.
+		 *
+		 * @param {object} record The record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
+		 */
+		async markVerified(record) {
+			const id = this.recordId(record)
+			if (!id) {
+				return
+			}
+			this.verifying = id
+			try {
+				await axios.post(generateUrl('/apps/stackiq/api/compliancy/{id}/verify', { id }))
+				showSuccess(t('stackiq', 'The claim is marked verified'))
+				await this.fetchType('compliancy')
+			} catch (error) {
+				showError(error?.response?.data?.message || t('stackiq', 'Could not mark the claim verified'))
+			} finally {
+				this.verifying = ''
+			}
+		},
 
 		/**
 		 * Fetch the collections the matrix depends on.
@@ -807,7 +914,10 @@ export default {
 			if (state === 'claimed') {
 				return t('stackiq', 'Claimed')
 			}
-			return t('stackiq', 'None')
+			if (state === 'not-met') {
+				return t('stackiq', 'Does not meet')
+			}
+			return t('stackiq', 'Unknown')
 		},
 
 		/**
@@ -955,6 +1065,16 @@ export default {
 	text-align: center;
 }
 
+.cmv-cellReviewer {
+	display: block;
+	font-size: var(--default-font-size);
+	color: var(--color-text-maxcontrast);
+}
+
+.cmv-verifyButton {
+	margin-top: calc(var(--default-grid-baseline) * 1);
+}
+
 .cmv-cell--verified {
 	background: var(--color-success, #2d7d46);
 	background: color-mix(in srgb, var(--color-success) 12%, transparent);
@@ -962,6 +1082,15 @@ export default {
 
 .cmv-cell--claimed {
 	background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.cmv-cell--not-met {
+	background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.cmv-summary {
+	margin: 8px 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .cmv-cellButton {
@@ -988,6 +1117,10 @@ export default {
 
 .cmv-iconClaimed {
 	color: var(--color-warning);
+}
+
+.cmv-iconNotMet {
+	color: var(--color-error);
 }
 
 .cmv-iconNone {

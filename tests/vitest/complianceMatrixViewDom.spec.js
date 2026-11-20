@@ -86,9 +86,9 @@ function COLLECTIONS () {
 	organization: { results: [] },
 	compliancy: {
 		results: [
-			{ id: 'c1', module: 'm1', standard_version: 's1', evidenceReference: '/Files/proof.pdf' },
+			{ id: 'c1', module: 'm1', standard_version: 's1', evidenceReference: '/Files/proof.pdf', verifiedBy: 'Rita Reviewer' },
 			{ id: 'c2', module: 'm2', standard_version: 's1' },
-			{ id: 'c3', module: 'm1', bioMeasure: 'b1', url: 'https://example.org/audit' },
+			{ id: 'c3', module: 'm1', bioMeasure: 'b1', url: 'https://example.org/audit', verifiedBy: 'Rita Reviewer' },
 			{ id: 'c4', module: 'm3', standardGemma: 'Some standard' },
 			{ id: 'c5', module: 'm4', standard_version: 's1', bioMeasure: 'b1' },
 		],
@@ -151,7 +151,7 @@ describe('ComplianceMatrixView mounted', () => {
 		expect(row(wrapper, 'Zaaksysteem').find('button').attributes('aria-label')).toBe('Zaaksysteem — StUF 3.01: Verified')
 		expect(row(wrapper, 'DMS').find('.cmv-cellText').text()).toBe('Claimed')
 		const none = row(wrapper, 'Portaal').find('.cmv-cellNone')
-		expect([none.exists(), none.attributes('aria-label')]).toEqual([true, 'Portaal — StUF 3.01: None'])
+		expect([none.exists(), none.attributes('aria-label')]).toEqual([true, 'Portaal — StUF 3.01: Unknown'])
 		expect(row(wrapper, 'Portaal').find('button').exists()).toBe(false)
 
 		const notes = wrapper.findAll('.note').map((n) => n.text())

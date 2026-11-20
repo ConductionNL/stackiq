@@ -27,6 +27,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -66,8 +67,17 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  */
 class ContactPersonHandler implements ContactPersonHandlerInterface {
+	/**
+	 * The catalogue roles, their groups and the default role per organisation type.
+	 *
+	 * @var RoleGroupMap
+	 */
+	private readonly RoleGroupMap $roleGroupMap;
+
 	/**
 	 * ContactPersonHandler constructor
 	 *
@@ -80,7 +90,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @param LoggerInterface $_logger Logger interface.
 	 * @param SymfonyEmailService $_emailService Email service.
 	 * @param IConfig $config Config interface.
+	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
 	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function __construct(
 		private readonly IUserManager $_userManager,
@@ -92,8 +105,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 		private readonly LoggerInterface $_logger,
 		private readonly SymfonyEmailService $_emailService,
 		private readonly IConfig $config,
+		?RoleGroupMap $roleGroupMap = null,
 		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
+		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $_config);
 	}//end __construct()
 
 	/**
@@ -811,22 +826,13 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 				$group->addUser($user);
 				$this->_logger->info(
 					'Added user to group',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 			}
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to add user to group: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-					'exception' => $e,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type) + ['exception' => $e]
 			);
 		}//end try
 	}//end addUserToGroup()
@@ -847,11 +853,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			if ($group === null) {
 				$this->_logger->warning(
 					'Group does not exist, skipping user assignment',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 				return;
 			}
@@ -859,11 +861,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			if ($group->inGroup($user) === true) {
 				$this->_logger->debug(
 					'User already in group',
-					[
-						'username' => $user->getUID(),
-						'groupName' => $groupName,
-						'type' => $type,
-					]
+					$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 				);
 				return;
 			}
@@ -871,24 +869,28 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			$group->addUser($user);
 			$this->_logger->info(
 				'Added user to existing group',
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type)
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to add user to group with check: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'groupName' => $groupName,
-					'type' => $type,
-					'exception' => $e,
-				]
+				$this->groupLogContext(user: $user, groupName: $groupName, type: $type) + ['exception' => $e]
 			);
 		}//end try
 	}//end addUserToGroupWithCheck()
+
+	/**
+	 * The log context of a group assignment: who, which group and why.
+	 *
+	 * @param \OCP\IUser $user      The user.
+	 * @param string     $groupName The group name.
+	 * @param string     $type      The type of group assignment.
+	 *
+	 * @return array{username: string, groupName: string, type: string}
+	 */
+	private function groupLogContext(\OCP\IUser $user, string $groupName, string $type): array {
+		return ['username' => $user->getUID(), 'groupName' => $groupName, 'type' => $type];
+	}//end groupLogContext()
 
 	/**
 	 * Updates user groups when contact person data changes
@@ -1287,25 +1289,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function handleNewContact(object $contactObject): void {
-		try {
-			$this->_logger->info(
-				'Handling new contact',
-				[
-					'objectId' => $contactObject->getId(),
-				]
-			);
-
-			// Process the contact to ensure proper user structure.
-			$this->processContactpersoon(contactPersonObject: $contactObject);
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to handle new contact: ' . $e->getMessage(),
-				[
-					'objectId' => $contactObject->getId(),
-					'exception' => $e,
-				]
-			);
-		}
+		$this->processLogged(contactObject: $contactObject, event: 'new contact');
 	}//end handleNewContact()
 
 	/**
@@ -1317,26 +1301,25 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function handleContactUpdate(object $contactObject): void {
-		try {
-			$this->_logger->info(
-				'Handling contact update',
-				[
-					'objectId' => $contactObject->getId(),
-				]
-			);
+		$this->processLogged(contactObject: $contactObject, event: 'contact update');
+	}//end handleContactUpdate()
 
-			// Process the updated contact.
+	/**
+	 * Process a created or updated contact, logging the event; never throws.
+	 *
+	 * @param object $contactObject The contact object
+	 * @param string $event         What happened to it, for the log ('new contact', 'contact update').
+	 *
+	 * @return void
+	 */
+	private function processLogged(object $contactObject, string $event): void {
+		try {
+			$this->_logger->info('Handling ' . $event, ['objectId' => $contactObject->getId()]);
 			$this->processContactpersoon(contactPersonObject: $contactObject);
 		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to handle contact update: ' . $e->getMessage(),
-				[
-					'objectId' => $contactObject->getId(),
-					'exception' => $e,
-				]
-			);
+			$this->_logger->error('Failed to handle ' . $event . ': ' . $e->getMessage(), ['objectId' => $contactObject->getId(), 'exception' => $e]);
 		}
-	}//end handleContactUpdate()
+	}//end processLogged()
 
 	/**
 	 * Handles contact deletion
@@ -1630,27 +1613,25 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * Maps organization type to role group based on business rules
 	 *
+	 * Reads the organisation type's default role from RoleGroupMap, keyed on
+	 * the stored English enum (Municipality, Supplier, Collaboration,
+	 * Community) and editable in the admin role mapping. #520 translated the
+	 * enum while this map kept the Dutch keys, so only Community matched
+	 * (stackiq#1137); the map now lives in one place for every path.
+	 *
 	 * @param string $organizationType The organization type (case-insensitive)
 	 *
 	 * @return string The role group name or empty string if no mapping exists
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	private function getRoleGroupByOrganizationType(string $organizationType): string {
-		// Normalize the organization type to lowercase for comparison.
-		$normalizedType = strtolower(trim($organizationType));
+		$role = $this->roleGroupMap->defaultRoleForOrganisationType(organisationType: $organizationType);
+		if ($role === null) {
+			return '';
+		}
 
-		// Keyed on the organization.type enum as stored (Municipality,
-		// Supplier, Collaboration, Community), lower-cased. #520 translated the
-		// enum and migrated the rows, but this map kept the Dutch keys
-		// (gemeente, leverancier, samenwerking), so only Community matched and
-		// municipal and supplier contacts got no role group (stackiq#1137).
-		$typeToRoleMapping = [
-			'municipality' => 'gebruik-beheerder',
-			'supplier' => 'aanbod-beheerder',
-			'collaboration' => 'gebruik-beheerder',
-			'community' => 'aanbod-beheerder',
-		];
-
-		return $typeToRoleMapping[$normalizedType] ?? '';
+		return (string) $this->roleGroupMap->roleGroup(role: $role);
 	}//end getRoleGroupByOrganizationType()
 
 	/**
@@ -1914,41 +1895,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserInactive(string $username): bool {
-		try {
-			$user = $this->_userManager->get($username);
-
-			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set inactive',
-					[
-						'username' => $username,
-					]
-				);
-
-				return false;
-			}
-
-			$user->setEnabled(false);
-
-			$this->_logger->info(
-				'Set user account to inactive',
-				[
-					'username' => $username,
-				]
-			);
-
-			return true;
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user inactive: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
-			return false;
-		}//end try
+		return $this->setUserEnabled(username: $username, enabled: false);
 	}//end setUserInactive()
 
 	/**
@@ -1960,42 +1907,38 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserActive(string $username): bool {
+		return $this->setUserEnabled(username: $username, enabled: true);
+	}//end setUserActive()
+
+	/**
+	 * Enable or disable a user account, logging the outcome; never throws.
+	 *
+	 * @param string $username The username.
+	 * @param bool   $enabled  True to set the account active, false for inactive.
+	 *
+	 * @return bool True if successful
+	 */
+	private function setUserEnabled(string $username, bool $enabled): bool {
+		$state = 'inactive';
+		if ($enabled === true) {
+			$state = 'active';
+		}
+
 		try {
 			$user = $this->_userManager->get($username);
-
 			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set active',
-					[
-						'username' => $username,
-					]
-				);
-
+				$this->_logger->warning('User not found when trying to set ' . $state, ['username' => $username]);
 				return false;
 			}
 
-			$user->setEnabled(true);
-
-			$this->_logger->info(
-				'Set user account to active',
-				[
-					'username' => $username,
-				]
-			);
-
+			$user->setEnabled($enabled);
+			$this->_logger->info('Set user account to ' . $state, ['username' => $username]);
 			return true;
 		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user active: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
+			$this->_logger->error('Failed to set user ' . $state . ': ' . $e->getMessage(), ['username' => $username, 'exception' => $e]);
 			return false;
 		}//end try
-	}//end setUserActive()
+	}//end setUserEnabled()
 
 	/**
 	 * Handles contactpersoon updates, particularly role changes

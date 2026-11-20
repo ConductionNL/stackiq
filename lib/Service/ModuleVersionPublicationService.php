@@ -264,6 +264,7 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	 * @param ModuleVersionCopyRun   $run     The copy in progress.
 	 *
 	 * @return array<int, mixed>|null The versions, or null when the search failed.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function readVersionPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): ?array {
 		try {
@@ -332,10 +333,8 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	 * @return boolean True when an anonymous reader may read it.
 	 */
 	private static function isPublicNow(array $mirror): bool {
-		if (($mirror['moduleRegisteredBy'] ?? null) === 'Supplier') {
-			return true;
-		}
-
+		// Only the publication date makes a version public; being registered by
+		// a supplier no longer does (capability-rows-the-code-does-not-yet-meet task 20).
 		$date = ($mirror['modulePublicationDate'] ?? null);
 		if (is_string($date) === false || $date === '') {
 			return false;

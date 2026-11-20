@@ -24,6 +24,9 @@ namespace OCA\Stackiq\Service;
 use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationAnswerServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationRoundAccessInterface;
+use OCA\Stackiq\Kernel\Contracts\AttestationServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\AskServiceInterface;
@@ -32,6 +35,7 @@ use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionSuggestionServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonEmailInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
@@ -41,7 +45,9 @@ use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\DataQualityReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EntryConfirmationServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CatalogExportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
 use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
@@ -51,6 +57,7 @@ use OCA\Stackiq\Kernel\Contracts\GemmaStandardLinkerInterface;
 use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\LandscapeComparisonServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\LifecycleCalendarServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
@@ -68,6 +75,7 @@ use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCA\Stackiq\Kernel\Contracts\PublicationServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
+use OCA\Stackiq\Kernel\Contracts\PublishedAanbodInterface;
 use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ReviewAggregateServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ReviewServiceInterface;
@@ -87,6 +95,7 @@ use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -119,17 +128,33 @@ final class ContractBindings {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function register(IRegistrationContext $context): void {
+		$this->registerFirstHalf(context: $context);
+		$this->registerSecondHalf(context: $context);
+	}//end register()
+
+	/**
+	 * Alias the contracts from AanbodServiceInterface up to GemmaStandardLinkerInterface.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 */
+	private function registerFirstHalf(IRegistrationContext $context): void {
 		$context->registerServiceAlias(AanbodServiceInterface::class, AanbodService::class);
 		$context->registerServiceAlias(AangebodenGebruikServiceInterface::class, AangebodenGebruikService::class);
 		$context->registerServiceAlias(ArchiMateImportControlInterface::class, ArchiMateImportControl::class);
 		$context->registerServiceAlias(ArchiMateImportServiceInterface::class, ArchiMateImportService::class);
 		$context->registerServiceAlias(ArchiMateServiceInterface::class, ArchiMateService::class);
 		$context->registerServiceAlias(AskServiceInterface::class, AskService::class);
+		$context->registerServiceAlias(AttestationAnswerServiceInterface::class, AttestationAnswerService::class);
+		$context->registerServiceAlias(AttestationRoundAccessInterface::class, AttestationRoundAccess::class);
+		$context->registerServiceAlias(AttestationServiceInterface::class, AttestationService::class);
 		$context->registerServiceAlias(CmdbExportImportServiceInterface::class, CmdbExportImportService::class);
 		$context->registerServiceAlias(CmdbImportPackStoreInterface::class, CmdbImportPackStore::class);
 		$context->registerServiceAlias(CmdbImportProfileInterface::class, CmdbImportProfile::class);
 		$context->registerServiceAlias(ConnectionReportServiceInterface::class, ConnectionReportService::class);
 		$context->registerServiceAlias(ConnectionSuggestionServiceInterface::class, ConnectionSuggestionService::class);
+		$context->registerServiceAlias(ContactPersonEmailInterface::class, ContactPersonEmail::class);
 		$context->registerServiceAlias(ContactPersonHandlerInterface::class, ContactPersonHandler::class);
 		$context->registerServiceAlias(ContactPersonOrganisationGuardInterface::class, ContactPersonOrganisationGuard::class);
 		$context->registerServiceAlias(ContactpersoonServiceInterface::class, ContactpersoonService::class);
@@ -139,16 +164,29 @@ final class ContractBindings {
 		$context->registerServiceAlias(DataQualityReportServiceInterface::class, DataQualityReportService::class);
 		$context->registerServiceAlias(DemoDataServiceInterface::class, DemoDataService::class);
 		$context->registerServiceAlias(EmailSettingsInterface::class, EmailSettings::class);
+		$context->registerServiceAlias(EntryConfirmationServiceInterface::class, EntryConfirmationService::class);
 		$context->registerServiceAlias(EolSyncServiceInterface::class, EolSyncService::class);
+		$context->registerServiceAlias(CatalogExportServiceInterface::class, CatalogExportService::class);
 		$context->registerServiceAlias(FacetServiceInterface::class, FacetService::class);
 		$context->registerServiceAlias(FederationConfigInterface::class, FederationConfig::class);
 		$context->registerServiceAlias(FederationServiceInterface::class, FederationService::class);
 		$context->registerServiceAlias(GebruikServiceInterface::class, GebruikService::class);
 		$context->registerServiceAlias(GebruikSyncServiceInterface::class, GebruikSyncService::class);
+	}//end registerFirstHalf()
+
+	/**
+	 * Alias the contracts from GemmaStandardLinkerInterface on, in alphabetical order.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 */
+	private function registerSecondHalf(IRegistrationContext $context): void {
 		$context->registerServiceAlias(GemmaStandardLinkerInterface::class, GemmaStandardLinker::class);
 		$context->registerServiceAlias(IntakeServiceInterface::class, IntakeService::class);
 		$context->registerServiceAlias(ItsmExchangeServiceInterface::class, ItsmExchangeService::class);
 		$context->registerServiceAlias(ItsmFileImportServiceInterface::class, ItsmFileImportService::class);
+		$context->registerServiceAlias(LandscapeComparisonServiceInterface::class, LandscapeComparisonService::class);
 		$context->registerServiceAlias(LifecycleCalendarServiceInterface::class, LifecycleCalendarService::class);
 		$context->registerServiceAlias(MaintenanceRecipientServiceInterface::class, MaintenanceRecipientService::class);
 		$context->registerServiceAlias(MergeOrganisatieServiceInterface::class, MergeOrganisatieService::class);
@@ -166,6 +204,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ProgressTrackerInterface::class, ProgressTracker::class);
 		$context->registerServiceAlias(PublicCatalogueRecordsInterface::class, PublicCatalogueRecords::class);
 		$context->registerServiceAlias(PublicationServiceInterface::class, PublicationService::class);
+		$context->registerServiceAlias(PublishedAanbodInterface::class, PublishedAanbod::class);
 		$context->registerServiceAlias(ReferenceComponentCoverageServiceInterface::class, ReferenceComponentCoverageService::class);
 		$context->registerServiceAlias(ReviewAggregateServiceInterface::class, ReviewAggregateService::class);
 		$context->registerServiceAlias(ReviewServiceInterface::class, ReviewService::class);
@@ -175,5 +214,5 @@ final class ContractBindings {
 		$context->registerServiceAlias(StackiqContactSyncServiceInterface::class, StackiqContactSyncService::class);
 		$context->registerServiceAlias(SyncProgressInterface::class, SyncProgress::class);
 		$context->registerServiceAlias(ViewServiceInterface::class, ViewService::class);
-	}//end register()
+	}//end registerSecondHalf()
 }//end class

@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Stackiq",
-        "version": "0.2.7-unstable.20261020120000",
+        "version": "0.2.8-unstable.20261119065125",
         "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -44,8 +44,16 @@
             "description": "Controller for handling offered usage (aangeboden gebruik) API operations"
         },
         {
+            "name": "access-review",
+            "description": "Review, per organisation, who holds which catalogue role and confirm or withdraw it"
+        },
+        {
             "name": "ask",
             "description": "A question about the catalogue, answered from the entries the caller may read"
+        },
+        {
+            "name": "attestation",
+            "description": "Confirmation rounds: owners confirm or correct their entries."
         },
         {
             "name": "cmdb-import",
@@ -70,6 +78,14 @@
         {
             "name": "data-quality-report",
             "description": "Serves one organisation's data quality report"
+        },
+        {
+            "name": "entry-confirmation",
+            "description": "Confirm an application or usage is current."
+        },
+        {
+            "name": "entry-type",
+            "description": "Change a catalogue entry between application, service and system software without recreating it"
         },
         {
             "name": "facet",
@@ -148,8 +164,24 @@
             "description": "Connection suggestions of a usage: list, accept and dismiss, for the usage's own organisation"
         },
         {
+            "name": "usage-classification",
+            "description": "The classification suggestion for a usage and the anonymous classification summary of an application."
+        },
+        {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "view-document",
+            "description": "The view document route, POST /api/views/{viewId}/document."
+        },
+        {
+            "name": "catalog-export",
+            "description": "The filtered list export route, GET /api/catalog/{schema}/export."
+        },
+        {
+            "name": "landscape-comparison",
+            "description": "Compares one organisation's landscape today with the plan, or a scenario, on a date"
         }
     ],
     "paths": {
@@ -258,6 +290,139 @@
                         "in": "path",
                         "required": true,
                         "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/aanbod/claimed": {
+            "get": {
+                "operationId": "claimed-usage-index",
+                "summary": "The usages other organisations claim of the active organisation's products",
+                "description": "Lists the unanswered usages whose provider is the active organisation and that another organisation owns, with the claiming organisation, product, version and claim date. `organisation` names the active organisation the claims are of.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The claims",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/aanbod/claimed/{uuid}/accept": {
+            "put": {
+                "operationId": "claimed-usage-accept",
+                "summary": "Accept a usage claimed of the active organisation's product",
+                "description": "Records `providerResponse: accepted` with date and user on the usage. Only the usage's provider may answer; anyone else gets 403 and nothing is written. The usage is not deleted.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answered usage",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/aanbod/claimed/{uuid}/decline": {
+            "put": {
+                "operationId": "claimed-usage-decline",
+                "summary": "Decline a usage claimed of the active organisation's product",
+                "description": "Records `providerResponse: declined` with date and user on the usage, which stays the claiming organisation's record. Only the usage's provider may answer; anyone else gets 403 and nothing is written.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answered usage",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
                         "schema": {
                             "type": "string"
                         }
@@ -507,6 +672,181 @@
                 ]
             }
         },
+        "/access-review/{contactPersonId}/confirm": {
+            "post": {
+                "operationId": "access-review-confirm",
+                "summary": "Keep access: record that the reviewer confirmed the person's access now",
+                "description": "Keep access: writes accessReviewedAt and accessReviewedBy on the contact person through OpenRegister. A reviewer cannot confirm their own access.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactPersonId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact person under review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The recorded review.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/access-review/{contactPersonId}/withdraw": {
+            "post": {
+                "operationId": "access-review-withdraw",
+                "summary": "Remove role: take a role off the person's contact person and out of its role group",
+                "description": "Remove role: removes the role from the contact person's roles, records the review, and takes the person out of the role group when no other source still grants the role. A role that comes from a mapped group or the organisation type is refused with 409 naming its source. A reviewer cannot change their own access.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactPersonId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact person under review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "description": "The catalogue role to remove, such as Gebruik-beheerder."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The withdrawal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/access-review/{organisationUuid}": {
+            "get": {
+                "operationId": "access-review-index",
+                "summary": "The people of an organisation who have an account, with their roles, sources and review state",
+                "description": "The people of an organisation who have an account, with their roles and where each comes from, last sign-in, whether the account is enabled, when their access was last reviewed and by whom, and whether a review is due. A Nextcloud admin may review any organisation; a member of functioneel-beheerder or organisatie-beheerder only their own active organisation. Refused before any read.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "organisationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organisation to review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The review rows.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/amef/config": {
             "get": {
                 "operationId": "settings-get-amef-config",
@@ -736,6 +1076,58 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "organizationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organizationUuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/archimate/export/organization/{organizationUuid}/access": {
+            "get": {
+                "operationId": "settings-org-export-access",
+                "summary": "Whether the caller may export one organisation as ArchiMate",
+                "description": "Whether the caller may export one organisation as ArchiMate. The organisation detail page's Export as ArchiMate action asks this before it shows itself; no export work runs here.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{mayExport: bool}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "mayExport": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "mayExport"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 },
                 "parameters": [
@@ -2008,6 +2400,78 @@
                 }
             }
         },
+        "/data-quality/confirm/{kind}/{id}": {
+            "post": {
+                "operationId": "entry-confirmation-confirm",
+                "summary": "Confirm the entry is current",
+                "description": "Sets lastConfirmedAt of one application (module) or usage to now and nothing else, so OpenRegister rescores it. Only a user who may update the entry can confirm it.",
+                "tags": [
+                    "entry-confirmation"
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "usage"
+                            ]
+                        },
+                        "description": "The kind of entry."
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The entry's id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The moment stored, as `{lastConfirmedAt}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "lastConfirmedAt": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "description": "OpenRegister or its configuration is unavailable."
+                    }
+                }
+            }
+        },
         "/email/config": {
             "get": {
                 "operationId": "settings-get-email-config",
@@ -2333,6 +2797,155 @@
                 }
             }
         },
+        "/entries/{uuid}/type-change": {
+            "get": {
+                "operationId": "entry-type-preview",
+                "summary": "What a change to another type keeps, drops and is blocked by",
+                "description": "What a change of the entry to `target` (application, service or systemSoftware) keeps, drops with its values, and is blocked by. Writes nothing.",
+                "tags": [
+                    "entry-type"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{uuid, currentType, targetType, carried, dropped, blockers, serviceTypes}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The entry: an application, system software or a service.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "target",
+                        "in": "query",
+                        "required": true,
+                        "description": "The type to change into.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "application",
+                                "service",
+                                "systemSoftware"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "entry-type-change",
+                "summary": "Change the entry into another type, keeping its uuid",
+                "description": "Change the entry into `target`. A change between application and service moves the object with OpenRegister, keeping its uuid, history, files and relations; `serviceTypes` is required for a service. Refused with 409 while other entries point at it.",
+                "tags": [
+                    "entry-type"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{uuid, targetType, moved, errors}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The entry: an application, system software or a service.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "target"
+                                ],
+                                "properties": {
+                                    "target": {
+                                        "type": "string",
+                                        "enum": [
+                                            "application",
+                                            "service",
+                                            "systemSoftware"
+                                        ]
+                                    },
+                                    "serviceTypes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/eol-sync/config": {
             "get": {
                 "operationId": "settings-get-eol-sync-config",
@@ -2524,6 +3137,60 @@
                 ]
             }
         },
+        "/catalog/{schema}/export": {
+            "get": {
+                "operationId": "catalog-export-export",
+                "summary": "Export the Applications or Services list as filtered",
+                "description": "Export the Applications (module) or Services (catalogService) list as CSV or XLSX: the objects the GEMMA facets and the search match, narrowed by the active quick filter, read with the caller's rights, in the page's columns. Query parameters: _gf_referenceComponent, _gf_standard, _gf_applicationService, _gf_domain (or the plain dimension names), search, quickFilter (JSON object), columns (JSON list of {key, label}), format (csv or xlsx). When the facet set stopped at its paging ceiling the file's last row says so. A schema whose authorization names export admits only those groups.",
+                "tags": [
+                    "catalog-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file: text/csv, or for format=xlsx an XLSX workbook (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "application/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "required": true,
+                        "description": "module or catalogService.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "catalogService"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "/federation/peers": {
             "post": {
                 "operationId": "federation-add-peer",
@@ -2705,6 +3372,43 @@
                 "operationId": "gebruik-get-gebruiken-for-deelnemer",
                 "summary": "Fetch gebruiken for a deelnemer",
                 "description": "Fetch gebruiken for a deelnemer.",
+                "tags": [
+                    "gebruik"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/gebruik/shared-connections": {
+            "get": {
+                "operationId": "gebruik-get-shared-connections",
+                "summary": "The connections of the usages your organisation owns or takes part in, with whom each is shared",
+                "description": "For each connection held by a shared usage that the caller's organisation owns or participates in: the other organisations it is shared with (sharedWith) and the usage ids (usages). Requires gebruik-beheerder or gebruik-raadpleger and an organisation on the account.",
                 "tags": [
                     "gebruik"
                 ],
@@ -5962,6 +6666,109 @@
                 ]
             }
         },
+        "/views/{viewId}/document": {
+            "post": {
+                "operationId": "view-document-create-view-document",
+                "summary": "Ask filinq for a Word document or a PowerPoint slide of the view.",
+                "description": "Sends the view's name, description, viewpoint, legend, date, a link to the view page and its SVG to filinq through filinq's published document contract, and answers the Files path and file id of the document filinq made in the caller's Files. 503 when the contract does not resolve; nothing is written then.",
+                "tags": [
+                    "view-document"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "format"
+                                ],
+                                "properties": {
+                                    "format": {
+                                        "type": "string",
+                                        "enum": [
+                                            "docx",
+                                            "pptx"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The document filinq filed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "fileId": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "502": {
+                        "description": "filinq refused or did not answer the request.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "viewId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The viewId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/views/{viewId}": {
             "get": {
                 "operationId": "view-get-view",
@@ -6239,6 +7046,319 @@
                         "in": "path",
                         "required": true,
                         "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/gebruik/{usageId}/classification-suggestion": {
+            "get": {
+                "operationId": "usage-classification-suggestion",
+                "summary": "The BIO levels GEMMA suggests for a usage, from its reference components; saves nothing",
+                "description": "The BIO levels GEMMA suggests for a usage, from its reference components; saves nothing.",
+                "tags": [
+                    "usage-classification"
+                ],
+                "parameters": [
+                    {
+                        "name": "usageId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answer.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/modules/{moduleId}/classification-summary": {
+            "get": {
+                "operationId": "usage-classification-summary",
+                "summary": "How many organisations classified an application, and from three on how many per level; never names one",
+                "description": "How many organisations classified an application, and from three on how many per level; never names one.",
+                "tags": [
+                    "usage-classification"
+                ],
+                "parameters": [
+                    {
+                        "name": "moduleId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The application.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answer.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/attestation-rounds": {
+            "post": {
+                "operationId": "attestation-start",
+                "summary": "Start a confirmation round over an organisation's usages or products",
+                "description": "Start a round over `scopeSchema` (usage or module) of `organisation`, due `deadline`. The caller must be an admin or a maintainer of the organisation. The answer lists the entries no request could be sent for.",
+                "tags": [
+                    "attestation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "organisation",
+                                    "scopeSchema",
+                                    "deadline"
+                                ],
+                                "properties": {
+                                    "organisation": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "scopeSchema": {
+                                        "type": "string",
+                                        "enum": [
+                                            "usage",
+                                            "module"
+                                        ]
+                                    },
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The round, its request count and the unassigned entries.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/attestation-requests/{id}/confirm": {
+            "post": {
+                "operationId": "attestation-confirm",
+                "summary": "Confirm a confirmation request",
+                "description": "The request's assignee confirms the entry is current: the entry's lastConfirmedAt is set under their own rights and the request reads confirmed.",
+                "tags": [
+                    "attestation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The confirmed request.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/landscape-comparison": {
+            "get": {
+                "operationId": "landscape-comparison-index",
+                "summary": "The comparison for `?organisation=` on `?date=`, or for `?scenario=`; refused before any read when the user may not read the organisation",
+                "description": "The comparison for `?organisation=` on `?date=`, or for `?scenario=`; refused before any read when the user may not read the organisation.",
+                "tags": [
+                    "landscape-comparison"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The comparison, or an error.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/compliancy/{id}/verify": {
+            "post": {
+                "operationId": "compliance-verification-verify",
+                "summary": "Mark a compliance claim verified",
+                "description": "Mark a compliance claim verified as the signed-in reviewer. Only a reviewer of another organisation than the supplier may, and only a claim with evidence.",
+                "tags": [
+                    "compliance-verification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{verifiedBy, verifiedAt, verifiedByOrganisation}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The compliancy uuid.",
                         "schema": {
                             "type": "string"
                         }

@@ -106,6 +106,20 @@ describe('KwetsbaarhedenView rendering', () => {
 		expect(navigationStore.setModal).toHaveBeenCalledWith('vulnerability')
 	})
 
+	it('opens a row on its own vulnerability page when the app has a router (REQ-CLR-018)', async () => {
+		const push = vi.fn()
+		const wrapper = mount(KwetsbaarhedenView, { global: { stubs, mocks: { $router: { push } } } })
+		await flush()
+
+		await wrapper.findAll('[data-testid="vuln-row"]')[0].trigger('click')
+
+		expect(push).toHaveBeenCalledTimes(1)
+		expect(push.mock.calls[0][0].name).toBe('KwetsbaarheidDetail')
+		expect(typeof push.mock.calls[0][0].params.id).toBe('string')
+		expect(push.mock.calls[0][0].params.id).not.toBe('')
+		expect(navigationStore.setModal).not.toHaveBeenCalled()
+	})
+
 	it('edits and deletes a row without also opening it', async () => {
 		const wrapper = await mountView()
 		const row = wrapper.findAll('[data-testid="vuln-row"]')[1]

@@ -249,6 +249,9 @@
 		"genericUserGroups": [],
 		"organizationAdminGroups": [],
 		"superUserGroups": [],
+		"roleMapping": {},
+		"organisationTypeRoles": {},
+		"accessReviewIntervalDays": null,
 		"emailSettings": {
 			"enabled": false,
 			"senderEmail": "",

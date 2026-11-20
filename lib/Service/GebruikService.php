@@ -29,8 +29,14 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for handling gebruik-related operations
+ * @SuppressWarnings(PHPMD.StaticAccess) SharedUsageScope is a pure selector over records already read.
  */
 class GebruikService implements GebruikServiceInterface {
+	/**
+	 * How many shared usages one read returns at most.
+	 */
+	private const SHARED_LIMIT = 500;
+
 	/**
 	 * Constructor for GebruikService.
 	 *
@@ -213,4 +219,61 @@ class GebruikService implements GebruikServiceInterface {
 
 		return $searchResult;
 	}//end getApplicationIds()
+
+	/**
+	 * The usages shared with an organisation: it is listed in their
+	 * participants and does not own them. Each carries its `_shared` marker.
+	 *
+	 * The request's own filters (module, status, ...) still apply; its
+	 * paging, its consumer filter and any participants filter are replaced,
+	 * so the caller cannot widen the scope to another organisation.
+	 *
+	 * @param array  $options The request options.
+	 * @param string $orgUuid The organisation's uuid; '' returns nothing.
+	 *
+	 * @return list<array<string, mixed>> The shared usages.
+	 *
+	 * @throws Exception When OpenRegister or its configuration is missing.
+	 *
+	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+	 */
+	public function getSharedGebruiken(array $options, string $orgUuid): array {
+		if ($orgUuid === '') {
+			return [];
+		}
+
+		unset($options['consumer'], $options['_page'], $options['page'], $options['_offset'], $options['offset']);
+		$options['participants'] = $orgUuid;
+		$options['_limit']       = self::SHARED_LIMIT;
+
+		$result = $this->getGebruiken(options: $options);
+
+		return SharedUsageScope::sharedWith(usages: ($result['results'] ?? []), organisation: $orgUuid);
+	}//end getSharedGebruiken()
+
+	/**
+	 * The connections of the usages an organisation owns or takes part in,
+	 * with the organisations each is shared with.
+	 *
+	 * @param string $orgUuid The organisation's uuid; '' returns nothing.
+	 *
+	 * @return array<string, array{sharedWith: list<string>, usages: list<string>}> Keyed by connection uuid.
+	 *
+	 * @throws Exception When OpenRegister or its configuration is missing.
+	 *
+	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 */
+	public function getSharedConnections(string $orgUuid): array {
+		if ($orgUuid === '') {
+			return [];
+		}
+
+		$owned  = $this->getGebruiken(options: ['consumer' => $orgUuid, '_limit' => self::SHARED_LIMIT]);
+		$shared = $this->getGebruiken(options: ['participants' => $orgUuid, '_limit' => self::SHARED_LIMIT]);
+
+		return SharedUsageScope::connections(
+			usages: array_merge(($owned['results'] ?? []), ($shared['results'] ?? [])),
+			organisation: $orgUuid
+		);
+	}//end getSharedConnections()
 }//end class

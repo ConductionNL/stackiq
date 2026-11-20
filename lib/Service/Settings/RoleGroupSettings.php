@@ -27,6 +27,8 @@ namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -39,7 +41,8 @@ use Psr\Log\LoggerInterface;
  * services that depend on it can be tested against a mock.
  *
  * @spec openspec/specs/settings-service/spec.md
- */
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Reading, validating and remapping the role groups share one settings shape.
+*/
 class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 	/**
@@ -54,19 +57,33 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	];
 
 	/**
+	 * The role mapping, the organisation type roles and the review interval.
+	 *
+	 * @var RoleGroupMap
+	 */
+	private readonly RoleGroupMap $roleGroupMap;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig      $config       The app config holding the group lists.
-	 * @param IAppManager     $appManager   Tells whether user_management is installed.
-	 * @param IGroupManager   $groupManager Lists the Nextcloud groups.
-	 * @param LoggerInterface $logger       The logger.
+	 * @param IAppConfig        $config       The app config holding the group lists.
+	 * @param IAppManager       $appManager   Tells whether user_management is installed.
+	 * @param IGroupManager     $groupManager Lists the Nextcloud groups.
+	 * @param LoggerInterface   $logger       The logger.
+	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 * @param RoleGrantSync|null $roleGrantSync Syncs the members of a remapped group; null leaves that to the nightly job.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
+		?RoleGroupMap $roleGroupMap = null,
+		private readonly ?RoleGrantSync $roleGrantSync = null,
 	) {
+		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $config);
 	}//end __construct()
 
 	/**
@@ -357,17 +374,24 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	/**
 	 * Get user groups configuration only
 	 *
+	 * Next to the three group lists it carries the catalogue role mapping:
+	 * `roleMapping`, `organisationTypeRoles` and `accessReviewIntervalDays`.
+	 *
 	 * @return array User groups configuration
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function getUserGroupsConfig(): array {
 		try {
-			$config = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
-				'allGroups' => $this->getAllGroups(),
-			];
+			$config = array_merge(
+				[
+					'generic' => $this->getGenericUserGroups(),
+					'organizationAdmin' => $this->getOrganizationAdminGroups(),
+					'superUser' => $this->getSuperUserGroups(),
+					'allGroups' => $this->getAllGroups(),
+				],
+				$this->roleGroupMap->toArray()
+			);
 
 			return [
 				'success' => true,
@@ -389,12 +413,90 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	}//end getUserGroupsConfig()
 
 	/**
+	 * Sync the members of every group whose mapped roles changed.
+	 *
+	 * Runs only once the role groups are seeded; a member without a contact
+	 * person is left alone, and a failed sync is logged without failing the save.
+	 *
+	 * @param array<string, list<string>> $before The source groups per role before the save.
+	 * @param array<string, list<string>> $after  The source groups per role after the save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	private function syncRemappedGroups(array $before, array $after): void {
+		if ($this->roleGrantSync === null || $this->roleGroupMap->grantsSeeded() === false) {
+			return;
+		}
+
+		$rolesBefore = self::rolesPerGroup(sourceGroups: $before);
+		$rolesAfter = self::rolesPerGroup(sourceGroups: $after);
+		$groups = array_unique(array_merge(array_keys($rolesBefore), array_keys($rolesAfter)));
+
+		$synced = [];
+		foreach ($groups as $groupId) {
+			if (($rolesBefore[$groupId] ?? []) === ($rolesAfter[$groupId] ?? [])) {
+				continue;
+			}
+
+			$group = $this->groupManager->get((string) $groupId);
+			if ($group === null) {
+				continue;
+			}
+
+			foreach ($group->getUsers() as $user) {
+				if (isset($synced[$user->getUID()]) === true) {
+					continue;
+				}
+
+				$synced[$user->getUID()] = true;
+				try {
+					$this->roleGrantSync->syncCatalogueUser(user: $user);
+				} catch (\Throwable $e) {
+					$this->logger->warning(
+						'Role groups of a remapped group member not synced',
+						['username' => $user->getUID(), 'group' => $groupId, 'error' => $e->getMessage()]
+					);
+				}
+			}
+		}//end foreach
+	}//end syncRemappedGroups()
+
+	/**
+	 * The roles each source group grants.
+	 *
+	 * @param array<string, list<string>> $sourceGroups The source groups per role.
+	 *
+	 * @return array<string, list<string>> The sorted roles per group id, as the mapping names it.
+	 */
+	private static function rolesPerGroup(array $sourceGroups): array {
+		$roles = [];
+		foreach ($sourceGroups as $role => $groups) {
+			foreach ($groups as $group) {
+				$roles[(string) $group][] = (string) $role;
+			}
+		}
+
+		foreach ($roles as $group => $list) {
+			sort($list);
+			$roles[$group] = $list;
+		}
+
+		return $roles;
+	}//end rolesPerGroup()
+
+	/**
 	 * Update user groups configuration
+	 *
+	 * The role mapping parts are validated and saved together by RoleGroupMap,
+	 * all or nothing.
 	 *
 	 * @param array $config User groups configuration data
 	 *
 	 * @return array Result of the update operation
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function updateUserGroupsConfig(array $config): array {
 		try {
@@ -410,6 +512,15 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 			if (isset($config['superUser']) === true) {
 				$results['superUser'] = $this->updateSuperUserGroups(groups: $config['superUser']);
+			}
+
+			$roleMapKeys = array_intersect_key($config, array_flip(['roleMapping', 'organisationTypeRoles', 'accessReviewIntervalDays']));
+			if ($roleMapKeys !== []) {
+				$before = $this->roleGroupMap->sourceGroups();
+				$results['roleMapping'] = $this->roleGroupMap->update(config: $roleMapKeys);
+				if ($results['roleMapping']['success'] === true) {
+					$this->syncRemappedGroups(before: $before, after: $this->roleGroupMap->sourceGroups());
+				}
 			}
 
 			// Check if any updates failed.

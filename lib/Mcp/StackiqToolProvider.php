@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Mcp;
 
 use OCA\OpenRegister\Mcp\IMcpToolProvider;
+use OCA\Stackiq\Service\ArchitectureViewDraftService;
 use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
 
 /**
@@ -252,6 +253,65 @@ class StackiqToolProvider implements IMcpToolProvider {
 			'required' => ['viewId'],
 		],
 	], [
+		'id' => 'stackiq.searchArchitectureElements',
+		'name' => 'Find architecture elements',
+		'description' => 'Architecture (ArchiMate) elements matching a text, as uuid, identifier, name, ArchiMate type and '
+			. 'GEMMA type, so a drafted view reuses existing elements instead of inventing new ones. At most 50 rows.',
+		...self::READ_TOOL,
+		'inputSchema' => [
+			'type' => 'object',
+			'properties' => [
+				'query' => ['type' => 'string', 'maxLength' => 200],
+				'types' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ArchitectureViewDraftService::ELEMENT_TYPES]],
+				'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => ArchitectureViewDraftService::MAX_SEARCH],
+			],
+			'required' => ['query'],
+		],
+	], [
+		'id' => 'stackiq.draftView',
+		'name' => 'Draft an architecture view',
+		'description' => 'Write a new architecture view in status draft from elements and relations, for a person to review '
+			. 'in the view editor. An element names an existing element by uuid, or a new one by ArchiMate type and name; a '
+			. 'relation names two element keys and an ArchiMate relation type. At most 60 elements and 120 relations. '
+			. 'Returns the view uuid and the link to open it.',
+		...self::CREATE_TOOL,
+		'inputSchema' => [
+			'type' => 'object',
+			'properties' => [
+				'name' => ['type' => 'string', 'maxLength' => 255],
+				'description' => ['type' => 'string', 'maxLength' => 2000],
+				'elements' => [
+					'type' => 'array',
+					'minItems' => 1,
+					'maxItems' => ArchitectureViewDraftService::MAX_ELEMENTS,
+					'items' => [
+						'type' => 'object',
+						'properties' => [
+							'key' => ['type' => 'string'],
+							'uuid' => self::UUID,
+							'type' => ['type' => 'string', 'enum' => ArchitectureViewDraftService::ELEMENT_TYPES],
+							'name' => ['type' => 'string'],
+						],
+						'required' => ['key'],
+					],
+				],
+				'relations' => [
+					'type' => 'array',
+					'maxItems' => ArchitectureViewDraftService::MAX_RELATIONS,
+					'items' => [
+						'type' => 'object',
+						'properties' => [
+							'source' => ['type' => 'string'],
+							'target' => ['type' => 'string'],
+							'type' => ['type' => 'string', 'enum' => ArchitectureViewDraftService::RELATION_TYPES],
+						],
+						'required' => ['source', 'target', 'type'],
+					],
+				],
+			],
+			'required' => ['name', 'elements'],
+		],
+	], [
 		'id' => 'stackiq.previewOrganisationMerge',
 		'name' => 'Preview organisation merge',
 		'description' => 'What merging the source organisation into the target would move and change, without changing '
@@ -418,11 +478,13 @@ class StackiqToolProvider implements IMcpToolProvider {
 	 * @param McpContractTools $contractTools The contract tools.
 	 * @param McpReadTools     $readTools     The other read tools.
 	 * @param McpWriteTools    $writeTools    The other write tools.
+	 * @param McpDraftTools    $draftTools    The tools an assistant drafts an architecture view with.
 	 */
 	public function __construct(
 		private readonly McpContractTools $contractTools,
 		private readonly McpReadTools $readTools,
 		private readonly McpWriteTools $writeTools,
+		private readonly McpDraftTools $draftTools,
 	) {
 	}//end __construct()
 
@@ -472,6 +534,8 @@ class StackiqToolProvider implements IMcpToolProvider {
 			'stackiq.getSbomImportStatus' => $this->readTools->getSbomImportStatus(args: $arguments),
 			'stackiq.listViews' => $this->readTools->listViews(args: $arguments),
 			'stackiq.getView' => $this->readTools->getView(args: $arguments),
+			'stackiq.searchArchitectureElements' => $this->draftTools->searchArchitectureElements(args: $arguments),
+			'stackiq.draftView' => $this->draftTools->draftView(args: $arguments),
 			'stackiq.previewOrganisationMerge' => $this->readTools->previewOrganisationMerge(args: $arguments),
 			'stackiq.getEolSyncStatus' => $this->readTools->getEolSyncStatus(args: $arguments),
 			'stackiq.publishObject' => $this->writeTools->publishObject(args: $arguments),

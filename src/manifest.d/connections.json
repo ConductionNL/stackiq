@@ -15,6 +15,7 @@
 			"route": "/koppelingen",
 			"type": "index",
 			"title": "Connections",
+			"actionsComponent": "ConnectionWizardAction",
 			"config": {
 				"bulkActions": [
 					{
@@ -26,6 +27,7 @@
 				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
+				"showAdd": false,
 				"description": "Every connection between applications, and from an application to a national provision.",
 				"columns": [
 					"name",
@@ -34,7 +36,8 @@
 					{ "key": "moduleA", "label": "From application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
 					{ "key": "moduleB", "label": "To application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
 					"nonMunicipalProvision",
-					"dataExchangeDirection"
+					"dataExchangeDirection",
+					{ "key": "sharedWith", "label": "Shared with", "widget": "sharedWith" }
 				],
 				"filterMenu": true,
 				"quickFilters": [
@@ -54,6 +57,7 @@
 			"type": "detail",
 			"title": "Connection",
 			"config": {
+				"permissions": true,
 				"headerActions": [
 					{
 						"id": "move-to-organisation",
@@ -69,7 +73,7 @@
 				"_note": "A connection is read for what it links and how: data 8 wide (name, type, status, direction, both applications, the national provision, the intermediary, the lifecycle dates), documents 4 wide at the right, then the related panel with the standards. Status transitions come from the schema's x-openregister-lifecycle (release, sunset, withdraw).",
 				"lifecycleActions": { "field": "status" },
 				"widgets": [
-					{ "id": "kp-data", "type": "data", "title": "Connection", "icon": "LinkVariant", "content": { "columns": 2, "include": [ "name", "type", "status", "dataExchangeDirection", "moduleA", "moduleB", "nonMunicipalProvision", "realisedWithIntermediaryModule", "shortDescription", "longDescription", "dateInDevelopment", "dateInUse", "dateEndSupport", "dateWithdrawn" ] } },
+					{ "id": "kp-data", "type": "data", "title": "Connection", "icon": "LinkVariant", "content": { "columns": 2, "include": [ "name", "type", "status", "dataExchangeDirection", "moduleA", "moduleB", "standardVersions", "nonMunicipalProvision", "realisedWithIntermediaryModule", "shortDescription", "longDescription", "dateInDevelopment", "dateInUse", "dateEndSupport", "dateWithdrawn" ] } },
 					{ "id": "kp-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "kp-related", "type": "related", "title": "Applications and standards", "icon": "LinkVariant" }
 				],

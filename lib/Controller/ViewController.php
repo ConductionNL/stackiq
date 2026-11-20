@@ -48,6 +48,10 @@ use Psr\Log\LoggerInterface;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) phpmd 3 counts the route attributes
+ *   (NoAdminRequired, NoCSRFRequired) and the response types as coupling; the controller
+ *   itself delegates to one view service and one image service.
  */
 class ViewController extends Controller {
 	/**

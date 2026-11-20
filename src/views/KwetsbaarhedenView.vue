@@ -396,14 +396,20 @@ export default {
 		},
 
 		/**
-		 * Open the full vulnerability record (the app's canonical "open record"
-		 * gesture) so its fields, affected applications and exposure are readable.
+		 * Open the vulnerability's own page (KwetsbaarheidDetail: its fields,
+		 * affected applications and versions, and the Exposure tab with the
+		 * organisations and usages exposed to it). Without a router or a uuid it
+		 * falls back to the record modal.
 		 *
 		 * @param {object} row A row view-model.
 		 * @return {void}
-		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md#requirement-the-vulnerability-page-lists-the-organisations-and-usages-exposed-to-it-req-clr-018
 		 */
 		openDetail(row) {
+			if (this.$router && row.uuid) {
+				this.$router.push({ name: 'KwetsbaarheidDetail', params: { id: row.uuid } })
+				return
+			}
 			if (typeof objectStore.setActiveObject === 'function') {
 				objectStore.setActiveObject('vulnerability', row.raw)
 			}
