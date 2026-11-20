@@ -8,7 +8,7 @@
  * successful pull, the number of mirrored objects and, when the last pull
  * failed, the error; Pull now stays in the header.
  *
- * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

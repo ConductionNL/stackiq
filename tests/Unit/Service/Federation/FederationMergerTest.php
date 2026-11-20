@@ -321,7 +321,7 @@ class FederationMergerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function testCountMergeableCountsStableIdsOnce(): void {
 		$merger = new FederationMerger();

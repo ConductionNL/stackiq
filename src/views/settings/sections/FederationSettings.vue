@@ -269,7 +269,7 @@ export default defineComponent({
 		 *
 		 * @param {string} iso - The ISO-8601 moment.
 		 * @return {string} For example "2026-11-20 08:00 UTC".
-		 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 		 */
 		pulledAt(iso) {
 			const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
@@ -282,7 +282,7 @@ export default defineComponent({
 		 *
 		 * @param {string} reason - The recorded error.
 		 * @return {string} The words.
-		 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 		 */
 		errorReason(reason) {
 			const known = {

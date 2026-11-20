@@ -224,7 +224,7 @@ class FederationConfigTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function testTheMaxEntriesCap(): void {
 		$values = ['federation_max_entries' => 0];
@@ -246,7 +246,7 @@ class FederationConfigTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function testPeerStateIsMergedPerPeer(): void {
 		$stored = ['federation_peer_state' => json_encode(['https://b.nl' => ['name' => 'B', 'objectCount' => 4, 'lastError' => '']])];

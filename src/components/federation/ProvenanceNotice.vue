@@ -7,7 +7,7 @@
   - own entries. The page itself keeps a mirror read only (manifest
   - `readOnlyWhen` on `_source.instance`).
   -
-  - @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+  - @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
   -->
 <template>
 	<NcNoteCard v-if="provenance" type="info" data-testid="provenance-notice">
@@ -54,7 +54,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	async mounted() {
 		if (!this.objectId) {
@@ -74,7 +74,7 @@ export default {
 		 * The record's data, read through the object store.
 		 *
 		 * @return {Promise<object>} The record's fields.
-		 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 		 */
 		async loadRecord() {
 			if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {

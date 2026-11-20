@@ -160,7 +160,7 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return int The cap.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function getMaxEntries(): int {
 		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_max_entries', 10000);
@@ -179,7 +179,7 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return array{name:string, lastPulledAt:?string, objectCount:int, lastError:?string}
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function getPeerState(string $peerUrl): array {
 		$state = ($this->readPeerStates()[$peerUrl] ?? []);
@@ -203,7 +203,7 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function setPeerState(string $peerUrl, ?array $changes): void {
 		$current = $this->getPeerState(peerUrl: $peerUrl);
@@ -221,7 +221,7 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return array<string, mixed> The states.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	private function readPeerStates(): array {
 		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peer_state', '{}'), true);
@@ -239,7 +239,7 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return string|null The string, or null.
 	 *
-	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	private function stringOrNull(mixed $value): ?string {
 		if (is_string($value) === true && $value !== '') {
