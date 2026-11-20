@@ -220,8 +220,14 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 		}
 
 		$this->assertContains($drafted['connections'][0]['modelRelationshipId'], $identifiers);
+
+		// Other fragments seed vng-gemma elements too (drawn ones); the ones this
+		// drafted view places and connects carry the assistant mark.
+		$placed = array_merge(array_column($drafted['nodes'], 'elementRef'), array_column($drafted['connections'], 'modelRelationshipId'));
 		foreach (array_merge($seeded['element'], $seeded['relation']) as $object) {
-			$this->assertSame('assistant', $object['origin']);
+			if (in_array($object['identifier'] ?? null, $placed, true) === true) {
+				$this->assertSame('assistant', $object['origin']);
+			}
 		}
 	}//end testADraftedViewCarriesItsMarkAndTheSeedHoldsOne()
 }//end class

@@ -38,6 +38,8 @@ use Throwable;
  * Finds elements for a draft and writes a drafted view.
  *
  * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator is the pure argument reader every MCP tool class shares.
  */
 class McpDraftTools {
 

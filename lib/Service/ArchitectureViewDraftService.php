@@ -46,6 +46,7 @@ use Throwable;
  * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One draft is one composite write: validation, resolution and three kinds of save belong together.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The coupling is OpenRegister's save and find value objects and the exceptions a draft can end in.
  */
 class ArchitectureViewDraftService {
 
@@ -303,10 +304,24 @@ class ArchitectureViewDraftService {
 		}
 
 		$uuid = ($element['uuid'] ?? null);
-		if (is_string($uuid) === true && $uuid !== '') {
-			return $key;
+		if (is_string($uuid) === false || $uuid === '') {
+			$this->assertNewElement(element: $element, key: $key);
 		}
 
+		return $key;
+	}//end validElementKey()
+
+	/**
+	 * Check a drafted element that names no existing uuid: it needs an ArchiMate type and a name.
+	 *
+	 * @param array<string, mixed> $element The drafted element.
+	 * @param string               $key     Its key.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException Naming what is missing.
+	 */
+	private function assertNewElement(array $element, string $key): void {
 		$type = ($element['type'] ?? null);
 		if (is_string($type) === false || in_array($type, self::ELEMENT_TYPES, true) === false) {
 			throw new InvalidArgumentException("Element '{$key}' needs an existing uuid, or an ArchiMate element type and a name.");
@@ -315,9 +330,7 @@ class ArchitectureViewDraftService {
 		if (is_string($element['name'] ?? null) === false || trim((string)$element['name']) === '') {
 			throw new InvalidArgumentException("Element '{$key}' needs a name.");
 		}
-
-		return $key;
-	}//end validElementKey()
+	}//end assertNewElement()
 
 	/**
 	 * Check one drafted relation.

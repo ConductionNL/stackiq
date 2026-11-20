@@ -286,7 +286,10 @@ export default {
 			return !this.imported && this.lockedByMe
 		},
 
-		/** @return {string} The origin, in words. */
+		/**
+		 * @return {string} The origin, in words.
+		 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+		 */
 		originLabel() {
 			if (this.drafted) {
 				return t('stackiq', 'Drafted by an assistant')
@@ -302,7 +305,10 @@ export default {
 			return this.view?.origin === 'assistant'
 		},
 
-		/** @return {string} Who the view was drafted for and when, in words. */
+		/**
+		 * @return {string} Who the view was drafted for and when, in words.
+		 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+		 */
 		draftedNotice() {
 			const at = this.view?.draftedAt ? new Date(this.view.draftedAt) : null
 			const date = at && !Number.isNaN(at.getTime()) ? at.toLocaleDateString() : ''
@@ -400,6 +406,7 @@ export default {
 		 *
 		 * @param {object} view The view.
 		 * @return {void}
+		 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-004-a-drafted-view-shall-be-laid-out-when-it-is-first-opened
 		 */
 		show(view) {
 			this.view = view

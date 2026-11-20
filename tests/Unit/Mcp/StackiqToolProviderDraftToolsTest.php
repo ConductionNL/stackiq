@@ -56,17 +56,17 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 		$tools = array_column(StackiqToolProvider::TOOL_DESCRIPTORS, null, 'id');
 
 		$search = $tools['stackiq.searchArchitectureElements'];
-		$this->assertSame(['read', 'user'], [$search['scope'], $search['reach']]);
-		$this->assertTrue($search['annotations']['readOnlyHint']);
-		$this->assertSame(['query'], $search['inputSchema']['required']);
+		$this->assertSame(expected: ['read', 'user'], actual: [$search['scope'], $search['reach']]);
+		$this->assertTrue(condition: $search['annotations']['readOnlyHint']);
+		$this->assertSame(expected: ['query'], actual: $search['inputSchema']['required']);
 
 		$draft = $tools['stackiq.draftView'];
-		$this->assertSame(['create', 'instance'], [$draft['scope'], $draft['reach']]);
-		$this->assertSame(['readOnlyHint' => false, 'destructiveHint' => false, 'idempotentHint' => false], $draft['annotations']);
-		$this->assertSame(['name', 'elements'], $draft['inputSchema']['required']);
-		$this->assertSame(60, $draft['inputSchema']['properties']['elements']['maxItems']);
-		$this->assertSame(120, $draft['inputSchema']['properties']['relations']['maxItems']);
-		$this->assertSame(ArchitectureViewDraftService::RELATION_TYPES, $draft['inputSchema']['properties']['relations']['items']['properties']['type']['enum']);
+		$this->assertSame(expected: ['create', 'instance'], actual: [$draft['scope'], $draft['reach']]);
+		$this->assertSame(expected: ['readOnlyHint' => false, 'destructiveHint' => false, 'idempotentHint' => false], actual: $draft['annotations']);
+		$this->assertSame(expected: ['name', 'elements'], actual: $draft['inputSchema']['required']);
+		$this->assertSame(expected: 60, actual: $draft['inputSchema']['properties']['elements']['maxItems']);
+		$this->assertSame(expected: 120, actual: $draft['inputSchema']['properties']['relations']['maxItems']);
+		$this->assertSame(expected: ArchitectureViewDraftService::RELATION_TYPES, actual: $draft['inputSchema']['properties']['relations']['items']['properties']['type']['enum']);
 	}//end testTheDescriptorsCarryTheirGrant()
 
 	/**
@@ -87,8 +87,8 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 			->with('zaak', ['ApplicationComponent'], 7)
 			->willReturn([['uuid' => 'u1']]);
 
-		$this->assertSame($answer, $provider->invokeTool('stackiq.draftView', ['name' => 'Concept', 'description' => 'Why', 'elements' => $elements, 'relations' => $relations]));
-		$this->assertSame(['elements' => [['uuid' => 'u1']]], $provider->invokeTool('stackiq.searchArchitectureElements', ['query' => 'zaak', 'types' => ['ApplicationComponent'], 'limit' => 7]));
+		$this->assertSame(expected: $answer, actual: $provider->invokeTool('stackiq.draftView', ['name' => 'Concept', 'description' => 'Why', 'elements' => $elements, 'relations' => $relations]));
+		$this->assertSame(expected: ['elements' => [['uuid' => 'u1']]], actual: $provider->invokeTool('stackiq.searchArchitectureElements', ['query' => 'zaak', 'types' => ['ApplicationComponent'], 'limit' => 7]));
 	}//end testValidCallsReachTheServiceUnchanged()
 
 	/**
@@ -110,7 +110,7 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 			['stackiq.searchArchitectureElements', ['query' => 'x', 'limit' => 51]],
 			['stackiq.searchArchitectureElements', ['query' => 'x', 'types' => [7]]],
 		] as [$tool, $args]) {
-			$this->assertSame('validation_error', $provider->invokeTool($tool, $args)['error'], json_encode($args));
+			$this->assertSame(expected: 'validation_error', actual: $provider->invokeTool($tool, $args)['error'], message: json_encode(value: $args));
 		}
 	}//end testMalformedArgumentsNeverReachTheService()
 
@@ -123,8 +123,8 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 		$provider = $this->provider(signedIn: false);
 		$this->drafts->expects($this->never())->method('draftView');
 
-		$this->assertSame('unauthenticated', $provider->invokeTool('stackiq.draftView', ['name' => 'C', 'elements' => [['key' => 'a']]])['error']);
-		$this->assertSame('unauthenticated', $provider->invokeTool('stackiq.searchArchitectureElements', ['query' => 'x'])['error']);
+		$this->assertSame(expected: 'unauthenticated', actual: $provider->invokeTool('stackiq.draftView', ['name' => 'C', 'elements' => [['key' => 'a']]])['error']);
+		$this->assertSame(expected: 'unauthenticated', actual: $provider->invokeTool('stackiq.searchArchitectureElements', ['query' => 'x'])['error']);
 	}//end testAnAnonymousCallIsRefused()
 
 	/**
@@ -142,7 +142,7 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 			$provider = $this->provider();
 			$this->drafts->method('draftView')->willThrowException($error);
 
-			$this->assertSame(McpArgumentValidator::error(code: $code, message: $error->getMessage()), $provider->invokeTool('stackiq.draftView', $args), $code);
+			$this->assertSame(expected: McpArgumentValidator::error(code: $code, message: $error->getMessage()), actual: $provider->invokeTool('stackiq.draftView', $args), message: $code);
 		}
 	}//end testServiceRefusalsAreStructuredErrors()
 
@@ -154,8 +154,8 @@ final class StackiqToolProviderDraftToolsTest extends TestCase {
 	 * @return StackiqToolProvider
 	 */
 	private function provider(bool $signedIn = true): StackiqToolProvider {
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($signedIn === true ? $this->createMock(IUser::class) : null);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($signedIn === true ? $this->createMock(originalClassName: IUser::class) : null);
 		$this->drafts = $this->createMock(ArchitectureViewDraftService::class);
 
 		return new StackiqToolProvider(

@@ -5,6 +5,7 @@
                 "version": "0.0.11",
                 "properties": {
                     "origin": {
+                        "title": "Origin",
                         "enum": [
                             "assistant"
                         ],
@@ -31,6 +32,7 @@
                 "version": "0.0.15",
                 "properties": {
                     "origin": {
+                        "title": "Origin",
                         "enum": [
                             "assistant"
                         ],
@@ -42,6 +44,7 @@
                 "version": "0.0.12",
                 "properties": {
                     "origin": {
+                        "title": "Origin",
                         "enum": [
                             "assistant"
                         ],
