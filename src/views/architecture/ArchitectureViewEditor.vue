@@ -62,6 +62,26 @@
 				{{ message.text }}
 			</NcNoteCard>
 
+			<fieldset v-if="imported" class="view-editor__usage" data-testid="view-editor-usage-control">
+				<legend class="view-editor__usage-title">
+					{{ t('stackiq', 'Show applications') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="showOwn"
+					:disabled="usageLoading"
+					@update:modelValue="toggleUsage('own', $event)">
+					{{ t('stackiq', 'Our applications') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="showShared"
+					:disabled="usageLoading"
+					@update:modelValue="toggleUsage('shared', $event)">
+					{{ t('stackiq', 'Shared with partners') }}
+				</NcCheckboxRadioSwitch>
+			</fieldset>
+
 			<section v-if="editing" class="view-editor__palette" :aria-label="t('stackiq', 'Add to the view')">
 				<NcSelect
 					v-model="existingElement"
@@ -100,22 +120,34 @@
 
 			<CnGraphCanvas
 				class="view-editor__canvas"
-				:nodes="canvas.nodes"
+				:nodes="displayNodes"
 				:edges="canvas.edges"
 				:readOnly="!editing"
 				:showMiniMap="false"
 				@nodesChange="onNodesChange"
 				@edgesChange="onEdgesChange"
 				@nodeRemove="onNodeRemove"
-				@connect="onConnect">
+				@connect="onConnect"
+				@nodeSelect="onNodeSelect">
 				<template #node="{ node }">
-					<div class="view-editor__node" :class="`view-editor__node--${layerOf(node.data.type)}`">
+					<div
+						v-if="node.data.usageId || node.data.more"
+						class="view-editor__usage-node"
+						:class="{ 'view-editor__usage-node--shared': node.data.shared, 'view-editor__usage-node--more': node.data.more }"
+						:aria-label="node.data.ariaLabel"
+						:title="node.data.ariaLabel">
+						<span class="view-editor__usage-name">{{ node.data.label }}</span>
+						<span v-if="node.data.badge" class="view-editor__usage-badge">{{ node.data.badge }}</span>
+					</div>
+					<div v-else class="view-editor__node" :class="`view-editor__node--${layerOf(node.data.type)}`">
 						<strong>{{ node.data.name || t('stackiq', 'Unnamed element') }}</strong>
 						<span>{{ node.data.type }}</span>
 						<span v-if="!node.data.elementRef" class="view-editor__node-new">{{ t('stackiq', 'New, created on save') }}</span>
 					</div>
 				</template>
 			</CnGraphCanvas>
+
+			<UsageOverlayLegend v-if="imported && (showOwn || showShared)" :own="showOwn" :shared="showShared" />
 
 			<section v-if="!imported && lockedByMe" class="view-editor__version">
 				<NcTextField
@@ -139,9 +171,12 @@ import { CnGraphCanvas, LockConflictError, useObjectLock } from '@conduction/nex
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { computed, reactive, ref } from 'vue'
+import UsageOverlayLegend from '../../components/architecture/UsageOverlayLegend.vue'
 import { createArchitectureViewStore, ELEMENT_TYPES, isImported, RELATION_TYPES, uuidOf } from '../../store/modules/architectureView.js'
+import { useViewStore } from '../../store/modules/view.js'
+import { usageOverlayNodes } from '../../utils/usageOverlay.js'
 import { applyEdgeChanges, applyNodeChanges, connect, layerOf, placeElement, removeNode } from '../../utils/viewEditorCanvas.js'
 import { layoutUnplacedNodes, toCanvas } from '../../utils/viewGraph.js'
 
@@ -150,7 +185,9 @@ import { layoutUnplacedNodes, toCanvas } from '../../utils/viewGraph.js'
  *
  * An imported GEMMA view opens read-only and offers Copy to edit; a drawn view
  * takes OpenRegister's object lock before it can be edited, and shows who holds
- * the lock otherwise. Saving writes new elements, then the relations behind new
+ * the lock otherwise. An imported view can show the organisation's own
+ * applications and those shared by partners inside its components
+ * (architecture-shared-usage-on-views). Saving writes new elements, then the relations behind new
  * connections, then the view, in the shape the GEMMA import stores.
  *
  * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -161,11 +198,13 @@ export default {
 	components: {
 		CnGraphCanvas,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
+		UsageOverlayLegend,
 	},
 
 	props: {
@@ -204,6 +243,10 @@ export default {
 			relationType: 'Association',
 			versionLabel: '',
 			lockConflict: null,
+			showOwn: false,
+			showShared: false,
+			usageLoading: false,
+			usageByNode: {},
 		}
 	},
 
@@ -271,6 +314,26 @@ export default {
 			return ELEMENT_TYPES.map(({ type }) => ({ id: type, label: type }))
 		},
 
+		/**
+		 * The canvas nodes, with the applications that fill each component
+		 * nested inside it when a switch is on. Only an imported view shows them.
+		 *
+		 * @return {Array<object>} The nodes CnGraphCanvas draws.
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
+		 */
+		displayNodes() {
+			if (!this.imported || (!this.showOwn && !this.showShared)) {
+				return this.canvas.nodes
+			}
+			const show = { own: this.showOwn, shared: this.showShared }
+			const overlay = this.canvas.nodes.flatMap((node) => {
+				const usage = this.usageByNode[node.id]
+				if (!usage) return []
+				return usageOverlayNodes({ id: node.id, ...usage }, show, { width: node.data?.width ?? 0, height: node.data?.height ?? 0, t })
+			})
+			return [...this.canvas.nodes, ...overlay]
+		},
+
 		/** @return {string[]} The relation types. */
 		relationTypes() {
 			return [...RELATION_TYPES]
@@ -302,12 +365,16 @@ export default {
 		 * Load the view, then take the lock when it is a drawn view.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
 		 */
 		async load() {
 			this.loading = true
 			this.loadError = ''
 			this.message = null
 			this.lockConflict = null
+			this.showOwn = false
+			this.showShared = false
+			this.usageByNode = {}
 			try {
 				if (this.isNew) {
 					this.view = null
@@ -532,6 +599,74 @@ export default {
 		},
 
 		/**
+		 * Switch own or shared applications on or off, and reload the view's
+		 * usage with exactly the switches that are on.
+		 *
+		 * @param {'own'|'shared'} kind Which switch.
+		 * @param {boolean} value Its new state.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
+		 */
+		async toggleUsage(kind, value) {
+			if (kind === 'own') {
+				this.showOwn = value === true
+			} else {
+				this.showShared = value === true
+			}
+			if (!this.showOwn && !this.showShared) {
+				this.usageByNode = {}
+				return
+			}
+			this.usageLoading = true
+			try {
+				const store = useViewStore()
+				store.setIncludeGebruik(this.showOwn)
+				store.setIncludeDeelnamesGebruik(this.showShared)
+				await store.fetchView(this.viewId)
+				if (store.error) {
+					this.message = { type: 'error', text: t('stackiq', 'The applications on this view could not be loaded.') }
+					return
+				}
+				this.usageByNode = this.usageIndex(store.activeView)
+			} finally {
+				this.usageLoading = false
+			}
+		},
+
+		/**
+		 * The enriched view's usage per view node id.
+		 *
+		 * @param {object|null} view The enriched view.
+		 * @return {{[nodeId: string]: {usage: Array, deelnamesGebruik: Array}}} The usage by node.
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
+		 */
+		usageIndex(view) {
+			const index = {}
+			for (const node of view?.viewNodes ?? []) {
+				const usage = Array.isArray(node.usage) ? node.usage : []
+				const deelnamesGebruik = Array.isArray(node.deelnamesGebruik) ? node.deelnamesGebruik : []
+				if (usage.length > 0 || deelnamesGebruik.length > 0) {
+					index[String(node.viewNodeId ?? node.identifier)] = { usage, deelnamesGebruik }
+				}
+			}
+			return index
+		},
+
+		/**
+		 * A click on an application inside a component opens its usage.
+		 *
+		 * @param {{node: object}} event The canvas's node event.
+		 * @return {void}
+		 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
+		 */
+		onNodeSelect(event) {
+			const usageId = event?.node?.data?.usageId
+			if (usageId) {
+				this.$router.push({ name: 'GebruikDetail', params: { id: usageId } })
+			}
+		},
+
+		/**
 		 * @param {string} status The status value.
 		 * @return {string}
 		 */
@@ -623,6 +758,59 @@ export default {
 
 .view-editor__node--technology {
 	box-shadow: inset 4px 0 0 0 var(--color-success);
+}
+
+.view-editor__usage {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--default-grid-baseline) * 4);
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.view-editor__usage-title {
+	font-weight: bold;
+}
+
+.view-editor__usage-node {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--default-grid-baseline);
+	height: 100%;
+	padding: 0 var(--default-grid-baseline);
+	border: 2px solid var(--color-primary-element);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 0.85em;
+	cursor: pointer;
+}
+
+.view-editor__usage-node--shared {
+	border-style: dashed;
+	border-color: var(--color-text-maxcontrast);
+}
+
+.view-editor__usage-node--more {
+	border-style: dotted;
+	border-color: var(--color-border-dark);
+	cursor: default;
+}
+
+.view-editor__usage-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.view-editor__usage-badge {
+	flex: 0 0 auto;
+	padding: 0 var(--default-grid-baseline);
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius);
 }
 
 .view-editor__node-new {

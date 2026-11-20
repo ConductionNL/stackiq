@@ -23,6 +23,7 @@
   - GIVEN a component with status In use WHEN Phase out is chosen THEN its status is To be phased out
 - [x] Implement (menu child of Applications declared in the fragment itself, as the CMDB and Applications in use entries do, so `src/menu-layout.json` needs no relocation; vitest tests/vitest/technologyPages.spec.js)
 - [ ] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
+  - The spec is written (database server, laptop, phase out, what runs on a host, Runs on panel on the demo usage); not yet run against a live instance.
 
 ### Task 3: Show the Runs on panel with the support state on the usage page
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state

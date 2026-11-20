@@ -213,6 +213,7 @@ class ModuleVersionService implements ModuleVersionServiceInterface {
 	 * @param array $lookup The module UUID, register, schema and ObjectService
 	 *
 	 * @return array The existing versions; empty when the search gives no list.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function existingVersionList(array $lookup): array {
 		$existingVersions = $lookup['objectService']->searchObjects(
