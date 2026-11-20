@@ -78,7 +78,7 @@ Templates for these files are in `openspec/schemas/conduction/templates/`.
 
 ## Architecture decisions
 
-App-level design decisions are recorded in the `design.md` file of each OpenSpec change (`openspec/changes/**/design.md`, including `archive/`). `docs/ARCHITECTURE.md` describes the services and the synchronisation design. The files under `.claude/openspec/architecture/` are copies of organisation-wide records, not decisions specific to this app.
+App-level decisions that have shipped are recorded as numbered records in [docs/adr/](docs/adr/README.md). New decisions are first written in the `design.md` file of an OpenSpec change (`openspec/changes/**/design.md`, including `archive/`). `docs/ARCHITECTURE.md` describes the services and the synchronisation design. The files under `.claude/openspec/architecture/` are copies of organisation-wide records, not decisions specific to this app.
 
 ## Repo conventions
 
