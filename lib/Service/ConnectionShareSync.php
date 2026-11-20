@@ -41,6 +41,7 @@ use Throwable;
  * field changes.
  *
  * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @SuppressWarnings(PHPMD.StaticAccess) RelationRefs reads relation values; SearchBounds::bounded() is the shared query guard.
  */
 class ConnectionShareSync {
 

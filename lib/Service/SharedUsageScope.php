@@ -35,6 +35,7 @@ namespace OCA\Stackiq\Service;
  * @link     https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @SuppressWarnings(PHPMD.StaticAccess) RelationRefs is a pure reader of relation values.
  */
 final class SharedUsageScope {
 	/**
@@ -181,18 +182,7 @@ final class SharedUsageScope {
 				continue;
 			}
 
-			$owner        = RelationRefs::ref(value: ($usage['consumer'] ?? null));
-			$participants = RelationRefs::refs(values: ($usage['participants'] ?? []));
-			if ($participants === []) {
-				continue;
-			}
-
-			$involved = $participants;
-			if ($owner !== null) {
-				array_unshift($involved, $owner);
-			}
-
-			$involved = array_values(array_unique($involved));
+			$involved = self::involved(usage: $usage);
 			if (in_array($organisation, $involved, true) === false) {
 				continue;
 			}
@@ -212,6 +202,29 @@ final class SharedUsageScope {
 
 		return $connections;
 	}//end connections()
+
+	/**
+	 * The organisations a shared usage involves: its owner first, then its
+	 * participants; none when it lists no participant.
+	 *
+	 * @param array<string, mixed> $usage The usage record.
+	 *
+	 * @return list<string> The organisation uuids.
+	 */
+	private static function involved(array $usage): array {
+		$participants = RelationRefs::refs(values: ($usage['participants'] ?? []));
+		if ($participants === []) {
+			return [];
+		}
+
+		$owner = RelationRefs::ref(value: ($usage['consumer'] ?? null));
+		if ($owner !== null) {
+			array_unshift($participants, $owner);
+		}
+
+		return array_values(array_unique($participants));
+
+	}//end involved()
 
 	/**
 	 * The id of a usage record.

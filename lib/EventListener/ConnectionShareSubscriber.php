@@ -40,6 +40,7 @@ use Throwable;
  * changes a connection's sharing, so its save does nothing here.
  *
  * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @SuppressWarnings(PHPMD.StaticAccess) ConnectionShareSync's static helpers are pure readers of the saved object.
  */
 class ConnectionShareSubscriber implements IEventListener {
 	use ObjectEventPayload;
@@ -66,27 +67,12 @@ class ConnectionShareSubscriber implements IEventListener {
 	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public function handle(Event $event): void {
-		$deleted = null;
-		$object  = $this->extractObjectFromEvent(event: $event);
-		if ($object === null && $event instanceof ObjectDeletedEvent) {
-			$object  = $event->getObject();
-			$deleted = $object->getUuid();
-		}
-
-		if ($object === null || $this->isUsage(object: $object) === false) {
+		[$object, $deleted] = $this->changedUsage(event: $event);
+		if ($object === null) {
 			return;
 		}
 
-		$usage    = [];
-		$previous = (array)$object->getObject();
-		if ($deleted === null) {
-			$usage    = $previous;
-			$previous = [];
-		}
-
-		if ($event instanceof ObjectUpdatedEvent && $event->getOldObject() !== null) {
-			$previous = (array)$event->getOldObject()->getObject();
-		}
+		[$usage, $previous] = $this->usageStates(event: $event, object: $object, deleted: $deleted);
 
 		$connections = ConnectionShareSync::affectedConnections(usage: $usage, previous: $previous);
 		if ($connections === []) {
@@ -102,6 +88,54 @@ class ConnectionShareSubscriber implements IEventListener {
 			);
 		}
 	}//end handle()
+
+	/**
+	 * The usage an event is about, with its uuid when the event deleted it.
+	 *
+	 * @param Event $event The object event.
+	 *
+	 * @return array{0: ?object, 1: ?string} The usage (null when the event is not about one) and the deleted uuid.
+	 */
+	private function changedUsage(Event $event): array {
+		$deleted = null;
+		$object  = $this->extractObjectFromEvent(event: $event);
+		if ($object === null && $event instanceof ObjectDeletedEvent) {
+			$object  = $event->getObject();
+			$deleted = $object->getUuid();
+		}
+
+		if ($object === null || $this->isUsage(object: $object) === false) {
+			return [null, null];
+		}
+
+		return [$object, $deleted];
+
+	}//end changedUsage()
+
+	/**
+	 * The usage after and before the event: a deleted usage has only a before.
+	 *
+	 * @param Event        $event   The object event.
+	 * @param object       $object  The usage.
+	 * @param string|null  $deleted The deleted uuid, or null.
+	 *
+	 * @return array{0: array<string, mixed>, 1: array<string, mixed>} The usage now and before.
+	 */
+	private function usageStates(Event $event, object $object, ?string $deleted): array {
+		$usage    = [];
+		$previous = (array)$object->getObject();
+		if ($deleted === null) {
+			$usage    = $previous;
+			$previous = [];
+		}
+
+		if ($event instanceof ObjectUpdatedEvent && $event->getOldObject() !== null) {
+			$previous = (array)$event->getOldObject()->getObject();
+		}
+
+		return [$usage, $previous];
+
+	}//end usageStates()
 
 	/**
 	 * Whether the object is a usage: its schema is the configured usage schema.

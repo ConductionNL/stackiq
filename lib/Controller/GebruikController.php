@@ -50,6 +50,8 @@ use OCP\IUserSession;
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/vendor-visibility-rbac/tasks.md#task-2
+ * @SuppressWarnings(PHPMD.StaticAccess) SharedUsageScope is a pure selector over records already read.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The usage endpoints share one controller, as the routes name them.
  */
 class GebruikController extends Controller {
 	/**

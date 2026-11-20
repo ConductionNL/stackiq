@@ -29,6 +29,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for handling gebruik-related operations
+ * @SuppressWarnings(PHPMD.StaticAccess) SharedUsageScope is a pure selector over records already read.
  */
 class GebruikService implements GebruikServiceInterface {
 	/**
