@@ -2349,7 +2349,9 @@ OC.L10N.register(
         "not reachable": "niet bereikbaar",
         "From: {catalogue}": "Uit: {catalogue}",
         "Open the original": "Open het origineel",
-        "Mirrored from {catalogue}; edit it there.": "Overgenomen uit {catalogue}; wijzig het daar."
+        "Mirrored from {catalogue}; edit it there.": "Overgenomen uit {catalogue}; wijzig het daar.",
+        "Send only from lifecycle state": "Pas versturen vanaf levenscyclusstatus",
+        "An application in an earlier lifecycle state stays in stackiq until it reaches this state.": "Een applicatie in een eerdere levenscyclusstatus blijft in stackiq tot ze deze status bereikt."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -152,6 +152,32 @@ class ItsmExchangeControllerTest extends TestCase {
 	}//end testSetUpRunsAsTheSignedInUser()
 
 	/**
+	 * The lifecycle state to send from reaches the service trimmed; an absent one is empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	public function testSetUpPassesTheLifecycleStateToSendFrom(): void {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('beheerder');
+		$this->session->method('getUser')->willReturn($user);
+		$this->exchange->expects($this->exactly(2))->method('setUp')
+			->willReturnCallback(
+				static fn (string $desk, string $organisation, string $runAs, string $templateId, string $sendFrom): array => [
+					'created' => true,
+					'sendFrom' => $sendFrom,
+				]
+			);
+
+		$chosen = $this->controller()->setUp(desk: 'topdesk', organisation: 'org-1', templateId: '', sendFrom: ' Planned ');
+		$absent = $this->controller()->setUp(desk: 'topdesk', organisation: 'org-1');
+
+		$this->assertSame(expected: 'Planned', actual: $chosen->getData()['sendFrom']);
+		$this->assertSame(expected: '', actual: $absent->getData()['sendFrom']);
+	}//end testSetUpPassesTheLifecycleStateToSendFrom()
+
+	/**
 	 * A set-up the service refuses answers 422 with the service's reason.
 	 *
 	 * @return void

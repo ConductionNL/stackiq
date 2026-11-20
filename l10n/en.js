@@ -2287,7 +2287,9 @@ OC.L10N.register(
         "not reachable": "not reachable",
         "From: {catalogue}": "From: {catalogue}",
         "Open the original": "Open the original",
-        "Mirrored from {catalogue}; edit it there.": "Mirrored from {catalogue}; edit it there."
+        "Mirrored from {catalogue}; edit it there.": "Mirrored from {catalogue}; edit it there.",
+        "Send only from lifecycle state": "Send only from lifecycle state",
+        "An application in an earlier lifecycle state stays in stackiq until it reaches this state.": "An application in an earlier lifecycle state stays in stackiq until it reaches this state."
     },
     "nplurals=2; plural=(n != 1);"
 )
