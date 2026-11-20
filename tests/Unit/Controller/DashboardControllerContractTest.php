@@ -59,15 +59,15 @@ class DashboardControllerContractTest extends TestCase {
 	 * @return DashboardController The controller under test.
 	 */
 	private function makeController(): DashboardController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn([]);
 
-		$this->userSession = $this->createMock(IUserSession::class);
+		$this->userSession = $this->createMock(originalClassName: IUserSession::class);
 
 		return new DashboardController(
-			'stackiq',
-			$request,
-			$this->userSession
+			appName: 'stackiq',
+			request: $request,
+			userSession: $this->userSession
 		);
 
 	}//end makeController()
@@ -83,10 +83,10 @@ class DashboardControllerContractTest extends TestCase {
 
 		$response = $controller->page(null);
 
-		$this->assertInstanceOf(TemplateResponse::class, $response);
-		$this->assertSame('index', $response->getTemplateName());
-		$this->assertSame('stackiq', $response->getApp());
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertInstanceOf(expected: TemplateResponse::class, actual: $response);
+		$this->assertSame(expected: 'index', actual: $response->getTemplateName());
+		$this->assertSame(expected: 'stackiq', actual: $response->getApp());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 
 	}//end testPageRendersTheAppIndexTemplate()
 
@@ -103,9 +103,9 @@ class DashboardControllerContractTest extends TestCase {
 		$response = $controller->page(null);
 		$csp = $response->getContentSecurityPolicy();
 
-		$this->assertNotNull($csp);
-		$this->assertStringContainsString('connect-src', $csp->buildPolicy());
-		$this->assertStringContainsString('*', $csp->buildPolicy());
+		$this->assertNotNull(actual: $csp);
+		$this->assertStringContainsString(needle: 'connect-src', haystack: $csp->buildPolicy());
+		$this->assertStringContainsString(needle: '*', haystack: $csp->buildPolicy());
 
 	}//end testPageAttachesAContentSecurityPolicyAllowingAppConnections()
 
@@ -120,7 +120,7 @@ class DashboardControllerContractTest extends TestCase {
 
 		$response = $controller->page('anything');
 
-		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame(expected: 'index', actual: $response->getTemplateName());
 
 	}//end testPageIgnoresTheOptionalQueryParameter()
 
@@ -135,8 +135,8 @@ class DashboardControllerContractTest extends TestCase {
 
 		$response = $controller->index();
 
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-		$this->assertSame(['message' => 'Not authenticated'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
+		$this->assertSame(expected: ['message' => 'Not authenticated'], actual: $response->getData());
 
 	}//end testIndexRejectsAnonymousWith401()
 
@@ -148,14 +148,14 @@ class DashboardControllerContractTest extends TestCase {
 	 */
 	public function testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller(): void {
 		$controller = $this->makeController();
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('alice');
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$response = $controller->index();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['results' => []], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['results' => []], actual: $response->getData());
 
 	}//end testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller()
 	/**
@@ -167,26 +167,26 @@ class DashboardControllerContractTest extends TestCase {
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
 	 */
 	public function testPageProvidesTheUsersPermissionList(): void {
-		$request = $this->createMock(IRequest::class);
-		$user = $this->createMock(IUser::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('pieter');
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->with('pieter')->willReturn(false);
 		$groupManager->method('getUserGroups')->willReturn([]);
-		$initialState = $this->createMock(IInitialState::class);
+		$initialState = $this->createMock(originalClassName: IInitialState::class);
 		$initialState->expects($this->once())->method('provideInitialState')->with('permissions', ['user']);
 
 		$controller = new DashboardController(
-			'stackiq',
-			$request,
-			$session,
-			$initialState,
-			new ShellPermissions(groupManager: $groupManager)
+			appName: 'stackiq',
+			request: $request,
+			userSession: $session,
+			initialState: $initialState,
+			shellPermissions: new ShellPermissions(groupManager: $groupManager)
 		);
 
-		$this->assertSame('index', $controller->page(getParameter: null)->getTemplateName());
+		$this->assertSame(expected: 'index', actual: $controller->page(getParameter: null)->getTemplateName());
 	}//end testPageProvidesTheUsersPermissionList()
 
 }//end class

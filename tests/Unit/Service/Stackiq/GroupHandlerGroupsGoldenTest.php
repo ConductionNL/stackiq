@@ -178,13 +178,13 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 		};
 
 		return new GroupHandler(
-			$groups,
-			$this->createMock(originalClassName: IUserManager::class),
-			$config,
-			$this->createMock(originalClassName: ContainerInterface::class),
-			$this->createMock(originalClassName: IAppManager::class),
-			$logger,
-			$roleGrantSync
+			_groupManager: $groups,
+			_userManager: $this->createMock(originalClassName: IUserManager::class),
+			_appConfig: $config,
+			_container: $this->createMock(originalClassName: ContainerInterface::class),
+			_appManager: $this->createMock(originalClassName: IAppManager::class),
+			_logger: $logger,
+			_roleGrantSync: $roleGrantSync
 		);
 
 	}//end handler()
@@ -230,9 +230,12 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 
 		$created = $handler->ensureGenericUserGroupsExist();
 
-		$this->assertSame(['aanbod-beheerder', 'gebruik-raadpleger', 'functioneel-beheerder', 'organisatie-beheerder', 'organisaties-beheerder'], $created);
 		$this->assertSame(
-			array_merge(
+			expected: ['aanbod-beheerder', 'gebruik-raadpleger', 'functioneel-beheerder', 'organisatie-beheerder', 'organisaties-beheerder'],
+			actual: $created
+		);
+		$this->assertSame(
+			expected: array_merge(
 				[['getValueString', 'stackiq', 'generic_user_groups']],
 				[['get', 'generic-a'], ['createGroup', 'generic-a']],
 				self::created(gid: 'aanbod-beheerder', message: 'Created generic user group'),
@@ -246,7 +249,7 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 				self::created(gid: 'organisaties-beheerder', message: 'Created role-based group'),
 				[['get', 'ambtenaar']]
 			),
-			$this->trace
+			actual: $this->trace
 		);
 
 	}//end testMissingGroupsAreCreated()
@@ -258,17 +261,20 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 	 */
 	public function testDefaultAndInvalidGenericGroups(): void {
 		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS]);
-		$this->assertSame(['software-catalog-users'], $handler->ensureGenericUserGroupsExist());
+		$this->assertSame(expected: ['software-catalog-users'], actual: $handler->ensureGenericUserGroupsExist());
 
 		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS, 'configured' => '"not-a-list"']);
-		$this->assertSame([], $handler->ensureGenericUserGroupsExist());
+		$this->assertSame(expected: [], actual: $handler->ensureGenericUserGroupsExist());
 		$this->assertSame(
-			array_merge([['getValueString', 'stackiq', 'generic_user_groups']], array_map(fn (string $gid) => ['get', $gid], self::ROLE_GROUPS)),
-			$this->trace
+			expected: array_merge(
+				[['getValueString', 'stackiq', 'generic_user_groups']],
+				array_map(fn (string $gid) => ['get', $gid], self::ROLE_GROUPS)
+			),
+			actual: $this->trace
 		);
 
 		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS, 'configured' => '{"x":"keyed-a","y":"keyed-b"}']);
-		$this->assertSame(['keyed-a', 'keyed-b'], $handler->ensureGenericUserGroupsExist());
+		$this->assertSame(expected: ['keyed-a', 'keyed-b'], actual: $handler->ensureGenericUserGroupsExist());
 
 	}//end testDefaultAndInvalidGenericGroups()
 
@@ -280,7 +286,7 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 	public function testFailingCreateEscapes(): void {
 		$handler = $this->handler(plan: ['configured' => '["generic-a"]', 'failing' => ['generic-a']]);
 
-		$this->expectException(\RuntimeException::class);
+		$this->expectException(exception: \RuntimeException::class);
 		$handler->ensureGenericUserGroupsExist();
 
 	}//end testFailingCreateEscapes()
@@ -310,10 +316,15 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 		$handler->updateRoleBasedGroups($user, $objectData);
 
 		$this->assertSame(
-			[
-				['log', 'info', 'Updated role-based groups for user', ['username' => 'alice', 'added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']]],
+			expected: [
+				[
+					'log',
+					'info',
+					'Updated role-based groups for user',
+					['username' => 'alice', 'added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']],
+				],
 			],
-			$this->trace
+			actual: $this->trace
 		);
 
 	}//end testRoleGroupsFollowTheRoleSync()

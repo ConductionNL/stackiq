@@ -172,10 +172,15 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return AccessReviewController
 	 */
 	private function controller(?string $uid, array $params = []): AccessReviewController {
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($uid === null ? null : $this->user(uid: $uid));
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$current = null;
+		if ($uid !== null) {
+			$current = $this->user(uid: $uid);
+		}
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$session->method('getUser')->willReturn($current);
+
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturnCallback(fn (string $uid): bool => in_array($uid, $this->groups['admin'], true));
 		$groupManager->method('get')->willReturnCallback(fn (string $gid): ?IGroup => $this->group(gid: $gid));
 		$groupManager->method('getUserGroups')->willReturnCallback(
@@ -195,19 +200,26 @@ final class AccessReviewControllerTest extends TestCase {
 			}
 		);
 
-		$userManager = $this->createMock(IUserManager::class);
+		$userManager = $this->createMock(originalClassName: IUserManager::class);
 		$userManager->method('get')->willReturnCallback(
-			fn (string $uid): ?IUser => in_array($uid, ['fa', 'colleague', 'newcomer', 'anders', 'joe', 'root'], true) ? $this->user(uid: $uid) : null
+			fn (string $uid): ?IUser => $this->knownUser(uid: $uid)
 		);
 
-		$config = $this->createMock(IConfig::class);
+		$config = $this->createMock(originalClassName: IConfig::class);
 		$config->method('getUserValue')->willReturnCallback(
-			fn (string $uid, string $app, string $key, $default = ''): string => ($app === 'core' && $key === 'organisation') ? ($this->activeOrganisation[$uid] ?? '') : (string) $default
+			fn (string $uid, string $app, string $key, $default = ''): string => $this->userValue(
+				uid: $uid,
+				key: $app . '.' . $key,
+				default: (string) $default
+			)
 		);
 
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->objectService->method('searchObjects')->willReturnCallback(
-			fn (): array => array_map(fn (string $id): ObjectEntityInterface => $this->entity(id: $id, data: $this->contactPersons[$id]), array_keys($this->contactPersons))
+			fn (): array => array_map(
+				fn (string $id): ObjectEntityInterface => $this->entity(id: $id, data: $this->contactPersons[$id]),
+				array_keys($this->contactPersons)
+			)
 		);
 		$this->objectService->method('find')->willReturnCallback(
 			function (int|string $id, ...$rest): ?ObjectEntityInterface {
@@ -226,20 +238,26 @@ final class AccessReviewControllerTest extends TestCase {
 			function (ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
 				$objectId = $patch->objectId;
 				$data = $patch->data;
-				$this->patches[] = ['id' => $objectId, 'data' => $data, 'register' => $patch->target->register, 'schema' => $patch->target->schema, 'rbac' => $_rbac];
+				$this->patches[] = [
+					'id' => $objectId,
+					'data' => $data,
+					'register' => $patch->target->register,
+					'schema' => $patch->target->schema,
+					'rbac' => $_rbac,
+				];
 				$this->contactPersons[$objectId] = array_merge($this->contactPersons[$objectId], $data);
 				return $this->entity(id: $objectId, data: $this->contactPersons[$objectId]);
 			}
 		);
 
-		$registerConfig = $this->createMock(RegisterConfigReaderInterface::class);
+		$registerConfig = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registerConfig->method('getObjectService')->willReturn($this->objectService);
-		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->configured === true ? 1 : null);
+		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->whenConfigured(id: 1));
 		$registerConfig->method('getSchemaIdForObjectType')->willReturnCallback(
-			fn (string $type): ?int => $this->configured === true ? ['organization' => 2, 'contactPerson' => 3][$type] : null
+			fn (string $type): ?int => $this->whenConfigured(id: ['organization' => 2, 'contactPerson' => 3][$type])
 		);
 
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => match ($key) {
 				'role_mapping' => (string) json_encode(['Gebruik-raadpleger' => ['Inkoop']]),
@@ -247,15 +265,15 @@ final class AccessReviewControllerTest extends TestCase {
 			}
 		);
 		$roleGroupMap = new RoleGroupMap(appConfig: $appConfig);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, $default = null) => $params[$key] ?? $default);
 
-		$time = $this->createMock(ITimeFactory::class);
+		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('getTime')->willReturn(self::NOW);
 
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters));
 
 		return new AccessReviewController(
@@ -266,7 +284,12 @@ final class AccessReviewControllerTest extends TestCase {
 			userManager: $userManager,
 			config: $config,
 			registerConfig: $registerConfig,
-			roleGrantSync: new RoleGrantSync(roleGroupMap: $roleGroupMap, groupManager: $groupManager, registerConfig: $registerConfig, logger: $logger),
+			roleGrantSync: new RoleGrantSync(
+				roleGroupMap: $roleGroupMap,
+				groupManager: $groupManager,
+				registerConfig: $registerConfig,
+				logger: $logger
+			),
 			roleGroupMap: $roleGroupMap,
 			timeFactory: $time,
 			l10n: $l10n,
@@ -282,7 +305,7 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return IUser
 	 */
 	private function user(string $uid): IUser {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn($uid);
 		$user->method('getDisplayName')->willReturn(ucfirst($uid));
 		$user->method('isEnabled')->willReturn($uid !== 'newcomer');
@@ -306,7 +329,7 @@ final class AccessReviewControllerTest extends TestCase {
 			return null;
 		}
 
-		$group = $this->createMock(IGroup::class);
+		$group = $this->createMock(originalClassName: IGroup::class);
 		$group->method('getGID')->willReturn($gid);
 		$group->method('inGroup')->willReturnCallback(fn (IUser $user): bool => in_array($user->getUID(), $this->groups[$gid], true));
 		$group->method('removeUser')->willReturnCallback(
@@ -331,7 +354,7 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return ObjectEntityInterface
 	 */
 	private function entity(string $id, array $data): ObjectEntityInterface {
-		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$entity->method('getUuid')->willReturn($id);
 		$entity->method('getObject')->willReturn($data);
 		return $entity;
@@ -346,21 +369,25 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testAFunctionalAdministratorListsTheirOwnOrganisation(): void {
 		$response = $this->controller(uid: 'fa')->index(self::ORG);
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 		$data = $response->getData();
-		$this->assertSame(365, $data['reviewIntervalDays']);
-		$this->assertSame(['cp-colleague', 'cp-fa', 'cp-newcomer'], array_column($data['results'], 'id'), 'No person without an account, nor of another organisation.');
+		$this->assertSame(expected: 365, actual: $data['reviewIntervalDays']);
+		$this->assertSame(
+			expected: ['cp-colleague', 'cp-fa', 'cp-newcomer'],
+			actual: array_column($data['results'], 'id'),
+			message: 'No person without an account, nor of another organisation.'
+		);
 
 		[$colleague, $self, $newcomer] = $data['results'];
-		$this->assertSame('colleague', $colleague['username']);
-		$this->assertSame('2025-09-14T08:00:00+00:00', $colleague['lastLogin']);
-		$this->assertTrue($colleague['enabled']);
-		$this->assertNull($colleague['accessReviewedAt']);
-		$this->assertNull($colleague['accessReviewedBy']);
-		$this->assertTrue($colleague['due'], 'Never reviewed is due.');
-		$this->assertFalse($colleague['self']);
+		$this->assertSame(expected: 'colleague', actual: $colleague['username']);
+		$this->assertSame(expected: '2025-09-14T08:00:00+00:00', actual: $colleague['lastLogin']);
+		$this->assertTrue(condition: $colleague['enabled']);
+		$this->assertNull(actual: $colleague['accessReviewedAt']);
+		$this->assertNull(actual: $colleague['accessReviewedBy']);
+		$this->assertTrue(condition: $colleague['due'], message: 'Never reviewed is due.');
+		$this->assertFalse(condition: $colleague['self']);
 		$this->assertSame(
-			[
+			expected: [
 				[
 					'role' => 'Gebruik-beheerder',
 					'group' => 'gebruik-beheerder',
@@ -380,16 +407,16 @@ final class AccessReviewControllerTest extends TestCase {
 					'removable' => true,
 				],
 			],
-			$colleague['roles']
+			actual: $colleague['roles']
 		);
 
-		$this->assertTrue($self['self']);
-		$this->assertFalse($self['due'], 'Reviewed a week ago is not due under a year.');
-		$this->assertSame('2026-11-07T09:00:00+00:00', $self['accessReviewedAt']);
-		$this->assertSame('root', $self['accessReviewedBy']);
+		$this->assertTrue(condition: $self['self']);
+		$this->assertFalse(condition: $self['due'], message: 'Reviewed a week ago is not due under a year.');
+		$this->assertSame(expected: '2026-11-07T09:00:00+00:00', actual: $self['accessReviewedAt']);
+		$this->assertSame(expected: 'root', actual: $self['accessReviewedBy']);
 
-		$this->assertFalse($newcomer['enabled']);
-		$this->assertNull($newcomer['lastLogin'], 'Never signed in is null, not 1970.');
+		$this->assertFalse(condition: $newcomer['enabled']);
+		$this->assertNull(actual: $newcomer['lastLogin'], message: 'Never signed in is null, not 1970.');
 	}//end testAFunctionalAdministratorListsTheirOwnOrganisation()
 
 	/**
@@ -403,8 +430,8 @@ final class AccessReviewControllerTest extends TestCase {
 
 		$rows = $this->controller(uid: 'fa')->index(self::ORG)->getData()['results'];
 
-		$this->assertTrue($rows[0]['due']);
-		$this->assertSame('fa', $rows[0]['accessReviewedBy']);
+		$this->assertTrue(condition: $rows[0]['due']);
+		$this->assertSame(expected: 'fa', actual: $rows[0]['accessReviewedBy']);
 	}//end testAnOldReviewIsDue()
 
 	/**
@@ -417,12 +444,12 @@ final class AccessReviewControllerTest extends TestCase {
 		$this->objectService->expects($this->never())->method('searchObjects');
 		$refused = $controller->index(self::OTHER);
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $refused->getStatus());
-		$this->assertArrayNotHasKey('results', $refused->getData());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $refused->getStatus());
+		$this->assertArrayNotHasKey(key: 'results', array: $refused->getData());
 
 		$admin = $this->controller(uid: 'root')->index(self::ORG);
-		$this->assertSame(Http::STATUS_OK, $admin->getStatus());
-		$this->assertCount(3, $admin->getData()['results']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $admin->getStatus());
+		$this->assertCount(expectedCount: 3, haystack: $admin->getData()['results']);
 	}//end testAnotherOrganisationIsRefusedAndAnAdminIsServed()
 
 	/**
@@ -431,10 +458,18 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryoneElseIsRefused(): void {
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'joe')->index(self::ORG)->getStatus(), 'A gebruik-beheerder is no reviewer.');
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'colleague')->index(self::ORG)->getStatus(), 'A reviewer without an active organisation reviews none.');
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'fa')->index('')->getStatus());
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(uid: null)->index(self::ORG)->getStatus());
+		$this->assertSame(
+			expected: Http::STATUS_FORBIDDEN,
+			actual: $this->controller(uid: 'joe')->index(self::ORG)->getStatus(),
+			message: 'A gebruik-beheerder is no reviewer.'
+		);
+		$this->assertSame(
+			expected: Http::STATUS_FORBIDDEN,
+			actual: $this->controller(uid: 'colleague')->index(self::ORG)->getStatus(),
+			message: 'A reviewer without an active organisation reviews none.'
+		);
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller(uid: 'fa')->index('')->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller(uid: null)->index(self::ORG)->getStatus());
 	}//end testEveryoneElseIsRefused()
 
 	/**
@@ -445,9 +480,9 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testAFailingCheckRefuses(): void {
 		$this->groupsFail = true;
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'fa')->index(self::ORG)->getStatus());
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'fa')->confirm('cp-colleague')->getStatus());
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller(uid: 'fa')->index(self::ORG)->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller(uid: 'fa')->confirm('cp-colleague')->getStatus());
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testAFailingCheckRefuses()
 
 	/**
@@ -460,8 +495,8 @@ final class AccessReviewControllerTest extends TestCase {
 
 		$response = $this->controller(uid: 'fa')->index(self::ORG);
 
-		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-		$this->assertSame('The access review could not be read.', $response->getData()['message']);
+		$this->assertSame(expected: Http::STATUS_INTERNAL_SERVER_ERROR, actual: $response->getStatus());
+		$this->assertSame(expected: 'The access review could not be read.', actual: $response->getData()['message']);
 	}//end testAMissingRegisterIsAnError()
 
 	/**
@@ -472,19 +507,27 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testKeepAccessRecordsTheReview(): void {
 		$response = $this->controller(uid: 'fa')->confirm('cp-colleague');
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 		$this->assertSame(
-			['id' => 'cp-colleague', 'accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa', 'due' => false],
-			$response->getData()
+			expected: ['id' => 'cp-colleague', 'accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa', 'due' => false],
+			actual: $response->getData()
 		);
 		$this->assertSame(
-			[['id' => 'cp-colleague', 'data' => ['accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa'], 'register' => 1, 'schema' => 3, 'rbac' => false]],
-			$this->patches
+			expected: [
+				[
+					'id' => 'cp-colleague',
+					'data' => ['accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa'],
+					'register' => 1,
+					'schema' => 3,
+					'rbac' => false,
+				],
+			],
+			actual: $this->patches
 		);
 
 		$row = $this->controller(uid: 'fa')->index(self::ORG)->getData()['results'][0];
-		$this->assertFalse($row['due'], 'After Keep access the row is no longer due.');
-		$this->assertSame('fa', $row['accessReviewedBy']);
+		$this->assertFalse(condition: $row['due'], message: 'After Keep access the row is no longer due.');
+		$this->assertSame(expected: 'fa', actual: $row['accessReviewedBy']);
 	}//end testKeepAccessRecordsTheReview()
 
 	/**
@@ -496,10 +539,10 @@ final class AccessReviewControllerTest extends TestCase {
 		$confirm = $this->controller(uid: 'fa')->confirm('cp-fa');
 		$withdraw = $this->controller(uid: 'fa', params: ['role' => 'Functioneel-beheerder'])->withdraw('cp-fa');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $confirm->getStatus());
-		$this->assertSame('You cannot review your own access.', $confirm->getData()['message']);
-		$this->assertSame(Http::STATUS_FORBIDDEN, $withdraw->getStatus());
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $confirm->getStatus());
+		$this->assertSame(expected: 'You cannot review your own access.', actual: $confirm->getData()['message']);
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $withdraw->getStatus());
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testAReviewerCannotReviewThemselves()
 
 	/**
@@ -508,11 +551,11 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfirmingAnotherOrganisationIsRefused(): void {
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(uid: 'fa')->confirm('cp-anders')->getStatus());
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller(uid: 'fa')->confirm('cp-anders')->getStatus());
+		$this->assertSame(expected: [], actual: $this->patches);
 
-		$this->assertSame(Http::STATUS_OK, $this->controller(uid: 'root')->confirm('cp-anders')->getStatus());
-		$this->assertSame('root', $this->patches[0]['data']['accessReviewedBy']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->controller(uid: 'root')->confirm('cp-anders')->getStatus());
+		$this->assertSame(expected: 'root', actual: $this->patches[0]['data']['accessReviewedBy']);
 	}//end testConfirmingAnotherOrganisationIsRefused()
 
 	/**
@@ -524,8 +567,8 @@ final class AccessReviewControllerTest extends TestCase {
 		$controller = $this->controller(uid: 'joe');
 		$this->objectService->expects($this->never())->method('find');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->confirm('cp-colleague')->getStatus());
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(uid: null)->confirm('cp-colleague')->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $controller->confirm('cp-colleague')->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller(uid: null)->confirm('cp-colleague')->getStatus());
 	}//end testANonReviewerIsRefusedBeforeAnyRead()
 
 	/**
@@ -534,7 +577,7 @@ final class AccessReviewControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnknownContactPersonIsNotFound(): void {
-		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller(uid: 'fa')->confirm('cp-missing')->getStatus());
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $this->controller(uid: 'fa')->confirm('cp-missing')->getStatus());
 	}//end testAnUnknownContactPersonIsNotFound()
 
 	/**
@@ -545,15 +588,19 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testRemoveRoleWithdrawsTheRoleAndItsGroup(): void {
 		$response = $this->controller(uid: 'fa', params: ['role' => 'functioneel-beheerder'])->withdraw('cp-colleague');
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus(), json_encode($response->getData()));
-		$this->assertSame('Functioneel-beheerder', $response->getData()['role']);
-		$this->assertTrue($response->getData()['removedFromGroup']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus(), message: json_encode($response->getData()));
+		$this->assertSame(expected: 'Functioneel-beheerder', actual: $response->getData()['role']);
+		$this->assertTrue(condition: $response->getData()['removedFromGroup']);
 		$this->assertSame(
-			['roles' => ['Gebruik-beheerder'], 'accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa'],
-			$this->patches[0]['data']
+			expected: ['roles' => ['Gebruik-beheerder'], 'accessReviewedAt' => '2026-11-14T12:00:00+00:00', 'accessReviewedBy' => 'fa'],
+			actual: $this->patches[0]['data']
 		);
-		$this->assertSame(['fa'], $this->groups['functioneel-beheerder']);
-		$this->assertSame(['joe', 'colleague'], $this->groups['gebruik-beheerder'], 'Another role group is left as it was.');
+		$this->assertSame(expected: ['fa'], actual: $this->groups['functioneel-beheerder']);
+		$this->assertSame(
+			expected: ['joe', 'colleague'],
+			actual: $this->groups['gebruik-beheerder'],
+			message: 'Another role group is left as it was.'
+		);
 	}//end testRemoveRoleWithdrawsTheRoleAndItsGroup()
 
 	/**
@@ -564,10 +611,10 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testARoleStillDerivedKeepsItsGroup(): void {
 		$response = $this->controller(uid: 'fa', params: ['role' => 'Gebruik-beheerder'])->withdraw('cp-colleague');
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertFalse($response->getData()['removedFromGroup']);
-		$this->assertSame(['Functioneel-beheerder'], $this->patches[0]['data']['roles']);
-		$this->assertContains('colleague', $this->groups['gebruik-beheerder']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertFalse(condition: $response->getData()['removedFromGroup']);
+		$this->assertSame(expected: ['Functioneel-beheerder'], actual: $this->patches[0]['data']['roles']);
+		$this->assertContains(needle: 'colleague', haystack: $this->groups['gebruik-beheerder']);
 	}//end testARoleStillDerivedKeepsItsGroup()
 
 	/**
@@ -578,10 +625,10 @@ final class AccessReviewControllerTest extends TestCase {
 	public function testARoleFromAMappedGroupNamesTheGroup(): void {
 		$response = $this->controller(uid: 'fa', params: ['role' => 'Gebruik-raadpleger'])->withdraw('cp-colleague');
 
-		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
-		$this->assertSame('This role comes from the group Inkoop. Change that group instead.', $response->getData()['message']);
-		$this->assertSame([['type' => 'group', 'group' => 'Inkoop']], $response->getData()['sources']);
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: Http::STATUS_CONFLICT, actual: $response->getStatus());
+		$this->assertSame(expected: 'This role comes from the group Inkoop. Change that group instead.', actual: $response->getData()['message']);
+		$this->assertSame(expected: [['type' => 'group', 'group' => 'Inkoop']], actual: $response->getData()['sources']);
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testARoleFromAMappedGroupNamesTheGroup()
 
 	/**
@@ -591,13 +638,22 @@ final class AccessReviewControllerTest extends TestCase {
 	 */
 	public function testOtherWithdrawalsAreRefused(): void {
 		$fromType = $this->controller(uid: 'fa', params: ['role' => 'Gebruik-beheerder'])->withdraw('cp-newcomer');
-		$this->assertSame(Http::STATUS_CONFLICT, $fromType->getStatus());
-		$this->assertSame('This role comes from the organisation type Municipality. Change the role mapping instead.', $fromType->getData()['message']);
+		$this->assertSame(expected: Http::STATUS_CONFLICT, actual: $fromType->getStatus());
+		$this->assertSame(
+			expected: 'This role comes from the organisation type Municipality. Change the role mapping instead.',
+			actual: $fromType->getData()['message']
+		);
 
-		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller(uid: 'fa', params: ['role' => 'Aanbod-beheerder'])->withdraw('cp-newcomer')->getStatus());
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(uid: 'fa', params: ['role' => 'Ambtenaar'])->withdraw('cp-colleague')->getStatus());
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(uid: 'fa')->withdraw('cp-colleague')->getStatus());
-		$this->assertSame([], $this->patches);
+		$this->assertSame(
+			expected: Http::STATUS_NOT_FOUND,
+			actual: $this->controller(uid: 'fa', params: ['role' => 'Aanbod-beheerder'])->withdraw('cp-newcomer')->getStatus()
+		);
+		$this->assertSame(
+			expected: Http::STATUS_BAD_REQUEST,
+			actual: $this->controller(uid: 'fa', params: ['role' => 'Ambtenaar'])->withdraw('cp-colleague')->getStatus()
+		);
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $this->controller(uid: 'fa')->withdraw('cp-colleague')->getStatus());
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testOtherWithdrawalsAreRefused()
 
 	/**
@@ -611,12 +667,63 @@ final class AccessReviewControllerTest extends TestCase {
 
 		foreach (['index' => 'GET', 'confirm' => 'POST', 'withdraw' => 'POST'] as $method => $verb) {
 			$attributes = (new ReflectionMethod(AccessReviewController::class, $method))->getAttributes(NoAdminRequired::class);
-			$this->assertCount(1, $attributes, $method);
-			$this->assertArrayHasKey('accessReview#' . $method, $names);
+			$this->assertCount(expectedCount: 1, haystack: $attributes, message: $method);
+			$this->assertArrayHasKey(key: 'accessReview#' . $method, array: $names);
 		}
 
-		$this->assertSame('/api/access-review/{organisationUuid}', $names['accessReview#index']);
-		$this->assertSame('/api/access-review/{contactPersonId}/confirm', $names['accessReview#confirm']);
-		$this->assertSame('/api/access-review/{contactPersonId}/withdraw', $names['accessReview#withdraw']);
+		$this->assertSame(expected: '/api/access-review/{organisationUuid}', actual: $names['accessReview#index']);
+		$this->assertSame(expected: '/api/access-review/{contactPersonId}/confirm', actual: $names['accessReview#confirm']);
+		$this->assertSame(expected: '/api/access-review/{contactPersonId}/withdraw', actual: $names['accessReview#withdraw']);
 	}//end testTheAuthPostureAndRoutes()
+
+	/**
+	 * The given id while the register is configured, otherwise none.
+	 *
+	 * @param int|null $id The register or schema id.
+	 *
+	 * @return int|null The id, or null when nothing is configured.
+	 */
+	private function whenConfigured(?int $id): ?int {
+		if ($this->configured === true) {
+			return $id;
+		}
+
+		return null;
+
+	}//end whenConfigured()
+
+	/**
+	 * A user the test instance knows, or null.
+	 *
+	 * @param string $uid The user id.
+	 *
+	 * @return IUser|null The user.
+	 */
+	private function knownUser(string $uid): ?IUser {
+		if (in_array($uid, ['fa', 'colleague', 'newcomer', 'anders', 'joe', 'root'], true) === false) {
+			return null;
+		}
+
+		return $this->user(uid: $uid);
+
+	}//end knownUser()
+
+	/**
+	 * A user preference: the active organisation for `core.organisation`,
+	 * the default for anything else.
+	 *
+	 * @param string $uid     The user id.
+	 * @param string $key     The app and key, joined by a dot.
+	 * @param string $default The default value.
+	 *
+	 * @return string The value.
+	 */
+	private function userValue(string $uid, string $key, string $default): string {
+		if ($key === 'core.organisation') {
+			return ($this->activeOrganisation[$uid] ?? '');
+		}
+
+		return $default;
+
+	}//end userValue()
 }//end class

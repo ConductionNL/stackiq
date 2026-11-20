@@ -52,15 +52,15 @@ class RelativeDemoDatesTest extends TestCase {
 	 */
 	public function testEachUnitAndDirectionResolvesAgainstTheImportDay(): void {
 		$this->assertSame(
-			[
+			expected: [
 				'today' => '2026-11-14',
 				'soon' => '2026-12-29',
 				'past' => '2026-11-13',
 				'months' => '2027-02-14',
 				'years' => '2024-11-14',
 			],
-			$this->resolveObject(
-				[
+			actual: $this->resolveObject(
+				object: [
 					'today' => '{{today}}',
 					'soon' => '{{today+45d}}',
 					'past' => '{{today-1d}}',
@@ -78,8 +78,8 @@ class RelativeDemoDatesTest extends TestCase {
 	 */
 	public function testNestedValuesAreResolved(): void {
 		$this->assertSame(
-			['window' => ['from' => '2026-11-14', 'dates' => ['2026-11-24', 'x']]],
-			$this->resolveObject(['window' => ['from' => '{{today}}', 'dates' => ['{{today+10d}}', 'x']]])
+			expected: ['window' => ['from' => '2026-11-14', 'dates' => ['2026-11-24', 'x']]],
+			actual: $this->resolveObject(object: ['window' => ['from' => '{{today}}', 'dates' => ['{{today+10d}}', 'x']]])
 		);
 	}//end testNestedValuesAreResolved()
 
@@ -101,7 +101,7 @@ class RelativeDemoDatesTest extends TestCase {
 			'flag' => true,
 		];
 
-		$this->assertSame($object, $this->resolveObject($object));
+		$this->assertSame(expected: $object, actual: $this->resolveObject(object: $object));
 	}//end testAnythingButAWholePlaceholderIsLeftAsItIs()
 
 	/**
@@ -122,10 +122,13 @@ class RelativeDemoDatesTest extends TestCase {
 
 		$resolved = $dates->resolve(data: $data, today: $today);
 
-		$this->assertSame('{{today}}', $resolved['components']['schemas']['catalogContract']['description']);
-		$this->assertSame('2026-11-14', $resolved['components']['objects'][0]['endDate']);
-		$this->assertSame(['components' => ['objects' => 'x']], $dates->resolve(data: ['components' => ['objects' => 'x']], today: $today));
-		$this->assertSame(['info' => []], $dates->resolve(data: ['info' => []], today: $today));
+		$this->assertSame(expected: '{{today}}', actual: $resolved['components']['schemas']['catalogContract']['description']);
+		$this->assertSame(expected: '2026-11-14', actual: $resolved['components']['objects'][0]['endDate']);
+		$this->assertSame(
+			expected: ['components' => ['objects' => 'x']],
+			actual: $dates->resolve(data: ['components' => ['objects' => 'x']], today: $today)
+		);
+		$this->assertSame(expected: ['info' => []], actual: $dates->resolve(data: ['info' => []], today: $today));
 	}//end testOnlyTheObjectsListIsResolved()
 
 	/**
@@ -150,13 +153,20 @@ class RelativeDemoDatesTest extends TestCase {
 
 		$out = RelativeDemoDates::resolveDurations(data: $data, now: $now);
 
-		$this->assertSame('2026-11-07T12:00:00+00:00', $out['components']['objects'][0]['accessReviewedAt']);
-		$this->assertSame('Voorbeeld', $out['components']['objects'][0]['role']);
-		$this->assertSame('2025-09-14T12:00:00+00:00', $out['components']['objects'][1]['accessReviewedAt']);
-		$this->assertSame(['-P7D'], $out['components']['objects'][2]['roles'], 'Only top-level string fields are resolved.');
-		$this->assertSame(['@self' => ['schema' => 'contactPerson'], 'note' => '-P', 'other' => 'P7D', 'count' => 3], $out['components']['objects'][3]);
-		$this->assertSame('not an object', $out['components']['objects'][4]);
-		$this->assertSame(['stackiq' => ['since' => '-P7D']], $out['components']['registers']);
+		$this->assertSame(expected: '2026-11-07T12:00:00+00:00', actual: $out['components']['objects'][0]['accessReviewedAt']);
+		$this->assertSame(expected: 'Voorbeeld', actual: $out['components']['objects'][0]['role']);
+		$this->assertSame(expected: '2025-09-14T12:00:00+00:00', actual: $out['components']['objects'][1]['accessReviewedAt']);
+		$this->assertSame(
+			expected: ['-P7D'],
+			actual: $out['components']['objects'][2]['roles'],
+			message: 'Only top-level string fields are resolved.'
+		);
+		$this->assertSame(
+			expected: ['@self' => ['schema' => 'contactPerson'], 'note' => '-P', 'other' => 'P7D', 'count' => 3],
+			actual: $out['components']['objects'][3]
+		);
+		$this->assertSame(expected: 'not an object', actual: $out['components']['objects'][4]);
+		$this->assertSame(expected: ['stackiq' => ['since' => '-P7D']], actual: $out['components']['registers']);
 	}//end testRelativeValuesBecomeDatesBeforeTheImport()
 
 	/**
@@ -167,7 +177,10 @@ class RelativeDemoDatesTest extends TestCase {
 	public function testADescriptorWithoutObjectsKeepsItsDurations(): void {
 		$now = new DateTimeImmutable('2026-11-14T12:00:00+00:00');
 
-		$this->assertSame(['components' => ['objects' => 'x']], RelativeDemoDates::resolveDurations(data: ['components' => ['objects' => 'x']], now: $now));
-		$this->assertSame([], RelativeDemoDates::resolveDurations(data: [], now: $now));
+		$this->assertSame(
+			expected: ['components' => ['objects' => 'x']],
+			actual: RelativeDemoDates::resolveDurations(data: ['components' => ['objects' => 'x']], now: $now)
+		);
+		$this->assertSame(expected: [], actual: RelativeDemoDates::resolveDurations(data: [], now: $now));
 	}//end testADescriptorWithoutObjectsKeepsItsDurations()
 }//end class

@@ -61,17 +61,17 @@ final class AccessReviewDeclarationTest extends TestCase {
 		$base = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
 		$contactPerson = $this->merged()['components']['schemas']['contactPerson'];
 
-		$this->assertSame('date-time', $contactPerson['properties']['accessReviewedAt']['format']);
-		$this->assertSame('string', $contactPerson['properties']['accessReviewedBy']['type']);
+		$this->assertSame(expected: 'date-time', actual: $contactPerson['properties']['accessReviewedAt']['format']);
+		$this->assertSame(expected: 'string', actual: $contactPerson['properties']['accessReviewedBy']['type']);
 		foreach (array_keys($base['components']['schemas']['contactPerson']['properties']) as $existing) {
-			$this->assertArrayHasKey($existing, $contactPerson['properties'], $existing . ' must survive the merge');
+			$this->assertArrayHasKey(key: $existing, array: $contactPerson['properties'], message: $existing . ' must survive the merge');
 		}
 
 		$this->assertTrue(
-			version_compare($contactPerson['version'], $base['components']['schemas']['contactPerson']['version'], '>'),
-			'Without a higher version an existing install skips the import and never gets the fields.'
+			condition: version_compare($contactPerson['version'], $base['components']['schemas']['contactPerson']['version'], '>'),
+			message: 'Without a higher version an existing install skips the import and never gets the fields.'
 		);
-		$this->assertSame('0.0.30', $contactPerson['version']);
+		$this->assertSame(expected: '0.0.30', actual: $contactPerson['version']);
 	}//end testContactPersonCarriesTheReview()
 
 	/**
@@ -83,9 +83,9 @@ final class AccessReviewDeclarationTest extends TestCase {
 		$properties = $this->merged()['components']['schemas']['contactPerson']['properties'];
 
 		foreach (['accessReviewedAt', 'accessReviewedBy'] as $field) {
-			$this->assertSame(['admin'], $properties[$field]['authorization']['update'], $field);
-			$this->assertSame(['admin'], $properties[$field]['authorization']['create'], $field);
-			$this->assertTrue($properties[$field]['hideOnForm'], $field);
+			$this->assertSame(expected: ['admin'], actual: $properties[$field]['authorization']['update'], message: $field);
+			$this->assertSame(expected: ['admin'], actual: $properties[$field]['authorization']['create'], message: $field);
+			$this->assertTrue(condition: $properties[$field]['hideOnForm'], message: $field);
 		}
 	}//end testOnlyAnAdminWritesTheReviewDirectly()
 
@@ -100,7 +100,7 @@ final class AccessReviewDeclarationTest extends TestCase {
 			true
 		);
 
-		$this->assertSame(['contactPerson'], array_keys($fragment['components']['schemas']));
-		$this->assertEqualsCanonicalizing(['_comment', 'components'], array_keys($fragment));
+		$this->assertSame(expected: ['contactPerson'], actual: array_keys($fragment['components']['schemas']));
+		$this->assertEqualsCanonicalizing(expected: ['_comment', 'components'], actual: array_keys($fragment));
 	}//end testTheFragmentTouchesOnlyContactPerson()
 }//end class

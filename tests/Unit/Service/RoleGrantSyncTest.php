@@ -97,12 +97,12 @@ final class RoleGrantSyncTest extends TestCase {
 	 * @return RoleGrantSync
 	 */
 	private function sync(): RoleGrantSync {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $this->stored[$key] ?? $default
 		);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('get')->willReturnCallback(fn (string $gid): ?IGroup => $this->groupDouble(gid: $gid));
 		$groupManager->method('createGroup')->willReturnCallback(
 			function (string $gid): IGroup {
@@ -124,23 +124,23 @@ final class RoleGrantSyncTest extends TestCase {
 			}
 		);
 
-		$organisation = $this->createMock(ObjectEntityInterface::class);
+		$organisation = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$organisation->method('getObject')->willReturnCallback(fn (): array => ['id' => self::ORG, 'type' => $this->organisationType]);
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->objectService->method('find')->willReturn($organisation);
 
-		$registerConfig = $this->createMock(RegisterConfigReaderInterface::class);
+		$registerConfig = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registerConfig->method('getObjectService')->willReturn($this->objectService);
-		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->configured === true ? 1 : null);
+		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->whenConfigured(id: 1));
 		$registerConfig->method('getSchemaIdForObjectType')->willReturnCallback(
-			fn (string $type): ?int => $this->configured === true ? ['organization' => 2, 'contactPerson' => 3][$type] : null
+			fn (string $type): ?int => $this->whenConfigured(id: ['organization' => 2, 'contactPerson' => 3][$type])
 		);
 
 		return new RoleGrantSync(
 			roleGroupMap: new RoleGroupMap(appConfig: $config),
 			groupManager: $groupManager,
 			registerConfig: $registerConfig,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 	}//end sync()
 
@@ -156,7 +156,7 @@ final class RoleGrantSyncTest extends TestCase {
 			return null;
 		}
 
-		$group = $this->createMock(IGroup::class);
+		$group = $this->createMock(originalClassName: IGroup::class);
 		$group->method('getGID')->willReturn($gid);
 		$group->method('inGroup')->willReturnCallback(fn (IUser $user): bool => in_array($user->getUID(), $this->groups[$gid], true));
 		$group->method('addUser')->willReturnCallback(
@@ -180,7 +180,7 @@ final class RoleGrantSyncTest extends TestCase {
 	 * @return IUser
 	 */
 	private function user(): IUser {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('ann');
 		return $user;
 	}//end user()
@@ -209,16 +209,16 @@ final class RoleGrantSyncTest extends TestCase {
 		$contact = ['roles' => ['functioneel-BEHEERDER', 'Ambtenaar', 7], 'organisation' => self::ORG];
 
 		$this->assertSame(
-			['Gebruik-beheerder', 'Gebruik-raadpleger', 'Functioneel-beheerder'],
-			$sync->rolesFor(user: $this->user(), contactPerson: $contact)
+			expected: ['Gebruik-beheerder', 'Gebruik-raadpleger', 'Functioneel-beheerder'],
+			actual: $sync->rolesFor(user: $this->user(), contactPerson: $contact)
 		);
 		$this->assertSame(
-			[
+			expected: [
 				'Gebruik-beheerder' => [['type' => 'organisationType', 'organisationType' => 'Municipality']],
 				'Gebruik-raadpleger' => [['type' => 'group', 'group' => 'Inkoop']],
 				'Functioneel-beheerder' => [['type' => 'contactPerson']],
 			],
-			$sync->roleSourcesFor(user: $this->user(), contactPerson: $contact)
+			actual: $sync->roleSourcesFor(user: $this->user(), contactPerson: $contact)
 		);
 	}//end testRolesForIsTheUnionOfTheThreeSources()
 
@@ -234,12 +234,12 @@ final class RoleGrantSyncTest extends TestCase {
 		$sources = $this->sync()->roleSourcesFor(user: $this->user(), contactPerson: ['roles' => ['Gebruik-beheerder'], 'organisation' => self::ORG]);
 
 		$this->assertSame(
-			[
+			expected: [
 				['type' => 'contactPerson'],
 				['type' => 'group', 'group' => 'Inkoop'],
 				['type' => 'organisationType', 'organisationType' => 'Municipality'],
 			],
-			$sources['Gebruik-beheerder']
+			actual: $sources['Gebruik-beheerder']
 		);
 	}//end testARoleFromTwoSourcesNamesBoth()
 
@@ -272,9 +272,9 @@ final class RoleGrantSyncTest extends TestCase {
 
 		$result = $this->sync()->sync(user: $this->user(), contactPerson: ['roles' => [], 'organisation' => self::ORG]);
 
-		$this->assertSame(['added' => [$roleGroup], 'removed' => []], $result);
-		$this->assertSame(['ann'], $this->groups[$roleGroup]);
-		$this->assertSame(['add ' . $roleGroup], $this->changes);
+		$this->assertSame(expected: ['added' => [$roleGroup], 'removed' => []], actual: $result);
+		$this->assertSame(expected: ['ann'], actual: $this->groups[$roleGroup]);
+		$this->assertSame(expected: ['add ' . $roleGroup], actual: $this->changes);
 	}//end testANewContactGetsTheRoleGroupOfTheirOrganisationType()
 
 	/**
@@ -294,12 +294,16 @@ final class RoleGrantSyncTest extends TestCase {
 
 		$result = $this->sync()->sync(user: $this->user(), contactPerson: ['roles' => [], 'organisation' => self::ORG]);
 
-		$this->assertSame(['added' => [], 'removed' => ['gebruik-beheerder']], $result);
-		$this->assertSame([], $this->groups['gebruik-beheerder']);
-		$this->assertSame(['ann'], $this->groups['software-catalog-users']);
-		$this->assertSame(['ann'], $this->groups['admin']);
-		$this->assertSame(['ann'], $this->groups['organisaties-beheerder'], 'organisaties-beheerder is no catalogue role group, so the sync leaves it.');
-		$this->assertSame(['remove gebruik-beheerder'], $this->changes);
+		$this->assertSame(expected: ['added' => [], 'removed' => ['gebruik-beheerder']], actual: $result);
+		$this->assertSame(expected: [], actual: $this->groups['gebruik-beheerder']);
+		$this->assertSame(expected: ['ann'], actual: $this->groups['software-catalog-users']);
+		$this->assertSame(expected: ['ann'], actual: $this->groups['admin']);
+		$this->assertSame(
+			expected: ['ann'],
+			actual: $this->groups['organisaties-beheerder'],
+			message: 'organisaties-beheerder is no catalogue role group, so the sync leaves it.'
+		);
+		$this->assertSame(expected: ['remove gebruik-beheerder'], actual: $this->changes);
 	}//end testLeavingTheMappedGroupEndsTheRoleAndKeepsOtherGroups()
 
 	/**
@@ -317,8 +321,8 @@ final class RoleGrantSyncTest extends TestCase {
 
 		$result = $this->sync()->sync(user: $this->user(), contactPerson: ['roles' => [], 'organisation' => self::ORG]);
 
-		$this->assertSame(['added' => [], 'removed' => []], $result);
-		$this->assertSame([], $this->changes);
+		$this->assertSame(expected: ['added' => [], 'removed' => []], actual: $result);
+		$this->assertSame(expected: [], actual: $this->changes);
 	}//end testStayingInTheMappedGroupChangesNothing()
 
 	/**
@@ -331,12 +335,12 @@ final class RoleGrantSyncTest extends TestCase {
 
 		$result = $this->sync()->sync(user: $this->user(), contactPerson: ['roles' => ['Organisatie-beheerder'], 'organisation' => self::ORG]);
 
-		$this->assertSame(['added' => ['aanbod-beheerder', 'organisatie-beheerder'], 'removed' => []], $result);
+		$this->assertSame(expected: ['added' => ['aanbod-beheerder', 'organisatie-beheerder'], 'removed' => []], actual: $result);
 		$this->assertSame(
-			['create aanbod-beheerder', 'add aanbod-beheerder', 'create organisatie-beheerder', 'add organisatie-beheerder'],
-			$this->changes
+			expected: ['create aanbod-beheerder', 'add aanbod-beheerder', 'create organisatie-beheerder', 'add organisatie-beheerder'],
+			actual: $this->changes
 		);
-		$this->assertArrayNotHasKey('gebruik-beheerder', $this->groups);
+		$this->assertArrayNotHasKey(key: 'gebruik-beheerder', array: $this->groups);
 	}//end testAMissingRoleGroupIsCreatedOnlyWhenNeeded()
 
 	/**
@@ -353,13 +357,13 @@ final class RoleGrantSyncTest extends TestCase {
 
 		try {
 			$this->sync()->sync(user: $this->user(), contactPerson: ['roles' => [], 'organisation' => self::ORG]);
-			$this->fail('The sync must refuse without a configured register.');
+			$this->fail(message: 'The sync must refuse without a configured register.');
 		} catch (RuntimeException $e) {
-			$this->assertStringContainsString('not configured', $e->getMessage());
+			$this->assertStringContainsString(needle: 'not configured', haystack: $e->getMessage());
 		}
 
-		$this->assertSame(['ann'], $this->groups['gebruik-beheerder']);
-		$this->assertSame([], $this->changes);
+		$this->assertSame(expected: ['ann'], actual: $this->groups['gebruik-beheerder']);
+		$this->assertSame(expected: [], actual: $this->changes);
 	}//end testAMissingRegisterChangesNothing()
 
 	/**
@@ -371,14 +375,14 @@ final class RoleGrantSyncTest extends TestCase {
 		$this->roleGroupsExist();
 		$sync = $this->sync();
 
-		$contact = $this->createMock(ObjectEntityInterface::class);
+		$contact = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$contact->method('getObject')->willReturn(['username' => 'ann', 'roles' => ['VNG-raadpleger']]);
 		$this->objectService->expects($this->once())
 			->method('searchObjects')
 			->with(['@self' => ['register' => 1, 'schema' => 3], 'username' => 'ann', '_limit' => 1], false, false)
 			->willReturn([$contact]);
 
-		$this->assertSame(['VNG-raadpleger'], $sync->rolesFor(user: $this->user()));
+		$this->assertSame(expected: ['VNG-raadpleger'], actual: $sync->rolesFor(user: $this->user()));
 	}//end testTheContactPersonIsFoundByUsername()
 
 	/**
@@ -392,14 +396,14 @@ final class RoleGrantSyncTest extends TestCase {
 		$this->groups['aanbod-beheerder'] = ['ann'];
 		$sync = $this->sync();
 
-		$contact = $this->createMock(ObjectEntityInterface::class);
+		$contact = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$contact->method('getObject')->willReturn(['username' => 'ann', 'roles' => ['VNG-raadpleger']]);
 		$this->objectService->method('searchObjects')->willReturn([$contact]);
 
 		$result = $sync->syncCatalogueUser(user: $this->user());
 
-		$this->assertSame(['added' => ['vng-raadpleger'], 'removed' => ['aanbod-beheerder']], $result);
-		$this->assertSame(['remove aanbod-beheerder', 'add vng-raadpleger'], $this->changes);
+		$this->assertSame(expected: ['added' => ['vng-raadpleger'], 'removed' => ['aanbod-beheerder']], actual: $result);
+		$this->assertSame(expected: ['remove aanbod-beheerder', 'add vng-raadpleger'], actual: $this->changes);
 	}//end testSyncCatalogueUserSyncsAnAccountWithAContactPerson()
 
 	/**
@@ -413,9 +417,9 @@ final class RoleGrantSyncTest extends TestCase {
 		$sync = $this->sync();
 		$this->objectService->method('searchObjects')->willReturn([]);
 
-		$this->assertNull($sync->syncCatalogueUser(user: $this->user()));
-		$this->assertSame([], $this->changes);
-		$this->assertSame(['ann'], $this->groups['gebruik-beheerder']);
+		$this->assertNull(actual: $sync->syncCatalogueUser(user: $this->user()));
+		$this->assertSame(expected: [], actual: $this->changes);
+		$this->assertSame(expected: ['ann'], actual: $this->groups['gebruik-beheerder']);
 	}//end testSyncCatalogueUserLeavesAnAccountWithoutAContactPersonAlone()
 
 	/**
@@ -434,13 +438,33 @@ final class RoleGrantSyncTest extends TestCase {
 		$after = ['roles' => [], 'organisation' => self::ORG];
 		$sync = $this->sync();
 
-		$this->assertTrue($sync->revokeIfUnderived(user: $this->user(), role: 'functioneel-beheerder', contactPerson: $after));
-		$this->assertFalse($sync->revokeIfUnderived(user: $this->user(), role: 'Gebruik-raadpleger', contactPerson: $after));
+		$this->assertTrue(condition: $sync->revokeIfUnderived(user: $this->user(), role: 'functioneel-beheerder', contactPerson: $after));
+		$this->assertFalse(condition: $sync->revokeIfUnderived(user: $this->user(), role: 'Gebruik-raadpleger', contactPerson: $after));
 
-		$this->assertSame(['remove functioneel-beheerder'], $this->changes);
-		$this->assertSame(['ann'], $this->groups['vng-raadpleger'], 'Another role group is left alone, even one the person does not derive.');
+		$this->assertSame(expected: ['remove functioneel-beheerder'], actual: $this->changes);
+		$this->assertSame(
+			expected: ['ann'],
+			actual: $this->groups['vng-raadpleger'],
+			message: 'Another role group is left alone, even one the person does not derive.'
+		);
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(exception: RuntimeException::class);
 		$sync->revokeIfUnderived(user: $this->user(), role: 'Ambtenaar', contactPerson: $after);
 	}//end testRevokeIfUnderivedTouchesOnlyThatRole()
+
+	/**
+	 * The given id while the register is configured, otherwise none.
+	 *
+	 * @param int|null $id The register or schema id.
+	 *
+	 * @return int|null The id, or null when nothing is configured.
+	 */
+	private function whenConfigured(?int $id): ?int {
+		if ($this->configured === true) {
+			return $id;
+		}
+
+		return null;
+
+	}//end whenConfigured()
 }//end class

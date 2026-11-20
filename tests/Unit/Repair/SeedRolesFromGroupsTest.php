@@ -63,7 +63,7 @@ final class SeedRolesFromGroupsTest extends TestCase {
 	 * @return void
 	 */
 	private function runStep(): void {
-		$output = $this->createMock(IOutput::class);
+		$output = $this->createMock(originalClassName: IOutput::class);
 		$output->method('info')->willReturnCallback(function (string $message): void {
 			$this->output[] = ['info', $message];
 		});
@@ -71,7 +71,11 @@ final class SeedRolesFromGroupsTest extends TestCase {
 			$this->output[] = ['warning', $message];
 		});
 
-		(new SeedRolesFromGroups(seeder: $this->seeder, roleGroupMap: $this->roleGroupMap, logger: $this->createMock(LoggerInterface::class)))
+		(new SeedRolesFromGroups(
+			seeder: $this->seeder,
+			roleGroupMap: $this->roleGroupMap,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		))
 			->run($output);
 	}//end runStep()
 
@@ -81,8 +85,8 @@ final class SeedRolesFromGroupsTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->seeder = $this->createMock(RoleGrantSeeder::class);
-		$this->roleGroupMap = $this->createMock(RoleGroupMap::class);
+		$this->seeder = $this->createMock(originalClassName: RoleGrantSeeder::class);
+		$this->roleGroupMap = $this->createMock(originalClassName: RoleGroupMap::class);
 	}//end setUp()
 
 	/**
@@ -96,7 +100,7 @@ final class SeedRolesFromGroupsTest extends TestCase {
 
 		$this->runStep();
 
-		$this->assertSame([], $this->output);
+		$this->assertSame(expected: [], actual: $this->output);
 	}//end testAnAlreadySeededInstanceIsLeftAlone()
 
 	/**
@@ -113,8 +117,10 @@ final class SeedRolesFromGroupsTest extends TestCase {
 		$this->runStep();
 
 		$this->assertSame(
-			[['info', 'Role groups: 2 contact persons got their role group roles, 3 were already complete, 1 members have no contact person.']],
-			$this->output
+			expected: [
+				['info', 'Role groups: 2 contact persons got their role group roles, 3 were already complete, 1 members have no contact person.'],
+			],
+			actual: $this->output
 		);
 	}//end testTheSeedingIsRunAndReported()
 
@@ -131,8 +137,8 @@ final class SeedRolesFromGroupsTest extends TestCase {
 
 		$this->runStep();
 
-		$this->assertSame('warning', $this->output[1][0]);
-		$this->assertStringContainsString('4 contact persons could not be written', $this->output[1][1]);
+		$this->assertSame(expected: 'warning', actual: $this->output[1][0]);
+		$this->assertStringContainsString(needle: '4 contact persons could not be written', haystack: $this->output[1][1]);
 	}//end testFailedWritesWarnThatTheSyncStaysOff()
 
 	/**
@@ -146,7 +152,7 @@ final class SeedRolesFromGroupsTest extends TestCase {
 
 		$this->runStep();
 
-		$this->assertSame([['warning', 'Role groups: the roles could not be seeded yet; the nightly job retries.']], $this->output);
+		$this->assertSame(expected: [['warning', 'Role groups: the roles could not be seeded yet; the nightly job retries.']], actual: $this->output);
 	}//end testAThrowingSeederDoesNotAbortTheUpgrade()
 
 	/**
@@ -155,8 +161,12 @@ final class SeedRolesFromGroupsTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheStepNamesWhatItDoes(): void {
-		$step = new SeedRolesFromGroups(seeder: $this->seeder, roleGroupMap: $this->roleGroupMap, logger: $this->createMock(LoggerInterface::class));
+		$step = new SeedRolesFromGroups(
+			seeder: $this->seeder,
+			roleGroupMap: $this->roleGroupMap,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 
-		$this->assertSame('Stackiq: write the role of each role group member onto their contact person', $step->getName());
+		$this->assertSame(expected: 'Stackiq: write the role of each role group member onto their contact person', actual: $step->getName());
 	}//end testTheStepNamesWhatItDoes()
 }//end class

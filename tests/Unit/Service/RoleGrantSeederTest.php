@@ -92,7 +92,7 @@ final class RoleGrantSeederTest extends TestCase {
 	 * @return RoleGrantSeeder
 	 */
 	private function seeder(): RoleGrantSeeder {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $this->stored[$key] ?? $default
 		);
@@ -103,20 +103,20 @@ final class RoleGrantSeederTest extends TestCase {
 			}
 		);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('get')->willReturnCallback(
 			function (string $gid): ?IGroup {
 				if (isset($this->groups[$gid]) === false) {
 					return null;
 				}
 
-				$group = $this->createMock(IGroup::class);
+				$group = $this->createMock(originalClassName: IGroup::class);
 				$group->method('getUsers')->willReturn(array_map(fn (string $uid): IUser => $this->user(uid: $uid), $this->groups[$gid]));
 				return $group;
 			}
 		);
 
-		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query): array {
 				$contact = $this->contacts[$query['username']] ?? null;
@@ -124,7 +124,7 @@ final class RoleGrantSeederTest extends TestCase {
 					return [];
 				}
 
-				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 				$entity->method('getUuid')->willReturn('cp-' . $query['username']);
 				$entity->method('getObject')->willReturn($contact);
 				return [$entity];
@@ -134,26 +134,26 @@ final class RoleGrantSeederTest extends TestCase {
 			function (ObjectPatch $patch, bool $_rbac, bool $_multitenancy): ObjectEntityInterface {
 				$objectId = $patch->objectId;
 				$data = $patch->data;
-				$this->assertSame([1, 3, false, false], [$patch->target->register, $patch->target->schema, $_rbac, $_multitenancy]);
+				$this->assertSame(expected: [1, 3, false, false], actual: [$patch->target->register, $patch->target->schema, $_rbac, $_multitenancy]);
 				if (in_array(substr($objectId, 3), $this->failingPatches, true) === true) {
 					throw new RuntimeException('write refused');
 				}
 
 				$this->patches[] = [$objectId, $data];
-				return $this->createMock(ObjectEntityInterface::class);
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
 			}
 		);
 
-		$registerConfig = $this->createMock(RegisterConfigReaderInterface::class);
+		$registerConfig = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registerConfig->method('getObjectService')->willReturn($objectService);
-		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->configured === true ? 1 : null);
-		$registerConfig->method('getSchemaIdForObjectType')->willReturnCallback(fn (): ?int => $this->configured === true ? 3 : null);
+		$registerConfig->method('getRegisterIdForObjectType')->willReturnCallback(fn (): ?int => $this->whenConfigured(id: 1));
+		$registerConfig->method('getSchemaIdForObjectType')->willReturnCallback(fn (): ?int => $this->whenConfigured(id: 3));
 
 		return new RoleGrantSeeder(
 			roleGroupMap: new RoleGroupMap(appConfig: $config),
 			groupManager: $groupManager,
 			registerConfig: $registerConfig,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 	}//end seeder()
 
@@ -165,7 +165,7 @@ final class RoleGrantSeederTest extends TestCase {
 	 * @return IUser
 	 */
 	private function user(string $uid): IUser {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn($uid);
 		return $user;
 	}//end user()
@@ -181,9 +181,12 @@ final class RoleGrantSeederTest extends TestCase {
 
 		$result = $this->seeder()->seed();
 
-		$this->assertSame([['cp-ann', ['roles' => ['VNG-raadpleger', 'Gebruik-beheerder']]]], $this->patches);
-		$this->assertSame(['written' => 1, 'unchanged' => 0, 'withoutContactPerson' => 0, 'failed' => 0, 'seeded' => true], $result);
-		$this->assertSame('1', $this->stored['role_grants_seeded']);
+		$this->assertSame(expected: [['cp-ann', ['roles' => ['VNG-raadpleger', 'Gebruik-beheerder']]]], actual: $this->patches);
+		$this->assertSame(
+			expected: ['written' => 1, 'unchanged' => 0, 'withoutContactPerson' => 0, 'failed' => 0, 'seeded' => true],
+			actual: $result
+		);
+		$this->assertSame(expected: '1', actual: $this->stored['role_grants_seeded']);
 	}//end testAHandAddedMemberGetsTheRoleOnTheirContactPerson()
 
 	/**
@@ -197,7 +200,7 @@ final class RoleGrantSeederTest extends TestCase {
 
 		$this->seeder()->seed();
 
-		$this->assertSame([['cp-ann', ['roles' => ['Aanbod-beheerder', 'Functioneel-beheerder']]]], $this->patches);
+		$this->assertSame(expected: [['cp-ann', ['roles' => ['Aanbod-beheerder', 'Functioneel-beheerder']]]], actual: $this->patches);
 	}//end testAMemberOfTwoRoleGroupsIsWrittenOnce()
 
 	/**
@@ -211,9 +214,9 @@ final class RoleGrantSeederTest extends TestCase {
 
 		$result = $this->seeder()->seed();
 
-		$this->assertSame([], $this->patches);
-		$this->assertSame(1, $result['unchanged']);
-		$this->assertTrue($result['seeded']);
+		$this->assertSame(expected: [], actual: $this->patches);
+		$this->assertSame(expected: 1, actual: $result['unchanged']);
+		$this->assertTrue(condition: $result['seeded']);
 	}//end testARoleAlreadyOnTheContactPersonIsNotWrittenAgain()
 
 	/**
@@ -226,9 +229,9 @@ final class RoleGrantSeederTest extends TestCase {
 
 		$result = $this->seeder()->seed();
 
-		$this->assertSame([], $this->patches);
-		$this->assertSame(1, $result['withoutContactPerson']);
-		$this->assertTrue($result['seeded']);
+		$this->assertSame(expected: [], actual: $this->patches);
+		$this->assertSame(expected: 1, actual: $result['withoutContactPerson']);
+		$this->assertTrue(condition: $result['seeded']);
 	}//end testAMemberWithoutAContactPersonIsLeftAlone()
 
 	/**
@@ -243,10 +246,10 @@ final class RoleGrantSeederTest extends TestCase {
 
 		$result = $this->seeder()->seed();
 
-		$this->assertSame([['cp-bob', ['roles' => ['Gebruik-beheerder']]]], $this->patches);
-		$this->assertSame(1, $result['failed']);
-		$this->assertFalse($result['seeded']);
-		$this->assertArrayNotHasKey('role_grants_seeded', $this->stored);
+		$this->assertSame(expected: [['cp-bob', ['roles' => ['Gebruik-beheerder']]]], actual: $this->patches);
+		$this->assertSame(expected: 1, actual: $result['failed']);
+		$this->assertFalse(condition: $result['seeded']);
+		$this->assertArrayNotHasKey(key: 'role_grants_seeded', array: $this->stored);
 	}//end testAFailedWriteKeepsTheRoleGroupsUnseeded()
 
 	/**
@@ -259,7 +262,23 @@ final class RoleGrantSeederTest extends TestCase {
 		$this->groups = ['gebruik-beheerder' => ['ann']];
 		$seeder = $this->seeder();
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(exception: RuntimeException::class);
 		$seeder->seed();
 	}//end testAnUnconfiguredRegisterThrows()
+
+	/**
+	 * The given id while the register is configured, otherwise none.
+	 *
+	 * @param int|null $id The register or schema id.
+	 *
+	 * @return int|null The id, or null when nothing is configured.
+	 */
+	private function whenConfigured(?int $id): ?int {
+		if ($this->configured === true) {
+			return $id;
+		}
+
+		return null;
+
+	}//end whenConfigured()
 }//end class

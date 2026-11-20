@@ -47,13 +47,13 @@ final class RoleGroupMapTest extends TestCase {
 	 * @return RoleGroupMap
 	 */
 	private function map(?IL10N $l10n = null): RoleGroupMap {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $this->stored[$key] ?? $default
 		);
 		$config->method('setValueString')->willReturnCallback(
 			function (string $app, string $key, string $value): bool {
-				$this->assertSame('stackiq', $app);
+				$this->assertSame(expected: 'stackiq', actual: $app);
 				$this->stored[$key] = $value;
 				return true;
 			}
@@ -72,7 +72,7 @@ final class RoleGroupMapTest extends TestCase {
 		$answer = $this->map()->toArray();
 
 		$this->assertSame(
-			[
+			expected: [
 				'Aanbod-beheerder' => ['group' => 'aanbod-beheerder', 'sourceGroups' => []],
 				'Gebruik-beheerder' => ['group' => 'gebruik-beheerder', 'sourceGroups' => []],
 				'Gebruik-raadpleger' => ['group' => 'gebruik-raadpleger', 'sourceGroups' => []],
@@ -80,18 +80,18 @@ final class RoleGroupMapTest extends TestCase {
 				'Organisatie-beheerder' => ['group' => 'organisatie-beheerder', 'sourceGroups' => []],
 				'VNG-raadpleger' => ['group' => 'vng-raadpleger', 'sourceGroups' => []],
 			],
-			$answer['roleMapping']
+			actual: $answer['roleMapping']
 		);
 		$this->assertSame(
-			[
+			expected: [
 				'Municipality' => 'Gebruik-beheerder',
 				'Supplier' => 'Aanbod-beheerder',
 				'Collaboration' => 'Gebruik-beheerder',
 				'Community' => 'Aanbod-beheerder',
 			],
-			$answer['organisationTypeRoles']
+			actual: $answer['organisationTypeRoles']
 		);
-		$this->assertSame(365, $answer['accessReviewIntervalDays']);
+		$this->assertSame(expected: 365, actual: $answer['accessReviewIntervalDays']);
 	}//end testTheDefaultsWithoutASavedMapping()
 
 	/**
@@ -102,10 +102,10 @@ final class RoleGroupMapTest extends TestCase {
 	public function testEveryRegisterOrganisationTypeHasADefaultRole(): void {
 		$register = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
 		$types = $register['components']['schemas']['organization']['properties']['type']['enum'];
-		$this->assertNotEmpty($types);
+		$this->assertNotEmpty(actual: $types);
 
 		foreach ($types as $type) {
-			$this->assertNotNull($this->map()->defaultRoleForOrganisationType(organisationType: $type), $type);
+			$this->assertNotNull(actual: $this->map()->defaultRoleForOrganisationType(organisationType: $type), message: $type);
 		}
 	}//end testEveryRegisterOrganisationTypeHasADefaultRole()
 
@@ -117,17 +117,27 @@ final class RoleGroupMapTest extends TestCase {
 	public function testLookupsIgnoreCase(): void {
 		$map = $this->map();
 
-		$this->assertSame('Aanbod-beheerder', $map->canonicalRole(roleOrGroup: ' aanbod-BEHEERDER '));
-		$this->assertSame('VNG-raadpleger', $map->canonicalRole(roleOrGroup: 'vng-raadpleger'));
-		$this->assertNull($map->canonicalRole(roleOrGroup: 'Ambtenaar'));
-		$this->assertNull($map->canonicalRole(roleOrGroup: ''));
-		$this->assertSame('gebruik-beheerder', $map->roleGroup(role: 'Gebruik-Beheerder'));
-		$this->assertNull($map->roleGroup(role: 'admin'));
-		$this->assertTrue($map->isRoleGroup(groupId: 'Functioneel-beheerder'));
-		$this->assertFalse($map->isRoleGroup(groupId: 'software-catalog-users'));
-		$this->assertSame('Aanbod-beheerder', $map->defaultRoleForOrganisationType(organisationType: ' supplier '));
-		$this->assertNull($map->defaultRoleForOrganisationType(organisationType: 'gemeente'));
-		$this->assertSame(['aanbod-beheerder', 'gebruik-beheerder', 'gebruik-raadpleger', 'functioneel-beheerder', 'organisatie-beheerder', 'vng-raadpleger'], $map->roleGroups());
+		$this->assertSame(expected: 'Aanbod-beheerder', actual: $map->canonicalRole(roleOrGroup: ' aanbod-BEHEERDER '));
+		$this->assertSame(expected: 'VNG-raadpleger', actual: $map->canonicalRole(roleOrGroup: 'vng-raadpleger'));
+		$this->assertNull(actual: $map->canonicalRole(roleOrGroup: 'Ambtenaar'));
+		$this->assertNull(actual: $map->canonicalRole(roleOrGroup: ''));
+		$this->assertSame(expected: 'gebruik-beheerder', actual: $map->roleGroup(role: 'Gebruik-Beheerder'));
+		$this->assertNull(actual: $map->roleGroup(role: 'admin'));
+		$this->assertTrue(condition: $map->isRoleGroup(groupId: 'Functioneel-beheerder'));
+		$this->assertFalse(condition: $map->isRoleGroup(groupId: 'software-catalog-users'));
+		$this->assertSame(expected: 'Aanbod-beheerder', actual: $map->defaultRoleForOrganisationType(organisationType: ' supplier '));
+		$this->assertNull(actual: $map->defaultRoleForOrganisationType(organisationType: 'gemeente'));
+		$this->assertSame(
+			expected: [
+				'aanbod-beheerder',
+				'gebruik-beheerder',
+				'gebruik-raadpleger',
+				'functioneel-beheerder',
+				'organisatie-beheerder',
+				'vng-raadpleger',
+			],
+			actual: $map->roleGroups()
+		);
 	}//end testLookupsIgnoreCase()
 
 	/**
@@ -143,14 +153,17 @@ final class RoleGroupMapTest extends TestCase {
 			]
 		);
 
-		$this->assertTrue($result['success'], json_encode($result));
+		$this->assertTrue(condition: $result['success'], message: json_encode($result));
 
 		$fresh = $this->map();
-		$this->assertSame(['Inkoop', 'Team Inkoop'], $fresh->sourceGroups()['Gebruik-beheerder']);
-		$this->assertSame([], $fresh->sourceGroups()['Aanbod-beheerder']);
-		$this->assertSame(180, $fresh->reviewIntervalDays());
-		$this->assertSame(['group' => 'gebruik-beheerder', 'sourceGroups' => ['Inkoop', 'Team Inkoop']], $fresh->toArray()['roleMapping']['Gebruik-beheerder']);
-		$this->assertArrayNotHasKey('organisation_type_roles', $this->stored, 'A part that was not submitted is not written.');
+		$this->assertSame(expected: ['Inkoop', 'Team Inkoop'], actual: $fresh->sourceGroups()['Gebruik-beheerder']);
+		$this->assertSame(expected: [], actual: $fresh->sourceGroups()['Aanbod-beheerder']);
+		$this->assertSame(expected: 180, actual: $fresh->reviewIntervalDays());
+		$this->assertSame(
+			expected: ['group' => 'gebruik-beheerder', 'sourceGroups' => ['Inkoop', 'Team Inkoop']],
+			actual: $fresh->toArray()['roleMapping']['Gebruik-beheerder']
+		);
+		$this->assertArrayNotHasKey(key: 'organisation_type_roles', array: $this->stored, message: 'A part that was not submitted is not written.');
 	}//end testASavedMappingAndIntervalAreAnswered()
 
 	/**
@@ -164,8 +177,8 @@ final class RoleGroupMapTest extends TestCase {
 
 		$result = $this->map()->update(config: ['roleMapping' => $this->map()->toArray()['roleMapping']]);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(['Leveranciers'], $this->map()->sourceGroups()['Aanbod-beheerder']);
+		$this->assertTrue(condition: $result['success']);
+		$this->assertSame(expected: ['Leveranciers'], actual: $this->map()->sourceGroups()['Aanbod-beheerder']);
 	}//end testTheReadShapeCanBeSavedBack()
 
 	/**
@@ -178,11 +191,11 @@ final class RoleGroupMapTest extends TestCase {
 			config: ['organisationTypeRoles' => ['supplier' => null, 'Municipality' => 'functioneel-beheerder']]
 		);
 
-		$this->assertTrue($result['success']);
+		$this->assertTrue(condition: $result['success']);
 		$map = $this->map();
-		$this->assertNull($map->defaultRoleForOrganisationType(organisationType: 'Supplier'));
-		$this->assertSame('Functioneel-beheerder', $map->defaultRoleForOrganisationType(organisationType: 'Municipality'));
-		$this->assertSame('Aanbod-beheerder', $map->defaultRoleForOrganisationType(organisationType: 'Community'));
+		$this->assertNull(actual: $map->defaultRoleForOrganisationType(organisationType: 'Supplier'));
+		$this->assertSame(expected: 'Functioneel-beheerder', actual: $map->defaultRoleForOrganisationType(organisationType: 'Municipality'));
+		$this->assertSame(expected: 'Aanbod-beheerder', actual: $map->defaultRoleForOrganisationType(organisationType: 'Community'));
 	}//end testOrganisationTypeRolesCanBeChanged()
 
 	/**
@@ -204,10 +217,10 @@ final class RoleGroupMapTest extends TestCase {
 			]
 		);
 
-		$this->assertFalse($result['success']);
-		$this->assertSame('The role mapping was not saved.', $result['message']);
+		$this->assertFalse(condition: $result['success']);
+		$this->assertSame(expected: 'The role mapping was not saved.', actual: $result['message']);
 		$this->assertSame(
-			[
+			expected: [
 				'aanbod-beheerder is a role group and cannot grant Gebruik-beheerder.',
 				'Ambtenaar is not a catalogue role.',
 				'The groups of Aanbod-beheerder must be a list.',
@@ -216,9 +229,9 @@ final class RoleGroupMapTest extends TestCase {
 				'Ambtenaar is not a catalogue role.',
 				'The review interval must be a whole number of days from 1 to 3650.',
 			],
-			$result['errors']
+			actual: $result['errors']
 		);
-		$this->assertSame([], $this->stored, 'A rejected save must not leave half a mapping behind.');
+		$this->assertSame(expected: [], actual: $this->stored, message: 'A rejected save must not leave half a mapping behind.');
 	}//end testAnInvalidSaveWritesNothing()
 
 	/**
@@ -228,14 +241,17 @@ final class RoleGroupMapTest extends TestCase {
 	 */
 	public function testTheIntervalBounds(): void {
 		foreach ([3651, -5, '12.5', 'a year', null, 1.5] as $bad) {
-			$this->assertFalse($this->map()->update(config: ['accessReviewIntervalDays' => $bad])['success'], var_export($bad, true));
+			$this->assertFalse(
+				condition: $this->map()->update(config: ['accessReviewIntervalDays' => $bad])['success'],
+				message: var_export($bad, true)
+			);
 		}
 
-		$this->assertTrue($this->map()->update(config: ['accessReviewIntervalDays' => 3650])['success']);
-		$this->assertSame(3650, $this->map()->reviewIntervalDays());
+		$this->assertTrue(condition: $this->map()->update(config: ['accessReviewIntervalDays' => 3650])['success']);
+		$this->assertSame(expected: 3650, actual: $this->map()->reviewIntervalDays());
 
 		$this->stored['access_review_interval_days'] = '99999';
-		$this->assertSame(365, $this->map()->reviewIntervalDays());
+		$this->assertSame(expected: 365, actual: $this->map()->reviewIntervalDays());
 	}//end testTheIntervalBounds()
 
 	/**
@@ -246,12 +262,12 @@ final class RoleGroupMapTest extends TestCase {
 	public function testAMalformedStoredMappingReadsAsTheDefaults(): void {
 		$this->stored['role_mapping'] = '{not json';
 		$this->stored['organisation_type_roles'] = '"Supplier"';
-		$this->assertSame([], $this->map()->sourceGroups()['Gebruik-beheerder']);
-		$this->assertSame('Aanbod-beheerder', $this->map()->defaultRoleForOrganisationType(organisationType: 'Supplier'));
+		$this->assertSame(expected: [], actual: $this->map()->sourceGroups()['Gebruik-beheerder']);
+		$this->assertSame(expected: 'Aanbod-beheerder', actual: $this->map()->defaultRoleForOrganisationType(organisationType: 'Supplier'));
 
 		$this->stored['role_mapping'] = json_encode(['Ambtenaar' => ['x'], 'Gebruik-beheerder' => ['Inkoop', 7, '']]);
-		$this->assertSame(['Inkoop'], $this->map()->sourceGroups()['Gebruik-beheerder']);
-		$this->assertArrayNotHasKey('Ambtenaar', $this->map()->sourceGroups());
+		$this->assertSame(expected: ['Inkoop'], actual: $this->map()->sourceGroups()['Gebruik-beheerder']);
+		$this->assertArrayNotHasKey(key: 'Ambtenaar', array: $this->map()->sourceGroups());
 	}//end testAMalformedStoredMappingReadsAsTheDefaults()
 
 	/**
@@ -260,15 +276,15 @@ final class RoleGroupMapTest extends TestCase {
 	 * @return void
 	 */
 	public function testMessagesAreTranslated(): void {
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static fn (string $text, array $parameters = []): string => 'NL:' . vsprintf($text, $parameters)
 		);
 
 		$result = $this->map(l10n: $l10n)->update(config: ['roleMapping' => ['Ambtenaar' => []]]);
 
-		$this->assertSame('NL:The role mapping was not saved.', $result['message']);
-		$this->assertSame(['NL:Ambtenaar is not a catalogue role.'], $result['errors']);
+		$this->assertSame(expected: 'NL:The role mapping was not saved.', actual: $result['message']);
+		$this->assertSame(expected: ['NL:Ambtenaar is not a catalogue role.'], actual: $result['errors']);
 	}//end testMessagesAreTranslated()
 
 	/**
@@ -278,11 +294,11 @@ final class RoleGroupMapTest extends TestCase {
 	 */
 	public function testTheSeedingIsRecorded(): void {
 		$map = $this->map();
-		$this->assertFalse($map->grantsSeeded());
+		$this->assertFalse(condition: $map->grantsSeeded());
 
 		$map->markGrantsSeeded();
 
-		$this->assertSame('1', $this->stored['role_grants_seeded']);
-		$this->assertTrue($map->grantsSeeded());
+		$this->assertSame(expected: '1', actual: $this->stored['role_grants_seeded']);
+		$this->assertTrue(condition: $map->grantsSeeded());
 	}//end testTheSeedingIsRecorded()
 }//end class

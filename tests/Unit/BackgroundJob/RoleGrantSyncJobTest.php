@@ -100,14 +100,14 @@ final class RoleGrantSyncJobTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->sync = $this->createMock(RoleGrantSync::class);
-		$this->seeder = $this->createMock(RoleGrantSeeder::class);
-		$this->roleGroupMap = $this->createMock(RoleGroupMap::class);
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$this->sync = $this->createMock(originalClassName: RoleGrantSync::class);
+		$this->seeder = $this->createMock(originalClassName: RoleGrantSeeder::class);
+		$this->roleGroupMap = $this->createMock(originalClassName: RoleGroupMap::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->objectService->method('searchObjects')->willReturnCallback(
 			function (array $query, bool $_rbac, bool $_multitenancy): array {
-				$this->assertFalse($_rbac);
-				$this->assertFalse($_multitenancy);
+				$this->assertFalse(condition: $_rbac);
+				$this->assertFalse(condition: $_multitenancy);
 				$this->queries[] = $query;
 				return array_slice($this->contactPersons, $query['_offset'], $query['_limit']);
 			}
@@ -120,32 +120,32 @@ final class RoleGrantSyncJobTest extends TestCase {
 	 * @return void
 	 */
 	private function runJob(): void {
-		$registerConfig = $this->createMock(RegisterConfigReaderInterface::class);
+		$registerConfig = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registerConfig->method('getObjectService')->willReturn($this->objectService);
 		$registerConfig->method('getRegisterIdForObjectType')->willReturn(1);
 		$registerConfig->method('getSchemaIdForObjectType')->willReturn(3);
 
-		$userManager = $this->createMock(IUserManager::class);
+		$userManager = $this->createMock(originalClassName: IUserManager::class);
 		$userManager->method('get')->willReturnCallback(
 			function (string $uid): ?IUser {
 				if (in_array($uid, $this->accounts, true) === false) {
 					return null;
 				}
 
-				$user = $this->createMock(IUser::class);
+				$user = $this->createMock(originalClassName: IUser::class);
 				$user->method('getUID')->willReturn($uid);
 				return $user;
 			}
 		);
 
 		$job = new RoleGrantSyncJob(
-			timeFactory: $this->createMock(ITimeFactory::class),
+			timeFactory: $this->createMock(originalClassName: ITimeFactory::class),
 			roleGrantSync: $this->sync,
 			seeder: $this->seeder,
 			roleGroupMap: $this->roleGroupMap,
 			registerConfig: $registerConfig,
 			userManager: $userManager,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 
 		$run = new \ReflectionMethod($job, 'run');
@@ -168,7 +168,7 @@ final class RoleGrantSyncJobTest extends TestCase {
 		$synced = [];
 		$this->sync->method('sync')->willReturnCallback(
 			function (IUser $user, ?array $contactPerson) use (&$synced): array {
-				$this->assertSame($user->getUID(), $contactPerson['username']);
+				$this->assertSame(expected: $user->getUID(), actual: $contactPerson['username']);
 				$synced[] = $user->getUID();
 				return ['added' => [], 'removed' => []];
 			}
@@ -176,10 +176,10 @@ final class RoleGrantSyncJobTest extends TestCase {
 
 		$this->runJob();
 
-		$this->assertCount(130, $synced);
-		$this->assertSame([0, 100], array_column($this->queries, '_offset'));
-		$this->assertSame([100, 100], array_column($this->queries, '_limit'));
-		$this->assertSame(['register' => 1, 'schema' => 3], $this->queries[0]['@self']);
+		$this->assertCount(expectedCount: 130, haystack: $synced);
+		$this->assertSame(expected: [0, 100], actual: array_column($this->queries, '_offset'));
+		$this->assertSame(expected: [100, 100], actual: array_column($this->queries, '_limit'));
+		$this->assertSame(expected: ['register' => 1, 'schema' => 3], actual: $this->queries[0]['@self']);
 	}//end testEveryContactPersonIsSyncedInBoundedBatches()
 
 	/**
@@ -189,7 +189,7 @@ final class RoleGrantSyncJobTest extends TestCase {
 	 */
 	public function testRowsWithoutAnAccountAreSkippedAndAFailureDoesNotStopTheRun(): void {
 		$this->roleGroupMap->method('grantsSeeded')->willReturn(true);
-		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$entity->method('getObject')->willReturn(['username' => 'cee']);
 		$this->contactPersons = [['username' => 'ann'], ['name' => 'no account'], ['username' => 'gone'], $entity];
 		$this->accounts = ['ann', 'cee'];
@@ -208,7 +208,7 @@ final class RoleGrantSyncJobTest extends TestCase {
 
 		$this->runJob();
 
-		$this->assertSame(['ann', 'cee'], $synced);
+		$this->assertSame(expected: ['ann', 'cee'], actual: $synced);
 	}//end testRowsWithoutAnAccountAreSkippedAndAFailureDoesNotStopTheRun()
 
 	/**
@@ -240,6 +240,6 @@ final class RoleGrantSyncJobTest extends TestCase {
 
 		$this->runJob();
 
-		$this->assertSame([], $this->queries);
+		$this->assertSame(expected: [], actual: $this->queries);
 	}//end testNothingIsSyncedWhileTheSeedingFails()
 }//end class

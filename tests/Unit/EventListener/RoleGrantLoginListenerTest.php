@@ -72,10 +72,10 @@ final class RoleGrantLoginListenerTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->sync = $this->createMock(RoleGrantSync::class);
-		$this->roleGroupMap = $this->createMock(RoleGroupMap::class);
-		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->user = $this->createMock(IUser::class);
+		$this->sync = $this->createMock(originalClassName: RoleGrantSync::class);
+		$this->roleGroupMap = $this->createMock(originalClassName: RoleGroupMap::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->user = $this->createMock(originalClassName: IUser::class);
 		$this->user->method('getUID')->willReturn('ann');
 	}//end setUp()
 
@@ -95,7 +95,9 @@ final class RoleGrantLoginListenerTest extends TestCase {
 	 */
 	public function testASignInSyncsTheUser(): void {
 		$this->roleGroupMap->method('grantsSeeded')->willReturn(true);
-		$this->sync->expects($this->once())->method('syncCatalogueUser')->with($this->identicalTo($this->user))->willReturn(['added' => [], 'removed' => []]);
+		$this->sync->expects($this->once())->method('syncCatalogueUser')->with(
+			$this->identicalTo(value: $this->user)
+		)->willReturn(['added' => [], 'removed' => []]);
 
 		$this->listener()->handle(new UserLoggedInEvent($this->user, 'ann', null, false));
 	}//end testASignInSyncsTheUser()

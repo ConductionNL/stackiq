@@ -63,21 +63,24 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 	public function testTheDefaultsAreAnswered(): void {
 		$answer = $this->settings()->getUserGroupsConfig();
 
-		$this->assertTrue($answer['success']);
+		$this->assertTrue(condition: $answer['success']);
 		$this->assertSame(
-			[
+			expected: [
 				'generic' => ['software-catalog-users'],
 				'organizationAdmin' => [],
 				'superUser' => ['admin', 'software-catalog-admins'],
 				'allGroups' => [],
 			],
-			array_intersect_key($answer['config'], array_flip(['generic', 'organizationAdmin', 'superUser', 'allGroups']))
+			actual: array_intersect_key($answer['config'], array_flip(['generic', 'organizationAdmin', 'superUser', 'allGroups']))
 		);
 		// The catalogue role mapping rides along (organisations-role-mapping-and-access-review).
-		$this->assertSame(array_keys(\OCA\Stackiq\Service\RoleGroupMap::ROLES), array_keys($answer['config']['roleMapping']));
-		$this->assertSame(\OCA\Stackiq\Service\RoleGroupMap::DEFAULT_ORGANISATION_TYPE_ROLES, $answer['config']['organisationTypeRoles']);
-		$this->assertSame(365, $answer['config']['accessReviewIntervalDays']);
-		$this->assertIsInt($answer['timestamp']);
+		$this->assertSame(expected: array_keys(\OCA\Stackiq\Service\RoleGroupMap::ROLES), actual: array_keys($answer['config']['roleMapping']));
+		$this->assertSame(
+			expected: \OCA\Stackiq\Service\RoleGroupMap::DEFAULT_ORGANISATION_TYPE_ROLES,
+			actual: $answer['config']['organisationTypeRoles']
+		);
+		$this->assertSame(expected: 365, actual: $answer['config']['accessReviewIntervalDays']);
+		$this->assertIsInt(actual: $answer['timestamp']);
 	}//end testTheDefaultsAreAnswered()
 
 	/**
@@ -96,15 +99,15 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 
 		$config = $this->settings(groups: ['users' => 3, 'org-admins' => 1])->getUserGroupsConfig()['config'];
 
-		$this->assertSame(['users'], $config['generic']);
-		$this->assertSame(['org-admins'], $config['organizationAdmin']);
-		$this->assertSame([], $config['superUser']);
+		$this->assertSame(expected: ['users'], actual: $config['generic']);
+		$this->assertSame(expected: ['org-admins'], actual: $config['organizationAdmin']);
+		$this->assertSame(expected: [], actual: $config['superUser']);
 		$this->assertSame(
-			[
+			expected: [
 				['id' => 'users', 'displayName' => 'Users label', 'memberCount' => 3, 'isGeneric' => true],
 				['id' => 'org-admins', 'displayName' => 'Org-admins label', 'memberCount' => 1, 'isGeneric' => false],
 			],
-			$config['allGroups']
+			actual: $config['allGroups']
 		);
 	}//end testStoredListsAndAllGroupsAreAnswered()
 
@@ -114,21 +117,21 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailingReadIsReported(): void {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willThrowException(new RuntimeException('db down'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('error')->with('Failed to get user groups config', ['exception' => 'db down']);
 
 		$settings = new RoleGroupSettings(
 			config: $config,
-			appManager: $this->createMock(IAppManager::class),
-			groupManager: $this->createMock(IGroupManager::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			groupManager: $this->createMock(originalClassName: IGroupManager::class),
 			logger: $logger
 		);
 
 		$this->assertSame(
-			['success' => false, 'message' => 'Failed to get user groups config: db down'],
-			$settings->getUserGroupsConfig()
+			expected: ['success' => false, 'message' => 'Failed to get user groups config: db down'],
+			actual: $settings->getUserGroupsConfig()
 		);
 	}//end testAFailingReadIsReported()
 
@@ -142,18 +145,18 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 			['generic' => ['users'], 'organizationAdmin' => ['org.admins'], 'superUser' => ['root_group']]
 		);
 
-		$this->assertTrue($answer['success']);
-		$this->assertSame('User groups configuration updated successfully', $answer['message']);
+		$this->assertTrue(condition: $answer['success']);
+		$this->assertSame(expected: 'User groups configuration updated successfully', actual: $answer['message']);
 		$this->assertSame(
-			[
+			expected: [
 				'generic_user_groups' => '["users"]',
 				'organization_admin_groups' => '["org.admins"]',
 				'super_user_groups' => '["root_group"]',
 			],
-			$this->stored
+			actual: $this->stored
 		);
-		$this->assertSame(['users'], $answer['config']['config']['generic']);
-		$this->assertSame(['root_group'], $answer['config']['config']['superUser']);
+		$this->assertSame(expected: ['users'], actual: $answer['config']['config']['generic']);
+		$this->assertSame(expected: ['root_group'], actual: $answer['config']['config']['superUser']);
 	}//end testEveryGivenListIsStored()
 
 	/**
@@ -164,7 +167,7 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 	public function testOnlyGivenListsAreStored(): void {
 		$this->settings()->updateUserGroupsConfig(['superUser' => ['admin']]);
 
-		$this->assertSame(['super_user_groups' => '["admin"]'], $this->stored);
+		$this->assertSame(expected: ['super_user_groups' => '["admin"]'], actual: $this->stored);
 	}//end testOnlyGivenListsAreStored()
 
 	/**
@@ -176,12 +179,15 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 	public function testAnInvalidListFailsTheUpdate(): void {
 		$answer = $this->settings()->updateUserGroupsConfig(['generic' => ['users'], 'superUser' => ['bad name!']]);
 
-		$this->assertFalse($answer['success']);
-		$this->assertSame('Some user group updates failed', $answer['message']);
-		$this->assertTrue($answer['results']['generic']['success']);
-		$this->assertSame('Invalid group names provided', $answer['results']['superUser']['message']);
-		$this->assertSame(["Group name 'bad name!' contains invalid characters"], $answer['results']['superUser']['validation']['errors']);
-		$this->assertSame(['generic_user_groups' => '["users"]'], $this->stored);
+		$this->assertFalse(condition: $answer['success']);
+		$this->assertSame(expected: 'Some user group updates failed', actual: $answer['message']);
+		$this->assertTrue(condition: $answer['results']['generic']['success']);
+		$this->assertSame(expected: 'Invalid group names provided', actual: $answer['results']['superUser']['message']);
+		$this->assertSame(
+			expected: ["Group name 'bad name!' contains invalid characters"],
+			actual: $answer['results']['superUser']['validation']['errors']
+		);
+		$this->assertSame(expected: ['generic_user_groups' => '["users"]'], actual: $this->stored);
 	}//end testAnInvalidListFailsTheUpdate()
 
 	/**
@@ -194,10 +200,10 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 
 		$answer = $this->settings()->updateUserGroupsConfig(['organizationAdmin' => ['org-admins']]);
 
-		$this->assertFalse($answer['success']);
-		$this->assertFalse($answer['results']['organizationAdmin']['success']);
-		$this->assertStringStartsWith('Failed to update ', $answer['results']['organizationAdmin']['message']);
-		$this->assertStringEndsWith(': read only', $answer['results']['organizationAdmin']['message']);
+		$this->assertFalse(condition: $answer['success']);
+		$this->assertFalse(condition: $answer['results']['organizationAdmin']['success']);
+		$this->assertStringStartsWith(prefix: 'Failed to update ', string: $answer['results']['organizationAdmin']['message']);
+		$this->assertStringEndsWith(suffix: ': read only', string: $answer['results']['organizationAdmin']['message']);
 	}//end testAFailingWriteFailsTheUpdate()
 
 	/**
@@ -208,7 +214,7 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 	 * @return RoleGroupSettings
 	 */
 	private function settings(array $groups = []): RoleGroupSettings {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->stored[$key] ?? $default)
 		);
@@ -223,26 +229,26 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 			}
 		);
 
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('isInstalled')->willReturnCallback(fn (string $app): bool => $app === 'user_management' && $this->userManagement);
 
 		$found = [];
 		foreach ($groups as $gid => $members) {
-			$group = $this->createMock(IGroup::class);
+			$group = $this->createMock(originalClassName: IGroup::class);
 			$group->method('getGID')->willReturn($gid);
 			$group->method('getDisplayName')->willReturn(ucfirst($gid) . ' label');
 			$group->method('getUsers')->willReturn(array_fill(0, $members, 'user'));
 			$found[] = $group;
 		}
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('search')->with('')->willReturn($found);
 
 		return new RoleGroupSettings(
 			config: $config,
 			appManager: $appManager,
 			groupManager: $groupManager,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 	}//end settings()
 }//end class

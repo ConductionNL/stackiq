@@ -43,15 +43,15 @@ class ShellPermissionsTest extends TestCase {
 	 * @return list<string> The permissions.
 	 */
 	private function permissionsOf(bool $isAdmin, array $groups): array {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('marloes');
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->expects($this->once())->method('isAdmin')->with('marloes')->willReturn($isAdmin);
 		$groupManager->method('getUserGroups')->with($user)->willReturn(
 			array_map(
 				function (string $gid): IGroup {
-					$group = $this->createMock(IGroup::class);
+					$group = $this->createMock(originalClassName: IGroup::class);
 					$group->method('getGID')->willReturn($gid);
 					return $group;
 				},
@@ -88,7 +88,7 @@ class ShellPermissionsTest extends TestCase {
 	 */
 	#[DataProvider('users')]
 	public function testEachUserGetsTheirPermissions(bool $isAdmin, array $groups, array $expected): void {
-		$this->assertSame($expected, $this->permissionsOf(isAdmin: $isAdmin, groups: $groups));
+		$this->assertSame(expected: $expected, actual: $this->permissionsOf(isAdmin: $isAdmin, groups: $groups));
 	}//end testEachUserGetsTheirPermissions()
 
 	/**
@@ -97,9 +97,9 @@ class ShellPermissionsTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoUserHoldsNothing(): void {
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->expects($this->never())->method('isAdmin');
 
-		$this->assertSame([], (new ShellPermissions(groupManager: $groupManager))->forUser(user: null));
+		$this->assertSame(expected: [], actual: (new ShellPermissions(groupManager: $groupManager))->forUser(user: null));
 	}//end testNoUserHoldsNothing()
 }//end class

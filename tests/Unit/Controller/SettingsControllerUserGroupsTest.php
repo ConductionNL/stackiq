@@ -65,7 +65,7 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 	 * @return SettingsController
 	 */
 	private function controller(bool $isAdmin, array $params = []): SettingsController {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $this->stored[$key] ?? $default
 		);
@@ -76,21 +76,21 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 			}
 		);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('caller');
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->with('caller')->willReturn($isAdmin);
 
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn($params);
 
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$roleGroupSettings = new RoleGroupSettings(
 			config: $config,
-			appManager: $this->createMock(IAppManager::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
 			groupManager: $groupManager,
 			logger: $logger,
 			roleGroupMap: new RoleGroupMap(appConfig: $config)
@@ -100,19 +100,19 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 			appName: 'stackiq',
 			request: $request,
 			config: $config,
-			container: $this->createMock(ContainerInterface::class),
-			appManager: $this->createMock(IAppManager::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
 			groupManager: $groupManager,
 			userSession: $session,
-			settingsService: $this->createMock(SettingsService::class),
-			cronjobSettings: $this->createMock(CronjobSettings::class),
-			orgSyncSvc: $this->createMock(OrganizationSyncService::class),
-			archiMateService: $this->createMock(ArchiMateService::class),
+			settingsService: $this->createMock(originalClassName: SettingsService::class),
+			cronjobSettings: $this->createMock(originalClassName: CronjobSettings::class),
+			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
+			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
 			roleGroupSettings: $roleGroupSettings,
-			progressTracker: $this->createMock(ProgressTracker::class),
-			archiMateImportControl: $this->createMock(ArchiMateImportControl::class),
-			eolSyncService: $this->createMock(EolSyncService::class),
-			emailSettings: $this->createMock(EmailSettings::class),
+			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
+			archiMateImportControl: $this->createMock(originalClassName: ArchiMateImportControl::class),
+			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
+			emailSettings: $this->createMock(originalClassName: EmailSettings::class),
 			logger: $logger
 		);
 	}//end controller()
@@ -132,15 +132,18 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 			]
 		)->updateUserGroupsConfig();
 
-		$this->assertSame(Http::STATUS_OK, $save->getStatus());
-		$this->assertTrue($save->getData()['success'], json_encode($save->getData()));
+		$this->assertSame(expected: Http::STATUS_OK, actual: $save->getStatus());
+		$this->assertTrue(condition: $save->getData()['success'], message: json_encode($save->getData()));
 
 		$read = $this->controller(isAdmin: true)->getUserGroupsConfig();
-		$this->assertSame(Http::STATUS_OK, $read->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $read->getStatus());
 		$config = $read->getData()['config'];
-		$this->assertSame(['group' => 'gebruik-beheerder', 'sourceGroups' => ['Inkoop']], $config['roleMapping']['Gebruik-beheerder']);
-		$this->assertSame(180, $config['accessReviewIntervalDays']);
-		$this->assertSame('Aanbod-beheerder', $config['organisationTypeRoles']['Supplier']);
+		$this->assertSame(
+			expected: ['group' => 'gebruik-beheerder', 'sourceGroups' => ['Inkoop']],
+			actual: $config['roleMapping']['Gebruik-beheerder']
+		);
+		$this->assertSame(expected: 180, actual: $config['accessReviewIntervalDays']);
+		$this->assertSame(expected: 'Aanbod-beheerder', actual: $config['organisationTypeRoles']['Supplier']);
 	}//end testAnAdminSavesTheMappingAndReadsItBack()
 
 	/**
@@ -151,9 +154,9 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 	public function testAnInvalidMappingIsNotStored(): void {
 		$save = $this->controller(isAdmin: true, params: ['roleMapping' => ['Gebruik-beheerder' => ['gebruik-beheerder']]])->updateUserGroupsConfig();
 
-		$this->assertFalse($save->getData()['success']);
-		$this->assertFalse($save->getData()['results']['roleMapping']['success']);
-		$this->assertSame([], $this->stored);
+		$this->assertFalse(condition: $save->getData()['success']);
+		$this->assertFalse(condition: $save->getData()['results']['roleMapping']['success']);
+		$this->assertSame(expected: [], actual: $this->stored);
 	}//end testAnInvalidMappingIsNotStored()
 
 	/**
@@ -171,9 +174,9 @@ final class SettingsControllerUserGroupsTest extends TestCase {
 		)->updateUserGroupsConfig();
 		$read = $this->controller(isAdmin: false)->getUserGroupsConfig();
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $write->getStatus());
-		$this->assertSame(Http::STATUS_FORBIDDEN, $read->getStatus());
-		$this->assertArrayNotHasKey('config', $read->getData());
-		$this->assertSame($before, $this->stored, 'A refused write must keep the mapping as it was.');
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $write->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $read->getStatus());
+		$this->assertArrayNotHasKey(key: 'config', array: $read->getData());
+		$this->assertSame(expected: $before, actual: $this->stored, message: 'A refused write must keep the mapping as it was.');
 	}//end testANonAdminIsRefusedAndTheMappingIsKept()
 }//end class

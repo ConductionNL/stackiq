@@ -76,7 +76,7 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 	 * @return RoleGroupSettings
 	 */
 	private function settings(): RoleGroupSettings {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => $this->stored[$key] ?? $default
 		);
@@ -87,18 +87,18 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 			}
 		);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('get')->willReturnCallback(
 			function (string $gid): ?IGroup {
 				if (isset($this->groups[$gid]) === false) {
 					return null;
 				}
 
-				$group = $this->createMock(IGroup::class);
+				$group = $this->createMock(originalClassName: IGroup::class);
 				$group->method('getUsers')->willReturn(
 					array_map(
 						function (string $uid): IUser {
-							$user = $this->createMock(IUser::class);
+							$user = $this->createMock(originalClassName: IUser::class);
 							$user->method('getUID')->willReturn($uid);
 							return $user;
 						},
@@ -111,7 +111,7 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 		$groupManager->method('search')->willReturn([]);
 		$groupManager->method('groupExists')->willReturnCallback(fn (string $gid): bool => isset($this->groups[$gid]));
 
-		$this->sync = $this->createMock(RoleGrantSync::class);
+		$this->sync = $this->createMock(originalClassName: RoleGrantSync::class);
 		$this->sync->method('syncCatalogueUser')->willReturnCallback(
 			function (IUser $user): ?array {
 				$this->synced[] = $user->getUID();
@@ -125,9 +125,9 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 
 		return new RoleGroupSettings(
 			config: $config,
-			appManager: $this->createMock(IAppManager::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
 			groupManager: $groupManager,
-			logger: $this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			roleGroupMap: new RoleGroupMap(appConfig: $config),
 			roleGrantSync: $this->sync
 		);
@@ -141,8 +141,8 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 	public function testANewlyMappedGroupsMembersAreSynced(): void {
 		$result = $this->settings()->updateUserGroupsConfig(['roleMapping' => ['Gebruik-beheerder' => ['Inkoop']]]);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(['ann', 'bob'], $this->synced);
+		$this->assertTrue(condition: $result['success']);
+		$this->assertSame(expected: ['ann', 'bob'], actual: $this->synced);
 	}//end testANewlyMappedGroupsMembersAreSynced()
 
 	/**
@@ -153,10 +153,12 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 	public function testAnUnmappedGroupIsSyncedAndAnUnchangedOneIsNot(): void {
 		$this->stored['role_mapping'] = json_encode(['Gebruik-beheerder' => ['Inkoop'], 'Gebruik-raadpleger' => ['Lezers']]);
 
-		$result = $this->settings()->updateUserGroupsConfig(['roleMapping' => ['Gebruik-beheerder' => ['Inkoop'], 'Functioneel-beheerder' => ['Beheer']]]);
+		$result = $this->settings()->updateUserGroupsConfig(
+			['roleMapping' => ['Gebruik-beheerder' => ['Inkoop'], 'Functioneel-beheerder' => ['Beheer']]]
+		);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(['cee', 'bob'], $this->synced);
+		$this->assertTrue(condition: $result['success']);
+		$this->assertSame(expected: ['cee', 'bob'], actual: $this->synced);
 	}//end testAnUnmappedGroupIsSyncedAndAnUnchangedOneIsNot()
 
 	/**
@@ -169,7 +171,7 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 
 		$this->settings()->updateUserGroupsConfig(['roleMapping' => ['Gebruik-beheerder' => ['Inkoop']]]);
 
-		$this->assertSame([], $this->synced);
+		$this->assertSame(expected: [], actual: $this->synced);
 	}//end testNothingIsSyncedBeforeTheSeeding()
 
 	/**
@@ -180,7 +182,7 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 	public function testARefusedMappingSyncsNobody(): void {
 		$result = $this->settings()->updateUserGroupsConfig(['roleMapping' => ['Gebruik-beheerder' => ['Inkoop']], 'accessReviewIntervalDays' => 0]);
 
-		$this->assertFalse($result['success']);
-		$this->assertSame([], $this->synced);
+		$this->assertFalse(condition: $result['success']);
+		$this->assertSame(expected: [], actual: $this->synced);
 	}//end testARefusedMappingSyncsNobody()
 }//end class
