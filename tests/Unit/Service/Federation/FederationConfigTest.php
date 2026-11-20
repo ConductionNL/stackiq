@@ -220,6 +220,67 @@ class FederationConfigTest extends TestCase {
 	}//end testLocalHostsAreSplitAndTrimmed()
 
 	/**
+	 * The pull cap defaults to 10000 and only a positive value overrides it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 */
+	public function testTheMaxEntriesCap(): void {
+		$values = ['federation_max_entries' => 0];
+		$this->appConfig->method('getValueInt')->willReturnCallback(
+			static function (string $app, string $key, int $default) use (&$values): int {
+				return $values[$key] ?? $default;
+			}
+		);
+		$config = new FederationConfig(appConfig: $this->appConfig);
+
+		$this->assertSame(expected: 10000, actual: $config->getMaxEntries());
+		$values['federation_max_entries'] = 250;
+		$this->assertSame(expected: 250, actual: $config->getMaxEntries());
+	}//end testTheMaxEntriesCap()
+
+	/**
+	 * A peer's state reads with defaults, merges changes, keeps other peers
+	 * and is forgotten with null; an unreadable map reads as empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function testPeerStateIsMergedPerPeer(): void {
+		$stored = ['federation_peer_state' => json_encode(['https://b.nl' => ['name' => 'B', 'objectCount' => 4, 'lastError' => '']])];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use (&$stored): string {
+				return $stored[$key] ?? $default;
+			}
+		);
+		$this->appConfig->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$stored): bool {
+				$stored[$key] = $value;
+				return true;
+			}
+		);
+		$config = new FederationConfig(appConfig: $this->appConfig);
+
+		$this->assertSame(expected: ['name' => 'B', 'lastPulledAt' => null, 'objectCount' => 4, 'lastError' => null], actual: $config->getPeerState(peerUrl: 'https://b.nl'));
+		$this->assertSame(expected: ['name' => '', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null], actual: $config->getPeerState(peerUrl: 'https://a.nl'));
+
+		$config->setPeerState(peerUrl: 'https://a.nl', changes: ['lastError' => 'not reachable']);
+		$config->setPeerState(peerUrl: 'https://a.nl', changes: ['name' => 'A', 'objectCount' => 2]);
+		$this->assertSame(expected: ['name' => 'A', 'lastPulledAt' => null, 'objectCount' => 2, 'lastError' => 'not reachable'], actual: $config->getPeerState(peerUrl: 'https://a.nl'));
+		$this->assertSame(expected: 'B', actual: $config->getPeerState(peerUrl: 'https://b.nl')['name']);
+
+		$config->setPeerState(peerUrl: 'https://a.nl', changes: null);
+		$this->assertSame(expected: ['https://b.nl'], actual: array_keys(json_decode($stored['federation_peer_state'], true)));
+
+		$stored['federation_peer_state'] = 'garbage';
+		$this->assertSame(expected: 0, actual: $config->getPeerState(peerUrl: 'https://b.nl')['objectCount']);
+		$stored['federation_peer_state'] = json_encode(['https://b.nl' => 'not a state']);
+		$this->assertSame(expected: '', actual: $config->getPeerState(peerUrl: 'https://b.nl')['name']);
+	}//end testPeerStateIsMergedPerPeer()
+
+	/**
 	 * A blank host setting means no local hosts.
 	 *
 	 * @return void

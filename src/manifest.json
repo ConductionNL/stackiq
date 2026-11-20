@@ -461,7 +461,9 @@
 					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "9", "widgetId": "org-usages", "gridX": 0, "gridY": 14, "gridWidth": 12, "gridHeight": 4 }
 				],
+				"readOnlyWhen": { "field": "_source.instance", "op": "notEmpty" },
 				"bodyWidgets": [
+					{ "id": "org-provenance", "component": "ProvenanceNotice", "props": { "objectId": "@objectId", "objectType": "organization" }, "placement": "before-body", "colSpan": 12 },
 					{ "id": "org-participants", "component": "OrganisationParticipantsList", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
 					{ "id": "org-claimed-usage", "component": "ClaimedUsageList", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }

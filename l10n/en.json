@@ -2320,6 +2320,14 @@
         "on the contact person": "on the contact person",
         "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.": "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.",
         "{role} removed from {person}": "{role} removed from {person}",
-        "Review": "Review"
+        "Review": "Review",
+        "blocked by the SSRF guard": "blocked by the SSRF guard",
+        "Error: {reason}": "Error: {reason}",
+        "Last pulled {date}": "Last pulled {date}",
+        "Never pulled": "Never pulled",
+        "not reachable": "not reachable",
+        "From: {catalogue}": "From: {catalogue}",
+        "Open the original": "Open the original",
+        "Mirrored from {catalogue}; edit it there.": "Mirrored from {catalogue}; edit it there."
     }
 }

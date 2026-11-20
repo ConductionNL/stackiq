@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Federation;
 
+require_once __DIR__ . '/../../Support/FakePeerCatalogClient.php';
+
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
@@ -31,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Unit\Support\FakePeerCatalogClient;
 
 /**
  * Announce, peer discovery and the pull of every peer once OpenCatalogi is there.
@@ -86,7 +89,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	 *
 	 * @return FederationService
 	 */
-	private function service(?ConnectionReportService $reports = null): FederationService {
+	private function service(?ConnectionReportService $reports = null, ?FakePeerCatalogClient $peerCatalog = null): FederationService {
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => (string)($this->store[$key] ?? $default)
@@ -125,7 +128,8 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 			merger: new FederationMerger(),
 			settingsService: null,
 			logger: $this->logger,
-			connectionReports: $reports
+			connectionReports: $reports,
+			peerCatalog: $peerCatalog
 		);
 	}//end service()
 
@@ -311,8 +315,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	 */
 	public function testPullAllPeersPullsEveryConfiguredPeer(): void {
 		$this->store['federation_peers'] = json_encode(['http://192.168.0.10', 'https://peer.example.org']);
-		$directory = $this->directory(listing: new RuntimeException('timeout'));
-		$this->services['OCA\\OpenCatalogi\\Service\\DirectoryService'] = $directory;
+		$peerCatalog = new FakePeerCatalogClient(listing: new RuntimeException('timeout'));
 		$empty    = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 		$expected = [
 			'ok' => true,
@@ -325,9 +328,13 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('federationPulled')->with($expected);
 
-		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports)->pullAllPeers());
-		$this->assertSame(expected: [['url' => 'https://peer.example.org']], actual: $directory->queries);
+		$this->assertSame(expected: $expected, actual: $this->service(reports: $reports, peerCatalog: $peerCatalog)->pullAllPeers());
+		$this->assertSame(expected: ['https://peer.example.org'], actual: $peerCatalog->fetched);
 		$this->assertSame(expected: json_encode(['https://peer.example.org' => 1]), actual: $this->store['federation_peer_failures']);
+		$this->assertSame(
+			expected: ['http://192.168.0.10' => 'blocked', 'https://peer.example.org' => 'timeout'],
+			actual: array_map(static fn (array $state): ?string => $state['lastError'], json_decode($this->store['federation_peer_state'], true))
+		);
 	}//end testPullAllPeersPullsEveryConfiguredPeer()
 
 	/**

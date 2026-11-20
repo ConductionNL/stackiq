@@ -152,11 +152,12 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 /**
  * Normalise a federation status payload to a stable shape the UI renders,
  * tolerating older `peers: string[]` payloads as well as the enriched
- * `peers: {url, failures, stale, allowed}[]` shape.
+ * `peers: {url, name, lastPulledAt, objectCount, lastError, failures, stale, allowed}[]` shape.
  *
  * @param {object} status - The raw `/api/federation/status` response.
- * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
+ * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
  * @spec openspec/specs/federated-catalog-sync/spec.md
+ * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 export function normaliseFederationStatus(status) {
 	const raw = status || {}
@@ -169,10 +170,14 @@ export function normaliseFederationStatus(status) {
 		message: raw.message || '',
 		peers: peers.map((peer) => {
 			if (typeof peer === 'string') {
-				return { url: peer, failures: 0, stale: false, allowed: true }
+				return { url: peer, name: peer, lastPulledAt: null, objectCount: 0, lastError: null, failures: 0, stale: false, allowed: true }
 			}
 			return {
 				url: peer.url || '',
+				name: peer.name || peer.url || '',
+				lastPulledAt: typeof peer.lastPulledAt === 'string' && peer.lastPulledAt !== '' ? peer.lastPulledAt : null,
+				objectCount: typeof peer.objectCount === 'number' ? peer.objectCount : 0,
+				lastError: typeof peer.lastError === 'string' && peer.lastError !== '' ? peer.lastError : null,
 				failures: typeof peer.failures === 'number' ? peer.failures : 0,
 				stale: peer.stale === true,
 				allowed: peer.allowed !== false,

@@ -36,6 +36,7 @@ use OCA\Stackiq\Service\FacetService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\IntakeService;
 use OCA\Stackiq\Service\MergeOrganisatieService;
@@ -70,6 +71,7 @@ use OCA\Stackiq\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use OCP\IConfig;
@@ -683,6 +685,17 @@ final class ServiceFactories {
 		);
 
 		$context->registerService(
+			PeerCatalogClient::class,
+			function ($container) {
+				return new PeerCatalogClient(
+					clientService: $container->get(IClientService::class),
+					config: $container->get(FederationConfig::class),
+					logger: $container->get(LoggerInterface::class)
+				);
+			}
+		);
+
+		$context->registerService(
 			FederationMerger::class,
 			function () {
 				return new FederationMerger();
@@ -702,7 +715,9 @@ final class ServiceFactories {
 					// The integriq connection report (adopt-connection-registry). Passed by
 					// name: this factory is hand-built, so the constructor default of null
 					// would otherwise switch every federation report off without a sound.
-					connectionReports: $container->get(ConnectionReportService::class)
+					connectionReports: $container->get(ConnectionReportService::class),
+					// Reads a peer's published listing over HTTP (federation-pull-fetches-the-peer).
+					peerCatalog: $container->get(PeerCatalogClient::class)
 				);
 			}
 		);

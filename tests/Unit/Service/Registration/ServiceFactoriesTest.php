@@ -35,6 +35,7 @@ use OCA\Stackiq\Service\FacetService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\IntakeService;
 use OCA\Stackiq\Service\MergeOrganisatieService;
@@ -88,6 +89,7 @@ use RuntimeException;
 #[UsesClass(FederationConfig::class)]
 #[UsesClass(FederationMerger::class)]
 #[UsesClass(FederationService::class)]
+#[UsesClass(PeerCatalogClient::class)]
 #[UsesClass(GebruikSyncService::class)]
 #[UsesClass(IntakeService::class)]
 #[UsesClass(MergeOrganisatieService::class)]
@@ -145,6 +147,7 @@ class ServiceFactoriesTest extends TestCase {
 		ContractStatusService::class,
 		ContractApprovalService::class,
 		FederationConfig::class,
+		PeerCatalogClient::class,
 		FederationMerger::class,
 		FederationService::class,
 		EolMatcherService::class,
@@ -441,8 +444,26 @@ class ServiceFactoriesTest extends TestCase {
 		$this->assertSame($this->stub(id: SettingsService::class), $this->property($service, 'settingsService'));
 		$this->assertNotNull($this->property($service, 'connectionReports'));
 		$this->assertSame($this->stub(id: ConnectionReportService::class), $this->property($service, 'connectionReports'));
+		// The pull reads the peer over HTTP through the peer catalogue client (federation-pull-fetches-the-peer).
+		$this->assertSame($this->stub(id: PeerCatalogClient::class), $this->property($service, 'peerCatalog'));
 
 	}//end testFederationServiceIsWiredWithItsConnectionReport()
+
+	/**
+	 * The peer catalogue client gets Nextcloud's HTTP client factory and the federation config.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 */
+	public function testPeerCatalogClientIsWiredWithTheHttpClient(): void {
+		$registrations = $this->register(method: 'registerDomainServices');
+		$client        = $this->build(registrations: $registrations, name: PeerCatalogClient::class, container: $this->container());
+
+		$this->assertSame($this->stub(id: 'OCP\Http\Client\IClientService'), $this->property($client, 'clientService'));
+		$this->assertSame($this->stub(id: FederationConfig::class), $this->property($client, 'config'));
+
+	}//end testPeerCatalogClientIsWiredWithTheHttpClient()
 
 	/**
 	 * The EOL sync gets the matcher and the connection report passed by name.
