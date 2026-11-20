@@ -243,7 +243,8 @@ class FederationServiceTest extends TestCase {
 		$this->store['federation_peer_failures'] = json_encode([self::PEER => 3]);
 		$this->store['federation_enabled']       = true;
 
-		$status = $this->service()->getStatus();
+		$status      = $this->service()->getStatus();
+		$neverPulled = ['lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null];
 
 		$this->assertSame(
 			expected: [
@@ -252,8 +253,8 @@ class FederationServiceTest extends TestCase {
 				'staleAfter' => 3,
 				'directoryUrl' => $status['directoryUrl'],
 				'peers' => [
-					['url' => self::PEER, 'name' => 'peer.example.org', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null, 'failures' => 3, 'stale' => true, 'allowed' => true],
-					['url' => 'http://10.0.0.1', 'name' => '10.0.0.1', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null, 'failures' => 0, 'stale' => false, 'allowed' => false],
+					['url' => self::PEER, 'name' => 'peer.example.org'] + $neverPulled + ['failures' => 3, 'stale' => true, 'allowed' => true],
+					['url' => 'http://10.0.0.1', 'name' => '10.0.0.1'] + $neverPulled + ['failures' => 0, 'stale' => false, 'allowed' => false],
 				],
 				'message' => 'Federation unavailable — requires OpenCatalogi',
 			],
@@ -534,7 +535,8 @@ class FederationServiceTest extends TestCase {
 	 * @spec openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	public function testABlockedHostOrAMissingClientRecordsTheError(): void {
-		$this->store['federation_peer_state'] = json_encode([self::PEER => ['name' => 'Peer', 'lastPulledAt' => '2026-11-19T10:00:00+00:00', 'objectCount' => 3]]);
+		$lastPull = ['name' => 'Peer', 'lastPulledAt' => '2026-11-19T10:00:00+00:00', 'objectCount' => 3];
+		$this->store['federation_peer_state'] = json_encode([self::PEER => $lastPull]);
 		$this->directoryReturning(listing: ['results' => [['id' => 'a']]]);
 		$this->service()->pullPeer(peerUrl: 'http://10.0.0.1');
 		$this->assertSame(expected: [], actual: $this->peerCatalog->fetched);
@@ -546,7 +548,7 @@ class FederationServiceTest extends TestCase {
 		$state = json_decode($this->store['federation_peer_state'], true);
 		$this->assertSame(expected: 'blocked', actual: $state['http://10.0.0.1']['lastError']);
 		$this->assertSame(
-			expected: ['name' => 'Peer', 'lastPulledAt' => '2026-11-19T10:00:00+00:00', 'objectCount' => 3, 'lastError' => 'peer catalogue client unavailable'],
+			expected: $lastPull + ['lastError' => 'peer catalogue client unavailable'],
 			actual: $state[self::PEER]
 		);
 	}//end testABlockedHostOrAMissingClientRecordsTheError()

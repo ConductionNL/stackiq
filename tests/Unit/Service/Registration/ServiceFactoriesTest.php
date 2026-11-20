@@ -458,8 +458,11 @@ class ServiceFactoriesTest extends TestCase {
 		$registrations = $this->register(method: 'registerDomainServices');
 		$client        = $this->build(registrations: $registrations, name: PeerCatalogClient::class, container: $this->container());
 
-		$this->assertSame($this->stub(id: 'OCP\Http\Client\IClientService'), $this->property($client, 'clientService'));
-		$this->assertSame($this->stub(id: FederationConfig::class), $this->property($client, 'config'));
+		$this->assertSame(
+			expected: $this->stub(id: 'OCP\Http\Client\IClientService'),
+			actual: $this->property(service: $client, property: 'clientService')
+		);
+		$this->assertSame(expected: $this->stub(id: FederationConfig::class), actual: $this->property(service: $client, property: 'config'));
 
 	}//end testPeerCatalogClientIsWiredWithTheHttpClient()
 

@@ -185,7 +185,10 @@ class FederationServiceTest extends TestCase {
 		);
 		$config->method('getPeerState')->willReturnMap(
 			[
-				['https://healthy.example', ['name' => 'Softwarecatalogus Drechtsteden', 'lastPulledAt' => '2026-11-20T08:00:00+00:00', 'objectCount' => 1204, 'lastError' => null]],
+				[
+					'https://healthy.example',
+					['name' => 'Softwarecatalogus Drechtsteden', 'lastPulledAt' => '2026-11-20T08:00:00+00:00', 'objectCount' => 1204, 'lastError' => null],
+				],
 				['https://broken.example', ['name' => '', 'lastPulledAt' => null, 'objectCount' => 0, 'lastError' => 'not reachable']],
 			]
 		);
@@ -216,12 +219,12 @@ class FederationServiceTest extends TestCase {
 		$this->assertTrue($status['peers'][1]['stale']);
 
 		// The peers table reads the catalogue, the last pull, the objects and the error.
-		$this->assertSame('Softwarecatalogus Drechtsteden', $status['peers'][0]['name']);
-		$this->assertSame('2026-11-20T08:00:00+00:00', $status['peers'][0]['lastPulledAt']);
-		$this->assertSame(1204, $status['peers'][0]['objectCount']);
-		$this->assertNull($status['peers'][0]['lastError']);
-		$this->assertSame('broken.example', $status['peers'][1]['name']);
-		$this->assertSame('not reachable', $status['peers'][1]['lastError']);
+		$this->assertSame(expected: 'Softwarecatalogus Drechtsteden', actual: $status['peers'][0]['name']);
+		$this->assertSame(expected: '2026-11-20T08:00:00+00:00', actual: $status['peers'][0]['lastPulledAt']);
+		$this->assertSame(expected: 1204, actual: $status['peers'][0]['objectCount']);
+		$this->assertNull(actual: $status['peers'][0]['lastError']);
+		$this->assertSame(expected: 'broken.example', actual: $status['peers'][1]['name']);
+		$this->assertSame(expected: 'not reachable', actual: $status['peers'][1]['lastError']);
 	}//end testStatusReportsPerPeerStaleAndAllowedState()
 
 	/**
