@@ -67,7 +67,7 @@ class FacetServiceDefinitionTest extends TestCase {
 	 * @return FacetService
 	 */
 	private function service(array $modules, array $elements): FacetService {
-		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturn(
 			['results' => $modules, 'total' => count($modules), 'page' => 1, 'pages' => 1]
 		);
@@ -83,15 +83,23 @@ class FacetServiceDefinitionTest extends TestCase {
 				return null;
 			}
 		};
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static fn (string $id) => ($id === ObjectService::class ? $objectService : $organisationService)
+			static function (string $id) use ($objectService, $organisationService) {
+				if ($id === ObjectService::class) {
+					return $objectService;
+				}
+
+				return $organisationService;
+			}
 		);
 
-		$catalogue = $this->createMock(CatalogueLocator::class);
-		$catalogue->method('getVoorzieningenConfig')->willReturn(['register' => '10', 'module_schema' => '20', 'dienst_schema' => '21']);
+		$catalogue = $this->createMock(originalClassName: CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
+			['register' => '10', 'module_schema' => '20', 'dienst_schema' => '21']
+		);
 
-		$archiMate = $this->createMock(ArchiMateService::class);
+		$archiMate = $this->createMock(originalClassName: ArchiMateService::class);
 		$archiMate->method('getElementObjects')->willReturnCallback(
 			function (array $query) use ($elements): array {
 				$this->elementQueries[] = $query;
@@ -100,14 +108,14 @@ class FacetServiceDefinitionTest extends TestCase {
 		);
 		$archiMate->method('getRelationshipObjects')->willReturn([]);
 
-		$cache = $this->createMock(ICache::class);
+		$cache = $this->createMock(originalClassName: ICache::class);
 		$cache->method('get')->willReturn(null);
-		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory = $this->createMock(originalClassName: ICacheFactory::class);
 		$cacheFactory->method('createDistributed')->willReturn($cache);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('alice');
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
 		return new FacetService(
@@ -116,7 +124,7 @@ class FacetServiceDefinitionTest extends TestCase {
 			archiMateService: $archiMate,
 			queryBuilder: new ViewQueryBuilder(),
 			userSession: $session,
-			logger: $this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			cacheFactory: $cacheFactory
 		);
 	}//end service()
@@ -134,7 +142,12 @@ class FacetServiceDefinitionTest extends TestCase {
 				['id' => 'm2', 'referenceComponents' => ['rc-zs'], 'standardVersions' => []],
 			],
 			elements: [
-				['identifier' => 'rc-zs', 'name' => 'Zaaksysteem', 'documentation' => "  Ondersteunt het zaakgericht werken.\n", 'gemmaUrl' => 'https://www.gemmaonline.nl/zaaksysteem'],
+				[
+					'identifier' => 'rc-zs',
+					'name' => 'Zaaksysteem',
+					'documentation' => "  Ondersteunt het zaakgericht werken.\n",
+					'gemmaUrl' => 'https://www.gemmaonline.nl/zaaksysteem',
+				],
 				['identifier' => 'rc-kb', 'name' => 'Kennisbank', 'documentation' => ['not', 'a', 'string'], 'gemmaUrl' => null],
 			]
 		);
@@ -142,14 +155,20 @@ class FacetServiceDefinitionTest extends TestCase {
 		$result = $service->getFacets(schema: 'module');
 
 		$this->assertSame(
-			[
-				['value' => 'Zaaksysteem', 'label' => 'Zaaksysteem', 'count' => 2, 'documentation' => 'Ondersteunt het zaakgericht werken.', 'gemmaUrl' => 'https://www.gemmaonline.nl/zaaksysteem'],
+			expected: [
+				[
+					'value' => 'Zaaksysteem',
+					'label' => 'Zaaksysteem',
+					'count' => 2,
+					'documentation' => 'Ondersteunt het zaakgericht werken.',
+					'gemmaUrl' => 'https://www.gemmaonline.nl/zaaksysteem',
+				],
 				['value' => 'Kennisbank', 'label' => 'Kennisbank', 'count' => 1, 'documentation' => '', 'gemmaUrl' => ''],
 			],
-			$result['referenceComponent']
+			actual: $result['referenceComponent']
 		);
-		$this->assertCount(1, $this->elementQueries);
-		$this->assertSame([['value' => 'StUF', 'label' => 'StUF', 'count' => 1]], $result['standard']);
+		$this->assertCount(expectedCount: 1, haystack: $this->elementQueries);
+		$this->assertSame(expected: [['value' => 'StUF', 'label' => 'StUF', 'count' => 1]], actual: $result['standard']);
 	}//end testEachReferenceComponentBucketCarriesItsDefinition()
 
 	/**
@@ -165,8 +184,8 @@ class FacetServiceDefinitionTest extends TestCase {
 		);
 
 		$this->assertSame(
-			[['value' => 'rc-gone', 'label' => 'rc-gone', 'count' => 1, 'documentation' => '', 'gemmaUrl' => '']],
-			$service->getFacets(schema: 'module')['referenceComponent']
+			expected: [['value' => 'rc-gone', 'label' => 'rc-gone', 'count' => 1, 'documentation' => '', 'gemmaUrl' => '']],
+			actual: $service->getFacets(schema: 'module')['referenceComponent']
 		);
 	}//end testAnUnresolvedComponentHasAnEmptyDefinition()
 
@@ -185,8 +204,8 @@ class FacetServiceDefinitionTest extends TestCase {
 		);
 
 		$this->assertSame(
-			[['value' => 'Portaal', 'label' => 'Portaal', 'count' => 1, 'documentation' => 'Eerste', 'gemmaUrl' => 'https://a']],
-			$service->getFacets(schema: 'module')['referenceComponent']
+			expected: [['value' => 'Portaal', 'label' => 'Portaal', 'count' => 1, 'documentation' => 'Eerste', 'gemmaUrl' => 'https://a']],
+			actual: $service->getFacets(schema: 'module')['referenceComponent']
 		);
 	}//end testTheFirstElementOfANameKeepsTheDefinition()
 }//end class

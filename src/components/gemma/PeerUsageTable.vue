@@ -24,14 +24,8 @@
 		<table class="peer-usage__table">
 			<thead>
 				<tr>
-					<th scope="col">
-						{{ t('stackiq', 'Reference component') }}
-					</th>
-					<th scope="col">
-						{{ t('stackiq', 'Own applications') }}
-					</th>
-					<th scope="col">
-						{{ t('stackiq', 'Comparable organisations use') }}
+					<th v-for="column in columns" :key="column" scope="col">
+						{{ column }}
 					</th>
 				</tr>
 			</thead>
@@ -100,6 +94,20 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The table's column headings.
+		 *
+		 * @return {Array<string>} The headings.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 */
+		columns() {
+			return [
+				t('stackiq', 'Reference component'),
+				t('stackiq', 'Own applications'),
+				t('stackiq', 'Comparable organisations use'),
+			]
+		},
+
 		/**
 		 * The peer applications by reference component.
 		 *

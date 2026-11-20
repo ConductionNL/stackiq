@@ -287,15 +287,15 @@ import {
 } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import PeerUsageTable from '../../components/gemma/PeerUsageTable.vue'
-import { peerLabel } from '../../components/gemma/peerLabel.js'
 import CoverageViewMap from './CoverageViewMap.vue'
+import { peerLabel } from '../../components/gemma/peerLabel.js'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import pinia from '../../pinia.js'
 import { useViewStore } from '../../store/modules/view.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
-import { peerApplicationsOf, peerIndex } from '../../utils/peerUsage.js'
 import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
+import { peerApplicationsOf, peerIndex } from '../../utils/peerUsage.js'
 import {
 	filterCoverage,
 	filterGroups,

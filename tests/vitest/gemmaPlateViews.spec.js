@@ -30,6 +30,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
 	CnStatsBlock: { props: ['title', 'count', 'countLabel'], template: '<div class="stat">{{ title }}={{ count }}</div>' },
 	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 
 const {

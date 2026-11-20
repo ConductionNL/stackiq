@@ -29,13 +29,27 @@ export function filterCoverage(components, filter) {
  * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export function groupCoverage(components, fallback) {
+	return groupsInOrder(
+		components.map((component) => [component.group || '', component]),
+		fallback,
+	)
+}
+
+/**
+ * Rows in named groups, in the order the rows come, with the rows of the
+ * unnamed group ('') last under one fallback name.
+ *
+ * @param {Array<[string, object]>} entries Pairs of group name and row.
+ * @param {string} fallback The name for rows without a group.
+ * @return {Array<{name: string, components: Array<object>}>} Groups.
+ */
+function groupsInOrder(entries, fallback) {
 	const groups = new Map()
-	for (const component of components) {
-		const name = component.group || ''
+	for (const [name, row] of entries) {
 		if (!groups.has(name)) {
 			groups.set(name, [])
 		}
-		groups.get(name).push(component)
+		groups.get(name).push(row)
 	}
 	const named = [...groups.entries()]
 		.filter(([name]) => name !== '')
@@ -166,7 +180,7 @@ export function viewRelease(view) {
  * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function viewOptions(views) {
-	return (views || [])
+	return (Array.isArray(views) ? views : [])
 		.map((view) => {
 			const id = viewId(view)
 			const name = String(view?.name || view?.title || id)
@@ -231,6 +245,32 @@ export function viewGroups(view, components, fallback) {
 	)
 	const byNodeId = new Map(nodes.map((node) => [node.viewNodeId, node]))
 	const parents = new Set(nodes.map((node) => node.parent).filter(Boolean))
+	const rows = rowsByKey(components)
+
+	const entries = []
+	const seen = new Set()
+	for (const node of nodes) {
+		const ref = node.modelNodeId || node.elementRef
+		const row = ref && !parents.has(node.viewNodeId) && !seen.has(ref)
+			? rows.get(ref) || usageRow(node, ref)
+			: null
+		if (row) {
+			seen.add(ref)
+			entries.push([groupName(node, byNodeId), row])
+		}
+	}
+
+	return groupsInOrder(entries, fallback)
+}
+
+/**
+ * Coverage rows by their element identifier and by their id, the first row
+ * of a key winning.
+ *
+ * @param {Array<object>} components Coverage rows.
+ * @return {Map<string, object>} The rows by key.
+ */
+function rowsByKey(components) {
 	const rows = new Map()
 	for (const row of components || []) {
 		for (const key of [row.identifier, row.id]) {
@@ -239,32 +279,7 @@ export function viewGroups(view, components, fallback) {
 			}
 		}
 	}
-
-	const groups = new Map()
-	const seen = new Set()
-	for (const node of nodes) {
-		const ref = node.modelNodeId || node.elementRef
-		if (!ref || parents.has(node.viewNodeId) || seen.has(ref)) {
-			continue
-		}
-		const row = rows.get(ref) || usageRow(node, ref)
-		if (!row) {
-			continue
-		}
-		seen.add(ref)
-		const name = groupName(node, byNodeId)
-		if (!groups.has(name)) {
-			groups.set(name, [])
-		}
-		groups.get(name).push(row)
-	}
-
-	const named = [...groups.entries()]
-		.filter(([name]) => name !== '')
-		.map(([name, rowsOfGroup]) => ({ name, components: rowsOfGroup }))
-	return groups.has('')
-		? [...named, { name: fallback, components: groups.get('') }]
-		: named
+	return rows
 }
 
 /**

@@ -33,6 +33,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
 	CnStatsBlock: { props: ['title', 'count'], template: '<div class="stat">{{ title }}={{ count }}</div>' },
 	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge">{{ label }}</span>' },
+	CnGraphCanvas: { template: '<div class="canvas" />' },
 }))
 
 const { peerApplicationsOf, peerIndex, isHeldBack } = await import('../../src/utils/peerUsage.js')
