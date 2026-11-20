@@ -9880,6 +9880,9 @@
         "participants": [
           "@ref:organization:gemeente-leiden",
           "@ref:organization:gemeente-leiderdorp"
+        ],
+        "dataEntities": [
+          "@ref:element:seed-el-melding"
         ]
       },
       {
