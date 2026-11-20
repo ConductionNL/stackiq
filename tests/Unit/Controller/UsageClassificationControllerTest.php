@@ -139,4 +139,17 @@ class UsageClassificationControllerTest extends TestCase {
 		$this->assertSame(500, $this->controller(organisation: 'org-sup')->suggestion(usageId: 'u-x')->getStatus());
 		$this->assertSame(401, $this->controller(organisation: null, groups: null)->suggestion(usageId: 'u-1')->getStatus());
 	}//end testTheSuggestionAnswers()
+	/**
+	 * A failing summary read answers 500 with a generic message, not the exception text.
+	 *
+	 * @return void
+	 */
+	public function testAFailingSummaryAnswers500(): void {
+		$this->service->expects($this->once())->method('summary')->with('m-1')->willThrowException(new \RuntimeException('OpenRegister is not available'));
+
+		$answer = $this->controller(organisation: 'org-gem')->summary(moduleId: 'm-1');
+
+		$this->assertSame(500, $answer->getStatus());
+		$this->assertSame(['message' => 'The summary could not be made'], $answer->getData());
+	}//end testAFailingSummaryAnswers500()
 }//end class
