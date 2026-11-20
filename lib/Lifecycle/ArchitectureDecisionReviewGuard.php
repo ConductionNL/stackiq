@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Lifecycle;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCP\IUserManager;
@@ -45,6 +46,10 @@ use Throwable;
  * | supersede       | `supersededBy` points at a decision in status accepted    |
  *
  * Any other action passes.
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) GuardResult's named constructors are OpenRegister's lifecycle-guard API.
+ *
+ * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
  */
 class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	/**
@@ -179,7 +184,10 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 		}
 
 		try {
-			$found = $this->objectService()->find(id: $uuid, register: self::REGISTER, schema: self::SCHEMA);
+			$found = $this->objectService()->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ArchitectureDecisionReviewGuard: superseding decision {uuid} could not be read: {message}',

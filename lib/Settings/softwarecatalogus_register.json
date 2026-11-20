@@ -8560,11 +8560,13 @@
               "properties": {
                 "option": {
                   "type": "string",
-                  "title": "Option"
+                  "title": "Option",
+                  "description": "An option that was considered and not chosen."
                 },
                 "reasonRejected": {
                   "type": "string",
-                  "title": "Reason rejected"
+                  "title": "Reason rejected",
+                  "description": "Why this option was not chosen."
                 }
               },
               "required": [

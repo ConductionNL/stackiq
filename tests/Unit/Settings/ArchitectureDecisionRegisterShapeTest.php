@@ -63,7 +63,7 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 	 */
 	private function schema(): array {
 		$schemas = $this->merged()['components']['schemas'];
-		$this->assertArrayHasKey('architectureDecision', $schemas);
+		$this->assertArrayHasKey(key: 'architectureDecision', array: $schemas);
 
 		return $schemas['architectureDecision'];
 	}//end schema()
@@ -76,12 +76,12 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 	public function testTheStackiqRegisterListsTheSchemaWithMagicMapping(): void {
 		$register = $this->merged()['components']['registers']['stackiq'];
 
-		$this->assertContains('architectureDecision', $register['schemas']);
-		$this->assertContains('usage', $register['schemas']);
-		$this->assertSame(count($register['schemas']), count(array_unique($register['schemas'])));
+		$this->assertContains(needle: 'architectureDecision', haystack: $register['schemas']);
+		$this->assertContains(needle: 'usage', haystack: $register['schemas']);
+		$this->assertSame(expected: count(value: $register['schemas']), actual: count(value: array_unique(array: $register['schemas'])));
 		$this->assertSame(
-			['magicMapping' => true, 'autoCreateTable' => true],
-			$register['configuration']['schemas']['architectureDecision']
+			expected: ['magicMapping' => true, 'autoCreateTable' => true],
+			actual: $register['configuration']['schemas']['architectureDecision']
 		);
 	}//end testTheStackiqRegisterListsTheSchemaWithMagicMapping()
 
@@ -93,29 +93,29 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 	public function testTheRecordHoldsTheDecisionFields(): void {
 		$props = $this->schema()['properties'];
 
-		$this->assertSame(['title'], $this->schema()['required']);
+		$this->assertSame(expected: ['title'], actual: $this->schema()['required']);
 		$this->assertSame(
-			['application', 'data', 'integration', 'infrastructure', 'security', 'standards'],
-			$props['category']['enum']
+			expected: ['application', 'data', 'integration', 'infrastructure', 'security', 'standards'],
+			actual: $props['category']['enum']
 		);
-		$this->assertSame(['low', 'medium', 'high'], $props['impact']['enum']);
+		$this->assertSame(expected: ['low', 'medium', 'high'], actual: $props['impact']['enum']);
 		$this->assertSame(
-			['draft', 'in review', 'accepted', 'rejected', 'superseded', 'deprecated'],
-			$props['status']['enum']
+			expected: ['draft', 'in review', 'accepted', 'rejected', 'superseded', 'deprecated'],
+			actual: $props['status']['enum']
 		);
-		$this->assertSame('draft', $props['status']['default']);
+		$this->assertSame(expected: 'draft', actual: $props['status']['default']);
 		foreach (['category', 'impact', 'status'] as $field) {
-			$this->assertTrue($props[$field]['facetable'], $field);
-			$this->assertSame($props[$field]['enum'], array_keys($props[$field]['x-enum-labels']), $field);
+			$this->assertTrue(condition: $props[$field]['facetable'], message: $field);
+			$this->assertSame(expected: $props[$field]['enum'], actual: array_keys(array: $props[$field]['x-enum-labels']), message: $field);
 		}
 
-		$this->assertSame(['option', 'reasonRejected'], array_keys($props['alternatives']['items']['properties']));
-		$this->assertSame('#/components/schemas/usage', $props['applications']['items']['$ref']);
-		$this->assertSame('#/components/schemas/element', $props['elements']['items']['$ref']);
-		$this->assertSame('#/components/schemas/architectureDecision', $props['supersedes']['$ref']);
-		$this->assertSame('#/components/schemas/architectureDecision', $props['supersededBy']['$ref']);
-		$this->assertSame('date', $props['decidedOn']['format']);
-		$this->assertSame('string', $props['reviewer']['type']);
+		$this->assertSame(expected: ['option', 'reasonRejected'], actual: array_keys(array: $props['alternatives']['items']['properties']));
+		$this->assertSame(expected: '#/components/schemas/usage', actual: $props['applications']['items']['$ref']);
+		$this->assertSame(expected: '#/components/schemas/element', actual: $props['elements']['items']['$ref']);
+		$this->assertSame(expected: '#/components/schemas/architectureDecision', actual: $props['supersedes']['$ref']);
+		$this->assertSame(expected: '#/components/schemas/architectureDecision', actual: $props['supersededBy']['$ref']);
+		$this->assertSame(expected: 'date', actual: $props['decidedOn']['format']);
+		$this->assertSame(expected: 'string', actual: $props['reviewer']['type']);
 	}//end testTheRecordHoldsTheDecisionFields()
 
 	/**
@@ -126,10 +126,10 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 	public function testReadRulesMatchOnTheOrganisation(): void {
 		$read = $this->schema()['authorization']['read'];
 
-		$this->assertNotEmpty($read);
+		$this->assertNotEmpty(actual: $read);
 		foreach ($read as $rule) {
-			$this->assertSame(['_organisation' => '$organisation'], $rule['match'], $rule['group']);
-			$this->assertArrayNotHasKey('crossOrganisation', $rule, $rule['group']);
+			$this->assertSame(expected: ['_organisation' => '$organisation'], actual: $rule['match'], message: $rule['group']);
+			$this->assertArrayNotHasKey(key: 'crossOrganisation', array: $rule, message: $rule['group']);
 		}
 	}//end testReadRulesMatchOnTheOrganisation()
 
@@ -142,31 +142,31 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 		$lifecycle = $this->schema()['configuration']['x-openregister-lifecycle'];
 		$statuses  = $this->schema()['properties']['status']['enum'];
 
-		$this->assertSame('status', $lifecycle['field']);
-		$this->assertContains($lifecycle['initial'], $statuses);
+		$this->assertSame(expected: 'status', actual: $lifecycle['field']);
+		$this->assertContains(needle: $lifecycle['initial'], haystack: $statuses);
 		$this->assertSame(
-			['submit', 'accept', 'reject', 'rework', 'supersede', 'deprecate'],
-			array_keys($lifecycle['transitions'])
+			expected: ['submit', 'accept', 'reject', 'rework', 'supersede', 'deprecate'],
+			actual: array_keys($lifecycle['transitions'])
 		);
 		foreach ($lifecycle['final'] as $final) {
-			$this->assertContains($final, $statuses);
+			$this->assertContains(needle: $final, haystack: $statuses);
 		}
 
 		$guarded = [];
 		foreach ($lifecycle['transitions'] as $action => $transition) {
-			$this->assertContains($transition['to'], $statuses, $action);
+			$this->assertContains(needle: $transition['to'], haystack: $statuses, message: $action);
 			foreach ($transition['from'] as $from) {
-				$this->assertContains($from, $statuses, $action);
+				$this->assertContains(needle: $from, haystack: $statuses, message: $action);
 			}
 
 			if (isset($transition['requires']) === true) {
-				$this->assertSame(ArchitectureDecisionReviewGuard::class, $transition['requires'], $action);
+				$this->assertSame(expected: ArchitectureDecisionReviewGuard::class, actual: $transition['requires'], message: $action);
 				$guarded[] = $action;
 			}
 		}
 
-		$this->assertSame(['submit', 'accept', 'reject', 'supersede'], $guarded);
-		$this->assertTrue(class_exists($lifecycle['transitions']['submit']['requires']));
+		$this->assertSame(expected: ['submit', 'accept', 'reject', 'supersede'], actual: $guarded);
+		$this->assertTrue(condition: class_exists(class: $lifecycle['transitions']['submit']['requires']));
 	}//end testTheLifecycleUsesEnumValuesAndTheGuardClass()
 
 	/**
@@ -177,21 +177,21 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 	public function testNotificationsGoToTheReviewerAndTheOwners(): void {
 		$rules = $this->schema()['configuration']['x-openregister-notifications'];
 
-		$this->assertSame(['review-requested', 'review-accepted', 'review-rejected'], array_keys($rules));
-		$this->assertSame([['kind' => 'field', 'field' => 'reviewer']], $rules['review-requested']['recipients']);
-		$this->assertSame('in review', $rules['review-requested']['trigger']['condition']['value']);
+		$this->assertSame(expected: ['review-requested', 'review-accepted', 'review-rejected'], actual: array_keys(array: $rules));
+		$this->assertSame(expected: [['kind' => 'field', 'field' => 'reviewer']], actual: $rules['review-requested']['recipients']);
+		$this->assertSame(expected: 'in review', actual: $rules['review-requested']['trigger']['condition']['value']);
 		foreach (['accepted', 'rejected'] as $status) {
 			$rule = $rules['review-' . $status];
-			$this->assertSame([['kind' => 'object-acl', 'permission' => 'manage']], $rule['recipients']);
-			$this->assertSame($status, $rule['trigger']['condition']['value']);
-			$this->assertSame('in review', $rule['trigger']['condition']['from']);
+			$this->assertSame(expected: [['kind' => 'object-acl', 'permission' => 'manage']], actual: $rule['recipients']);
+			$this->assertSame(expected: $status, actual: $rule['trigger']['condition']['value']);
+			$this->assertSame(expected: 'in review', actual: $rule['trigger']['condition']['from']);
 		}
 
 		foreach ($rules as $key => $rule) {
-			$this->assertSame('updated', $rule['trigger']['type'], $key);
-			$this->assertSame('status', $rule['trigger']['condition']['field'], $key);
-			$this->assertSame(['nc-notification', 'email'], $rule['channels'], $key);
-			$this->assertSame(['nl', 'en'], array_keys($rule['subject']), $key);
+			$this->assertSame(expected: 'updated', actual: $rule['trigger']['type'], message: $key);
+			$this->assertSame(expected: 'status', actual: $rule['trigger']['condition']['field'], message: $key);
+			$this->assertSame(expected: ['nc-notification', 'email'], actual: $rule['channels'], message: $key);
+			$this->assertSame(expected: ['nl', 'en'], actual: array_keys(array: $rule['subject']), message: $key);
 		}
 	}//end testNotificationsGoToTheReviewerAndTheOwners()
 
@@ -206,7 +206,7 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 		$contract = $schemas['catalogContract']['properties']['decisions'];
 
 		foreach (['type', 'x-external-register', 'items', 'referenceType'] as $key) {
-			$this->assertSame($contract[$key], $board[$key], $key);
+			$this->assertSame(expected: $contract[$key], actual: $board[$key], message: $key);
 		}
 	}//end testBoardDecisionsMatchTheContractDecisionLink()
 
@@ -229,10 +229,10 @@ class ArchitectureDecisionRegisterShapeTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['seed-ab-zaakgericht-werken', 'seed-ab-api-first'], array_keys($seeded));
-		$this->assertSame('accepted', $seeded['seed-ab-zaakgericht-werken']['status']);
-		$this->assertSame('in review', $seeded['seed-ab-api-first']['status']);
-		$this->assertSame(['@ref:usage:gebruik-suite4-gem-delft-eigenaar'], $seeded['seed-ab-zaakgericht-werken']['applications']);
-		$this->assertContains('gebruik-suite4-gem-delft-eigenaar', $usages);
+		$this->assertSame(expected: ['seed-ab-zaakgericht-werken', 'seed-ab-api-first'], actual: array_keys(array: $seeded));
+		$this->assertSame(expected: 'accepted', actual: $seeded['seed-ab-zaakgericht-werken']['status']);
+		$this->assertSame(expected: 'in review', actual: $seeded['seed-ab-api-first']['status']);
+		$this->assertSame(expected: ['@ref:usage:gebruik-suite4-gem-delft-eigenaar'], actual: $seeded['seed-ab-zaakgericht-werken']['applications']);
+		$this->assertContains(needle: 'gebruik-suite4-gem-delft-eigenaar', haystack: $usages);
 	}//end testTheTwoDemoDecisionsAreSeeded()
 }//end class

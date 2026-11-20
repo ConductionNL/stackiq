@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Tests\Unit\Lifecycle;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Lifecycle\ArchitectureDecisionReviewGuard;
 use OCP\IUserManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -96,8 +97,8 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 	public function testSubmitWithAColleagueAsReviewerIsAllowed(): void {
 		$result = $this->guard()->check(object: ['title' => 'x', 'reviewer' => 'bram'], action: 'submit', userId: 'anna');
 
-		$this->assertTrue($result->isAllowed());
-		$this->assertNull($result->getMessage());
+		$this->assertTrue(condition: $result->isAllowed());
+		$this->assertNull(actual: $result->getMessage());
 	}//end testSubmitWithAColleagueAsReviewerIsAllowed()
 
 	/**
@@ -115,8 +116,8 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 
 		foreach ($cases as $name => [$object, $message]) {
 			$result = $this->guard()->check(object: $object, action: 'submit', userId: 'anna');
-			$this->assertFalse($result->isAllowed(), $name);
-			$this->assertSame($message, $result->getMessage(), $name);
+			$this->assertFalse(condition: $result->isAllowed(), message: $name);
+			$this->assertSame(expected: $message, actual: $result->getMessage(), message: $name);
 		}
 	}//end testSubmitIsDeniedWithoutAValidSecondReviewer()
 
@@ -128,17 +129,17 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 	public function testOnlyTheReviewerAcceptsOrRejects(): void {
 		foreach (['accept', 'reject'] as $action) {
 			$this->assertTrue(
-				$this->guard()->check(object: ['reviewer' => 'bram'], action: $action, userId: 'bram')->isAllowed(),
-				$action
+				condition: $this->guard()->check(object: ['reviewer' => 'bram'], action: $action, userId: 'bram')->isAllowed(),
+				message: $action
 			);
 
 			$denied = $this->guard()->check(object: ['reviewer' => 'bram'], action: $action, userId: 'anna');
-			$this->assertFalse($denied->isAllowed(), $action);
-			$this->assertSame('Only the reviewer of the decision can accept or reject it.', $denied->getMessage());
+			$this->assertFalse(condition: $denied->isAllowed(), message: $action);
+			$this->assertSame(expected: 'Only the reviewer of the decision can accept or reject it.', actual: $denied->getMessage());
 
 			$this->assertFalse(
-				$this->guard()->check(object: ['reviewer' => ''], action: $action, userId: '')->isAllowed(),
-				$action . ' without reviewer'
+				condition: $this->guard()->check(object: ['reviewer' => ''], action: $action, userId: '')->isAllowed(),
+				message: $action . ' without reviewer'
 			);
 		}
 	}//end testOnlyTheReviewerAcceptsOrRejects()
@@ -152,12 +153,16 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 		$this->container->expects($this->never())->method('get');
 
 		$this->assertTrue(
-			$this->guard()->check(object: ['supersededBy' => ['id' => 'u2', 'status' => 'accepted']], action: 'supersede', userId: 'anna')->isAllowed()
+			condition: $this->guard()->check(
+				object: ['supersededBy' => ['id' => 'u2', 'status' => 'accepted']],
+				action: 'supersede',
+				userId: 'anna'
+			)->isAllowed()
 		);
 
 		$denied = $this->guard()->check(object: ['supersededBy' => ['id' => 'u2', 'status' => 'draft']], action: 'supersede', userId: 'anna');
-		$this->assertFalse($denied->isAllowed());
-		$this->assertStringContainsString('accepted decision', (string) $denied->getMessage());
+		$this->assertFalse(condition: $denied->isAllowed());
+		$this->assertStringContainsString(needle: 'accepted decision', haystack: (string) $denied->getMessage());
 	}//end testSupersedeReadsAnEmbeddedDecision()
 
 	/**
@@ -169,7 +174,7 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 		$this->expectFind(uuid: 'u2', status: 'accepted');
 
 		$this->assertTrue(
-			$this->guard()->check(object: ['supersededBy' => 'u2'], action: 'supersede', userId: 'anna')->isAllowed()
+			condition: $this->guard()->check(object: ['supersededBy' => 'u2'], action: 'supersede', userId: 'anna')->isAllowed()
 		);
 	}//end testSupersedeFetchesADecisionNamedByUuid()
 
@@ -180,10 +185,10 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 	 */
 	public function testSupersedeIsDeniedUnlessTheSupersedingDecisionIsAccepted(): void {
 		$this->expectFind(uuid: 'u3', status: 'draft');
-		$this->assertFalse($this->guard()->check(object: ['supersededBy' => 'u3'], action: 'supersede', userId: 'a')->isAllowed());
+		$this->assertFalse(condition: $this->guard()->check(object: ['supersededBy' => 'u3'], action: 'supersede', userId: 'a')->isAllowed());
 
-		$this->assertFalse($this->guard()->check(object: [], action: 'supersede', userId: 'a')->isAllowed());
-		$this->assertFalse($this->guard()->check(object: ['supersededBy' => ''], action: 'supersede', userId: 'a')->isAllowed());
+		$this->assertFalse(condition: $this->guard()->check(object: [], action: 'supersede', userId: 'a')->isAllowed());
+		$this->assertFalse(condition: $this->guard()->check(object: ['supersededBy' => ''], action: 'supersede', userId: 'a')->isAllowed());
 	}//end testSupersedeIsDeniedUnlessTheSupersedingDecisionIsAccepted()
 
 	/**
@@ -197,7 +202,7 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 		$this->container->method('get')->willReturn($service);
 		$this->logger->expects($this->once())->method('warning');
 
-		$this->assertFalse($this->guard()->check(object: ['supersededBy' => 'u4'], action: 'supersede', userId: 'a')->isAllowed());
+		$this->assertFalse(condition: $this->guard()->check(object: ['supersededBy' => 'u4'], action: 'supersede', userId: 'a')->isAllowed());
 	}//end testAnUnreadableSupersedingDecisionFailsClosed()
 
 	/**
@@ -213,7 +218,8 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 		$this->users->expects($this->never())->method('createUser');
 
 		foreach (['rework', 'deprecate', 'anything'] as $action) {
-			$this->assertTrue($this->guard()->check(object: ['reviewer' => 'anna'], action: $action, userId: 'anna')->isAllowed(), $action);
+			$allowed = $this->guard()->check(object: ['reviewer' => 'anna'], action: $action, userId: 'anna')->isAllowed();
+			$this->assertTrue(condition: $allowed, message: $action);
 		}
 	}//end testOtherActionsPassWithoutWriting()
 
@@ -231,7 +237,12 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 
 		$service = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$service->expects($this->once())->method('find')
-			->with($uuid, [], false, 'stackiq', 'architectureDecision')
+			->with(
+				$uuid,
+				$this->callback(
+					callback: static fn (ObjectFindOptions $options): bool => $options->register === 'stackiq' && $options->schema === 'architectureDecision'
+				)
+			)
 			->willReturn($entity);
 
 		$this->container->expects($this->once())->method('get')
