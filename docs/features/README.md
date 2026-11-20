@@ -11,6 +11,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Connection Suggestions](connection-suggestions.md) | Suggested connections for an application in use, from your landscape and earlier usages |
 | [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Applications on GEMMA views](shared-usage-on-views.md) | Show your own and partners' shared applications inside the components of a GEMMA view |

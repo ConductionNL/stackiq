@@ -25,6 +25,7 @@ import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
+import ConnectionSuggestionsPanel from './components/connections/ConnectionSuggestionsPanel.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
@@ -207,6 +208,11 @@ export default {
 	// (operations-technology-components D5): a state derived per row is not
 	// something a built-in object list shows.
 	UsageRunsOnPanel,
+
+	// The connections suggested for a usage (connections-derived-dependencies D3):
+	// derived on the server from the organisation's landscape and earlier
+	// usages, with accept and dismiss, which no built-in widget does.
+	ConnectionSuggestionsPanel,
 
 	// The name of a contact person on its detail page (landscape-usage-registration):
 	// the name lives in Nextcloud Contacts, read through /api/contact-names,

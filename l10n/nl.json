@@ -2144,6 +2144,22 @@
         "Publish now": "Nu publiceren",
         "Publish on a date": "Op een datum publiceren",
         "Scheduled": "Gepland",
-        "Withdraw": "Intrekken"
+        "Withdraw": "Intrekken",
+        "Accept all": "Alles accepteren",
+        "Accept {name}": "{name} accepteren",
+        "Both applications are in your landscape": "Beide applicaties staan in uw landschap",
+        "Carried over from another version": "Overgenomen van een andere versie",
+        "Connections added: {count}": "Koppelingen toegevoegd: {count}",
+        "Dismiss": "Negeren",
+        "Dismiss {name}": "{name} negeren",
+        "Draft from the application this one replaces": "Concept van de applicatie die deze vervangt",
+        "Loading suggested connections": "Voorgestelde koppelingen laden",
+        "No suggestions. Every known connection of this application is already in your usage.": "Geen voorstellen. Elke bekende koppeling van deze applicatie staat al in uw gebruik.",
+        "Only the organisation that uses this application can change its connections.": "Alleen de organisatie die deze applicatie gebruikt, kan de koppelingen wijzigen.",
+        "Only the organisation that uses this application can see its suggested connections.": "Alleen de organisatie die deze applicatie gebruikt, kan de voorgestelde koppelingen zien.",
+        "Suggested connections": "Voorgestelde koppelingen",
+        "The suggested connections could not be loaded.": "De voorgestelde koppelingen konden niet worden geladen.",
+        "The suggestion could not be saved.": "Het voorstel kon niet worden opgeslagen.",
+        "Unnamed connection": "Naamloze koppeling"
     }
 }

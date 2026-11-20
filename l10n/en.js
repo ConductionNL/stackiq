@@ -2077,7 +2077,23 @@ OC.L10N.register(
         "Publish now": "Publish now",
         "Publish on a date": "Publish on a date",
         "Scheduled": "Scheduled",
-        "Withdraw": "Withdraw"
+        "Withdraw": "Withdraw",
+        "Accept all": "Accept all",
+        "Accept {name}": "Accept {name}",
+        "Both applications are in your landscape": "Both applications are in your landscape",
+        "Carried over from another version": "Carried over from another version",
+        "Connections added: {count}": "Connections added: {count}",
+        "Dismiss": "Dismiss",
+        "Dismiss {name}": "Dismiss {name}",
+        "Draft from the application this one replaces": "Draft from the application this one replaces",
+        "Loading suggested connections": "Loading suggested connections",
+        "No suggestions. Every known connection of this application is already in your usage.": "No suggestions. Every known connection of this application is already in your usage.",
+        "Only the organisation that uses this application can change its connections.": "Only the organisation that uses this application can change its connections.",
+        "Only the organisation that uses this application can see its suggested connections.": "Only the organisation that uses this application can see its suggested connections.",
+        "Suggested connections": "Suggested connections",
+        "The suggested connections could not be loaded.": "The suggested connections could not be loaded.",
+        "The suggestion could not be saved.": "The suggestion could not be saved.",
+        "Unnamed connection": "Unnamed connection"
     },
     "nplurals=2; plural=(n != 1);"
 )
