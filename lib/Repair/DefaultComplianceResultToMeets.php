@@ -33,6 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
@@ -57,15 +59,15 @@ class DefaultComplianceResultToMeets implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager                   $appManager      Tells whether OpenRegister is installed.
-	 * @param RegisterConfigReaderInterface $settingsService Resolves the register, the schema and the ObjectService.
 	 * @param LoggerInterface               $logger          The logger.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register, the schema and the ObjectService.
 	 *
 	 * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly RegisterConfigReaderInterface $settingsService,
 	) {
 	}//end __construct()
 
@@ -155,10 +157,13 @@ class DefaultComplianceResultToMeets implements IRepairStep {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					extend: [],
-					register: $claim->getRegister(),
-					schema: $claim->getSchema(),
-					uuid: $claim->getUuid(),
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+							register: $claim->getRegister(),
+							schema: $claim->getSchema()
+						),
+						uuid: $claim->getUuid()
+					),
 					_rbac: false,
 					_multitenancy: false
 				);

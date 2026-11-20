@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Repair\DefaultComplianceResultToMeets;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -148,8 +149,9 @@ class DefaultComplianceResultToMeetsTest extends TestCase {
 
 		$saved = [];
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')->willReturnCallback(
-			function (array $object, array $extend, $register, $schema, $uuid, bool $_rbac, bool $_multitenancy) use (&$saved) {
-				$saved[$uuid] = [$object, $register, $schema, $_rbac, $_multitenancy];
+			function (array $object, ObjectSaveOptions $options, bool $_rbac, bool $_multitenancy) use (&$saved) {
+				$uuid         = $options->uuid;
+				$saved[$uuid] = [$object, $options->target->register, $options->target->schema, $_rbac, $_multitenancy];
 				return $this->claim(uuid: $uuid, data: $object);
 			}
 		);
@@ -191,7 +193,8 @@ class DefaultComplianceResultToMeetsTest extends TestCase {
 		$this->configured();
 		$this->objects->method('findAll')->willReturn([$this->claim(uuid: 'bad', data: []), $this->claim(uuid: 'good', data: [])]);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, array $extend, $register, $schema, $uuid) {
+			function (array $object, ObjectSaveOptions $options) {
+				$uuid = $options->uuid;
 				if ($uuid === 'bad') {
 					throw new RuntimeException('locked');
 				}
@@ -242,7 +245,8 @@ class DefaultComplianceResultToMeetsTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheSchemaDeclaresTheResult(): void {
-		$register = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/softwarecatalogus_register.json'), true, 512, JSON_THROW_ON_ERROR);
+		$path     = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
+		$register = json_decode((string)file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 		$schema   = $register['components']['schemas']['compliancy'];
 
 		$this->assertSame(expected: ['meets', 'does-not-meet'], actual: $schema['properties']['result']['enum']);
