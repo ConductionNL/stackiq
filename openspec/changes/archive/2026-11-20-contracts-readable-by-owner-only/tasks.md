@@ -12,4 +12,5 @@
 - [x] 3.2 A test per custom read path from 2.1: an `ambtenaar` of organisation B gets no field of organisation A's contract; an `ambtenaar` of A and an admin do.
 
 ## 4. Capability row
-- [ ] 4.1 Set `org-data-segregation` to built in `openspec/parity/capabilities.json` with the rule and test as evidence, then archive this change.
+- [x] 4.1 Set `org-data-segregation` to built in `openspec/parity/capabilities.json` with the rule and test as evidence, then archive this change.
+  > Built 20 Nov: the row reads built, citing the `catalogContract` read rule and `ContractRbacTest`; the contactPerson grants it still notes are outside this change.
