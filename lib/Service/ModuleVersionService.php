@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
@@ -211,6 +213,7 @@ class ModuleVersionService implements ModuleVersionServiceInterface {
 	 * @param array $lookup The module UUID, register, schema and ObjectService
 	 *
 	 * @return array The existing versions; empty when the search gives no list.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function existingVersionList(array $lookup): array {
 		$existingVersions = $lookup['objectService']->searchObjects(
@@ -286,8 +289,7 @@ class ModuleVersionService implements ModuleVersionServiceInterface {
 
 		$savedVersion = $context['objectService']->saveObject(
 			object: $versionData,
-			register: $context['registerId'],
-			schema: $context['schemaId'],
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $context['registerId'], schema: $context['schemaId'])),
 			_rbac: false,
 			_multitenancy: false
 		);

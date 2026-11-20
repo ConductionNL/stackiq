@@ -489,14 +489,13 @@ echo "[ci-seed] done."
 # Installing would push the app's whole demo dataset into every list the suite
 # asserts on. `demo-data-setup-step.spec.ts` exercises the install deliberately.
 #
-# Uses the workflow's own exported credentials rather than this script's, so it
-# does not depend on where in the file it sits.
+# Sent to the BASE and credentials resolved at the top, like every other
+# request here: a run that sets only PLAYWRIGHT_BASE_URL must not reach :8080.
 #
 # Tolerant on purpose: an app whose wizard has no demo-data step answers 400
 # here, and that is not a seeding failure.
-DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
 DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
-	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
+	-u "${USER_NAME}:${USER_PASS}" -X POST \
 	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' --data '{}' \
-	"${DEMO_BASE}/index.php/apps/stackiq/api/setup/action/skip-demo-data" || echo 000)"
+	"${BASE}/index.php/apps/stackiq/api/setup/action/skip-demo-data" || echo 000)"
 echo "[ci-seed] POST setup/action/skip-demo-data -> HTTP ${DEMO_CODE}"

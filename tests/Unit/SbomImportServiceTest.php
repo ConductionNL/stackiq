@@ -40,6 +40,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Test class for SbomImportService.
@@ -171,7 +173,9 @@ class SbomImportServiceTest extends TestCase {
 		);
 
 		$this->objectService->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register=null, $schema=null) {
+			function (array $objects, BulkSaveOptions $options = new BulkSaveOptions()) {
+				$register = $options->defaults->register;
+				$schema = $options->defaults->schema;
 				$this->savedTargets[] = ['saveObjects', $register, $schema];
 				$this->savedBatches[] = $objects;
 				return ['statistics' => ['objectsCreated' => count($objects)]];
@@ -179,7 +183,10 @@ class SbomImportServiceTest extends TestCase {
 		);
 
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, $extend=null, $register=null, $schema=null) use ($entity) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($entity) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->savedTargets[] = ['saveObject', $register, $schema];
 				$this->savedModuleVersion = $object;
 				return $entity;

@@ -16,10 +16,15 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
-const live = vi.hoisted(() => ({ calls: [] }))
+const live = vi.hoisted(() => ({ calls: [], fetches: [] }))
 
 vi.mock('../../src/store/store.js', () => ({
-	objectStore: { getCollection: () => ({ results: [{ uuid: 'o1', name: 'Gemeente A' }, { uuid: 'o2', name: 'Gemeente B' }] }) },
+	objectStore: {
+		settings: {},
+		objectTypeRegistry: { organization: {} },
+		getCollection: () => ({ results: [{ uuid: 'o1', name: 'Gemeente A' }, { uuid: 'o2', name: 'Gemeente B' }] }),
+		fetchCollection: (...args) => live.fetches.push(args),
+	},
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({
 	useLiveCollections: (target, types) => live.calls.push(types),
@@ -97,6 +102,12 @@ describe('DataQualityReport', () => {
 		render({ selectedOrg: { uuid: 'x' }, report: null })
 
 		expect(live.calls).toContainEqual(['organization'])
+	})
+
+	it('loads the organisations itself when it mounts', () => {
+		render({ selectedOrg: { uuid: 'x' }, report: null })
+
+		expect(live.fetches).toContainEqual(['organization', { _limit: 1000 }])
 	})
 
 	it('shows only the loader while loading, then an error, then the empty state', () => {

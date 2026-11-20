@@ -32,6 +32,8 @@
 import type { APIRequestContext, Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { APP_PATH } from '../base-url.ts'
 
 /** Integriq's objects endpoint for stackiq's connection rows. */
@@ -41,12 +43,10 @@ const CONNECTIONS_API =
 /** Stackiq's email settings endpoint, admin only. */
 const EMAIL_SETTINGS_API = `${APP_PATH}/api/settings/email`
 
-/** The declared keys and titles, in declared order. */
-const DECLARED = [
-	{ key: 'email', title: 'Email' },
-	{ key: 'federation', title: 'Catalog federation' },
-	{ key: 'eol-feed', title: 'End-of-life feed' },
-]
+/** The declared keys and titles, read from the declaration integriq syncs. */
+const DECLARED: Array<{ key: string, title: string }> = JSON.parse(
+	readFileSync(resolve(__dirname, '../../../lib/Settings/connections.json'), 'utf8'),
+).connections.map(({ key, title }: { key: string, title: string }) => ({ key, title }))
 
 /** Headers for the JSON API calls. */
 const JSON_HEADERS = { 'OCS-APIRequest': 'true', Accept: 'application/json' }
@@ -85,7 +85,7 @@ async function openIntegrations(page: Page): Promise<void> {
 }
 
 test.describe('Integrations over the connection registry', () => {
-	test("lists the three declared connections, all of them stackiq's", async ({
+	test("lists the declared connections, all of them stackiq's", async ({
 		page,
 	}) => {
 		const byKey = await rowsByKey(page.request)

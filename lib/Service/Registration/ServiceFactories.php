@@ -638,7 +638,8 @@ final class ServiceFactories {
 				return new ContractStatusService(
 					container: $container,
 					settingsService: $container->get(SettingsService::class),
-					logger: $container->get(LoggerInterface::class)
+					logger: $container->get(LoggerInterface::class),
+					appConfig: $container->get(\OCP\IAppConfig::class)
 				);
 			}
 		);

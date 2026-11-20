@@ -70,3 +70,30 @@ test('features-roadmap: roadmap nav entry is rendered by the deployed shell', as
 
 	expectNoAppErrors(bag)
 })
+
+// REQ-FRM-002: one entry for the store. The page carries the tabs "Features
+// and roadmap" and "Extensions"; `?tab=extensions` opens the second, and the
+// old /store route (also the footer Store entry) lands on it.
+test('features-roadmap: ?tab=extensions opens the Extensions tab', async ({
+	page,
+}) => {
+	const bag = collectAppErrors(page)
+	await gotoAppRoute(page, '/features-roadmap?tab=extensions')
+	const main = page.locator(APP_MAIN).first()
+	await expect(main.getByTestId('frm-tab-features')).toBeVisible({ timeout: 30000 })
+	await expect(main.getByTestId('frm-tab-extensions')).toHaveAttribute('aria-selected', 'true')
+	await expect(main.getByTestId('frm-panel-extensions')).toBeVisible()
+	await expect(main.getByTestId('frm-panel-features')).toBeHidden()
+	expectNoAppErrors(bag)
+})
+
+test('features-roadmap: an old /store link redirects to the Extensions tab', async ({
+	page,
+}) => {
+	const bag = collectAppErrors(page)
+	await gotoAppRoute(page, '/store')
+	const main = page.locator(APP_MAIN).first()
+	await expect(main.getByTestId('frm-tab-extensions')).toHaveAttribute('aria-selected', 'true', { timeout: 30000 })
+	await expect(page).toHaveURL(/features-roadmap\?tab=extensions/)
+	expectNoAppErrors(bag)
+})

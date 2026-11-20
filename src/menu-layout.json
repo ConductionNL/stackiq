@@ -5,6 +5,9 @@
 	"relocations": {
 		"Komplianties": "ReportsCompliance",
 		"ComplianceMatrix": "ReportsCompliance",
+		"Standaarden": "Architecture",
+		"Views": "Architecture",
+		"Gegevensmodel": "Architecture",
 		"Architectuurbesluiten": "Architecture"
 	},
 	"removals": [],

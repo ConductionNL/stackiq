@@ -38,47 +38,45 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 						v-if="isNewObject && !hasSelectedSchema"
 						class="selectionContainer">
 						<div v-if="catalogOptions.length > 1" class="selectionStep">
-							<h3>Select Catalog</h3>
+							<h3>{{ t('stackiq', 'Select Catalog') }}</h3>
 							<p>
-								Choose the catalog where this publication will be
-								stored.
+								{{ t('stackiq', 'Choose the catalog where this publication will be stored.') }}
 							</p>
 							<NcSelect
 								v-model="selectedCatalog"
 								:options="catalogOptions"
-								inputLabel="Catalog"
-								placeholder="Select a catalog..."
+								:inputLabel="t('stackiq', 'Catalog')"
+								:placeholder="t('stackiq', 'Select a catalog…')"
 								:disabled="catalogStore.isLoading" />
 						</div>
 
 						<div
 							v-if="selectedCatalog && registerOptions.length > 1"
 							class="selectionStep">
-							<h3>Select Register</h3>
+							<h3>{{ t('stackiq', 'Select Register') }}</h3>
 							<p>
-								Choose the register that will store this publication.
+								{{ t('stackiq', 'Choose the register that will store this publication.') }}
 							</p>
 							<NcSelect
 								v-model="selectedRegister"
 								:options="registerOptions"
-								inputLabel="Register"
-								placeholder="Select a register..."
+								:inputLabel="t('stackiq', 'Register')"
+								:placeholder="t('stackiq', 'Select a register…')"
 								:disabled="catalogStore.isLoading" />
 						</div>
 
 						<div
 							v-if="selectedRegister && schemaOptions.length > 1"
 							class="selectionStep">
-							<h3>Select Schema</h3>
+							<h3>{{ t('stackiq', 'Select Schema') }}</h3>
 							<p>
-								Choose the schema that defines the structure of this
-								publication.
+								{{ t('stackiq', 'Choose the schema that defines the structure of this publication.') }}
 							</p>
 							<NcSelect
 								v-model="selectedSchema"
 								:options="schemaOptions"
-								inputLabel="Schema"
-								placeholder="Select a schema..."
+								:inputLabel="t('stackiq', 'Schema')"
+								:placeholder="t('stackiq', 'Select a schema…')"
 								:disabled="catalogStore.isLoading" />
 						</div>
 
@@ -89,7 +87,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 								<template #icon>
 									<ArrowRight :size="20" />
 								</template>
-								Continue to Properties
+								{{ t('stackiq', 'Continue to Properties') }}
 							</NcButton>
 						</div>
 					</div>
@@ -105,10 +103,10 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 							<thead>
 								<tr class="viewTableRow">
 									<th scope="col" class="tableColumnConstrained">
-										Property
+										{{ t('stackiq', 'Property') }}
 									</th>
 									<th scope="col" class="tableColumnExpanded">
-										Value
+										{{ t('stackiq', 'Value') }}
 									</th>
 									<th
 										scope="col"
@@ -118,16 +116,16 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 											v-if="hasConstantOrImmutableProperties"
 											v-tooltip="
 												showConstantProperties
-													? 'Hide constant & immutable properties'
-													: 'Show constant & immutable properties'
+													? t('stackiq', 'Hide constant & immutable properties')
+													: t('stackiq', 'Show constant & immutable properties')
 											"
 											variant="primary"
 											size="small"
 											class="action-btn eye-toggle-btn"
 											:aria-label="
 												showConstantProperties
-													? 'Hide constant & immutable properties'
-													: 'Show constant & immutable properties'
+													? t('stackiq', 'Hide constant & immutable properties')
+													: t('stackiq', 'Show constant & immutable properties')
 											"
 											@click="
 												showConstantProperties =
@@ -352,7 +350,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 													<NcSelect
 														v-model="themeFormData"
 														:options="themeOptions"
-														inputLabel="Themes"
+														:inputLabel="t('stackiq', 'Themes')"
 														multiple
 														:placeholder="
 															getPropertyDisplayName(
@@ -427,7 +425,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														" />
 													<InformationOutline
 														v-tooltip="
-															'Array values should be separated by commas'
+															t('stackiq', 'Array values should be separated by commas')
 														"
 														:size="25"
 														class="info-icon" />
@@ -476,7 +474,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 															&& formData[key] !== null
 														"
 														v-tooltip="
-															'JSON object (edited)'
+															t('stackiq', 'JSON object (edited)')
 														"
 														class="json-value"
 														>{{
@@ -490,7 +488,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 															&& formData[key]
 														"
 														v-tooltip="
-															`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`
+															t('stackiq', '{format}: {value} (edited)', { format: getDateTimePropertyFormat(key), value: formData[key] })
 														"
 														>{{
 															formatDateTimeValue(
@@ -506,7 +504,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 															)
 														"
 														v-tooltip="
-															`Date: ${new Date(formData[key]).toISOString()} (edited)`
+															t('stackiq', 'Date: {date} (edited)', { date: new Date(formData[key]).toISOString() })
 														"
 														>{{
 															new Date(
@@ -536,7 +534,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																=== 'object'
 															&& value !== null
 														"
-														v-tooltip="'JSON object'"
+														v-tooltip="t('stackiq', 'JSON object')"
 														class="json-value"
 														>{{
 															formatValue(value)
@@ -561,7 +559,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 															isValidDate(value)
 														"
 														v-tooltip="
-															`Date: ${new Date(value).toISOString()}`
+															t('stackiq', 'Date: {date}', { date: new Date(value).toISOString() })
 														"
 														>{{
 															new Date(
@@ -612,20 +610,20 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									class="tab-button"
 									:class="{ active: activeTab === 'properties' }"
 									@click="activeTab = 'properties'">
-									Properties
+									{{ t('stackiq', 'Properties') }}
 								</button>
 								<button
 									class="tab-button"
 									:class="{ active: activeTab === 'metadata' }"
 									@click="activeTab = 'metadata'">
-									Metadata
+									{{ t('stackiq', 'Metadata') }}
 								</button>
 								<button
 									class="tab-button"
 									:class="{ active: activeTab === 'files' }"
 									@click="activeTab = 'files'">
 									<div class="tab-title">
-										<span>Files</span>
+										<span>{{ t('stackiq', 'Files') }}</span>
 										<NcLoadingIcon
 											v-if="
 												currentObject
@@ -650,12 +648,12 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 												<th
 													scope="col"
 													class="tableColumnConstrained">
-													Property
+													{{ t('stackiq', 'Property') }}
 												</th>
 												<th
 													scope="col"
 													class="tableColumnExpanded">
-													Value
+													{{ t('stackiq', 'Value') }}
 												</th>
 												<th
 													scope="col"
@@ -667,16 +665,16 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														"
 														v-tooltip="
 															showConstantProperties
-																? 'Hide constant & immutable properties'
-																: 'Show constant & immutable properties'
+																? t('stackiq', 'Hide constant & immutable properties')
+																: t('stackiq', 'Show constant & immutable properties')
 														"
 														variant="primary"
 														size="small"
 														class="action-btn eye-toggle-btn"
 														:aria-label="
 															showConstantProperties
-																? 'Hide constant & immutable properties'
-																: 'Show constant & immutable properties'
+																? t('stackiq', 'Hide constant & immutable properties')
+																: t('stackiq', 'Show constant & immutable properties')
 														"
 														@click="
 															showConstantProperties =
@@ -968,7 +966,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	:options="
 																		themeOptions
 																	"
-																	inputLabel="Themes"
+																	:inputLabel="t('stackiq', 'Themes')"
 																	multiple
 																	:placeholder="
 																		getPropertyDisplayName(
@@ -1060,7 +1058,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	" />
 																<InformationOutline
 																	v-tooltip="
-																		'Array values should be separated by commas'
+																		t('stackiq', 'Array values should be separated by commas')
 																	"
 																	:size="25"
 																	class="info-icon" />
@@ -1138,7 +1136,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		] !== null
 																	"
 																	v-tooltip="
-																		'JSON object (edited)'
+																		t('stackiq', 'JSON object (edited)')
 																	"
 																	class="json-value"
 																	>{{
@@ -1158,7 +1156,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		]
 																	"
 																	v-tooltip="
-																		`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`
+																		t('stackiq', '{format}: {value} (edited)', { format: getDateTimePropertyFormat(key), value: formData[key] })
 																	"
 																	>{{
 																		formatDateTimeValue(
@@ -1178,7 +1176,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		)
 																	"
 																	v-tooltip="
-																		`Date: ${new Date(formData[key]).toISOString()} (edited)`
+																		t('stackiq', 'Date: {date} (edited)', { date: new Date(formData[key]).toISOString() })
 																	"
 																	>{{
 																		new Date(
@@ -1215,7 +1213,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																			!== null
 																	"
 																	v-tooltip="
-																		'JSON object'
+																		t('stackiq', 'JSON object')
 																	"
 																	class="json-value"
 																	>{{
@@ -1246,7 +1244,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		)
 																	"
 																	v-tooltip="
-																		`Date: ${new Date(value).toISOString()}`
+																		t('stackiq', 'Date: {date}', { date: new Date(value).toISOString() })
 																	"
 																	>{{
 																		new Date(
@@ -1316,12 +1314,12 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 												<th
 													scope="col"
 													class="tableColumnConstrained">
-													Metadata
+													{{ t('stackiq', 'Metadata') }}
 												</th>
 												<th
 													scope="col"
 													class="tableColumnExpanded">
-													Value
+													{{ t('stackiq', 'Value') }}
 												</th>
 											</tr>
 										</thead>
@@ -1352,13 +1350,11 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									class="files-info-card">
 									<p>
 										<strong
-											>Files can be added after the publication
-											is created.</strong
+											>{{ t('stackiq', 'Files can be added after the publication is created.') }}</strong
 										>
 									</p>
 									<p>
-										Save the publication first, then you'll be
-										able to upload and manage files.
+										{{ t('stackiq', 'Save the publication first, then you\'ll be able to upload and manage files.') }}
 									</p>
 								</NcNoteCard>
 
@@ -1369,8 +1365,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 											`publication_${currentObject.id}_files`,
 										)
 									"
-									title="Loading files..."
-									description="Loading files for this publication...">
+									:title="t('stackiq', 'Loading files…')"
+									:description="t('stackiq', 'Loading files for this publication…')">
 									<template #icon>
 										<NcLoadingIcon :size="64" />
 									</template>
@@ -1384,10 +1380,10 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 											"
 											:title="
 												selectedAttachments.length === 0
-													? 'Select one or more files to use mass actions'
-													: `Mass actions (${selectedAttachments.length} selected)`
+													? t('stackiq', 'Select one or more files to use mass actions')
+													: t('stackiq', 'Mass actions ({count} selected)', { count: selectedAttachments.length })
 											"
-											:menuName="`Mass Actions (${selectedAttachments.length})`">
+											:menuName="t('stackiq', 'Mass Actions ({count})', { count: selectedAttachments.length })">
 											<template #icon>
 												<FormatListChecks :size="20" />
 											</template>
@@ -1406,12 +1402,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														:size="20" />
 													<FileOutline v-else :size="20" />
 												</template>
-												Publish
-												{{ selectedAttachments.length }}
-												file{{
-													selectedAttachments.length > 1
-														? 's'
-														: ''
+												{{
+													n('stackiq', 'Publish {count} file', 'Publish {count} files', selectedAttachments.length, { count: selectedAttachments.length })
 												}}
 											</NcActionButton>
 											<NcActionButton
@@ -1430,12 +1422,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														:size="20" />
 													<LockOutline v-else :size="20" />
 												</template>
-												Depublish
-												{{ selectedAttachments.length }}
-												file{{
-													selectedAttachments.length > 1
-														? 's'
-														: ''
+												{{
+													n('stackiq', 'Depublish {count} file', 'Depublish {count} files', selectedAttachments.length, { count: selectedAttachments.length })
 												}}
 											</NcActionButton>
 											<NcActionButton
@@ -1453,12 +1441,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														:size="20" />
 													<Delete v-else :size="20" />
 												</template>
-												Delete
-												{{ selectedAttachments.length }}
-												file{{
-													selectedAttachments.length > 1
-														? 's'
-														: ''
+												{{
+													n('stackiq', 'Delete {count} file', 'Delete {count} files', selectedAttachments.length, { count: selectedAttachments.length })
 												}}
 											</NcActionButton>
 										</NcActions>
@@ -1477,7 +1461,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 															:indeterminate="
 																someFilesSelected
 															"
-															aria-label="Select all attachments"
+															:aria-label="t('stackiq', 'Select all attachments')"
 															@update:modelValue="
 																toggleSelectAllFiles
 															" />
@@ -1485,28 +1469,28 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 													<th
 														scope="col"
 														class="tableColumnExpanded table-row-title">
-														Name
+														{{ t('stackiq', 'Name') }}
 													</th>
 													<th
 														scope="col"
 														class="tableColumnConstrained short-column">
-														Size
+														{{ t('stackiq', 'Size') }}
 													</th>
 													<th
 														scope="col"
 														class="tableColumnConstrained table-row-type">
-														Type
+														{{ t('stackiq', 'Type') }}
 													</th>
 													<th
 														scope="col"
 														:class="`tableColumnConstrained ${editingTags ? 'table-row-labels' : 'short-column'}`">
-														Labels
+														{{ t('stackiq', 'Labels') }}
 													</th>
 													<th
 														scope="col"
 														class="table-row-actions">
 														<span class="hidden-visually"
-															>Actions</span
+															>{{ t('stackiq', 'Actions') }}</span
 														>
 													</th>
 												</tr>
@@ -1543,7 +1527,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	attachment.id,
 																)
 															"
-															:aria-label="`Select ${attachment.title || attachment.name || 'attachment'}`"
+															:aria-label="t('stackiq', 'Select {name}', { name: attachment.title || attachment.name || t('stackiq', 'attachment') })"
 															@update:modelValue="
 																(checked) =>
 																	toggleFileSelection(
@@ -1565,7 +1549,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		&& !attachment.downloadUrl
 																	"
 																	v-tooltip="
-																		'Not shared'
+																		t('stackiq', 'Not shared')
 																	"
 																	class="warningIcon"
 																	:size="20" />
@@ -1596,7 +1580,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 														class="tableColumnConstrained table-row-type">
 														{{
 															attachment?.type
-															|| 'No type'
+															|| t('stackiq', 'No type')
 														}}
 													</td>
 													<td
@@ -1618,7 +1602,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																			> 0
 																	"
 																	class="files-list__system-tags"
-																	aria-label="Assigned collaborative tags">
+																	:aria-label="t('stackiq', 'Assigned collaborative tags')">
 																	<li
 																		v-for="label of attachment.labels"
 																		:key="label"
@@ -1637,7 +1621,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																			.length
 																			=== 0
 																	">
-																	No labels
+																	{{ t('stackiq', 'No labels') }}
 																</span>
 															</span>
 															<div
@@ -1665,11 +1649,11 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	" />
 																<NcButton
 																	v-tooltip="
-																		'Save labels'
+																		t('stackiq', 'Save labels')
 																	"
 																	variant="primary"
 																	size="small"
-																	:aria-label="`save labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
+																	:aria-label="t('stackiq', 'save labels for {name}', { name: attachment.name ?? attachment?.title ?? t('stackiq', 'file') })"
 																	class="editTagsButton"
 																	@click="
 																		saveTags(
@@ -1686,9 +1670,9 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																</NcButton>
 																<NcButton
 																	v-tooltip="
-																		'Cancel'
+																		t('stackiq', 'Cancel')
 																	"
-																	:aria-label="`cancel editing labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
+																	:aria-label="t('stackiq', 'cancel editing labels for {name}', { name: attachment.name ?? attachment?.title ?? t('stackiq', 'file') })"
 																	variant="secondary"
 																	size="small"
 																	@click="
@@ -1710,7 +1694,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																editingTags
 																!== attachment.id
 															"
-															:aria-label="`Actions for ${attachment.name ?? attachment?.title ?? 'file'}`">
+															:aria-label="t('stackiq', 'Actions for {name}', { name: attachment.name ?? attachment?.title ?? t('stackiq', 'file') })">
 															<NcActionButton
 																@click="
 																	openFile(
@@ -1721,7 +1705,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	<OpenInNew
 																		:size="20" />
 																</template>
-																View
+																{{ t('stackiq', 'View') }}
 															</NcActionButton>
 															<NcActionButton
 																:disabled="
@@ -1739,7 +1723,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																	<Tag
 																		:size="20" />
 																</template>
-																Edit Labels
+																{{ t('stackiq', 'Edit Labels') }}
 															</NcActionButton>
 															<NcActionButton
 																v-if="
@@ -1768,7 +1752,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		v-else
 																		:size="20" />
 																</template>
-																Publish
+																{{ t('stackiq', 'Publish') }}
 															</NcActionButton>
 															<NcActionButton
 																v-else
@@ -1794,7 +1778,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		v-else
 																		:size="20" />
 																</template>
-																Depublish
+																{{ t('stackiq', 'Depublish') }}
 															</NcActionButton>
 															<NcActionButton
 																:disabled="
@@ -1819,7 +1803,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 																		v-else
 																		:size="20" />
 																</template>
-																Delete
+																{{ t('stackiq', 'Delete') }}
 															</NcActionButton>
 														</NcActions>
 													</td>
@@ -1830,8 +1814,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 								</template>
 								<NcEmptyContent
 									v-else-if="!isNewObject"
-									name="No files attached"
-									description="No files have been attached to this object">
+									:name="t('stackiq', 'No files attached')"
+									:description="t('stackiq', 'No files have been attached to this object')">
 									<template #icon>
 										<FileOutline :size="64" />
 									</template>
@@ -1863,13 +1847,13 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<template #icon>
 						<Cancel :size="20" />
 					</template>
-					Close
+					{{ t('stackiq', 'Close') }}
 				</NcButton>
 				<NcButton v-if="!isNewObject" @click="uploadFiles">
 					<template #icon>
 						<Upload :size="20" />
 					</template>
-					Add File
+					{{ t('stackiq', 'Add File') }}
 				</NcButton>
 				<NcButton
 					v-if="shouldShowPublishAction(currentObject)"
@@ -1877,7 +1861,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<template #icon>
 						<Publish :size="20" />
 					</template>
-					Publish
+					{{ t('stackiq', 'Publish') }}
 				</NcButton>
 				<NcButton
 					v-if="shouldShowDepublishAction(currentObject)"
@@ -1885,7 +1869,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<template #icon>
 						<PublishOff :size="20" />
 					</template>
-					Depublish
+					{{ t('stackiq', 'Depublish') }}
 				</NcButton>
 				<NcButton
 					v-if="!isNewObject"
@@ -1894,7 +1878,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<template #icon>
 						<Delete :size="20" />
 					</template>
-					Delete
+					{{ t('stackiq', 'Delete') }}
 				</NcButton>
 				<NcButton variant="primary" :disabled="isSaving" @click="saveObject">
 					<template #icon>
@@ -1904,11 +1888,11 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					{{
 						isSaving
 							? isNewObject
-								? 'Creating...'
-								: 'Saving...'
+								? t('stackiq', 'Creating…')
+								: t('stackiq', 'Saving…')
 							: isNewObject
-								? 'Create'
-								: 'Save'
+								? t('stackiq', 'Create')
+								: t('stackiq', 'Save')
 					}}
 				</NcButton>
 			</template>
@@ -1918,6 +1902,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 <script>
 import { getRequestToken } from '@nextcloud/auth'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcActionButton,
 	NcActions,
@@ -1988,6 +1973,12 @@ import {
 	themeIds,
 	updateEndpoint,
 } from './objectFormData.js'
+import {
+	editorContent,
+	isUsableTitle,
+	sharedSchemaIds,
+	titleOption,
+} from './objectFormOptions.js'
 import {
 	lockDescription,
 	objectDisplayName,
@@ -2124,7 +2115,7 @@ export default {
 			editingTags: null,
 			editedTags: [],
 			labelOptionsEdit: {
-				inputLabel: 'Labels',
+				inputLabel: t('stackiq', 'Labels'),
 				multiple: true,
 				options: [],
 			},
@@ -2219,11 +2210,11 @@ export default {
 			const registers = objectStore.availableRegisters
 			const schemas = objectStore.availableSchemas
 			return [
-				['ID', obj.id || 'Not set'],
-				['Version', self?.version || 'Not set'],
-				['Register', referenceTitle(self?.register, registers)],
-				['Schema', referenceTitle(self?.schema, schemas)],
-				['Locked', lockDescription(self?.locked)],
+				[t('stackiq', 'ID'), obj.id || t('stackiq', 'Not set')],
+				[t('stackiq', 'Version'), self?.version || t('stackiq', 'Not set')],
+				[t('stackiq', 'Register'), referenceTitle(self?.register, registers)],
+				[t('stackiq', 'Schema'), referenceTitle(self?.schema, schemas)],
+				[t('stackiq', 'Locked'), lockDescription(self?.locked)],
 				...timestampRows(self),
 			]
 		},
@@ -2312,15 +2303,9 @@ export default {
 			}
 
 			const selectedCatalogRegisterIds = fullCatalog.registers || []
-
 			return objectStore.availableRegisters
-				.filter((register) =>
-					selectedCatalogRegisterIds.includes(register.id),
-				)
-				.map((register) => ({
-					id: register.id,
-					label: register.title,
-				}))
+				.filter((register) => selectedCatalogRegisterIds.includes(register.id))
+				.map((register) => titleOption(register))
 		},
 
 		/**
@@ -2337,26 +2322,10 @@ export default {
 			const catalog = objectStore
 				.getCollection('catalog')
 				.results.find((catalog) => catalog.id === this.selectedCatalog.id)
-
 			if (!register || !catalog) {
 				return []
 			}
-
-			const registerSchemaIds =
-				register.schemas?.map((schema) => schema.id) || []
-			const catalogSchemaIds = catalog.schemas || []
-
-			// only get schema ids where the id is in both registerSchemaIds and catalogSchemaIds
-			const validSchemaIds = registerSchemaIds.filter((id) =>
-				catalogSchemaIds.includes(id),
-			)
-
-			return objectStore.availableSchemas
-				.filter((schema) => validSchemaIds.includes(schema.id))
-				.map((schema) => ({
-					id: schema.id,
-					label: schema.title,
-				}))
+			return this.schemaOptionsOf(sharedSchemaIds(register, catalog))
 		},
 
 		hasSelectedSchema() {
@@ -2559,15 +2528,28 @@ export default {
 
 	methods: {
 		/**
+		 * The available schemas with the given ids, as select options.
+		 *
+		 * @param {Array<string>} schemaIds The schema ids.
+		 * @return {Array<{id: string, label: string}>} The options.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		schemaOptionsOf(schemaIds) {
+			return objectStore.availableSchemas
+				.filter((schema) => schemaIds.includes(schema.id))
+				.map((schema) => titleOption(schema))
+		},
+
+		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getModalTitle() {
 			// For new objects, show "Create Publication"
 			if (this.isNewObject) {
-				return 'Create Publication'
+				return t('stackiq', 'Create Publication')
 			}
 
-			if (!this.currentObject) return 'View Object'
+			if (!this.currentObject) return t('stackiq', 'View Object')
 
 			const name = objectDisplayName(this.currentObject)
 			const schemaName = objectSchemaName(this.currentObject)
@@ -2704,7 +2686,7 @@ export default {
 				await this.submitObject()
 			} catch (e) {
 				console.error('Save error:', e)
-				this.error = e.message || 'Failed to save object'
+				this.error = e.message || t('stackiq', 'Failed to save object')
 				this.success = false
 			} finally {
 				this.isSaving = false
@@ -2724,7 +2706,7 @@ export default {
 			// For new objects, validate we have the required selections
 			if (isCreating && this.missingSelection()) {
 				this.error =
-					'Please select catalog, register, and schema before saving'
+					t('stackiq', 'Please select catalog, register, and schema before saving')
 				return
 			}
 
@@ -2786,7 +2768,9 @@ export default {
 
 			// Clear form data since we now have the saved object
 			this.formData = {}
-			this.success = `Publication ${isCreating ? 'created' : 'updated'} successfully`
+			this.success = isCreating
+				? t('stackiq', 'Publication created successfully')
+				: t('stackiq', 'Publication updated successfully')
 
 			// Refresh the publications list
 			catalogStore.fetchPublications()
@@ -2820,7 +2804,7 @@ export default {
 				const parsed = JSON.parse(this.jsonData)
 				this.formData = parsed
 			} catch (e) {
-				this.error = 'Invalid JSON format'
+				this.error = t('stackiq', 'Invalid JSON format')
 			}
 		},
 
@@ -2973,11 +2957,11 @@ export default {
 		},
 
 		getPropertyWarningMessage(key, value) {
-			return `Property '${key}' exists in the object but is not defined in the current schema. This might happen when property names are changed in the schema.`
+			return t('stackiq', 'Property \'{key}\' exists in the object but is not defined in the current schema. This might happen when property names are changed in the schema.', { key })
 		},
 
 		getPropertyNewMessage(key) {
-			return `Property '${key}' is defined in the schema but doesn't have a value yet. Click to add a value.`
+			return t('stackiq', 'Property \'{key}\' is defined in the schema but doesn\'t have a value yet. Click to add a value.', { key })
 		},
 
 		/**
@@ -3160,7 +3144,7 @@ export default {
 			// Ensure we always have a valid key
 			if (!key || typeof key !== 'string') {
 				console.warn('Invalid key passed to getPropertyDisplayName:', key)
-				return 'Unknown Property'
+				return t('stackiq', 'Unknown Property')
 			}
 
 			const schemaProperties = this.getSchemaProperties()
@@ -3168,16 +3152,7 @@ export default {
 
 			// Return the title if it exists and is not empty or just "new" (placeholder)
 			const title = schemaProperty?.title
-			if (
-				title
-				&& typeof title === 'string'
-				&& title.trim() !== ''
-				&& title.trim().toLowerCase() !== 'new'
-			) {
-				return title
-			}
-
-			return key
+			return isUsableTitle(title) ? title : key
 		},
 
 		/**
@@ -3198,7 +3173,7 @@ export default {
 			}
 
 			// Fallback to property key info
-			return `Property: ${key}`
+			return t('stackiq', 'Property: {key}', { key })
 		},
 
 		/**
@@ -3391,26 +3366,9 @@ export default {
 		 */
 		updateMarkdownValue(key, editorInstance) {
 			// Get the current content from the editor as MARKDOWN
-			let content = ''
-
+			let content
 			try {
-				// Always prefer markdown output over HTML
-				if (
-					editorInstance
-					&& typeof editorInstance.getMarkdown === 'function'
-				) {
-					content = editorInstance.getMarkdown()
-				} else if (
-					editorInstance
-					&& typeof editorInstance.getHTML === 'function'
-				) {
-					// Fallback to HTML if markdown not available
-					content = editorInstance.getHTML()
-				} else {
-					// Fallback: if it's a string, use it directly
-					content =
-						typeof editorInstance === 'string' ? editorInstance : ''
-				}
+				content = editorContent(editorInstance)
 			} catch (error) {
 				console.warn('Error getting content from markdown editor:', error)
 				content = ''
@@ -3639,7 +3597,7 @@ export default {
 			try {
 				await this.runPublicationAction(this.publishAction())
 				this.closePublishModal()
-				this.reportPublicationSuccess('Object published successfully')
+				this.reportPublicationSuccess(t('stackiq', 'Object published successfully'))
 			} catch (error) {
 				this.reportPublicationFailure('publish', error)
 			} finally {
@@ -3655,7 +3613,7 @@ export default {
 			try {
 				await this.runPublicationAction(this.depublishAction())
 				this.closeDepublishModal()
-				this.reportPublicationSuccess('Object depublished successfully')
+				this.reportPublicationSuccess(t('stackiq', 'Object depublished successfully'))
 			} catch (error) {
 				this.reportPublicationFailure('depublish', error)
 			} finally {
@@ -3704,7 +3662,9 @@ export default {
 		 */
 		async runPublicationAction(action) {
 			if (!this.currentObject) {
-				throw new Error(`No object to ${action.verb}`)
+				throw new Error(action.verb === 'publish'
+					? t('stackiq', 'No object to publish')
+					: t('stackiq', 'No object to depublish'))
 			}
 			const endpoint = publicationEndpoint(this.currentObjectUrl(), action)
 			const init = publicationInit(this.currentObject, action)
@@ -3756,7 +3716,9 @@ export default {
 		 */
 		reportPublicationFailure(verb, error) {
 			console.error(`Failed to ${verb} object:`, error)
-			this.error = `Failed to ${verb} object: ` + error.message
+			this.error = verb === 'publish'
+				? t('stackiq', 'Failed to publish object: {error}', { error: error.message })
+				: t('stackiq', 'Failed to depublish object: {error}', { error: error.message })
 			setTimeout(() => {
 				this.error = null
 			}, 5000)
@@ -3785,7 +3747,7 @@ export default {
 		 */
 		formatFileSize(bytes) {
 			const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-			if (bytes === 0) return 'n/a'
+			if (bytes === 0) return t('stackiq', 'n/a')
 			const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
 			if (i === 0 && sizes[i] === 'Bytes') return '< 1 KB'
 			if (i === 0) return bytes + ' ' + sizes[i]
@@ -4081,7 +4043,7 @@ export default {
 
 				if (!response.ok) {
 					throw new Error(
-						`Failed to update file tags: ${response.statusText}`,
+						t('stackiq', 'Failed to update file tags: {statusText}', { statusText: response.statusText }),
 					)
 				}
 
@@ -4092,13 +4054,13 @@ export default {
 				this.editedTags = []
 
 				// Show success message
-				this.success = 'File labels updated successfully'
+				this.success = t('stackiq', 'File labels updated successfully')
 				setTimeout(() => {
 					this.success = null
 				}, 3000)
 			} catch (error) {
 				console.error('Error saving tags:', error)
-				this.error = 'Failed to save file labels: ' + error.message
+				this.error = t('stackiq', 'Failed to save file labels: {error}', { error: error.message })
 				setTimeout(() => {
 					this.error = null
 				}, 5000)
@@ -4378,9 +4340,9 @@ export default {
 			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
 
 			if (isSchemaProperty) {
-				return `Reset '${this.getPropertyDisplayName(key)}' to empty value`
+				return t('stackiq', 'Reset \'{name}\' to empty value', { name: this.getPropertyDisplayName(key) })
 			} else {
-				return `Remove '${this.getPropertyDisplayName(key)}' property completely`
+				return t('stackiq', 'Remove \'{name}\' property completely', { name: this.getPropertyDisplayName(key) })
 			}
 		},
 

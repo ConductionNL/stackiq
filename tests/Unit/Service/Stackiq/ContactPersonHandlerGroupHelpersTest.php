@@ -37,6 +37,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * addUserToGroup(), getOrganizationGroup(), getAllowedRoleGroups() and
@@ -255,7 +256,13 @@ class ContactPersonHandlerGroupHelpersTest extends TestCase {
 		$this->registers->method('getSchemaIdForObjectType')->with('organization')->willReturn(5);
 		$organisation = $this->createMock(ObjectEntity::class);
 		$organisation->method('getObject')->willReturn(['group' => 'gemeente-voorbeeld']);
-		$this->objects->expects($this->once())->method('find')->with('org-1', [], false, 4, 5)->willReturn($organisation);
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'org-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 4,
+				'schema' => 5,
+			]))->willReturn($organisation);
 		$this->groups->expects($this->once())->method('get')->with('gemeente-voorbeeld')->willReturn($group);
 
 		$this->assertSame($group, $this->call('getOrganizationGroup', ['org-1']));
