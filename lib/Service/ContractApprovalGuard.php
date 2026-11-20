@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ namespace OCA\Stackiq\Service;
  * that is already Active keeps that status on later edits (existing Active
  * contracts were grandfathered by BackfillContractApprovalState).
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalGuard {
 	/**
@@ -40,7 +40,7 @@ class ContractApprovalGuard {
 	 *
 	 * @return bool True when the write makes the contract Active without an approved decision.
 	 *
-	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
 	public function refuses(array $data, ?array $oldData): bool {
 		if (self::isActive(contract: $data) === false) {

@@ -46,7 +46,7 @@ interface ContactPersonEmailInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.ShortMethodName) The name of ContactPersonEmail::of(), which callers already use.
 	 *
-	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 * @spec openspec/specs/contactpersoon-sync/spec.md
 	 */
 	public function of(array $contactData): string;
 }//end interface

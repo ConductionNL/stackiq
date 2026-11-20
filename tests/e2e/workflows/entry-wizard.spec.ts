@@ -10,7 +10,7 @@
  * connection, and removes those rows and everything the wizard created with
  * the same RUN_ID afterwards.
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/tasks.md
+ * @spec openspec/changes/archive/2026-11-20-capability-requirements-from-the-matrix/tasks.md
  */
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

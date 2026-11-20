@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalListener implements IEventListener {
 	/**
@@ -62,7 +62,7 @@ class ContractApprovalListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md
+	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatingEvent) {
