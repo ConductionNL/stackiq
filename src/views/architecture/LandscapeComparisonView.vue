@@ -11,6 +11,8 @@
   - the scenario on its target date and, for an adopted scenario that was not
   - applied, offers Apply to landscape.
   -
+  - @visual exclude A screenshot baseline needs a live instance with dated usages; tests/e2e/workflows/future-state-scenarios.spec.ts drives the page and is not run yet.
+  -
   - @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 -->
 <template>
