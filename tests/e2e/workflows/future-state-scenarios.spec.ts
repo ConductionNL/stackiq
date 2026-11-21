@@ -11,6 +11,9 @@
  * by tests/Unit/Service/LandscapeAtDateDerivationTest.php and the apply by
  * tests/vitest/scenarioApply.spec.js.
  *
+ * The tests drive LandscapeComparisonView (src/views/architecture/) on the
+ * LandscapeComparison page and as the body widget of ScenarioDetail.
+ *
  * Written from the change's scenarios; not yet run against a live instance.
  *
  * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
