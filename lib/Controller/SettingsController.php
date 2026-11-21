@@ -24,6 +24,7 @@
 
 namespace OCA\Stackiq\Controller;
 
+use OCA\Stackiq\Service\ArchiMateRoundTripService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Exception\CmdbImportException;
@@ -1634,6 +1635,61 @@ class SettingsController extends Controller {
 			return new JSONResponse(['success' => false, 'message' => 'Import failed: ' . $e->getMessage(), 'error' => $e->getMessage()], $statusCode);
 		}//end try
 	}//end importArchiMate()
+
+	/**
+	 * Check what an uploaded exchange file loses on its way through stackiq.
+	 *
+	 * Admins only, refused before the service runs. Accepts only a multipart
+	 * upload: a `file_path` parameter is refused with 400. The mode is
+	 * `before-import` (the default) or `against-imported`. Nothing is written.
+	 *
+	 * @return JSONResponse The report, or the refusal.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only, and adminRefusal() checks again.
+	 */
+	public function checkArchiMateRoundTrip(): JSONResponse {
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		if ($this->request->getParam('file_path') !== null) {
+			return new JSONResponse(
+				[
+					'success' => false,
+					'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
+					'error' => 'FILE_PATH_NOT_ALLOWED',
+				],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$mode = (string) $this->request->getParam('mode', ArchiMateRoundTripService::MODE_BEFORE_IMPORT);
+		if (in_array(needle: $mode, haystack: ArchiMateRoundTripService::MODES, strict: true) === false) {
+			return new JSONResponse(['success' => false, 'message' => 'Unknown mode', 'error' => 'UNKNOWN_MODE'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$options = $this->parseArchiMateFileUpload();
+		if ($options === null) {
+			return new JSONResponse(
+				['success' => false, 'message' => 'No ArchiMate file uploaded', 'error' => 'NO_FILE_UPLOADED'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$report = $this->archiMateService->checkRoundTrip(filePath: $options['filePath'], mode: $mode);
+			return new JSONResponse(['success' => true] + $report);
+		} catch (\Exception $e) {
+			$this->logger->error('ArchiMate round-trip check failed', ['error' => $e->getMessage()]);
+			return new JSONResponse(
+				['success' => false, 'message' => 'Check failed: ' . $e->getMessage()],
+				$this->getHttpStatusForException(e: $e)
+			);
+		}
+	}//end checkArchiMateRoundTrip()
 
 	/**
 	 * Parse the uploaded ArchiMate file from the multipart request.

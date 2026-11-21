@@ -1251,6 +1251,43 @@
                 }
             }
         },
+        "/archimate/round-trip-check": {
+            "post": {
+                "operationId": "settings-check-archi-mate-round-trip",
+                "summary": "Check what an uploaded exchange file loses on its way through stackiq",
+                "description": "Check what an uploaded exchange file loses on its way through stackiq. Admins only, refused before the service runs. Accepts only a multipart upload (field `archiMateFile`): a `file_path` parameter is refused with 400. The `mode` is `before-import` (the default: the file is converted and generated back) or `against-imported` (the stored objects of the file's model are generated back). Nothing is written.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The report: mode, modelIdentifier, imported, and when imported lossless and a row per category with the counts and up to 50 examples.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/archimate/status": {
             "get": {
                 "operationId": "settings-get-archi-mate-config-get-archimate-status",
