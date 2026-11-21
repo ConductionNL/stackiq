@@ -41,8 +41,9 @@
   - GIVEN a body with `file_path` WHEN it is posted THEN the answer is 400
   - GIVEN the route table WHEN it is read THEN `settings#testArchiMateRoundTrip` is gone and `settings#checkArchiMateRoundTrip` exists
   - GIVEN the source WHEN it is searched THEN `testRoundTrip`, `createTestArchiMateXml` and `createTempFile` are gone
-- [ ] Implement
-- [ ] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
+- [x] Implement
+- [x] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
+- Built 21 Nov: `POST /api/archimate/round-trip-check` (`settings#checkArchiMateRoundTrip`): admin refusal first, 400 on `file_path`, on an unknown mode and on no upload; `ArchiMateService::checkRoundTrip()` reads the AMEF register's stored objects for the against-imported mode (`ArchiMateServiceRoundTripTest`). The old round trip, its route and the store action were already gone (`SettingsRouteTableTest::testTheOldArchiMateRoundTripIsNotRoutedOrCallable`), so `SettingsControllerEmailArchiMateContractTest` needed no change.
 
 ### Task 5: Report on the admin settings page
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
@@ -62,7 +63,7 @@
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
 
-Built: Tasks 1 to 3. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 4 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
+Built: Tasks 1 to 4. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 5 and 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
 
 ## Verification
 

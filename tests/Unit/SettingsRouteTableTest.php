@@ -175,4 +175,16 @@ class SettingsRouteTableTest extends TestCase {
 		$store = (string)file_get_contents(__DIR__ . '/../../src/store/modules/settings.js');
 		$this->assertStringNotContainsString('test-round-trip', $store);
 	}
+
+	/**
+	 * The round-trip check is routed as an upload POST to the admin controller method.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 */
+	public function testTheRoundTripCheckIsRouted(): void {
+		$found = $this->match($this->routes(), 'settings#checkArchiMateRoundTrip', '/api/archimate/round-trip-check', 'POST');
+
+		$this->assertCount(1, $found);
+		$this->assertTrue(method_exists(\OCA\Stackiq\Controller\SettingsController::class, 'checkArchiMateRoundTrip'));
+	}
 }

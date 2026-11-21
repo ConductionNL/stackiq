@@ -109,6 +109,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
+        // @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+        ['name' => 'settings#checkArchiMateRoundTrip', 'url' => '/api/archimate/round-trip-check', 'verb' => 'POST'],
         ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
         // Whether the caller may export that organisation: the detail page's action asks before it shows (insight-exports-and-custom-reports).
         ['name' => 'settings#orgExportAccess', 'url' => '/api/archimate/export/organization/{organizationUuid}/access', 'verb' => 'GET'],
