@@ -2431,6 +2431,26 @@
         "No SaaS subscriptions": "No SaaS subscriptions",
         "Buying department": "Buying department",
         "The department that bought this application, when it is not IT.": "The department that bought this application, when it is not IT.",
-        "Whether the department bought this application without IT being involved.": "Whether the department bought this application without IT being involved."
+        "Whether the department bought this application without IT being involved.": "Whether the department bought this application without IT being involved.",
+        "Relationships": "Relationships",
+        "View nodes": "View nodes",
+        "Property definitions": "Property definitions",
+        "Organization folders": "Organization folders",
+        "This model is not imported.": "This model is not imported.",
+        "No losses found": "No losses found",
+        "Losses in: {categories}": "Losses in: {categories}",
+        "The check failed": "The check failed",
+        "Check a model file": "Check a model file",
+        "See what an exchange file loses on its way through the import and the export.": "See what an exchange file loses on its way through the import and the export.",
+        "Model file to check": "Model file to check",
+        "Check mode": "Check mode",
+        "Before import (nothing is written)": "Before import (nothing is written)",
+        "Against the imported model": "Against the imported model",
+        "Checking…": "Checking…",
+        "Check": "Check",
+        "In the file": "In the file",
+        "After the round trip": "After the round trip",
+        "Extra": "Extra",
+        "Examples: {category}": "Examples: {category}"
     }
 }

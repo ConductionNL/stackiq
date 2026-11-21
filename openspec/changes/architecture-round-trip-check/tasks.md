@@ -51,8 +51,9 @@
 - **acceptance_criteria**:
   - GIVEN the admin settings page WHEN the ArchiMate section renders THEN Check a model file offers a file picker, the two modes and a Check button
   - GIVEN a result WHEN it renders THEN a row per category shows the counts, examples expand per category, and the summary names the categories with losses or reads "No losses found"
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `archimate-round-trip-check.spec.ts`)
+- Built 21 Nov: `ArchiMateRoundTripCheck.vue` under the ArchiMate import and export (file picker, the two modes, Check, the table per category, examples per category with losses, the summary) over `src/utils/archiMateRoundTrip.js` (the upload request, rows and summary). Tests: `tests/vitest/archiMateRoundTrip.spec.js` and `tests/vitest/archiMateRoundTripCheck.spec.js`. The request lives in the util, not in `src/store/modules/settings.js`, because the section is its only reader. The Playwright spec `tests/e2e/workflows/archimate-round-trip-check.spec.ts` is written and not yet run against a live instance. English and Dutch strings are in `l10n/en.json` and `l10n/nl.json`.
 
 ### Task 6: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
