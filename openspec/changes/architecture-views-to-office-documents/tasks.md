@@ -53,7 +53,8 @@
   - GIVEN a Dutch instance WHEN the Export menu opens THEN every label and the filinq notice read in Dutch
 - [ ] Implement
   - Done (2026-11-15): the menu's English and Dutch strings in `l10n/en.json`, `l10n/nl.json` and their `.js`.
-  - Left: the Export section of `docs/features/architecture-views.md`, which the `architecture-views-editor` branch creates (writing it here would conflict), with its screenshot.
+  - Done (2026-11-21): the "Exporting a view" section of `docs/features/architecture-views.md`: the three actions, what filinq adds and the notice without it.
+  - Left: the screenshot of the menu and a downloaded SVG, which needs a live instance. That is why Implement stays open.
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
 ## Verification
