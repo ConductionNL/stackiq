@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/bound-unbounded-searchobjects-scans/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
+ * @spec openspec/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
  */
 
 declare(strict_types=1);
