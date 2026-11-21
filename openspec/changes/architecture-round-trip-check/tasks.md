@@ -18,8 +18,9 @@
 - **acceptance_criteria**:
   - GIVEN the fixture `lib/Settings/GEMMA_testdata_below_1_5mb.xml` WHEN it is converted by the optimised import with the save mocked and by `convertFileToObjects` THEN the object lists are equal
   - GIVEN `exportArchiMateXml` WHEN it runs THEN it calls `generateXmlFromObjects`, and the existing decomposition tests stay green
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
+- Built 21 Nov: `ArchiMateImportService::convertFileToObjects()` (parse, model identifier, transform, with the import's parsing and analyzing phases and both cancel checks; returns null when cancelled) is what `importArchiMateFileFromPathOptimized()` now calls, so its timings, phases and the recorded import goldens are unchanged. `ArchiMateExportService::generateXmlFromObjects()` (the former private `generateXmlDirectly()`) is what `exportArchiMateXml()` calls. `ArchiMateImportServiceConvertTest` uses `tests/data/archimate_golden.xml`: the 1.5 MB GEMMA fixture takes minutes through the mocked import, too slow for the unit suite.
 
 ### Task 3: Round-trip service with two modes
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
@@ -28,8 +29,9 @@
   - GIVEN the before-import mode WHEN it runs on the fixture THEN no save method is called and every category is reported
   - GIVEN the against-imported mode and stored objects of the model WHEN it runs THEN it compares only objects with that model identifier
   - GIVEN no stored object with the model identifier WHEN the against-imported mode runs THEN it answers that the model is not imported
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
+- Built 21 Nov: `ArchiMateRoundTripService::checkBeforeImport()` and `checkAgainstImported($filePath, $storedObjects)`; the caller (task 4) hands it the AMEF register's stored objects, and only those whose `model_identifier` is the file's take part.
 
 ### Task 4: Admin route and removal of the old round trip
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
@@ -60,7 +62,7 @@
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
 
-Built: Task 1. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 2 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
+Built: Tasks 1 to 3. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 4 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
 
 ## Verification
 
