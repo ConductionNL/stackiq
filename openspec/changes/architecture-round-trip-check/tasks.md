@@ -63,6 +63,7 @@
   - GIVEN a Dutch instance WHEN the check renders THEN every label and summary reads in Dutch
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
+- Progress 21 Nov: `docs/features/archimate-import-export.md` explains both modes, the report columns, the comparison rules and the API, and the features index links it. The labels and the summary are in English and Dutch (`l10n/en.json`, `l10n/nl.json`, PR for task 5), and `npm run test:l10n` passes. Left: the screenshot of a report, which needs a live instance. That is why Implement stays open.
 
 Built: Tasks 1 to 4. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 5 and 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
 
