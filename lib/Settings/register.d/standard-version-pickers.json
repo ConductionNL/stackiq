@@ -1,0 +1,26 @@
+{
+  "$comment": "capability-rows-the-code-does-not-yet-meet tasks 9 and 18 (REQ-CLR-012): the standard version pickers on the connection form and the compliance form list the GEMMA standard versions from the vng-gemma register, which holds the GEMMA elements, instead of searching this register, where no element lives. The gemmaType=standaardversie filter in objectConfiguration stays.",
+  "components": {
+    "schemas": {
+      "connection": {
+        "version": "0.3.8",
+        "properties": {
+          "standardVersions": {
+            "items": {
+              "x-external-register": "vng-gemma",
+              "x-label-field": "name"
+            }
+          }
+        }
+      },
+      "compliancy": {
+        "properties": {
+          "standardVersion": {
+            "x-external-register": "vng-gemma",
+            "x-label-field": "name"
+          }
+        }
+      }
+    }
+  }
+}

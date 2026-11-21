@@ -1,0 +1,435 @@
+{
+	"client": {
+		"numbers | uuid undefined | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid undefined | action undefined | lang true": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid undefined | action undefined | lang false": "/index.php/apps/openregister/api/objects/7/21",
+		"numbers | uuid undefined | action  | lang undefined": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid undefined | action  | lang true": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid undefined | action  | lang false": "/index.php/apps/openregister/api/objects/7/21",
+		"numbers | uuid undefined | action logs | lang undefined": "/index.php/apps/openregister/api/objects/7/21/audit-trails?_lang=nl",
+		"numbers | uuid undefined | action logs | lang true": "/index.php/apps/openregister/api/objects/7/21/audit-trails?_lang=nl",
+		"numbers | uuid undefined | action logs | lang false": "/index.php/apps/openregister/api/objects/7/21/audit-trails",
+		"numbers | uuid undefined | action lock | lang undefined": "/index.php/apps/openregister/api/objects/7/21/lock?_lang=nl",
+		"numbers | uuid undefined | action lock | lang true": "/index.php/apps/openregister/api/objects/7/21/lock?_lang=nl",
+		"numbers | uuid undefined | action lock | lang false": "/index.php/apps/openregister/api/objects/7/21/lock",
+		"numbers | uuid  | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid  | action undefined | lang true": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid  | action undefined | lang false": "/index.php/apps/openregister/api/objects/7/21",
+		"numbers | uuid  | action  | lang undefined": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid  | action  | lang true": "/index.php/apps/openregister/api/objects/7/21?_lang=nl",
+		"numbers | uuid  | action  | lang false": "/index.php/apps/openregister/api/objects/7/21",
+		"numbers | uuid  | action logs | lang undefined": "/index.php/apps/openregister/api/objects/7/21/audit-trails?_lang=nl",
+		"numbers | uuid  | action logs | lang true": "/index.php/apps/openregister/api/objects/7/21/audit-trails?_lang=nl",
+		"numbers | uuid  | action logs | lang false": "/index.php/apps/openregister/api/objects/7/21/audit-trails",
+		"numbers | uuid  | action lock | lang undefined": "/index.php/apps/openregister/api/objects/7/21/lock?_lang=nl",
+		"numbers | uuid  | action lock | lang true": "/index.php/apps/openregister/api/objects/7/21/lock?_lang=nl",
+		"numbers | uuid  | action lock | lang false": "/index.php/apps/openregister/api/objects/7/21/lock",
+		"numbers | uuid abc | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/7/21/abc?_lang=nl",
+		"numbers | uuid abc | action undefined | lang true": "/index.php/apps/openregister/api/objects/7/21/abc?_lang=nl",
+		"numbers | uuid abc | action undefined | lang false": "/index.php/apps/openregister/api/objects/7/21/abc",
+		"numbers | uuid abc | action  | lang undefined": "/index.php/apps/openregister/api/objects/7/21/abc?_lang=nl",
+		"numbers | uuid abc | action  | lang true": "/index.php/apps/openregister/api/objects/7/21/abc?_lang=nl",
+		"numbers | uuid abc | action  | lang false": "/index.php/apps/openregister/api/objects/7/21/abc",
+		"numbers | uuid abc | action logs | lang undefined": "/index.php/apps/openregister/api/objects/7/21/abc/audit-trails?_lang=nl",
+		"numbers | uuid abc | action logs | lang true": "/index.php/apps/openregister/api/objects/7/21/abc/audit-trails?_lang=nl",
+		"numbers | uuid abc | action logs | lang false": "/index.php/apps/openregister/api/objects/7/21/abc/audit-trails",
+		"numbers | uuid abc | action lock | lang undefined": "/index.php/apps/openregister/api/objects/7/21/abc/lock?_lang=nl",
+		"numbers | uuid abc | action lock | lang true": "/index.php/apps/openregister/api/objects/7/21/abc/lock?_lang=nl",
+		"numbers | uuid abc | action lock | lang false": "/index.php/apps/openregister/api/objects/7/21/abc/lock",
+		"zero ids | uuid undefined | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid undefined | action undefined | lang true": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid undefined | action undefined | lang false": "/index.php/apps/openregister/api/objects/0/0",
+		"zero ids | uuid undefined | action  | lang undefined": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid undefined | action  | lang true": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid undefined | action  | lang false": "/index.php/apps/openregister/api/objects/0/0",
+		"zero ids | uuid undefined | action logs | lang undefined": "/index.php/apps/openregister/api/objects/0/0/audit-trails?_lang=nl",
+		"zero ids | uuid undefined | action logs | lang true": "/index.php/apps/openregister/api/objects/0/0/audit-trails?_lang=nl",
+		"zero ids | uuid undefined | action logs | lang false": "/index.php/apps/openregister/api/objects/0/0/audit-trails",
+		"zero ids | uuid undefined | action lock | lang undefined": "/index.php/apps/openregister/api/objects/0/0/lock?_lang=nl",
+		"zero ids | uuid undefined | action lock | lang true": "/index.php/apps/openregister/api/objects/0/0/lock?_lang=nl",
+		"zero ids | uuid undefined | action lock | lang false": "/index.php/apps/openregister/api/objects/0/0/lock",
+		"zero ids | uuid  | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid  | action undefined | lang true": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid  | action undefined | lang false": "/index.php/apps/openregister/api/objects/0/0",
+		"zero ids | uuid  | action  | lang undefined": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid  | action  | lang true": "/index.php/apps/openregister/api/objects/0/0?_lang=nl",
+		"zero ids | uuid  | action  | lang false": "/index.php/apps/openregister/api/objects/0/0",
+		"zero ids | uuid  | action logs | lang undefined": "/index.php/apps/openregister/api/objects/0/0/audit-trails?_lang=nl",
+		"zero ids | uuid  | action logs | lang true": "/index.php/apps/openregister/api/objects/0/0/audit-trails?_lang=nl",
+		"zero ids | uuid  | action logs | lang false": "/index.php/apps/openregister/api/objects/0/0/audit-trails",
+		"zero ids | uuid  | action lock | lang undefined": "/index.php/apps/openregister/api/objects/0/0/lock?_lang=nl",
+		"zero ids | uuid  | action lock | lang true": "/index.php/apps/openregister/api/objects/0/0/lock?_lang=nl",
+		"zero ids | uuid  | action lock | lang false": "/index.php/apps/openregister/api/objects/0/0/lock",
+		"zero ids | uuid abc | action undefined | lang undefined": "/index.php/apps/openregister/api/objects/0/0/abc?_lang=nl",
+		"zero ids | uuid abc | action undefined | lang true": "/index.php/apps/openregister/api/objects/0/0/abc?_lang=nl",
+		"zero ids | uuid abc | action undefined | lang false": "/index.php/apps/openregister/api/objects/0/0/abc",
+		"zero ids | uuid abc | action  | lang undefined": "/index.php/apps/openregister/api/objects/0/0/abc?_lang=nl",
+		"zero ids | uuid abc | action  | lang true": "/index.php/apps/openregister/api/objects/0/0/abc?_lang=nl",
+		"zero ids | uuid abc | action  | lang false": "/index.php/apps/openregister/api/objects/0/0/abc",
+		"zero ids | uuid abc | action logs | lang undefined": "/index.php/apps/openregister/api/objects/0/0/abc/audit-trails?_lang=nl",
+		"zero ids | uuid abc | action logs | lang true": "/index.php/apps/openregister/api/objects/0/0/abc/audit-trails?_lang=nl",
+		"zero ids | uuid abc | action logs | lang false": "/index.php/apps/openregister/api/objects/0/0/abc/audit-trails",
+		"zero ids | uuid abc | action lock | lang undefined": "/index.php/apps/openregister/api/objects/0/0/abc/lock?_lang=nl",
+		"zero ids | uuid abc | action lock | lang true": "/index.php/apps/openregister/api/objects/0/0/abc/lock?_lang=nl",
+		"zero ids | uuid abc | action lock | lang false": "/index.php/apps/openregister/api/objects/0/0/abc/lock",
+		"no register | uuid undefined | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid undefined | action lock | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid  | action lock | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"no register | uuid abc | action lock | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid undefined | action lock | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid  | action lock | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action undefined | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action undefined | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action undefined | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action  | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action  | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action  | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action logs | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action logs | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action logs | lang false": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action lock | lang undefined": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action lock | lang true": "error: register and schema are required to build an OpenRegister URL",
+		"null schema | uuid abc | action lock | lang false": "error: register and schema are required to build an OpenRegister URL"
+	},
+	"plugin": {
+		"downloadObject | top-level ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/3/7/o1?_lang=nl",
+					"GET"
+				]
+			],
+			"error": "document is not defined"
+		},
+		"downloadObject | @self ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/4/8/o2?_lang=nl",
+					"GET"
+				]
+			],
+			"error": "document is not defined"
+		},
+		"downloadObject | ids as objects": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/5/s-uuid/o3?_lang=nl",
+					"GET"
+				]
+			],
+			"error": "document is not defined"
+		},
+		"downloadObject | @self wins over top level": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/9/10/o4?_lang=nl",
+					"GET"
+				]
+			],
+			"error": "document is not defined"
+		},
+		"downloadObject | _id reference": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/r_/6/o5?_lang=nl",
+					"GET"
+				]
+			],
+			"error": "document is not defined"
+		},
+		"downloadObject | missing schema": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"downloadObject | missing id": {
+			"calls": [],
+			"error": "Object ID is required for download"
+		},
+		"downloadObject | zero register": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"deleteObject | top-level ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/3/7/o1",
+					"DELETE"
+				]
+			],
+			"error": "Cannot read properties of undefined (reading 'some')"
+		},
+		"deleteObject | @self ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/4/8/o2",
+					"DELETE"
+				]
+			],
+			"error": "Cannot read properties of undefined (reading 'some')"
+		},
+		"deleteObject | ids as objects": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/5/s-uuid/o3",
+					"DELETE"
+				]
+			],
+			"error": "Cannot read properties of undefined (reading 'some')"
+		},
+		"deleteObject | @self wins over top level": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/9/10/o4",
+					"DELETE"
+				]
+			],
+			"error": "Cannot read properties of undefined (reading 'some')"
+		},
+		"deleteObject | _id reference": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/r_/6/o5",
+					"DELETE"
+				]
+			],
+			"error": "Cannot read properties of undefined (reading 'some')"
+		},
+		"deleteObject | missing schema": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"deleteObject | missing id": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"deleteObject | zero register": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"lockObject | top-level ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/3/7/o1/lock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"lockObject | @self ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/4/8/o2/lock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"lockObject | ids as objects": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/5/s-uuid/o3/lock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"lockObject | @self wins over top level": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/9/10/o4/lock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"lockObject | _id reference": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/r_/6/o5/lock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"lockObject | missing schema": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"lockObject | missing id": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"lockObject | zero register": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"unlockObject | top-level ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/3/7/o1/unlock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"unlockObject | @self ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/4/8/o2/unlock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"unlockObject | ids as objects": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/5/s-uuid/o3/unlock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"unlockObject | @self wins over top level": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/9/10/o4/unlock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"unlockObject | _id reference": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/r_/6/o5/unlock",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"unlockObject | missing schema": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"unlockObject | missing id": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"unlockObject | zero register": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"publishObject | top-level ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/3/7/o1/publish",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"publishObject | @self ids": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/4/8/o2/publish",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"publishObject | ids as objects": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/5/s-uuid/o3/publish",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"publishObject | @self wins over top level": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/9/10/o4/publish",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"publishObject | _id reference": {
+			"calls": [
+				[
+					"/index.php/apps/openregister/api/objects/r_/6/o5/publish",
+					"POST"
+				]
+			],
+			"error": null
+		},
+		"publishObject | missing schema": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"publishObject | missing id": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		},
+		"publishObject | zero register": {
+			"calls": [],
+			"error": "Object must have id, register, and schema information"
+		}
+	}
+}

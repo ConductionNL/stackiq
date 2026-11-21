@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * complianceMatrix — pure data mapper for the module ✕ standard compliance matrix.
  *
  * "Does application X support standard Y?" is the procurement question a
@@ -6,10 +10,12 @@
  * data — modules, compliancy records, and a selection of standard versions —
  * into a matrix whose every cell carries one of three honest states:
  *
- *  - `verified` — a compliancy record links the module to the standaardversie
- *    AND carries evidence (a `bewijs` file, a `bewijsReferentie` NC Files
- *    link, or a `url`);
- *  - `claimed`  — the link exists but no evidence is attached;
+ *  - `verified` — a compliancy record links the module to the standaardversie,
+ *    carries evidence (a `bewijs` file, a `bewijsReferentie` NC Files link,
+ *    or a `url`) AND a reviewer outside the supplier marked it verified
+ *    (`verifiedBy`, REQ-CLR-022);
+ *  - `claimed`  — the link exists but no reviewer verified it, with or
+ *    without evidence;
  *  - `none`     — no compliancy record exists for that (module, standard) pair.
  *
  * Per the design (Decision 2) verified and claimed MUST stay distinct — a PvE
@@ -42,20 +48,36 @@
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 
+import { dataOf, resolveUuid } from './lifecyclePhase.js'
+
+export { dataOf, resolveUuid }
+
 /**
- * @typedef {('verified'|'claimed'|'none')} CellState
+ * @typedef {('verified'|'claimed'|'not-met'|'none')} CellState
  */
 
 /**
  * Cell-state constants. Exported so callers never compare against bare strings.
  *
- * @type {{VERIFIED: CellState, CLAIMED: CellState, NONE: CellState}}
+ * `not-met` is a recorded claim with result "does-not-meet"
+ * (bio-measures-shipped-and-not-met): it stays apart from `none`, which means
+ * nobody assessed the pair.
+ *
+ * @type {{VERIFIED: CellState, CLAIMED: CellState, NOT_MET: CellState, NONE: CellState}}
  */
 export const CELL = Object.freeze({
 	VERIFIED: 'verified',
 	CLAIMED: 'claimed',
+	NOT_MET: 'not-met',
 	NONE: 'none',
 })
+
+/**
+ * The result a compliancy record carries when it says the module does not meet the column.
+ *
+ * @type {string}
+ */
+export const RESULT_DOES_NOT_MEET = 'does-not-meet'
 
 /**
  * @typedef {('standard_version'|'bioMeasure')} ColumnSource
@@ -73,24 +95,43 @@ export const COLUMN_SOURCE = Object.freeze({
 })
 
 /**
- * Resolve the UUID of a related object that may be served as a bare string,
- * an object with `uuid`/`id`, or null. Mirrors the leniency of the backend
- * ModuleComplianceService::extractStandaardversieUuids().
+ * Whether an evidence value carries something: a non-blank string, an object
+ * with keys, or any other truthy value.
  *
- * @param {*} value A relation value (string UUID, object, or null).
- * @return {string} The resolved UUID, or '' when none.
- *
- * @spec openspec/specs/module-compliance-assessment/spec.md
+ * @param {string|object|number|boolean|null} value The evidence value.
+ * @return {boolean} True when it carries something.
  */
-export function resolveUuid(value) {
+function hasEvidenceValue(value) {
+	if (!value) {
+		return false
+	}
 	if (typeof value === 'string') {
-		return value.trim()
+		return value.trim() !== ''
 	}
-	if (value && typeof value === 'object') {
-		const uuid = value.uuid ?? value.id ?? value['@self']?.id ?? ''
-		return typeof uuid === 'string' ? uuid.trim() : String(uuid || '')
+	if (typeof value === 'object') {
+		return Object.keys(value).length > 0
 	}
-	return ''
+	return true
+}
+
+/**
+ * Whether an evidence reference is set: a non-blank string or any truthy value.
+ *
+ * @param {string|object|number|boolean|null} ref The reference.
+ * @return {boolean} True when it is set.
+ */
+function hasReference(ref) {
+	return typeof ref === 'string' ? ref.trim() !== '' : !!ref
+}
+
+/**
+ * Whether a url is a non-blank string.
+ *
+ * @param {string|number|null} url The url.
+ * @return {boolean} True when it is set.
+ */
+function hasUrl(url) {
+	return typeof url === 'string' && url.trim() !== ''
 }
 
 /**
@@ -108,46 +149,124 @@ export function hasEvidence(record) {
 	if (!record || typeof record !== 'object') {
 		return false
 	}
-
-	const bewijs = record.evidence
-	const hasBewijs =
-		!!bewijs
-		&& (typeof bewijs === 'string'
-			? bewijs.trim() !== ''
-			: typeof bewijs === 'object'
-				? Object.keys(bewijs).length > 0
-				: true)
-
-	const ref = record.evidenceReference
-	const hasRef = typeof ref === 'string' ? ref.trim() !== '' : !!ref
-
-	const url = record.url
-	const hasUrl = typeof url === 'string' && url.trim() !== ''
-
-	return hasBewijs || hasRef || hasUrl
+	return (
+		hasEvidenceValue(record.evidence)
+		|| hasReference(record.evidenceReference)
+		|| hasUrl(record.url)
+	)
 }
 
 /**
- * Read the data bag of a record that may be a plain object or an OR object
- * envelope (`{ '@self': …, …props }`). OR object-API responses already inline
- * the properties at the top level, so we treat the record itself as the bag.
- * Exported for reuse by callers that unwrap other object types (e.g.
- * `gebruik` records) the same way.
+ * Whether a reviewer outside the supplier marked the record verified.
+ * Evidence alone leaves a claim claimed (REQ-CLR-022).
  *
- * @param {object} record A record (OR object or plain data).
- * @return {object} The property bag.
- * @spec openspec/specs/module-compliance-assessment/spec.md
+ * @param {object} record A compliancy object's data.
+ * @return {boolean} True when the record is verified by a reviewer.
+ *
+ * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment/spec.md#requirement-a-claim-reads-verified-only-after-a-reviewer-outside-the-supplier-checks-it-req-clr-022
  */
-export function dataOf(record) {
+export function isReviewerVerified(record) {
 	if (!record || typeof record !== 'object') {
-		return {}
+		return false
 	}
-	// OR responses inline properties alongside `@self`; nested `object` only
-	// appears in some legacy shapes — prefer it when present.
-	if (record.object && typeof record.object === 'object') {
-		return record.object
+	return hasEvidence(record)
+		&& typeof record.verifiedBy === 'string'
+		&& record.verifiedBy.trim() !== ''
+}
+
+/**
+ * The relations a compliancy record names, resolved to uuids, and whether it
+ * carries evidence.
+ *
+ * @param {object} record The compliancy record.
+ * @return {object} The record, its data and its relations.
+ */
+function compliancyRelations(record) {
+	const data = dataOf(record)
+	return {
+		record,
+		data,
+		moduleUuid: resolveUuid(data.module),
+		standaardversieUuid: resolveUuid(data.standard_version),
+		bioMaatregelUuid: resolveUuid(data.bioMeasure),
+		evidenced: isReviewerVerified(data),
+		meets: data.result !== RESULT_DOES_NOT_MEET,
 	}
-	return record
+}
+
+/**
+ * The conflicted entry of a record that names both a standard and a BIO
+ * measure, or null. Such a record is a data-quality issue and is matched to
+ * neither column (module-compliance-assessment, "A record with both relations
+ * set is flagged, not matched").
+ *
+ * @param {object} rel The record's relations.
+ * @return {Array|null} The bucket and entry, or null.
+ */
+function conflictEntry(rel) {
+	if (rel.standaardversieUuid === '' || rel.bioMaatregelUuid === '') {
+		return null
+	}
+	const { moduleUuid, standaardversieUuid, bioMaatregelUuid, record } = rel
+	return [
+		'conflicted',
+		{ moduleUuid, standaardversieUuid, bioMaatregelUuid, record },
+	]
+}
+
+/**
+ * The resolved entry of a record placed in a column.
+ *
+ * @param {object} rel The record's relations.
+ * @param {string} columnUuid The column.
+ * @return {Array} The bucket and entry.
+ */
+function resolvedEntry(rel, columnUuid) {
+	const { moduleUuid, evidenced, meets, record } = rel
+	return ['resolved', { moduleUuid, columnUuid, evidenced, meets, record }]
+}
+
+/**
+ * The unresolved entry of a record that only names a GEMMA standard by
+ * text, or null when it names none. The key is `standardGemma`, as the
+ * consumers read it.
+ *
+ * @param {object} rel The record's relations.
+ * @return {Array|null} The bucket and entry, or null.
+ */
+function gemmaEntry(rel) {
+	const value = rel.data.standardGemma
+	const standardGemma = typeof value === 'string' ? value.trim() : ''
+	if (standardGemma === '') {
+		return null
+	}
+	const { moduleUuid, evidenced, record } = rel
+	return ['unresolved', { moduleUuid, standardGemma, evidenced, record }]
+}
+
+/**
+ * Where a compliancy record goes. For the BIO matrix only a BIO measure
+ * places it; a record with only a standaardversie (or neither) is dropped.
+ * Records with neither a relation nor a GEMMA text are dropped too.
+ *
+ * @param {object} rel The record's relations.
+ * @param {string} columnSource The column source.
+ * @return {Array|null} The bucket and entry, or null when it is dropped.
+ */
+function placeCompliancy(rel, columnSource) {
+	const conflict = conflictEntry(rel)
+	if (conflict) {
+		return conflict
+	}
+	if (columnSource === COLUMN_SOURCE.BIO_MAATREGEL) {
+		return rel.bioMaatregelUuid === ''
+			? null
+			: resolvedEntry(rel, rel.bioMaatregelUuid)
+	}
+	if (rel.standaardversieUuid !== '') {
+		return resolvedEntry(rel, rel.standaardversieUuid)
+	}
+	return gemmaEntry(rel)
 }
 
 /**
@@ -169,90 +288,118 @@ export function partitionCompliancy(
 	records,
 	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
 ) {
-	const resolved = []
-	const unresolved = []
-	const conflicted = []
-
+	const buckets = { resolved: [], unresolved: [], conflicted: [] }
 	for (const record of records || []) {
-		const data = dataOf(record)
-		const moduleUuid = resolveUuid(data.module)
-		const standaardversieUuid = resolveUuid(data.standard_version)
-		const bioMaatregelUuid = resolveUuid(data.bioMeasure)
-		const evidenced = hasEvidence(data)
-
-		// A record naming both a standard and a BIO measure is a data-quality
-		// issue — flag it and match it to neither column (module-compliance-
-		// assessment, "A record with both relations set is flagged, not
-		// matched").
-		if (standaardversieUuid !== '' && bioMaatregelUuid !== '') {
-			conflicted.push({
-				moduleUuid,
-				standaardversieUuid,
-				bioMaatregelUuid,
-				record,
-			})
-			continue
+		const placed = placeCompliancy(compliancyRelations(record), columnSource)
+		if (placed) {
+			buckets[placed[0]].push(placed[1])
 		}
-
-		if (columnSource === COLUMN_SOURCE.BIO_MAATREGEL) {
-			if (bioMaatregelUuid !== '') {
-				resolved.push({
-					moduleUuid,
-					columnUuid: bioMaatregelUuid,
-					evidenced,
-					record,
-				})
-			}
-			// A record with only a standaardversie (or neither) is not
-			// applicable to the BIO matrix — dropped, same as the inverse
-			// case below.
-			continue
-		}
-
-		if (standaardversieUuid !== '') {
-			resolved.push({
-				moduleUuid,
-				columnUuid: standaardversieUuid,
-				evidenced,
-				record,
-			})
-			continue
-		}
-
-		// The variable name is the KEY, because the push below uses shorthand.
-		// The rename updated the read (`data.standardGemma`) and the consumers, but
-		// a shorthand property has no `name:` for a key-rewrite to match, so this
-		// object kept emitting `standaardGemma` while everything reading it had
-		// moved on.
-		const standardGemma =
-			typeof data.standardGemma === 'string' ? data.standardGemma.trim() : ''
-		if (standardGemma !== '') {
-			unresolved.push({ moduleUuid, standardGemma, evidenced, record })
-		}
-		// Records with neither a resolved relation nor a string are dropped —
-		// they cannot be placed in any column and carry no buyer-facing signal.
 	}
+	return buckets
+}
 
-	return { resolved, unresolved, conflicted }
+/**
+ * The state one resolved entry gives its cell: not met when the record says
+ * so, else verified with evidence and claimed without.
+ *
+ * @param {{evidenced: boolean, meets: boolean}} entry The resolved entry.
+ * @return {CellState} The state.
+ *
+ * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+ */
+export function entryState(entry) {
+	if (entry.meets === false) {
+		return CELL.NOT_MET
+	}
+	return entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
 }
 
 /**
  * Combine two cell states for the same (module, standard) pair, keeping the
- * strongest signal. verified > claimed > none. Two compliancy records for the
- * same pair therefore render verified if either is evidenced.
+ * strongest signal. verified > claimed > not-met > none. Two compliancy
+ * records for the same pair therefore render verified if either is evidenced,
+ * and a "does not meet" record shows only when no record says it meets.
  *
  * @param {CellState} a First state.
  * @param {CellState} b Second state.
  * @return {CellState} The strongest of the two.
  */
 function strongest(a, b) {
-	if (a === CELL.VERIFIED || b === CELL.VERIFIED) {
-		return CELL.VERIFIED
-	}
-	if (a === CELL.CLAIMED || b === CELL.CLAIMED) {
-		return CELL.CLAIMED
+	for (const state of [CELL.VERIFIED, CELL.CLAIMED, CELL.NOT_MET]) {
+		if (a === state || b === state) {
+			return state
+		}
 	}
 	return CELL.NONE
+}
+
+/**
+ * Resolved records by `${moduleUuid}::${columnUuid}`, each cell holding the
+ * strongest state and, once verified, an evidenced record.
+ *
+ * @param {Array<object>} resolved The resolved entries.
+ * @return {Map<string, {state: string, record: object}>} The cells.
+ */
+function indexCells(resolved) {
+	const index = new Map()
+	for (const entry of resolved) {
+		const key = `${entry.moduleUuid}::${entry.columnUuid}`
+		index.set(key, mergeCell(index.get(key), entry))
+	}
+	return index
+}
+
+/**
+ * A cell after adding one resolved entry.
+ *
+ * @param {{state: string, record: object}|undefined} existing The cell so far.
+ * @param {object} entry The resolved entry.
+ * @return {{state: string, record: object}} The cell.
+ */
+function mergeCell(existing, entry) {
+	const state = entryState(entry)
+	if (existing === undefined) {
+		return { state, record: entry.record }
+	}
+	const merged = strongest(existing.state, state)
+	const preferEvidenced = merged === CELL.VERIFIED && entry.evidenced
+	return {
+		state: merged,
+		record: preferEvidenced ? entry.record : existing.record,
+	}
+}
+
+/**
+ * The matrix columns: uuid and label of each column object.
+ *
+ * @param {Array} columnObjects The column objects or ids.
+ * @return {Array<{uuid: string, label: string}>} The columns.
+ */
+function matrixColumns(columnObjects) {
+	return columnObjects.map((column) => ({
+		uuid: resolveUuid(column.uuid ?? column.id ?? column),
+		label: columnLabel(column),
+	}))
+}
+
+/**
+ * One matrix row: the module and its cell per column.
+ *
+ * @param {object|string} module The module.
+ * @param {{columns: Array, index: Map}} grid The columns and the cell index.
+ * @return {object} The row.
+ */
+function matrixRow(module, grid) {
+	const moduleUuid = resolveUuid(module.uuid ?? module.id ?? module)
+	const cells = {}
+	for (const column of grid.columns) {
+		const hit = grid.index.get(`${moduleUuid}::${column.uuid}`)
+		cells[column.uuid] =
+			hit === undefined
+				? { state: CELL.NONE, record: null }
+				: { state: hit.state, record: hit.record }
+	}
+	return { module, moduleUuid, cells }
 }
 
 /**
@@ -282,50 +429,24 @@ export function buildComplianceMatrix({
 	compliancy = [],
 	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
 } = {}) {
-	const columnObjects = columnObjectsParam ?? standardVersions ?? []
 	const { resolved, unresolved, conflicted } = partitionCompliancy(
 		compliancy,
 		columnSource,
 	)
-
-	// Index resolved records by `${moduleUuid}::${columnUuid}`.
-	const index = new Map()
-	for (const entry of resolved) {
-		const key = `${entry.moduleUuid}::${entry.columnUuid}`
-		const state = entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
-		const existing = index.get(key)
-		if (existing === undefined) {
-			index.set(key, { state, record: entry.record })
-		} else {
-			const merged = strongest(existing.state, state)
-			// Prefer to surface an evidenced record when the cell becomes verified.
-			const record =
-				merged === CELL.VERIFIED && entry.evidenced
-					? entry.record
-					: existing.record
-			index.set(key, { state: merged, record })
-		}
-	}
-
-	const columns = columnObjects.map((column) => ({
-		uuid: resolveUuid(column.uuid ?? column.id ?? column),
-		label: columnLabel(column),
-	}))
-
-	const rows = modules.map((module) => {
-		const moduleUuid = resolveUuid(module.uuid ?? module.id ?? module)
-		const cells = {}
-		for (const column of columns) {
-			const hit = index.get(`${moduleUuid}::${column.uuid}`)
-			cells[column.uuid] =
-				hit !== undefined
-					? { state: hit.state, record: hit.record }
-					: { state: CELL.NONE, record: null }
-		}
-		return { module, moduleUuid, cells }
-	})
-
+	const index = indexCells(resolved)
+	const columns = matrixColumns(columnObjectsParam ?? standardVersions ?? [])
+	const rows = modules.map((module) => matrixRow(module, { columns, index }))
 	return { rows, columns, unresolved, conflicted }
+}
+
+/**
+ * The uuid of a column object, as its last-resort label.
+ *
+ * @param {object} column The column.
+ * @return {string} The uuid.
+ */
+function columnUuidLabel(column) {
+	return resolveUuid(column.uuid ?? column.id ?? '')
 }
 
 /**
@@ -343,13 +464,10 @@ export function columnLabel(column) {
 	if (!column || typeof column !== 'object') {
 		return String(column || '')
 	}
-	return (
-		column.name
-		|| column.titel
-		|| column.title
-		|| column.label
-		|| resolveUuid(column.uuid ?? column.id ?? '')
+	const named = [column.name, column.titel, column.title, column.label].find(
+		Boolean,
 	)
+	return named || columnUuidLabel(column)
 }
 
 /**
@@ -363,6 +481,43 @@ export function columnLabel(column) {
  */
 export function standardLabel(standard) {
 	return columnLabel(standard)
+}
+
+/**
+ * The strongest cell state per module for one target column.
+ *
+ * @param {Array<object>} resolved The resolved entries.
+ * @param {string} targetUuid The column.
+ * @return {Map<string, string>} The state by module uuid.
+ */
+function moduleStates(resolved, targetUuid) {
+	const moduleState = new Map()
+	for (const entry of resolved) {
+		if (entry.columnUuid !== targetUuid) {
+			continue
+		}
+		const state = entryState(entry)
+		const current = moduleState.get(entry.moduleUuid) ?? CELL.NONE
+		moduleState.set(entry.moduleUuid, strongest(current, state))
+	}
+	return moduleState
+}
+
+/**
+ * The coverage row of one usage: its module and that module's state.
+ *
+ * @param {object} gebruik The usage.
+ * @param {{moduleIndex: object, moduleState: Map}} lookup The module index and the states.
+ * @return {object} The row.
+ */
+function coverageRow(gebruik, lookup) {
+	const moduleUuid = resolveUuid(dataOf(gebruik).module)
+	return {
+		gebruik,
+		moduleUuid,
+		module: lookup.moduleIndex[moduleUuid] ?? null,
+		state: lookup.moduleState.get(moduleUuid) ?? CELL.NONE,
+	}
 }
 
 /**
@@ -397,28 +552,27 @@ export function buildOrganisationCoverage({
 } = {}) {
 	const { resolved } = partitionCompliancy(compliancy, columnSource)
 	const targetUuid = resolveUuid(columnUuid ?? standaardversieUuid ?? '')
+	const moduleState = moduleStates(resolved, targetUuid)
+	return (usages || []).map((gebruik) =>
+		coverageRow(gebruik, { moduleIndex, moduleState }),
+	)
+}
 
-	// module → strongest cell state for the target column.
-	const moduleState = new Map()
-	for (const entry of resolved) {
-		if (entry.columnUuid !== targetUuid) {
-			continue
+/**
+ * How many cells of a matrix are in each state, for the summary under the legend.
+ *
+ * @param {{rows: Array<{cells: {[key: string]: {state: CellState}}}>}} matrix The matrix.
+ * @return {{verified: number, claimed: number, notMet: number, none: number}} The counts.
+ *
+ * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+ */
+export function countCellStates(matrix) {
+	const counts = { verified: 0, claimed: 0, notMet: 0, none: 0 }
+	const key = { [CELL.VERIFIED]: 'verified', [CELL.CLAIMED]: 'claimed', [CELL.NOT_MET]: 'notMet', [CELL.NONE]: 'none' }
+	for (const row of matrix?.rows || []) {
+		for (const cell of Object.values(row.cells || {})) {
+			counts[key[cell.state] ?? 'none']++
 		}
-		const state = entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
-		moduleState.set(
-			entry.moduleUuid,
-			strongest(moduleState.get(entry.moduleUuid) ?? CELL.NONE, state),
-		)
 	}
-
-	return (usages || []).map((gebruik) => {
-		const data = dataOf(gebruik)
-		const moduleUuid = resolveUuid(data.module)
-		return {
-			gebruik,
-			moduleUuid,
-			module: moduleIndex[moduleUuid] ?? null,
-			state: moduleState.get(moduleUuid) ?? CELL.NONE,
-		}
-	})
+	return counts
 }

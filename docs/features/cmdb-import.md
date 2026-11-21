@@ -458,8 +458,7 @@ server is overwritten by the next app update.
 
 **What you need.** Editing the mapping needs an OpenRegister with the
 migration-pack editor, whose pack writes are admin-only and need a CSRF
-token (added in [openregister#4602](https://github.com/ConductionNL/openregister/pull/4602);
-the first OpenRegister release that contains it). On an older OpenRegister
+token: OpenRegister 2.1.41 or later. On an older OpenRegister
 nothing is stored in OpenRegister and there is nothing to edit: the import
 runs the packs that ship with stackiq, and the import result says so.
 Changing those shipped files on the server does not last, because the next

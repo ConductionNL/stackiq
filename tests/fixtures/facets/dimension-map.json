@@ -1,0 +1,90 @@
+{
+    "with relations": {
+        "o1": {
+            "referenceComponent": [
+                "Zaakregistratie",
+                "rc-2",
+                "rc-9"
+            ],
+            "standard": [
+                "StUF",
+                "ZGW"
+            ],
+            "domain": [
+                "Bedrijfsvoering"
+            ],
+            "applicationService": [
+                "Zaakservice",
+                "Klantservice"
+            ]
+        },
+        "o2": {
+            "referenceComponent": [
+                "Klantcontact"
+            ],
+            "standard": [],
+            "domain": [
+                "Dienstverlening"
+            ],
+            "applicationService": [
+                "Klantservice"
+            ]
+        },
+        "o3": {
+            "referenceComponent": [],
+            "standard": [],
+            "domain": [],
+            "applicationService": []
+        },
+        "7": {
+            "referenceComponent": [],
+            "standard": [
+                "NEN"
+            ],
+            "domain": [],
+            "applicationService": []
+        }
+    },
+    "without relations": {
+        "o1": {
+            "referenceComponent": [
+                "Zaakregistratie",
+                "rc-2",
+                "rc-9"
+            ],
+            "standard": [
+                "StUF",
+                "ZGW"
+            ],
+            "domain": [
+                "Bedrijfsvoering"
+            ],
+            "applicationService": []
+        },
+        "o2": {
+            "referenceComponent": [
+                "Klantcontact"
+            ],
+            "standard": [],
+            "domain": [
+                "Dienstverlening"
+            ],
+            "applicationService": []
+        },
+        "o3": {
+            "referenceComponent": [],
+            "standard": [],
+            "domain": [],
+            "applicationService": []
+        },
+        "7": {
+            "referenceComponent": [],
+            "standard": [
+                "NEN"
+            ],
+            "domain": [],
+            "applicationService": []
+        }
+    },
+    "no objects": []
+}

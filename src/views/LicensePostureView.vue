@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="postureView">
 		<div class="pv-header">
@@ -95,6 +99,57 @@
 							<td>{{ row.mix.openCount }}</td>
 							<td>{{ row.mix.closedCount }}</td>
 							<td>{{ row.mix.unknownCount }}</td>
+							<td>{{ row.costLabel }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<!-- SaaS subscriptions, including the ones bought outside IT -->
+			<section class="pv-section" data-testid="posture-saas">
+				<h3 class="pv-sectionTitle">
+					{{ t('stackiq', 'SaaS subscriptions') }}
+				</h3>
+				<div class="pv-filter" role="group" :aria-label="t('stackiq', 'Filter the subscriptions')">
+					<NcButton
+						:variant="saasOutsideItOnly ? 'tertiary' : 'secondary'"
+						:aria-pressed="saasOutsideItOnly ? 'false' : 'true'"
+						data-testid="posture-saas-all"
+						@click="saasOutsideItOnly = false">
+						{{ t('stackiq', 'All subscriptions') }}
+					</NcButton>
+					<NcButton
+						:variant="saasOutsideItOnly ? 'secondary' : 'tertiary'"
+						:aria-pressed="saasOutsideItOnly ? 'true' : 'false'"
+						data-testid="posture-saas-outside-it"
+						@click="saasOutsideItOnly = true">
+						{{ t('stackiq', 'Bought outside IT') }}
+					</NcButton>
+				</div>
+				<NcEmptyContent
+					v-if="saasRows.length === 0"
+					:name="saasOutsideItOnly ? t('stackiq', 'No subscriptions bought outside IT') : t('stackiq', 'No SaaS subscriptions')" />
+				<table v-else class="pv-table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('stackiq', 'Application') }}</th>
+							<th scope="col">{{ t('stackiq', 'Supplier') }}</th>
+							<th scope="col">{{ t('stackiq', 'Organisation') }}</th>
+							<th scope="col">{{ t('stackiq', 'Buying department') }}</th>
+							<th scope="col">{{ t('stackiq', 'Bought outside IT') }}</th>
+							<th scope="col">{{ t('stackiq', 'Annual cost') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="row in saasRows"
+							:key="row.usageId"
+							data-testid="posture-saas-row">
+							<td>{{ row.applicationName }}</td>
+							<td>{{ row.supplierName }}</td>
+							<td>{{ row.organisationName }}</td>
+							<td>{{ row.department }}</td>
+							<td>{{ row.boughtOutsideItLabel }}</td>
 							<td>{{ row.costLabel }}</td>
 						</tr>
 					</tbody>
@@ -214,15 +269,31 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { objectStore } from '../store/store.js'
 import {
-	LICENSE_TYPE,
+	licenceMixCounts,
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
 	SEAT_STATE,
 	seatRows,
 } from '../utils/licensePosture.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { indexByUuid } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
+import { saasSubscriptionRows } from '../utils/saasSubscriptions.js'
 import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
+
+/**
+ * A record's display name (of its object envelope when it has one), else
+ * the given UUID.
+ *
+ * @param {object} record The record.
+ * @param {string} id Its UUID.
+ * @return {string} The name.
+ * @spec openspec/specs/software-license-posture/spec.md
+ */
+function displayNameOr(record, id) {
+	const data = record.object || record
+	return data.name || data.title || id
+}
 
 /**
  * @class LicensePostureView
@@ -274,6 +345,7 @@ export default {
 		return {
 			loading: true,
 			selectedOrg: null,
+			saasOutsideItOnly: false,
 		}
 	},
 
@@ -337,16 +409,10 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		organisatieIndex() {
-			const index = {}
-			for (const org of objectStore.getCollection('organization')?.results
-				|| []) {
-				const data = org.object || org
-				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('organization')?.results || [],
+				displayNameOr,
+			)
 		},
 
 		/**
@@ -356,15 +422,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		moduleNameIndex() {
-			const index = {}
-			for (const m of this.modules) {
-				const data = m.object || m
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(this.modules, displayNameOr)
 		},
 
 		/**
@@ -397,24 +455,29 @@ export default {
 		 */
 		vendorRows() {
 			return perVendorRollup(this.modules, this.usages, this.contracts)
-				.map((row) => ({
-					vendorId: row.vendorId,
-					vendorName:
-						this.organisatieIndex[row.vendorId]
-						|| row.vendorId
-						|| t('stackiq', 'Unknown vendor'),
-					deployments: row.deployments,
-					mix: {
-						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
-						closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
-						unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
-					},
-					costLabel:
-						row.annualCost === null
-							? '—'
-							: this.formatCurrency(row.annualCost),
-				}))
+				.map((row) => this.vendorRow(row))
 				.sort((a, b) => b.deployments - a.deployments)
+		},
+
+		/**
+		 * The SaaS subscriptions, all or only those bought outside IT, with
+		 * their names, buying department and yearly cost resolved.
+		 *
+		 * @return {Array<object>} The subscription rows.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/saas-subscriptions/spec.md#requirement-the-licences-page-lists-saas-subscriptions-with-their-yearly-cost-including-ones-bought-outside-it-req-clr-001
+		 */
+		saasRows() {
+			return saasSubscriptionRows(
+				{ usages: this.usages, contracts: this.contracts, modules: this.modules },
+				this.saasOutsideItOnly,
+			).map((row) => ({
+				...row,
+				applicationName: this.moduleNameIndex[row.moduleId] || row.moduleId || t('stackiq', 'Unknown application'),
+				supplierName: row.supplierId ? this.vendorLabel(row.supplierId) : '',
+				organisationName: this.organisatieIndex[row.consumerId] || '',
+				boughtOutsideItLabel: row.boughtOutsideIt ? t('stackiq', 'Yes') : t('stackiq', 'No'),
+				costLabel: this.costText(row.annualCost),
+			}))
 		},
 
 		/**
@@ -523,22 +586,50 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
+			await fetchObjectTypeCollection(objectStore, type)
+		},
+
+		/**
+		 * The display name of a vendor, else its id, else a placeholder.
+		 *
+		 * @param {string} vendorId The vendor id.
+		 * @return {string} The name.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorLabel(vendorId) {
+			return (
+				this.organisatieIndex[vendorId]
+				|| vendorId
+				|| t('stackiq', 'Unknown vendor')
+			)
+		},
+
+		/**
+		 * A yearly cost as a currency label, or a dash when unknown.
+		 *
+		 * @param {number|null} annualCost The cost.
+		 * @return {string} The label.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		costText(annualCost) {
+			return annualCost === null ? '—' : this.formatCurrency(annualCost)
+		},
+
+		/**
+		 * One vendor rollup row resolved to its display name, licence mix
+		 * counts and cost label.
+		 *
+		 * @param {object} row The rollup row.
+		 * @return {object} The vendor row.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorRow(row) {
+			return {
+				vendorId: row.vendorId,
+				vendorName: this.vendorLabel(row.vendorId),
+				deployments: row.deployments,
+				mix: licenceMixCounts(row.mix),
+				costLabel: this.costText(row.annualCost),
 			}
 		},
 
@@ -623,6 +714,12 @@ export default {
 
 .pv-row--over td {
 	color: var(--color-error-text);
+}
+
+.pv-filter {
+	display: flex;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	margin-block-end: calc(var(--default-grid-baseline, 4px) * 2);
 }
 
 .pv-table {

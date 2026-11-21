@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * OrganisatieCard.vue * Custom card component for displaying organisatie objects
 * @category Components * @package stackiq * @author Ruben Linde * @copyright 2024 *
 @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 *
@@ -29,7 +33,7 @@
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
-						v-for="action in objectActions"
+						v-for="action in availableActions"
 						:key="action.id"
 						closeAfterClick
 						:disabled="action.condition && !action.condition(item)"
@@ -56,12 +60,27 @@
 						{{ item.type }}
 					</span>
 					<span
+						v-if="provenance"
+						class="sourceBadge"
+						data-testid="organisatie-source"
+						:title="t('stackiq', 'Mirrored from {catalogue}; edit it there.', { catalogue: provenance.name })">
+						{{ t('stackiq', 'From: {catalogue}', { catalogue: provenance.name }) }}
+					</span>
+					<span
 						v-if="item.status"
 						class="statusBadge"
 						:class="`status-${item.status.toLowerCase()}`">
 						{{ item.status }}
 					</span>
 				</div>
+
+				<!-- A cooperation's number of participants (shared-usage-visible-to-participants REQ-DLG-012) -->
+				<p
+					v-if="isCooperation"
+					class="organisatieParticipants"
+					data-testid="organisatie-participants">
+					{{ n('stackiq', 'Cooperation · %n participant', 'Cooperation · %n participants', participantCount) }}
+				</p>
 
 				<!-- Organisation Description -->
 				<div class="organisatieDescription">
@@ -173,6 +192,7 @@
 </template>
 
 <script>
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
@@ -181,6 +201,32 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
+import { provenanceOf } from '../../utils/provenance.js'
+import { participantsOf } from '../../utils/sharedUsage.js'
+
+/**
+ * Whether a view change switches to the contact person view from another
+ * view.
+ *
+ * @param {string} newView The new view.
+ * @param {string} oldView The old view.
+ * @return {*} Truthy when it does.
+ */
+function isSwitchToContactpersonen(newView, oldView) {
+	return newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen'
+}
+
+/**
+ * The summary of an organisation from its type: "<type> organisatie" when it
+ * also has a name, else the type, else ''.
+ *
+ * @param {object|null} item The organisation.
+ * @return {string} The summary.
+ */
+function typeSummary(item) {
+	if (item?.type && item?.name) return `${item.type} organisatie`
+	return item?.type || ''
+}
 
 export default {
 	name: 'OrganisatieCard',
@@ -229,6 +275,43 @@ export default {
 		}
 	},
 
+	computed: {
+		/**
+		 * @return {{name: string, url: string|null}|null} The peer catalogue a mirrored organisation came from, or null.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		provenance() {
+			return provenanceOf(this.item)
+		},
+
+		/**
+		 * @return {Array<object>} The card's actions: a mirror, read only here, offers no edit or delete.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		availableActions() {
+			if (!this.provenance) {
+				return this.objectActions
+			}
+			return this.objectActions.filter((action) => !['edit', 'delete'].includes(action?.id))
+		},
+
+		/**
+		 * @return {boolean} Whether the organisation is a cooperation.
+		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 */
+		isCooperation() {
+			return ['Collaboration', 'Samenwerking'].includes(this.item?.type)
+		},
+
+		/**
+		 * @return {number} How many participant organisations the cooperation lists, each once.
+		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 */
+		participantCount() {
+			return participantsOf({ participants: this.item?.participants }).length
+		},
+	},
+
 	watch: {
 		/**
 		 * Watch for changes in currentView and refresh user data when switching to contactpersonen
@@ -241,39 +324,30 @@ export default {
 			 */
 			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
-				if (
-					newView === 'contactpersonen'
-					&& oldView
-					&& oldView !== 'contactpersonen'
-				) {
-					console.info(
-						'Switched to contactpersonen view, loading user info and groups...',
-					)
-					// Use nextTick to ensure the component is fully rendered
-					await this.$nextTick()
-					if (
-						this.$refs.contactpersonenList
-						&& this.$refs.contactpersonenList.loadUserInfoAndGroups
-					) {
-						// Add a small delay to prevent rapid successive calls
-						setTimeout(async () => {
-							if (
-								this.$refs.contactpersonenList
-								&& this.$refs.contactpersonenList
-									.loadUserInfoAndGroups
-							) {
-								await this.$refs.contactpersonenList.loadUserInfoAndGroups()
-							}
-						}, 100)
-					}
+				if (!isSwitchToContactpersonen(newView, oldView)) {
+					return
 				}
+				console.info(
+					'Switched to contactpersonen view, loading user info and groups...',
+				)
+				// Use nextTick to ensure the component is fully rendered
+				await this.$nextTick()
+				if (!this.canLoadContactUserInfo()) {
+					return
+				}
+				// Add a small delay to prevent rapid successive calls
+				setTimeout(() => this.loadContactUserInfo(), 100)
 			},
+
 
 			immediate: false,
 		},
 	},
 
 	methods: {
+		n,
+		t,
+
 		/**
 		 * Emit the `click` event CnCardGrid/CnIndexPage listen on for
 		 * navigation (CnPageRenderer.onRowOpen resolves the matching
@@ -314,9 +388,33 @@ export default {
 		getOrganisatieSummary(item) {
 			if (item?.shortDescription) return item.shortDescription
 			if (item?.longDescription) return item.longDescription
-			if (item?.type && item?.name) return `${item.type} organisatie`
-			if (item?.type) return item.type
-			return ''
+			return typeSummary(item)
+		},
+
+		/**
+		 * Whether the contact person list is there and can load user info.
+		 *
+		 * @return {*} Truthy when it can.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		canLoadContactUserInfo() {
+			return (
+				this.$refs.contactpersonenList
+				&& this.$refs.contactpersonenList.loadUserInfoAndGroups
+			)
+		},
+
+		/**
+		 * Load the contact person list's user info and groups, if the list
+		 * can still load them.
+		 *
+		 * @return {Promise<void>} Resolves once loaded.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async loadContactUserInfo() {
+			if (this.canLoadContactUserInfo()) {
+				await this.$refs.contactpersonenList.loadUserInfoAndGroups()
+			}
 		},
 
 		/**
@@ -393,20 +491,13 @@ export default {
 		 */
 		getOrganisatieAdres() {
 			const adres = this.item?.adres
-			const postcode = this.item?.postcode
 			const plaats = this.item?.plaats
-
-			if (adres && postcode && plaats) {
-				return `${adres}, ${postcode} ${plaats}`
-			} else if (adres && plaats) {
-				return `${adres}, ${plaats}`
-			} else if (plaats) {
-				return plaats
-			} else if (adres) {
-				return adres
-			}
-
-			return 'Geen adres beschikbaar'
+			// The postcode only shows in a full street, postcode and place line.
+			const postcode = adres && plaats ? this.item?.postcode : ''
+			const place = [postcode, plaats].filter(Boolean).join(' ')
+			return (
+				[adres, place].filter(Boolean).join(', ') || 'Geen adres beschikbaar'
+			)
 		},
 	},
 }
@@ -463,6 +554,15 @@ export default {
 }
 
 .typeBadge,
+.sourceBadge {
+	padding: 4px 8px;
+	border-radius: var(--border-radius-pill);
+	font-size: 12px;
+	font-weight: 600;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
 .statusBadge {
 	padding: 4px 8px;
 	border-radius: var(--border-radius-pill);
@@ -471,24 +571,29 @@ export default {
 	text-transform: capitalize;
 }
 
+.organisatieParticipants {
+	margin: 0 0 var(--default-grid-baseline, 4px);
+	color: var(--color-text-maxcontrast);
+}
+
 .typeBadge {
 	background: var(--color-primary-light);
 	color: var(--color-primary-element-text);
 }
 
 .typeBadge.type-gemeente {
-	background: #e3f2fd;
-	color: #1565c0;
+	background: var(--color-primary-element-light, #e3f2fd);
+	color: var(--color-primary-element-light-text, #1565c0);
 }
 
 .typeBadge.type-leverancier {
-	background: #f3e5f5;
-	color: #7b1fa2;
+	background: var(--color-background-hover, #f3e5f5);
+	color: var(--color-info-text, #7b1fa2);
 }
 
 .typeBadge.type-samenwerking {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge {
@@ -497,18 +602,18 @@ export default {
 }
 
 .statusBadge.status-actief {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge.status-concept {
-	background: #fff3e0;
-	color: #f57c00;
+	background: var(--color-background-hover, #fff3e0);
+	color: var(--color-warning-text, #f57c00);
 }
 
 .statusBadge.status-deactief {
-	background: #ffebee;
-	color: #c62828;
+	background: var(--color-background-hover, #ffebee);
+	color: var(--color-error-text, #c62828);
 }
 
 .organisatieDescription {

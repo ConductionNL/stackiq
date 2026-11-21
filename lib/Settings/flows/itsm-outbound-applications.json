@@ -46,6 +46,14 @@
               "!!": {
                 "var": "json.module"
               }
+            },
+            {
+              "in": [
+                {
+                  "var": "json.status"
+                },
+                "%SEND_STATES%"
+              ]
             }
           ]
         }

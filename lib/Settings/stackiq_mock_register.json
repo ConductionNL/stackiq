@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.1.0",
-    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
+    "version": "1.3.2",
+    "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it. 1.3.0 adds one demo application with two components (landscape-application-components). 1.3.1 adds three demo technology components, a host, a virtual machine and a database (operations-technology-components). 1.3.2 adds three demo architecture decisions to each register that holds the schema (architecture-decision-register)."
   },
   "x-openregister": {
     "type": "mock",
@@ -283,6 +283,7 @@
           "slug": "contactperson-contactperson-1-1"
         },
         "contactsUid": "Voorbeeld Contactsuid 1",
+        "accessReviewedAt": "-P7D",
         "role": "Voorbeeld Role 1",
         "organization": {},
         "notifications": [
@@ -299,6 +300,7 @@
           "slug": "contactperson-contactperson-2-2"
         },
         "contactsUid": "Voorbeeld Contactsuid 2",
+        "accessReviewedAt": "-P14M",
         "role": "Voorbeeld Role 2",
         "organization": {},
         "notifications": [
@@ -419,6 +421,34 @@
         "decisions": [
           "00000000-0000-4000-8000-000000000002"
         ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "catalogContract",
+          "slug": "contract-expiring-6"
+        },
+        "service": {},
+        "usage": {},
+        "startDate": "{{today-2y}}",
+        "contractNumber": "Voorbeeld Contractnumber 6",
+        "contractType": "SLA",
+        "status": "Expiring",
+        "approvalState": "none",
+        "endDate": "{{today+45d}}",
+        "cost": 6.0,
+        "costPeriod": "Annually",
+        "responsibleUser": "admin",
+        "contactPersonProvider": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "contactPersonUser": {
+          "name": "Voorbeeld Name 6",
+          "email": "Voorbeeld Email 6"
+        },
+        "documentReference": "Voorbeeld Documentreference 6",
+        "opmerkingen": "Voorbeeld Opmerkingen 6"
       },
       {
         "@self": {
@@ -674,7 +704,7 @@
         ],
         "hostingJurisdiction": "NL",
         "hostingLocation": "NL",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "licentietype": "Closed source",
         "licence": "MIT License",
         "referenceComponents": [
@@ -707,7 +737,8 @@
           {}
         ],
         "registeredBy": "Municipality",
-        "publicationDate": "2026-03-01T09:00:00+00:00"
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -725,7 +756,7 @@
         ],
         "hostingJurisdiction": "EU",
         "hostingLocation": "EU",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "licentietype": "Open source",
         "licence": "GNU General Public License (GPL)",
         "referenceComponents": [
@@ -758,7 +789,8 @@
           {}
         ],
         "registeredBy": "Application",
-        "publicationDate": "2026-03-02T09:00:00+00:00"
+        "publicationDate": "2026-03-02T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -776,7 +808,7 @@
         ],
         "hostingJurisdiction": "US",
         "hostingLocation": "US",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-3-3",
         "licentietype": "Closed source",
         "licence": "Apache License 2.0",
         "referenceComponents": [
@@ -809,7 +841,60 @@
           {}
         ],
         "registeredBy": "Collaboration",
-        "publicationDate": "2026-03-03T09:00:00+00:00"
+        "publicationDate": "2026-03-03T09:00:00+00:00",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-duplicate-1"
+        },
+        "name": "Voorbeeld name 1",
+        "shortDescription": "Voorbeeld Shortdescription 1",
+        "longDescription": "Voorbeeld markdown 0",
+        "website": "https://example.invalid/resource/0",
+        "contactPerson": {},
+        "cloudDienstverleningsmodel": [
+          "On-premises (self-managed)"
+        ],
+        "hostingJurisdiction": "NL",
+        "hostingLocation": "NL",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "licentietype": "Closed source",
+        "licence": "MIT License",
+        "referenceComponents": [
+          {}
+        ],
+        "type": "Application",
+        "logo": "Voorbeeld base64 0",
+        "diensten": [
+          {}
+        ],
+        "koppelingen": [
+          {}
+        ],
+        "compliancy": [
+          {}
+        ],
+        "standards": [
+          "Voorbeeld Standards 1"
+        ],
+        "standardsGemma": [
+          "Voorbeeld Standardsgemma 1"
+        ],
+        "standardVersions": [
+          {}
+        ],
+        "moduleVersions": [
+          {}
+        ],
+        "usages": [
+          {}
+        ],
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1235,7 +1320,7 @@
           "slug": "service-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "type": [
           "Functional management"
         ],
@@ -1251,7 +1336,8 @@
           {}
         ],
         "publicationDate": "2026-03-01T09:00:00+00:00",
-        "depublicationDate": "2026-03-01T09:00:00+00:00"
+        "depublicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1260,7 +1346,7 @@
           "slug": "service-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "type": [
           "Application management"
         ],
@@ -1276,7 +1362,8 @@
           {}
         ],
         "publicationDate": "2026-03-02T09:00:00+00:00",
-        "depublicationDate": "2026-03-02T09:00:00+00:00"
+        "depublicationDate": "2026-03-02T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1285,7 +1372,7 @@
           "slug": "service-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-3-3",
         "type": [
           "Technical management"
         ],
@@ -1301,7 +1388,8 @@
           {}
         ],
         "publicationDate": "2026-03-03T09:00:00+00:00",
-        "depublicationDate": "2026-03-03T09:00:00+00:00"
+        "depublicationDate": "2026-03-03T09:00:00+00:00",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -1357,7 +1445,7 @@
           "schema": "usage",
           "slug": "usage-usage-1-1"
         },
-        "consumer": {},
+        "consumer": "@ref:organization-voorbeeld-name-1-1",
         "provider": {},
         "contactPerson": {},
         "participants": [
@@ -1369,8 +1457,15 @@
         "startDateOutPhasing": "2026-03-01",
         "startDateOutPhased": "2026-03-01",
         "status": "Acquisition",
+        "availabilityLevel": "BBN1",
+        "availabilityReason": "Een dag uitval is op te vangen",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN2",
+        "confidentialityReason": "Bevat persoonsgegevens",
+        "bbnLevel": "BBN2",
         "interneAnnotation": "Voorbeeld Interneannotation 1",
-        "module": {},
+        "module": "@ref:module-voorbeeld-name-1-1",
         "moduleVersion": {},
         "usedForReferenceComponents": [
           {}
@@ -1492,7 +1587,11 @@
         "technicalFit": 2,
         "riskScore": 3,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -2396,6 +2495,50 @@
         ],
         "registeredBy": "Collaboration",
         "publicationDate": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaaksysteem"
+        },
+        "name": "Voorbeeld Zaaksysteem",
+        "shortDescription": "Voorbeeld zaaksysteem met twee componenten (landscape-application-components)",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaakportaal"
+        },
+        "name": "Voorbeeld Zaakportaal",
+        "shortDescription": "Het portaal waarin inwoners hun zaken volgen; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "module-voorbeeld-zaken-api"
+        },
+        "name": "Voorbeeld Zaken-API",
+        "shortDescription": "De API waarmee andere applicaties zaken lezen en schrijven; een component van Voorbeeld Zaaksysteem",
+        "provider": "@ref:organization-voorbeeld-name-2-2",
+        "type": "Application",
+        "registeredBy": "Municipality",
+        "publicationDate": "2026-03-01T09:00:00+00:00",
+        "partOf": "@ref:module-voorbeeld-zaaksysteem",
+        "recordStatus": "Active"
       },
       {
         "@self": {
@@ -3078,7 +3221,11 @@
         "technicalFit": 1,
         "riskScore": 5,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -3376,6 +3523,34 @@
       },
       {
         "@self": {
+          "register": "stackiq",
+          "schema": "applicationInterface",
+          "slug": "api-case-registration-rest"
+        },
+        "name": "Case registration API",
+        "shortDescription": "Create and read cases over REST.",
+        "module": {},
+        "style": "REST",
+        "version": "1.2",
+        "specificationUrl": "https://example.org/openapi.json",
+        "documentationUrl": "https://example.org/docs",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "applicationInterface",
+          "slug": "api-case-events"
+        },
+        "name": "Case events",
+        "shortDescription": "Notifications when a case is created or changes status.",
+        "module": {},
+        "style": "event or message",
+        "version": "1.0",
+        "status": "in development"
+      },
+      {
+        "@self": {
           "register": "vng-gemma",
           "schema": "maintenanceWindow",
           "slug": "maintenance-database-upgrade"
@@ -3415,6 +3590,715 @@
         "endsAt": "2026-10-25T02:00:00+02:00",
         "impact": "no impact",
         "status": "completed"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "organisation": {},
+        "targetDate": "2026-03-01",
+        "status": "draft",
+        "description": "Voorbeeld markdown 0",
+        "appliedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "organisation": {},
+        "targetDate": "2026-03-02",
+        "status": "proposed",
+        "description": "Voorbeeld markdown 1",
+        "appliedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "organisation": {},
+        "targetDate": "2026-03-03",
+        "status": "adopted",
+        "description": "Voorbeeld markdown 2",
+        "appliedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-1-1"
+        },
+        "scenario": {},
+        "action": "add",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-01",
+        "note": "Voorbeeld Note 1",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-2-2"
+        },
+        "scenario": {},
+        "action": "phase out",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-3-3"
+        },
+        "scenario": {},
+        "action": "replace",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "organisation": {},
+        "targetDate": "2026-03-01",
+        "status": "draft",
+        "description": "Voorbeeld markdown 0",
+        "appliedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "organisation": {},
+        "targetDate": "2026-03-02",
+        "status": "proposed",
+        "description": "Voorbeeld markdown 1",
+        "appliedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "organisation": {},
+        "targetDate": "2026-03-03",
+        "status": "adopted",
+        "description": "Voorbeeld markdown 2",
+        "appliedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-1-1"
+        },
+        "scenario": {},
+        "action": "add",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-01",
+        "note": "Voorbeeld Note 1",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-2-2"
+        },
+        "scenario": {},
+        "action": "phase out",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-3-3"
+        },
+        "scenario": {},
+        "action": "replace",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "organization-classification-4"
+        },
+        "type": "Municipality",
+        "name": "Gemeente Voorbeeldstad",
+        "summary": "Voorbeeldgemeente voor de BIO-classificatie",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "usage",
+          "slug": "usage-classified-2"
+        },
+        "consumer": "@ref:organization-voorbeeld-name-3-3",
+        "module": "@ref:module-voorbeeld-name-1-1",
+        "status": "In production",
+        "availabilityLevel": "BBN2",
+        "availabilityReason": "Balieprocessen stoppen bij uitval",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN3",
+        "confidentialityReason": "Bevat bijzondere persoonsgegevens",
+        "bbnLevel": "BBN3"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "usage",
+          "slug": "usage-classified-3"
+        },
+        "consumer": "@ref:organization-classification-4",
+        "module": "@ref:module-voorbeeld-name-1-1",
+        "status": "In production",
+        "availabilityLevel": "BBN1",
+        "availabilityReason": "Een dag uitval is op te vangen",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN2",
+        "confidentialityReason": "Bevat persoonsgegevens",
+        "bbnLevel": "BBN2"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-1"
+        },
+        "name": "Bevestigingsronde applicaties Q1",
+        "deadline": "2026-03-31",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 4,
+        "answeredCount": 1,
+        "unassigned": [
+          {
+            "entryId": "usage-usage-3-3",
+            "entryName": "Voorbeeld gebruik 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "complianceDocument",
+          "slug": "compliance-document-processing-agreement"
+        },
+        "module": {},
+        "documentType": "processing agreement",
+        "title": "Processing agreement template",
+        "summary": "The standard processing agreement for municipalities that use this product.",
+        "issuedOn": "2026-01-15",
+        "validUntil": "2027-01-15",
+        "publisher": {},
+        "audience": "public",
+        "sharedWithOrganisations": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-2"
+        },
+        "name": "Bevestigingsronde modules voorjaar",
+        "deadline": "2026-04-30",
+        "scopeSchema": "module",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 3,
+        "answeredCount": 0,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRound",
+          "slug": "attestationround-3"
+        },
+        "name": "Bevestigingsronde applicaties 2025",
+        "deadline": "2025-12-15",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "startedBy": "admin",
+        "status": "closed",
+        "requestCount": 2,
+        "answeredCount": 2,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-1"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-1-1",
+        "entryName": "Voorbeeld gebruik 1",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-03-31",
+        "status": "pending"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-2"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "entrySchema": "module",
+        "entryId": "module-module-2-2",
+        "entryName": "Voorbeeld module 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-04-30",
+        "status": "confirmed",
+        "respondedAt": "2026-04-02T10:15:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-3"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-2-2",
+        "entryName": "Voorbeeld gebruik 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2025-12-15",
+        "status": "overdue"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-1"
+        },
+        "name": "Bevestigingsronde applicaties Q1",
+        "deadline": "2026-03-31",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 4,
+        "answeredCount": 1,
+        "unassigned": [
+          {
+            "entryId": "usage-usage-3-3",
+            "entryName": "Voorbeeld gebruik 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-2"
+        },
+        "name": "Bevestigingsronde modules voorjaar",
+        "deadline": "2026-04-30",
+        "scopeSchema": "module",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "startedBy": "admin",
+        "status": "open",
+        "requestCount": 3,
+        "answeredCount": 0,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRound",
+          "slug": "attestationround-3"
+        },
+        "name": "Bevestigingsronde applicaties 2025",
+        "deadline": "2025-12-15",
+        "scopeSchema": "usage",
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "startedBy": "admin",
+        "status": "closed",
+        "requestCount": 2,
+        "answeredCount": 2,
+        "unassigned": []
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-1"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000001",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-1-1",
+        "entryName": "Voorbeeld gebruik 1",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-03-31",
+        "status": "pending"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-2"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000002",
+        "entrySchema": "module",
+        "entryId": "module-module-2-2",
+        "entryName": "Voorbeeld module 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2026-04-30",
+        "status": "confirmed",
+        "respondedAt": "2026-04-02T10:15:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "attestationRequest",
+          "slug": "attestationrequest-3"
+        },
+        "round": {},
+        "scopeOrganisation": "5d1f1c1e-0a0b-4c1d-8e2f-000000000003",
+        "entrySchema": "usage",
+        "entryId": "usage-usage-2-2",
+        "entryName": "Voorbeeld gebruik 2",
+        "assigneeUserId": "admin",
+        "assigneeContact": "contactpersoon-demo-1",
+        "deadline": "2025-12-15",
+        "status": "overdue"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "complianceDocument",
+          "slug": "compliance-document-pentest-report"
+        },
+        "module": {},
+        "documentType": "pentest report",
+        "title": "Pentest report 2026",
+        "summary": "The yearly penetration test of the hosted product, shared with one municipality.",
+        "issuedOn": "2026-03-01",
+        "validUntil": "2027-03-01",
+        "publisher": {},
+        "audience": "named",
+        "sharedWithOrganisations": []
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-host-1"
+        },
+        "name": "Host 01",
+        "class": "Physical server",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "manufacturer": "Dell",
+        "model": "PowerEdge R750",
+        "location": "Stadhuis",
+        "endOfSupport": "2029-12-31"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-vm-1"
+        },
+        "name": "App server 01",
+        "class": "Virtual machine",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "runsOn": [
+          "@ref:technology-host-1"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-db-1"
+        },
+        "name": "Database 01",
+        "class": "Database",
+        "archimateType": "System software",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "software": "@ref:moduleversion-moduleversion-3-3",
+        "endOfSupport": "2026-03-03",
+        "eolSource": "Voorbeeld Eolsource 3",
+        "eolUpdatedOn": "2026-03-03T09:00:00+00:00",
+        "runsOn": [
+          "@ref:technology-vm-1"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "context": "Voorbeeld text 0",
+        "decision": "Voorbeeld text 0",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 1",
+            "reasonRejected": "Voorbeeld Reasonrejected 1"
+          }
+        ],
+        "consequences": "Voorbeeld text 0",
+        "category": "application",
+        "impact": "low",
+        "status": "draft",
+        "reviewer": "Voorbeeld Reviewer 1",
+        "decidedOn": "2026-03-01",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000000"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "context": "Voorbeeld text 1",
+        "decision": "Voorbeeld text 1",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 2",
+            "reasonRejected": "Voorbeeld Reasonrejected 2"
+          }
+        ],
+        "consequences": "Voorbeeld text 1",
+        "category": "data",
+        "impact": "medium",
+        "status": "in review",
+        "reviewer": "Voorbeeld Reviewer 2",
+        "decidedOn": "2026-03-02",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "context": "Voorbeeld text 2",
+        "decision": "Voorbeeld text 2",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 3",
+            "reasonRejected": "Voorbeeld Reasonrejected 3"
+          }
+        ],
+        "consequences": "Voorbeeld text 2",
+        "category": "integration",
+        "impact": "high",
+        "status": "accepted",
+        "reviewer": "Voorbeeld Reviewer 3",
+        "decidedOn": "2026-03-03",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000002"
+        ]
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "context": "Voorbeeld text 0",
+        "decision": "Voorbeeld text 0",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 1",
+            "reasonRejected": "Voorbeeld Reasonrejected 1"
+          }
+        ],
+        "consequences": "Voorbeeld text 0",
+        "category": "application",
+        "impact": "low",
+        "status": "draft",
+        "reviewer": "Voorbeeld Reviewer 1",
+        "decidedOn": "2026-03-01",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000000"
+        ]
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "context": "Voorbeeld text 1",
+        "decision": "Voorbeeld text 1",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 2",
+            "reasonRejected": "Voorbeeld Reasonrejected 2"
+          }
+        ],
+        "consequences": "Voorbeeld text 1",
+        "category": "data",
+        "impact": "medium",
+        "status": "in review",
+        "reviewer": "Voorbeeld Reviewer 2",
+        "decidedOn": "2026-03-02",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "architectureDecision",
+          "slug": "architecturedecision-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "context": "Voorbeeld text 2",
+        "decision": "Voorbeeld text 2",
+        "alternatives": [
+          {
+            "option": "Voorbeeld Option 3",
+            "reasonRejected": "Voorbeeld Reasonrejected 3"
+          }
+        ],
+        "consequences": "Voorbeeld text 2",
+        "category": "integration",
+        "impact": "high",
+        "status": "accepted",
+        "reviewer": "Voorbeeld Reviewer 3",
+        "decidedOn": "2026-03-03",
+        "applications": [
+          {}
+        ],
+        "elements": [
+          {}
+        ],
+        "supersedes": {},
+        "supersededBy": {},
+        "boardDecisions": [
+          "00000000-0000-4000-8000-000000000002"
+        ]
       }
     ]
   }

@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -40,14 +42,14 @@ class ModuleEventProcessor {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container for lazy service resolution.
-	 * @param SettingsService $settings Settings service for schema ID lookup.
+	 * @param RegisterConfigReaderInterface $settings Settings service for schema ID lookup.
 	 * @param LoggerInterface $logger Logger instance.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settings,
+		private readonly RegisterConfigReaderInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -205,9 +207,11 @@ class ModuleEventProcessor {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$orgWithContacts = $objectService->find(
 				id: $objectId,
-				register: $register,
-				schema: $organizationSchema,
-				_extend: ['contactpersonen'],
+				options: new ObjectFindOptions(
+					register: $register,
+					schema: $organizationSchema,
+					extend: ['contactpersonen']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

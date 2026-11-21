@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
-use OCA\Stackiq\Service\ItsmExchangeService;
-use OCA\Stackiq\Service\ItsmFileImportService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,17 +49,17 @@ class ItsmExchangeController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest              $request      The request.
-	 * @param ItsmExchangeService   $exchange     Sets up the flows.
-	 * @param ItsmFileImportService $fileImport   Imports a spreadsheet.
+	 * @param ItsmExchangeServiceInterface   $exchange     Sets up the flows.
+	 * @param ItsmFileImportServiceInterface $fileImport   Imports a spreadsheet.
 	 * @param IUserSession          $userSession  The signed-in user, who the imports run as.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ItsmExchangeService $exchange,
-		private readonly ItsmFileImportService $fileImport,
+		private readonly ItsmExchangeServiceInterface $exchange,
+		private readonly ItsmFileImportServiceInterface $fileImport,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -106,18 +106,25 @@ class ItsmExchangeController extends Controller {
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The organisation uuid.
 	 * @param string $templateId   The desk's asset template for new records (TOPdesk), or empty.
+	 * @param string $sendFrom     The lifecycle state from which applications are sent, or empty for the default.
 	 *
 	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 *
 	 * @return JSONResponse The outcome; 422 when nothing was created.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function setUp(string $desk = '', string $organisation = '', string $templateId = ''): JSONResponse {
+	public function setUp(string $desk = '', string $organisation = '', string $templateId = '', string $sendFrom = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['created' => false, 'message' => 'Sign in first.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$refusal = $this->exchange->chooseSendFrom(state: trim($sendFrom));
+		if ($refusal !== null) {
+			return new JSONResponse(['created' => false, 'message' => $refusal], Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
 
 		$result = $this->exchange->setUp(desk: $desk, organisation: $organisation, runAs: $user->getUID(), templateId: trim($templateId));

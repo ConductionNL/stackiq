@@ -1,0 +1,71 @@
+{
+	"settings present": [
+		[
+			"registerObjectType",
+			"suite",
+			"suite",
+			7,
+			{
+				"registerSlug": "stackiq",
+				"schemaSlug": "suite"
+			}
+		]
+	],
+	"settings fetched": [
+		[
+			"fetchSettings"
+		],
+		[
+			"registerObjectType",
+			"suite",
+			"suite",
+			7,
+			{
+				"registerSlug": "stackiq",
+				"schemaSlug": "suite"
+			}
+		]
+	],
+	"settings missing, no fetch": [],
+	"config fallback": [
+		[
+			"registerObjectType",
+			"suite",
+			"suite",
+			"vz",
+			{
+				"registerSlug": "stackiq",
+				"schemaSlug": "suite"
+			}
+		]
+	],
+	"voorzieningen wins": [
+		[
+			"registerObjectType",
+			"suite",
+			"suite",
+			1,
+			{
+				"registerSlug": "stackiq",
+				"schemaSlug": "suite"
+			}
+		]
+	],
+	"empty voorzieningen falls back": [],
+	"no register": [],
+	"already registered": [],
+	"other types registered": [
+		[
+			"registerObjectType",
+			"suite",
+			"suite",
+			7,
+			{
+				"registerSlug": "stackiq",
+				"schemaSlug": "suite"
+			}
+		]
+	],
+	"store cannot register": [],
+	"empty settings object": []
+}

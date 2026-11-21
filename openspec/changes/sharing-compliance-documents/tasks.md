@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN a pentest report shared with municipality A WHEN municipality B lists compliance documents THEN it is not listed
   - GIVEN a public processing agreement WHEN an anonymous visitor reads the product's documents through the API THEN it is listed
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ComplianceDocumentsFragmentTest.php`, `tests/Unit/Settings/SchemaRbacTest.php` cases for the three audiences)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ComplianceDocumentsFragmentTest.php`, `tests/Unit/Settings/SchemaRbacTest.php` cases for the three audiences)
 
 ### Task 2: Product page section and the documents list
 - **spec_ref**: openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
@@ -17,15 +17,15 @@
 - **acceptance_criteria**:
   - GIVEN a supplier on its product page WHEN it adds a processing agreement with audience government THEN the product page lists it for a municipal user
   - GIVEN documents with different validity WHEN the user picks Expiring within 90 days THEN only those remain
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/compliance-documents.spec.ts`, including an organisation outside a named share)
+- [ ] Implement. Built: the list on the application page (publish from it, soonest expiry first), the documents list with a quick filter per type, the detail page, menu entry, en and nl strings, and `tests/vitest/complianceDocuments.spec.js`. Built 17 Nov: the "Expiring within 90 days" quick filter, on the materialised `expiresWithin90Days` calculation over `validUntil` (with `daysUntilExpiry`; schema 0.2.0), kept current by OpenRegister's temporal sweep. Left: the confirmation before choosing the public audience. The document is created in the shared `CnObjectListWidget` form, which has no hook to confirm one field value before saving, so it needs that hook in @conduction/nextcloud-vue first.
+- [ ] Test (Playwright `tests/e2e/workflows/compliance-documents.spec.ts`, including an organisation outside a named share) — written 17 Nov (the supplier publishes from the product page, a named share read by A and not by B, the 90-day filter); not run yet, needs a live instance
 
 ### Task 3: Documentation
 - **spec_ref**: openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
 - **files**: `docs/features/compliance-documents.md`, `docs/images/compliance-documents.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Compliance documents THEN publishing, the three audiences and expiry are explained with a screenshot
-- [ ] Implement
+- [ ] Implement. Built: `docs/features/compliance-documents.md` (publishing, the three audiences, finding documents). Left: the screenshot, which needs a running instance.
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification

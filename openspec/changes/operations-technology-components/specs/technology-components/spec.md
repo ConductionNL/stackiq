@@ -22,6 +22,13 @@ The `stackiq` register SHALL hold a `technologyComponent` schema with a required
 - **WHEN** they add Database 01 with class Database, running on App server 01, and save
 - **THEN** `/technologie/:id` SHALL show Database 01 with class Database, owner Gemeente Voorbeeld and Runs on App server 01
 
+#### Scenario: An information manager registers a laptop
+@e2e tests/e2e/spec-coverage/technology-components.spec.ts
+
+- **GIVEN** a municipal information manager of Gemeente Voorbeeld on `/technologie`
+- **WHEN** they add Laptop 117 with class Hardware, manufacturer Dell, serial number SN-4471 and location Stadhuis, and save
+- **THEN** `/technologie/:id` SHALL show Laptop 117 with class Hardware, its manufacturer, serial number and location
+
 #### Scenario: A supplier cannot read an organisation's components
 @e2e exclude An authorisation rule held by OpenRegister; tests/Unit/Settings/TechnologyComponentDeclarationTest.php asserts the read rule is organisation-scoped and names no supplier or public group.
 

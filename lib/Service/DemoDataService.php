@@ -20,14 +20,20 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use DateTimeImmutable;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -37,7 +43,7 @@ use RuntimeException;
  *
  * @spec exclude Demo-data import; ADR-111 rule 1, no per-app behavioural spec.
  */
-class DemoDataService {
+class DemoDataService implements DemoDataServiceInterface {
 	/**
 	 * App-relative path to the generated mock descriptor.
 	 *
@@ -55,14 +61,16 @@ class DemoDataService {
 	 *
 	 * @var string
 	 */
-	private const CONFIG_APP_ID = Application::APP_ID . '.demo';
+	private const CONFIG_APP_ID = AppIdentity::APP_ID . '.demo';
 
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppManager        $appManager Resolves this app's path and version.
-	 * @param ContainerInterface $container  Resolves OpenRegister's importer.
-	 * @param LoggerInterface    $logger     Records what was imported.
+	 * @param IAppManager        $appManager  Resolves this app's path and version.
+	 * @param ContainerInterface $container   Resolves OpenRegister's importer.
+	 * @param LoggerInterface    $logger      Records what was imported.
+	 * @param ITimeFactory|null  $timeFactory The clock `{{today...}}` placeholders resolve against; the system
+	 *                                        clock when null.
 	 *
 	 * @return void
 	 */
@@ -70,6 +78,7 @@ class DemoDataService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly ?ITimeFactory $timeFactory = null,
 	) {
 	}//end __construct()
 
@@ -83,24 +92,6 @@ class DemoDataService {
 	public function isAvailable(): bool {
 		return is_file($this->descriptorPath()) === true;
 	}//end isAvailable()
-
-	/**
-	 * The answer that means "plant nothing".
-	 *
-	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
-	 * step; a step that can never be marked done reopens the wizard over every
-	 * page (nextcloud-vue#806).
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The id of the dataset this app ships.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'demo';
 
 	/**
 	 * Every answer the wizard's choice step may offer, declining included.
@@ -162,44 +153,22 @@ class DemoDataService {
 	 * @return integer|null The object count, or null when there is no usable descriptor.
 	 */
 	private function shippedObjectCount(): ?int {
-		$path = $this->descriptorPath();
-		if (is_file($path) === false) {
+		try {
+			return self::objectCount(data: $this->readDescriptor());
+		} catch (RuntimeException) {
 			return null;
 		}
-
-		$raw = file_get_contents($path);
-		if ($raw === false) {
-			return null;
-		}
-
-		$data = json_decode($raw, true);
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
-			return 0;
-		}
-
-		return count($components['objects']);
 
 	}//end shippedObjectCount()
 
 	/**
-	 * Import the demo dataset.
+	 * Read and decode the shipped demo descriptor.
 	 *
-	 * 🔴 THROWS RATHER THAN RETURNING A QUIET FAILURE. The caller reports the
-	 * outcome to an operator who just asked for this, so "nothing happened" must
-	 * not be presentable as success.
+	 * @return array<string, mixed> The decoded descriptor.
 	 *
-	 * @return array{objects: integer, registers: integer, schemas: integer} What was imported.
-	 *
-	 * @throws RuntimeException When the descriptor is missing, unreadable, or OpenRegister is absent.
-	 *
-	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
+	 * @throws RuntimeException When the descriptor is missing, unreadable or not valid JSON.
 	 */
-	public function install(): array {
+	private function readDescriptor(): array {
 		$path = $this->descriptorPath();
 		if (is_file($path) === false) {
 			throw new RuntimeException('No demo dataset ships with this app (' . self::DESCRIPTOR . ' not found).');
@@ -215,42 +184,116 @@ class DemoDataService {
 			throw new RuntimeException('The demo dataset is not valid JSON: ' . $path);
 		}
 
+		return $data;
+
+	}//end readDescriptor()
+
+	/**
+	 * How many objects a decoded descriptor carries.
+	 *
+	 * @param array<string, mixed> $data The decoded descriptor.
+	 *
+	 * @return integer The number of objects in `components.objects`, 0 when absent.
+	 */
+	private static function objectCount(array $data): int {
+		$components = ($data['components'] ?? []);
+		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
+			return 0;
+		}
+
+		return count($components['objects']);
+
+	}//end objectCount()
+
+	/**
+	 * Import the demo dataset.
+	 *
+	 * 🔴 THROWS RATHER THAN RETURNING A QUIET FAILURE. The caller reports the
+	 * outcome to an operator who just asked for this, so "nothing happened" must
+	 * not be presentable as success.
+	 *
+	 * @return array{objects: integer, registers: integer, schemas: integer} What was imported.
+	 *
+	 * @throws RuntimeException When the descriptor is missing, unreadable, or OpenRegister is absent.
+	 *
+	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
+	 */
+	public function install(): array {
+		$data = $this->readDescriptor();
+
 		// Counted from the FILE, not the importer's reply, so the number reported
 		// is the number ASKED FOR. An object whose schema does not resolve is
 		// SKIPPED rather than errored, so a discrepancy here is a real condition
 		// an operator should be able to see.
-		$objects = 0;
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === true && is_array(($components['objects'] ?? null)) === true) {
-			$objects = count($components['objects']);
-		}
-
-		$importer = $this->configurationService();
-		$data     = $this->pinSchemasToTheirRegisters(data: $data);
-
-		$result = $importer->importFromApp(
-			appId: self::CONFIG_APP_ID,
-			data: $data,
-			version: $this->appManager->getAppVersion(Application::APP_ID),
-			force: true
-		);
+		$result = $this->runImport(data: $data);
 
 		$imported = [
-			'objects'   => $objects,
+			'objects'   => self::objectCount(data: $data),
 			'registers' => count((array)($result['registers'] ?? [])),
 			'schemas'   => count((array)($result['schemas'] ?? [])),
 		];
+		$this->logImported(imported: $imported);
 
+		return $imported;
+
+	}//end install()
+
+	/**
+	 * Hand the descriptor to OpenRegister's importer, relative dates resolved and schemas pinned first.
+	 *
+	 * @param array<string, mixed> $data The decoded descriptor.
+	 *
+	 * @return mixed The importer's reply.
+	 *
+	 * @throws RuntimeException When OpenRegister is absent.
+	 * @SuppressWarnings(PHPMD.StaticAccess) RelativeDemoDates::resolveDurations() is a pure function of the data and the clock.
+	*/
+	private function runImport(array $data): mixed {
+		$importer = $this->configurationService();
+
+		// Dates written as `{{today+45d}}` become real dates of the import day, so
+		// a demo contract seeded to read Expiring still does months later.
+		$data = (new RelativeDemoDates())->resolve(data: $data, today: $this->today());
+
+		return $importer->importFromApp(
+			appId: self::CONFIG_APP_ID,
+			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new DateTimeImmutable())),
+			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
+			force: true
+		);
+
+	}//end runImport()
+
+	/**
+	 * The import day.
+	 *
+	 * @return DateTimeImmutable
+	 */
+	private function today(): DateTimeImmutable {
+		if ($this->timeFactory !== null) {
+			return DateTimeImmutable::createFromMutable($this->timeFactory->getDateTime());
+		}
+
+		return new DateTimeImmutable();
+	}//end today()
+
+	/**
+	 * Log what an import brought in.
+	 *
+	 * @param array{objects: integer, registers: integer, schemas: integer} $imported The counts.
+	 *
+	 * @return void
+	 */
+	private function logImported(array $imported): void {
 		$this->logger->info(
 			'[DemoDataService] imported demo data: '
 			. $imported['objects'] . ' object(s), '
 			. $imported['registers'] . ' register(s), '
 			. $imported['schemas'] . ' schema(s).',
-			['app' => Application::APP_ID]
+			['app' => AppIdentity::APP_ID]
 		);
 
-		return $imported;
-	}//end install()
+	}//end logImported()
 
 	/**
 	 * Point every demo object at its schema in its own register, by id.
@@ -278,20 +321,39 @@ class DemoDataService {
 
 		$bySlug = [];
 		foreach ($objects as $index => $object) {
-			$register = (string) ($object['@self']['register'] ?? '');
-			$schema   = (string) ($object['@self']['schema'] ?? '');
-			if ($register === '' || $schema === '') {
-				continue;
-			}
-
-			$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
-			if (isset($bySlug[$register][$schema]) === true) {
-				$data['components']['objects'][$index]['@self']['schema'] = (string) $bySlug[$register][$schema];
+			$schemaId = $this->schemaIdInOwnRegister(object: $object, bySlug: $bySlug);
+			if ($schemaId !== '') {
+				$data['components']['objects'][$index]['@self']['schema'] = $schemaId;
 			}
 		}
 
 		return $data;
 	}//end pinSchemasToTheirRegisters()
+
+	/**
+	 * The id of a demo object's schema in the register it names, or '' when it names none or the register does
+	 * not list it.
+	 *
+	 * @param mixed                            $object The demo object.
+	 * @param array<string, array<string, int>> $bySlug The schema ids per register read so far; a register read
+	 *                                                 here is added.
+	 *
+	 * @return string
+	 */
+	private function schemaIdInOwnRegister(mixed $object, array &$bySlug): string {
+		$register = (string) ($object['@self']['register'] ?? '');
+		$schema   = (string) ($object['@self']['schema'] ?? '');
+		if ($register === '' || $schema === '') {
+			return '';
+		}
+
+		$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
+		if (isset($bySlug[$register][$schema]) === false) {
+			return '';
+		}
+
+		return (string) $bySlug[$register][$schema];
+	}//end schemaIdInOwnRegister()
 
 	/**
 	 * The schemas a register lists, as slug => id.
@@ -326,7 +388,7 @@ class DemoDataService {
 	 * @return string The path.
 	 */
 	private function descriptorPath(): string {
-		return $this->appManager->getAppPath(Application::APP_ID) . self::DESCRIPTOR;
+		return $this->appManager->getAppPath(AppIdentity::APP_ID) . self::DESCRIPTOR;
 	}//end descriptorPath()
 
 	/**

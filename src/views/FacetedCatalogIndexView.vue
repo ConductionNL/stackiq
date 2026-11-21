@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
 FacetedCatalogIndexView.vue
 
 GEMMA-dimension faceted index page for the `module` (Applications) and
@@ -79,6 +83,33 @@ generic route-query-to-filter passthrough never sees it (see the
 					{{ view.name }}
 				</NcActionButton>
 			</NcActions>
+			<NcButton
+				v-if="mayFindDuplicates"
+				variant="tertiary"
+				:href="duplicateCandidatesHref"
+				data-testid="find-duplicates">
+				<template #icon>
+					<ContentDuplicate :size="20" />
+				</template>
+				{{ t('stackiq', 'Find duplicates') }}
+			</NcButton>
+			<NcActions :aria-label="t('stackiq', 'Export')" :menuName="t('stackiq', 'Export')">
+				<template #icon>
+					<Download :size="20" />
+				</template>
+				<NcActionButton @click="exportList('csv')">
+					<template #icon>
+						<FileDelimitedOutline :size="20" />
+					</template>
+					{{ t('stackiq', 'Export as CSV') }}
+				</NcActionButton>
+				<NcActionButton @click="exportList('xlsx')">
+					<template #icon>
+						<FileExcelOutline :size="20" />
+					</template>
+					{{ t('stackiq', 'Export as Excel') }}
+				</NcActionButton>
+			</NcActions>
 		</div>
 
 		<p
@@ -108,6 +139,7 @@ generic route-query-to-filter passthrough never sees it (see the
 			<div class="faceted-catalog-index__list">
 				<CnIndexPage
 					:key="indexPageKey"
+					ref="indexPage"
 					:title="title"
 					:register="register"
 					:schema="schema"
@@ -117,11 +149,49 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMode="quickFilterMode"
 					:quickFilterMultiple="quickFilterMultiple"
 					:sidebar="sidebar"
+					:bulkActions="bulkActions"
+					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
+					:showAdd="addWizard === ''"
 					@search="onListSearch"
 					@rowClick="openDetail"
 					@view="openDetail"
-					@quickFilterChange="onQuickFilterChange" />
+					@quickFilterChange="onQuickFilterChange">
+					<!-- Publish, Withdraw and Lock next to the built-in Delete in
+					     the selection strip (REQ-ODP-010, board SkApplicaties). -->
+					<template #selection-actions="{ selectedIds }">
+						<NcButton
+							variant="secondary"
+							data-testid="selection-publish"
+							@click="openSelectionDialog('massPublishObjects', selectedIds)">
+							<template #icon>
+								<Publish :size="20" />
+							</template>
+							{{ t('stackiq', 'Publish') }}
+						</NcButton>
+						<NcButton
+							variant="secondary"
+							data-testid="selection-withdraw"
+							@click="openSelectionDialog('massDepublishObjects', selectedIds)">
+							<template #icon>
+								<PublishOff :size="20" />
+							</template>
+							{{ t('stackiq', 'Withdraw') }}
+						</NcButton>
+						<NcButton
+							variant="secondary"
+							data-testid="selection-lock"
+							@click="openSelectionDialog('massLockObjects', selectedIds)">
+							<template #icon>
+								<LockOutline :size="20" />
+							</template>
+							{{ t('stackiq', 'Lock') }}
+						</NcButton>
+					</template>
+					<template v-if="addWizard !== ''" #header-actions>
+						<EntryWizardAction :kind="addWizard" />
+					</template>
+				</CnIndexPage>
 			</div>
 		</div>
 
@@ -137,15 +207,30 @@ generic route-query-to-filter passthrough never sees it (see the
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcActionButton, NcActionCaption, NcActions } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud/vue'
+import { defineAsyncComponent } from 'vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import FileDelimitedOutline from 'vue-material-design-icons/FileDelimitedOutline.vue'
+import FileExcelOutline from 'vue-material-design-icons/FileExcelOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
+import Publish from 'vue-material-design-icons/Publish.vue'
+import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
+import {
+	selectedEntries,
+	setPublicationTarget,
+} from '../services/publicationActions.js'
 import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
+import { catalogExportUrl } from '../utils/catalogExportUrl.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
+import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -153,6 +238,7 @@ const DIMENSION_LABELS = {
 	standard: () => t('stackiq', 'Standard'),
 	applicationService: () => t('stackiq', 'Application service'),
 	domain: () => t('stackiq', 'Domain'),
+	supplier: () => t('stackiq', 'Supplier'),
 }
 
 /**
@@ -190,12 +276,23 @@ export default {
 		NcActions,
 		NcActionButton,
 		NcActionCaption,
+		NcButton,
+		ContentDuplicate,
 		CnFacetSidebar,
 		CnIndexPage,
+		// Loaded when a page asks for it: the wizard reads the object store.
+		EntryWizardAction: defineAsyncComponent(() => import('../components/entryWizard/EntryWizardAction.vue')),
 		SaveFacetViewModal,
 		ContentSaveOutline,
+		Download,
+		FileDelimitedOutline,
+		FileExcelOutline,
 		FolderOutline,
 		FolderStarOutline,
+		NcButton,
+		Publish,
+		PublishOff,
+		LockOutline,
 	},
 
 	props: {
@@ -204,6 +301,17 @@ export default {
 		 * Empty keeps rows where they are (the Services list has no detail page).
 		 */
 		detailRoute: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * The guided entry wizard the page's Add opens (manifest `config.addWizard`),
+		 * a kind of src/utils/entryWizard.js such as `module`. Empty keeps the list's own Add.
+		 *
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 */
+		addWizard: {
 			type: String,
 			default: '',
 		},
@@ -235,6 +343,15 @@ export default {
 
 		/** Table column definitions, forwarded to `CnIndexPage` (manifest `config.columns`). */
 		columns: {
+			type: Array,
+			default: () => [],
+		},
+
+		/**
+		 * Selection-strip actions, forwarded to `CnIndexPage` (manifest
+		 * `config.bulkActions`), e.g. Move to organisation.
+		 */
+		bulkActions: {
 			type: Array,
 			default: () => [],
 		},
@@ -294,6 +411,20 @@ export default {
 			type: Object,
 			default: null,
 		},
+
+		/**
+		 * Copy settings, forwarded to `CnIndexPage` (manifest `config.copy`):
+		 * `include` lists the links a copy may take along, which the single and
+		 * mass copy dialogs then offer, ticked; `overrides` holds the field
+		 * values a copy starts with (the publication dates cleared, so a copy is
+		 * never published with its source).
+		 *
+		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+		 */
+		copy: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	/**
@@ -314,6 +445,8 @@ export default {
 			searchDebounceTimer: null,
 			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 			listRemount: 0,
+			mayFindDuplicates: false,
+			duplicateCandidatesHref: duplicateCandidatesUrl(generateUrl),
 		}
 	},
 
@@ -447,6 +580,7 @@ export default {
 	mounted() {
 		this.refetch()
 		this.facetStore.fetchSavedViews(this.schema)
+		this.loadMayFindDuplicates()
 	},
 
 	beforeUnmount() {
@@ -454,6 +588,59 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Open a mass dialog (publish, withdraw or lock) for the rows selected
+		 * in the list: the dialog acts on those objects, and publish and
+		 * withdraw go through the publication endpoint for this list's type.
+		 *
+		 * @param {string} dialog The dialog key (`massPublishObjects`, ...).
+		 * @param {Array<string>} selectedIds The selected row ids.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+		 */
+		async openSelectionDialog(dialog, selectedIds) {
+			// The app's object and navigation stores, loaded on first use so
+			// the list itself does not pull them in.
+			const { navigationStore, objectStore } = await import('../store/store.js')
+			const page = this.$refs.indexPage
+			const loaded = (page && (page.selectedObjects || page.effectiveObjects)) || []
+			setPublicationTarget({ objectType: this.schema })
+			objectStore.setSelectedObjects(selectedEntries(selectedIds, loaded))
+			navigationStore.setDialog(dialog)
+			// Reload the list once the dialog closes, so published, withdrawn
+			// or locked entries show their new state.
+			const stop = this.$watch(
+				() => navigationStore.dialog,
+				(open) => {
+					if (!open) {
+						stop()
+						this.listRemount++
+					}
+				},
+			)
+		},
+
+		/**
+		 * Whether the user may open OpenRegister's duplicate candidates: a
+		 * Nextcloud admin or a functional administrator (`/api/me`). Anyone
+		 * else, or a failed lookup, does not see Find duplicates; the
+		 * candidates page checks access itself.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		async loadMayFindDuplicates() {
+			try {
+				const response = await fetch(generateUrl('/apps/stackiq/api/me'), {
+					headers: { requesttoken: globalThis.OC?.requestToken ?? '' },
+				})
+				const data = response.ok ? await response.json() : null
+				this.mayFindDuplicates = data?.mayFindDuplicates === true
+			} catch {
+				this.mayFindDuplicates = false
+			}
+		},
+
 		/**
 		 * Remember which quick-filter tab is active (single-select mode emits the
 		 * tab index; multi-select emits an array, which never selects the
@@ -463,6 +650,26 @@ export default {
 		 * @return {void}
 		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
+		/**
+		 * Download the list as filtered: the GEMMA facets, the search and the
+		 * active quick filter go to stackiq's export, in the page's columns.
+		 *
+		 * @param {string} format `csv` or `xlsx`.
+		 * @return {void}
+		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+		 */
+		exportList(format) {
+			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
+			window.location.assign(catalogExportUrl({
+				schema: this.schema,
+				activeFilters: this.facetStore[this.schema].activeFilters,
+				search: this.facetStore[this.schema].search,
+				quickFilter: tab?.filter ?? null,
+				columns: this.columns,
+				format,
+			}, generateUrl))
+		},
+
 		onQuickFilterChange(index) {
 			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
 		},

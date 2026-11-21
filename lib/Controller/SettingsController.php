@@ -27,14 +27,22 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Exception\CmdbImportException;
-use OCA\Stackiq\Service\ArchiMateImportService;
-use OCA\Stackiq\Service\ArchiMateService;
-use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
-use OCA\Stackiq\Service\ConnectionReportService;
-use OCA\Stackiq\Service\EolSyncService;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\ProgressTracker;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
+use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Stackiq\Service\HelperFactory;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -42,11 +50,11 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StreamResponse;
 use OCP\IAppConfig;
-use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -99,21 +107,26 @@ class SettingsController extends Controller {
 	 * @param IAppManager $appManager The app manager.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param IUserSession $userSession The user session.
-	 * @param SettingsService $settingsService The settings service.
-	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
-	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
-	 * @param ProgressTracker $progressTracker The progress tracking service.
-	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
+	 * @param SettingsServiceInterface $settingsService The settings service.
+	 * @param CronjobSettingsInterface $cronjobSettings The cronjob configuration.
+	 * @param OrganizationSyncServiceInterface $orgSyncSvc The organization sync service.
+	 * @param ArchiMateServiceInterface $archiMateService The ArchiMate import/export service.
+	 * @param RoleGroupSettingsInterface $roleGroupSettings The role group lists.
+	 * @param ProgressTrackerInterface $progressTracker The progress tracking service.
+	 * @param ArchiMateImportControlInterface $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
+	 * @param EolSyncServiceInterface $eolSyncService The EOL feed sync orchestration service.
+	 * @param EmailSettingsInterface $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
-	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
-	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
+	 * @param ConnectionReportServiceInterface|null $connectionReports Asks integriq to look again after an email settings save.
+	 * @param CmdbImportProfileInterface|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
+	 * @param OrganisationReportAccessInterface|null $organisationAccess Who may export which organisation; resolved from the container when not given.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function __construct(
 		$appName,
@@ -123,16 +136,21 @@ class SettingsController extends Controller {
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
-		private readonly SettingsService $settingsService,
-		private readonly OrganizationSyncService $orgSyncSvc,
-		private readonly ArchiMateService $archiMateService,
-		private readonly ProgressTracker $progressTracker,
-		private readonly EolSyncService $eolSyncService,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly CronjobSettingsInterface $cronjobSettings,
+		private readonly OrganizationSyncServiceInterface $orgSyncSvc,
+		private readonly ArchiMateServiceInterface $archiMateService,
+		private readonly RoleGroupSettingsInterface $roleGroupSettings,
+		private readonly ProgressTrackerInterface $progressTracker,
+		private readonly ArchiMateImportControlInterface $archiMateImportControl,
+		private readonly EolSyncServiceInterface $eolSyncService,
+		private readonly EmailSettingsInterface $emailSettings,
 		private readonly LoggerInterface $logger,
-		private readonly ?ConnectionReportService $connectionReports = null,
-		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
+		private readonly ?ConnectionReportServiceInterface $connectionReports = null,
+		private readonly ?CmdbImportProfileInterface $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?OrganisationReportAccessInterface $organisationAccess = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -205,7 +223,8 @@ class SettingsController extends Controller {
 	}//end getRedactedParams()
 
 	/**
-	 * Build the 500 response for a failed config READ.
+	 * Build the 500 response for a failed config READ, or for a config call
+	 * that logs no request params.
 	 *
 	 * Centralises the error-log emission + the
 	 * `{success: false, message: "Failed to <op>: <exception>"}` shape that
@@ -251,6 +270,71 @@ class SettingsController extends Controller {
 			]
 		);
 	}//end buildConfigWriteErrorResponse()
+
+	/**
+	 * The refusal for a caller who is not an administrator: 401 for an
+	 * anonymous caller, 403 for a signed-in non-admin; null for an admin.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the caller is an admin.
+	 */
+	private function adminRefusal(): ?JSONResponse {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		}
+
+		return null;
+	}//end adminRefusal()
+
+	/**
+	 * The response to a user-group update: the service's outcome, message and groups.
+	 *
+	 * @param array<string, mixed> $result The service result.
+	 *
+	 * @return JSONResponse
+	 */
+	private function groupsUpdateResponse(array $result): JSONResponse {
+		return new JSONResponse(
+			[
+				'success' => $result['success'],
+				'message' => $result['message'],
+				'groups' => $result['groups'] ?? null,
+			]
+		);
+	}//end groupsUpdateResponse()
+
+	/**
+	 * The refusal for an anonymous caller: 401; null for a signed-in caller.
+	 *
+	 * @return JSONResponse|null The refusal, or null when someone is signed in.
+	 */
+	private function anonymousRefusal(): ?JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		return null;
+	}//end anonymousRefusal()
+
+	/**
+	 * Run one per-section config call, answering an exception with the shared 500 body.
+	 *
+	 * @param string   $operationLabel "get AMEF config" / "update email config" / …
+	 * @param \Closure $call           Builds the success response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function configCall(string $operationLabel, \Closure $call): JSONResponse {
+		try {
+			return $call();
+		} catch (\Exception $e) {
+			return $this->buildConfigReadErrorResponse(operationLabel: $operationLabel, exception: $e);
+		}
+	}//end configCall()
 
 	/**
 	 * Log the failure and build the shared 500 config-error response body.
@@ -343,6 +427,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function update(): JSONResponse {
 		try {
@@ -382,6 +468,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function create(): JSONResponse {
 		return $this->update();
@@ -442,7 +530,7 @@ class SettingsController extends Controller {
 				continue;
 			}
 
-			$validation = $this->settingsService->validateGroups($userGroups[$key]);
+			$validation = $this->roleGroupSettings->validateGroups($userGroups[$key]);
 			if (empty($validation['invalid']) === false) {
 				return new JSONResponse(
 					['error' => 'Invalid ' . $cfg['label'] . ' group names provided', 'validation' => $validation],
@@ -450,7 +538,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$this->settingsService->{$cfg['setter']}($validation['valid']);
+			$this->roleGroupSettings->{$cfg['setter']}($validation['valid']);
 			$result['userGroups'][$key] = $validation['valid'];
 		}
 
@@ -477,7 +565,7 @@ class SettingsController extends Controller {
 			return;
 		}
 
-		$result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+		$result['emailSettings'] = $this->emailSettings->updateEmailSettings($data['emailSettings']);
 		$this->connectionReports?->emailSettingsSaved();
 
 	}//end applyEmailSettingsUpdate()
@@ -490,6 +578,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse General configuration
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getGeneralConfig(): JSONResponse {
 		try {
@@ -516,6 +606,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateGeneralConfig(): JSONResponse {
 		try {
@@ -547,6 +639,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Sync configuration
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getSyncConfig(): JSONResponse {
 		try {
@@ -573,6 +667,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateSyncConfig(): JSONResponse {
 		try {
@@ -604,6 +700,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function load(): JSONResponse {
 		try {
@@ -623,6 +721,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function initialize(): JSONResponse {
 		try {
@@ -708,6 +808,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function autoConfigure(): JSONResponse {
 		try {
@@ -787,6 +889,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function debug(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -818,6 +922,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function sendTestEmail(): JSONResponse {
 		try {
@@ -892,6 +998,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function performSync(int $minutesBack = 0): JSONResponse {
 		try {
@@ -1058,6 +1166,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function resetAutoConfig(): JSONResponse {
 		try {
@@ -1091,6 +1201,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearCache(): JSONResponse {
 		try {
@@ -1130,6 +1242,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function manualImport(): JSONResponse {
 		try {
@@ -1189,6 +1303,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function forceUpdate(): JSONResponse {
 		try {
@@ -1261,6 +1377,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function consolidatedAutoConfigure(): JSONResponse {
 		try {
@@ -1368,9 +1486,10 @@ class SettingsController extends Controller {
 	 *
 	 * Progress lives in a store every request reads (the distributed cache, or
 	 * the app config without a shared cache), so any request can load an
-	 * operation by its id. Its owner and Nextcloud admins may read it. An
-	 * operation without an owner, such as one a background job started, is
-	 * for admins only.
+	 * operation by its id. Its owner and Nextcloud admins may read it, and an
+	 * organisation sync also whoever SyncAccessPolicy lets see the sync. Any
+	 * other operation without an owner, such as one a background job started,
+	 * is for admins only.
 	 *
 	 * @param array  $progress The stored progress snapshot.
 	 * @param string $uid      The signed-in caller.
@@ -1385,7 +1504,14 @@ class SettingsController extends Controller {
 			return true;
 		}
 
-		return $this->groupManager->isAdmin($uid) === true;
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
+
+		// The organisation sync runs from cron with no owner: whoever may see
+		// the sync may follow it (operations-sync-status-and-progress D4).
+		return ($progress['operation_type'] ?? null) === 'organisation_sync'
+			&& (new SyncAccessPolicy(groupManager: $this->groupManager))->mayViewSync(uid: $uid) === true;
 	}//end mayReadProgress()
 
 	/**
@@ -1398,8 +1524,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) framework-required: SSE loop in anonymous Response subclass
-	 * @spec                                          openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function streamProgress(string $operationId): Response {
 		$currentUser = $this->userSession->getUser();
@@ -1407,117 +1532,41 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Verify the caller may read this operation before streaming. An
-		// unknown operation streams one error event and closes.
+		$refusal = $this->streamRefusal(operationId: $operationId, user: $currentUser);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		// Stream Server-Sent Events.
+		return new ProgressStreamResponse(
+			operationId: $operationId,
+			stream: new ProgressEventStream(progressTracker: $this->progressTracker, logger: $this->logger)
+		);
+	}//end streamProgress()
+
+	/**
+	 * The 404 for a caller who may not read the operation; null when the stream may open.
+	 *
+	 * Verifies the caller may read this operation before streaming. An
+	 * unknown operation streams one error event and closes.
+	 *
+	 * @param string $operationId The operation ID.
+	 * @param IUser $user The signed-in caller.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	private function streamRefusal(string $operationId, IUser $user): ?JSONResponse {
 		$progress = $this->progressTracker->getProgress($operationId);
 		if ($progress !== null
-			&& $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+			&& $this->mayReadProgress(progress: $progress, uid: $user->getUID()) === false
 		) {
 			return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
 		}
 
-		// Set headers for Server-Sent Events.
-		$response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
-			/**
-			 * Constructor for the SSE response.
-			 *
-			 * @param string $operationId The operation ID to stream.
-			 * @param ProgressTracker $progressTracker The progress tracker service.
-			 * @param LoggerInterface $logger The logger instance.
-			 */
-			public function __construct(
-				private string $operationId,
-				private ProgressTracker $progressTracker,
-				private LoggerInterface $logger,
-			) {
-				parent::__construct();
-				$this->addHeader(name: 'Content-Type', value: 'text/event-stream');
-				$this->addHeader(name: 'Cache-Control', value: 'no-cache');
-				$this->addHeader(name: 'Connection', value: 'keep-alive');
-				$this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
-			}//end __construct()
-
-			/**
-			 * Render the SSE stream.
-			 *
-			 * @return string Empty string (output is streamed directly).
-			 *
-			 * @spec openspec/specs/settings-admin-controller/spec.md
-			 */
-			public function render(): string {
-				// Enable output buffering and turn off compression.
-				if (ob_get_level() !== 0) {
-					ob_end_clean();
-				}
-
-				ob_implicit_flush(true);
-
-				// Stream progress updates.
-				$lastProgress = null;
-				$maxAttempts = 300;
-				// 5 minutes with 1-second intervals.
-				$attempts = 0;
-
-				while ($attempts < $maxAttempts) {
-					try {
-						$progress = $this->progressTracker->getProgress($this->operationId);
-
-						if ($progress === null) {
-							// Operation not found, send error and close.
-							echo "event: error\n";
-							echo 'data: ' . json_encode(['error' => 'Operation not found']) . "\n\n";
-							break;
-						}
-
-						// Only send update if progress changed.
-						if ($progress !== $lastProgress) {
-							echo "event: progress\n";
-							echo 'data: ' . json_encode($progress) . "\n\n";
-							$lastProgress = $progress;
-
-							// If operation completed, send final event and close.
-							if ($progress['phase'] === 'completed') {
-								echo "event: completed\n";
-								echo 'data: ' . json_encode($progress) . "\n\n";
-								break;
-							}
-						}
-
-						// Send heartbeat every 10 seconds.
-						if ($attempts % 10 === 0) {
-							echo "event: heartbeat\n";
-							echo 'data: ' . json_encode(['timestamp' => time()]) . "\n\n";
-						}
-
-						flush();
-						sleep(1);
-						$attempts++;
-					} catch (\Exception $e) {
-						$this->logger->error(
-							'Progress streaming error',
-							[
-								'operation_id' => $this->operationId,
-								'error' => $e->getMessage(),
-							]
-						);
-
-						echo "event: error\n";
-						echo 'data: ' . json_encode(['error' => $e->getMessage()]) . "\n\n";
-						break;
-					}//end try
-				}//end while
-
-				// Send final close event.
-				echo "event: close\n";
-				echo 'data: ' . json_encode(['reason' => 'Stream ended']) . "\n\n";
-				flush();
-
-				return '';
-			}//end render()
-		};
-
-		return $response;
-	}//end streamProgress()
+		return null;
+	}//end streamRefusal()
 
 	/**
 	 * Import ArchiMate file.
@@ -1533,15 +1582,13 @@ class SettingsController extends Controller {
 	 *
 	 * @SuppressWarnings(PHPMD.Superglobals)
 	 * @spec                                 openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function importArchiMate(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -1674,7 +1721,7 @@ class SettingsController extends Controller {
 		// export their own organisation only, through the sibling route
 		// (stackiq#1136). The `organization` body value is not a filter the
 		// export applies, so it cannot scope this route.
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: null);
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1738,7 +1785,9 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: $organizationUuid);
+		// REQ-CER-003 (insight-exports-and-custom-reports): the same organisation
+		// rule as the portfolio report, refused before any export work starts.
+		$permissionError = $this->verifyOrgScope(currentUser: $currentUser, organizationUuid: $organizationUuid);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1748,6 +1797,7 @@ class SettingsController extends Controller {
 				'modules' => $this->request->getParam('modules', 'true') === 'true',
 				'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
 				'usage' => $this->request->getParam('usage', 'false') === 'true',
+				'connections' => $this->request->getParam('connections', 'false') === 'true',
 			];
 
 			$result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);
@@ -1767,7 +1817,11 @@ class SettingsController extends Controller {
 			$fileName = $result['file_name'] ?? 'archimate_org_export_' . date('Y-m-d_H-i-s') . '.xml';
 			$xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-			return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			$response = $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			// Connections with an end outside the exported model were skipped (REQ-CDX-004).
+			$response->addHeader('X-Stackiq-Connections-Skipped', (string)($result['connections_skipped'] ?? 0));
+
+			return $response;
 		} catch (\Exception $e) {
 			$this->logger->error('Organization ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 			$statusCode = $this->getHttpStatusForException(e: $e);
@@ -1776,59 +1830,90 @@ class SettingsController extends Controller {
 	}//end exportOrgArchiMate()
 
 	/**
-	 * Verify that the current user has permission to export an organisation's ArchiMate file.
+	 * Whether the caller may export one organisation as ArchiMate.
 	 *
-	 * A Nextcloud admin may export anything. A member of one of the saved
-	 * organisation admin groups may export only their own active organisation
-	 * (user value `core`/`organisation`, the rule
-	 * PortfolioReportController::isAuthorisedForOrganisation() applies), so a
-	 * call without an organisation is admin-only. Before stackiq#1136 the group
-	 * list always read empty and only admins got through; restoring the read
-	 * without this scope would have let a group member export any
-	 * organisation by uuid.
+	 * The detail page's Export as ArchiMate action asks this before it shows
+	 * itself, so the action and the export answer from the same rule. No
+	 * export work runs here.
 	 *
-	 * @param \OCP\IUser $currentUser The currently authenticated user.
-	 * @param string|null $organizationUuid The organisation asked for, or null for the whole register.
+	 * @param string $organizationUuid The organisation UUID.
 	 *
-	 * @return JSONResponse|null Forbidden response, or null when permitted.
+	 * @return JSONResponse `{mayExport: bool}`, or 401 without a session.
 	 *
-	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 	 */
-	private function verifyOrgExportPermission(\OCP\IUser $currentUser, ?string $organizationUuid): ?JSONResponse {
+	public function orgExportAccess(string $organizationUuid): JSONResponse {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$refusal = $this->verifyOrgScope(currentUser: $currentUser, organizationUuid: $organizationUuid);
+
+		return new JSONResponse(['mayExport' => $refusal === null]);
+	}//end orgExportAccess()
+
+	/**
+	 * Refuse the full ArchiMate export to anyone but a Nextcloud admin.
+	 *
+	 * @param \OCP\IUser $currentUser The authenticated caller.
+	 *
+	 * @return JSONResponse|null 403 for a non-admin, null when allowed.
+	 *
+	 * @spec openspec/specs/settings-admin-controller/spec.md
+	 */
+	private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse {
 		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
 			return null;
 		}
 
-		$forbidden = new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
-		if ($organizationUuid === null || $organizationUuid === '') {
+		return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+	}//end verifyOrgExportPermission()
+
+	/**
+	 * Refuse an organisation export to a caller outside that organisation.
+	 *
+	 * A Nextcloud admin may export any organisation. Everyone else follows the
+	 * rule the portfolio report uses: `admin` and `ambtenaar` may export any
+	 * organisation, every other user only their own active organisation. Fails
+	 * closed when the rule cannot be read.
+	 *
+	 * @param \OCP\IUser $currentUser      The authenticated caller.
+	 * @param string      $organizationUuid The organisation to export.
+	 *
+	 * @return JSONResponse|null 403 when refused, null when allowed.
+	 *
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 */
+	private function verifyOrgScope(\OCP\IUser $currentUser, string $organizationUuid): ?JSONResponse {
+		$forbidden = new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
+		if ($organizationUuid === '') {
 			return $forbidden;
 		}
 
-		$isOrgAdmin = false;
-		foreach ($this->settingsService->getOrganizationAdminGroups() as $groupName) {
-			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-				$isOrgAdmin = true;
-				break;
+		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
+			return null;
+		}
+
+		$access = $this->organisationAccess;
+		if ($access === null) {
+			try {
+				$access = $this->container->get(OrganisationReportAccessInterface::class);
+			} catch (\Throwable) {
+				$access = null;
 			}
 		}
 
-		if ($isOrgAdmin === false) {
-			return $forbidden;
-		}
-
-		$ownOrganisation = (string)$this->container->get(IConfig::class)->getUserValue(
-			userId: $currentUser->getUID(),
-			appName: 'core',
-			key: 'organisation',
-			default: ''
-		);
-
-		if ($ownOrganisation !== $organizationUuid) {
+		if (($access instanceof OrganisationReportAccessInterface) === false
+			|| $access->mayRead(user: $currentUser, organisationUuid: $organizationUuid) === false
+		) {
 			return $forbidden;
 		}
 
 		return null;
-	}//end verifyOrgExportPermission()
+	}//end verifyOrgScope()
 
 	/**
 	 * Build an XML file download Response from content and filename.
@@ -2068,23 +2153,21 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Current email settings (secrets redacted)
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailSettings(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
 			// Redaction lives in SettingsService so this route and /api/email/config share
 			// one secret list — they had drifted, and the other one was returning the
 			// secrets in the clear.
-			$emailSettings = $this->settingsService->redactEmailSecrets(
-				$this->settingsService->getEmailSettings()
+			$emailSettings = $this->emailSettings->redactEmailSecrets(
+				$this->emailSettings->getEmailSettings()
 			);
 
 			return new JSONResponse(
@@ -2094,19 +2177,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email settings', exception: $e);
 		}//end try
 	}//end getEmailSettings()
 
@@ -2118,22 +2189,20 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 * @spec   openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEmailSettings(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
 			$data = $this->request->getParams();
 			$emailSettings = $data['emailSettings'] ?? $data;
 
-			$updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
+			$updatedSettings = $this->emailSettings->updateEmailSettings($emailSettings);
 			$this->connectionReports?->emailSettingsSaved();
 
 			return new JSONResponse(
@@ -2144,20 +2213,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email settings',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update email settings', exception: $e);
 		}//end try
 	}//end updateEmailSettings()
 
@@ -2181,7 +2237,7 @@ class SettingsController extends Controller {
 
 		try {
 			// Delegate all business logic to service.
-			$templates = $this->settingsService->getAllEmailTemplates();
+			$templates = $this->emailSettings->getAllEmailTemplates();
 
 			return new JSONResponse(
 				[
@@ -2190,19 +2246,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email templates',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email templates: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email templates', exception: $e);
 		}//end try
 	}//end getEmailTemplates()
 
@@ -2221,6 +2265,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplate(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2228,7 +2274,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$template = $this->settingsService->getEmailTemplate($templateName);
+			$template = $this->emailSettings->getEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2238,19 +2284,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplate()
 
@@ -2291,7 +2325,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$success = $this->settingsService->updateEmailTemplate(
+			$success = $this->emailSettings->updateEmailTemplate(
 				templateName: $templateName,
 				templateContent: $templateContent
 			);
@@ -2303,20 +2337,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $success, 'message' => $updateMsg]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to update email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to update email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: "update email template {$templateName}", exception: $e);
 		}//end try
 	}//end updateEmailTemplate()
 
@@ -2332,6 +2353,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplateDefault(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2339,7 +2362,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
+			$defaultTemplate = $this->emailSettings->getDefaultEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2349,19 +2372,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get default email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get default email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get default email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateDefault()
 
@@ -2377,6 +2388,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplateVariables(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2384,7 +2397,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$variables = $this->settingsService->getEmailTemplateVariables($templateName);
+			$variables = $this->emailSettings->getEmailTemplateVariables($templateName);
 
 			return new JSONResponse(
 				[
@@ -2394,19 +2407,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template variables for {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template variables for {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template variables for {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateVariables()
 
@@ -2427,17 +2428,13 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getGenericUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$groups = $this->settingsService->getGenericUserGroups();
+			$groups = $this->roleGroupSettings->getGenericUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2446,20 +2443,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get generic user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get generic user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get generic user groups', exception: $e);
+		}
 	}//end getGenericUserGroups()
 
 	/**
@@ -2469,15 +2454,13 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setGenericUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2485,31 +2468,12 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateGenericUserGroups($groups);
+			$result = $this->roleGroupSettings->updateGenericUserGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set generic user groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set generic user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set generic user groups', exception: $e);
+		}
 	}//end setGenericUserGroups()
 
 	/**
@@ -2525,17 +2489,13 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getOrganizationAdminGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$groups = $this->settingsService->getOrganizationAdminGroups();
+			$groups = $this->roleGroupSettings->getOrganizationAdminGroups();
 
 			return new JSONResponse(
 				[
@@ -2544,20 +2504,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get organization admin groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get organization admin groups', exception: $e);
+		}
 	}//end getOrganizationAdminGroups()
 
 	/**
@@ -2567,15 +2515,13 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setOrganizationAdminGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2583,31 +2529,12 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateOrganizationAdminGroups($groups);
+			$result = $this->roleGroupSettings->updateOrganizationAdminGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set organization admin groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set organization admin groups', exception: $e);
+		}
 	}//end setOrganizationAdminGroups()
 
 	/**
@@ -2623,17 +2550,13 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getSuperUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$groups = $this->settingsService->getSuperUserGroups();
+			$groups = $this->roleGroupSettings->getSuperUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2642,20 +2565,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get super user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get super user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get super user groups', exception: $e);
+		}
 	}//end getSuperUserGroups()
 
 	/**
@@ -2665,15 +2576,13 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setSuperUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2681,31 +2590,12 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateSuperUserGroups($groups);
+			$result = $this->roleGroupSettings->updateSuperUserGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set super user groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set super user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set super user groups', exception: $e);
+		}
 	}//end setSuperUserGroups()
 
 	/**
@@ -2721,17 +2611,13 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getAllGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$allGroups = $this->settingsService->getAllGroups();
+			$allGroups = $this->roleGroupSettings->getAllGroups();
 
 			return new JSONResponse(
 				[
@@ -2740,19 +2626,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get all groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get all groups: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get all groups', exception: $e);
 		}//end try
 	}//end getAllGroups()
 
@@ -2770,19 +2644,17 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Clear result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearArchiMateImportStatus(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$result = $this->settingsService->clearArchiMateImportStatus();
+			$result = $this->archiMateImportControl->clearArchiMateImportStatus();
 
 			return new JSONResponse(
 				[
@@ -2792,19 +2664,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate import status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate import status', exception: $e);
 		}//end try
 	}//end clearArchiMateImportStatus()
 
@@ -2820,19 +2680,17 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function killArchiMateImport(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$result = $this->settingsService->killArchiMateImport();
+			$result = $this->archiMateImportControl->killArchiMateImport();
 
 			return new JSONResponse(
 				[
@@ -2842,19 +2700,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to kill ArchiMate import process',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'kill ArchiMate import process', exception: $e);
 		}//end try
 	}//end killArchiMateImport()
 
@@ -2869,27 +2715,25 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Cancellation result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function cancelArchiMateImport(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$operationId = $this->request->getParam('operationId');
 		if ($operationId !== null
 			&& (is_string($operationId) === false
-			|| preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1)
+			|| preg_match(ArchiMateImportServiceInterface::OPERATION_ID_PATTERN, $operationId) !== 1)
 		) {
 			return new JSONResponse(['success' => false, 'message' => 'Invalid operation id'], Http::STATUS_BAD_REQUEST);
 		}
 
 		try {
-			$result = $this->settingsService->cancelArchiMateImport(operationId: $operationId);
+			$result = $this->archiMateImportControl->cancelArchiMateImport(operationId: $operationId);
 			$message = 'ArchiMate import cancellation failed';
 			if ($result['cancelled'] === true) {
 				$message = 'ArchiMate import cancellation succeeded';
@@ -2897,19 +2741,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $result['cancelled'], 'message' => $message, 'details' => $result]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to cancel ArchiMate import',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'cancel ArchiMate import', exception: $e);
 		}//end try
 	}//end cancelArchiMateImport()
 
@@ -2922,19 +2754,17 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Clear result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearArchiMateExportStatus(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			$this->settingsService->clearArchiMateExportStatus();
+			$this->archiMateImportControl->clearArchiMateExportStatus();
 
 			return new JSONResponse(
 				[
@@ -2943,19 +2773,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate export status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate export status', exception: $e);
 		}//end try
 	}//end clearArchiMateExportStatus()
 
@@ -2984,19 +2802,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get ArchiMate settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get ArchiMate settings', exception: $e);
 		}//end try
 	}//end getArchiMateSettings()
 
@@ -3024,19 +2830,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object counts',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object counts: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get object counts', exception: $e);
 		}//end try
 	}//end getObjectCounts()
 
@@ -3054,29 +2848,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getArchiMateConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getArchiMateConfig();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get ArchiMate config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get ArchiMate config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get ArchiMate config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getArchiMateConfig())
+		);
 	}//end getArchiMateConfig()
 
 	/**
@@ -3086,28 +2861,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateArchiMateConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateArchiMateConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update ArchiMate config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update ArchiMate config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update ArchiMate config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateArchiMateConfig($this->request->getParams()))
+		);
 	}//end updateArchiMateConfig()
 
 	/**
@@ -3128,34 +2889,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getEmailConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$config = $this->settingsService->getEmailConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'get email config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getEmailConfigFocused())
+		);
 	}//end getEmailConfig()
 
 	/**
@@ -3165,28 +2902,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEmailConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateEmailConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update email config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update email config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateEmailConfig($this->request->getParams()))
+		);
 	}//end updateEmailConfig()
 
 	/**
@@ -3199,29 +2922,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getAmefConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getAmefConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get AMEF config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get AMEF config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get AMEF config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getAmefConfigFocused())
+		);
 	}//end getAmefConfig()
 
 	/**
@@ -3231,28 +2935,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateAmefConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateAmefConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update AMEF config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update AMEF config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update AMEF config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateAmefConfig($this->request->getParams()))
+		);
 	}//end updateAmefConfig()
 
 	/**
@@ -3265,29 +2955,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getVoorzieningenConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getVoorzieningenConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get Voorzieningen config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get Voorzieningen config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getVoorzieningenConfigFocused())
+		);
 	}//end getVoorzieningenConfig()
 
 	/**
@@ -3297,28 +2968,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateVoorzieningenConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateVoorzieningenConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update Voorzieningen config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update Voorzieningen config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateVoorzieningenConfig($this->request->getParams()))
+		);
 	}//end updateVoorzieningenConfig()
 
 	/**
@@ -3331,29 +2988,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getObjectsCounts(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$counts = $this->settingsService->getObjectsCounts();
-
-			return new JSONResponse($counts);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object counts',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object counts: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get object counts',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getObjectsCounts())
+		);
 	}//end getObjectsCounts()
 
 	/**
@@ -3366,29 +3004,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getObjectsStatistics(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$statistics = $this->settingsService->getObjectsStatistics();
-
-			return new JSONResponse($statistics);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object statistics',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object statistics: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get object statistics',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getObjectsStatistics())
+		);
 	}//end getObjectsStatistics()
 
 	/**
@@ -3406,36 +3025,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse User groups configuration
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getUserGroupsConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$config = $this->settingsService->getUserGroupsConfig();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get user groups config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'get user groups config',
+			call: fn (): JSONResponse => new JSONResponse($this->roleGroupSettings->getUserGroupsConfig())
+		);
 	}//end getUserGroupsConfig()
 
 	/**
@@ -3445,37 +3042,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateUserGroupsConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateUserGroupsConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update user groups config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'update user groups config',
+			call: fn (): JSONResponse => new JSONResponse($this->roleGroupSettings->updateUserGroupsConfig($this->request->getParams()))
+		);
 	}//end updateUserGroupsConfig()
 
 	/**
@@ -3625,22 +3199,20 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function bulkSyncStandards(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
 			$this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
 			// Get the ModuleComplianceService from the container.
-			$moduleComplianceService = $this->container->get(\OCA\Stackiq\Service\ModuleComplianceService::class);
+			$moduleComplianceService = $this->container->get(ModuleComplianceServiceInterface::class);
 
 			// Perform the bulk sync.
 			$results = $moduleComplianceService->bulkSyncModuleStandards();
@@ -3702,22 +3274,10 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$config = $this->settingsService->getCronjobConfig();
+			$config = $this->cronjobSettings->getCronjobConfig();
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get cronjob config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get cronjob config', exception: $e);
 		}
 	}//end getCronjobConfig()
 
@@ -3730,11 +3290,13 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateCronjobConfig(): JSONResponse {
 		try {
 			$data = $this->request->getParams();
-			$result = $this->settingsService->updateCronjobConfig($data);
+			$result = $this->cronjobSettings->updateCronjobConfig($data);
 			$statusCode = 400;
 			if ($result['success'] === true) {
 				$statusCode = 200;
@@ -3742,20 +3304,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($result, $statusCode);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update cronjob config',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update cronjob config', exception: $e);
 		}//end try
 	}//end updateCronjobConfig()
 
@@ -3822,6 +3371,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The current EOL sync configuration.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEolSyncConfig(): JSONResponse {
 		try {
@@ -3844,6 +3395,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The updated EOL sync configuration.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEolSyncConfig(): JSONResponse {
 		try {
@@ -3864,6 +3417,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The resulting sync status.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function triggerEolSync(): JSONResponse {
 		try {
@@ -3895,6 +3450,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The current EOL sync status.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEolSyncStatus(): JSONResponse {
 		try {
@@ -3932,11 +3489,11 @@ class SettingsController extends Controller {
 	 *
 	 * @auth admin-only the import's configuration; the import writes with RBAC and multitenancy off, so its view keeps that posture.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function getCmdbImportMapping(): JSONResponse {
-		$profile = ($this->cmdbImportProfile ?? new CmdbImportProfile(container: $this->container));
+		$profile = ($this->cmdbImportProfile ?? (new HelperFactory())->cmdbImportProfile(container: $this->container));
 
 		try {
 			$overview = $profile->mappingOverview();
@@ -3995,7 +3552,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return string|null Null when the pack is not stored in OpenRegister or the link cannot be built.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	private function packEditUrl(?int $packId): ?string {
 		if ($packId === null || $this->urlGenerator === null) {
@@ -4025,7 +3582,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	private static function boundedReason(string $message): string {
 		$firstLine = strtok($message, "\r\n");

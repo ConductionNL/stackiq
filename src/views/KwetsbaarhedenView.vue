@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="vulnView">
 		<div class="vv-header">
@@ -144,6 +148,7 @@ import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { navigationStore, objectStore } from '../store/store.js'
 import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 import { exposureCount } from '../utils/vulnerabilityExposure.js'
 import {
 	deriveSeverity,
@@ -330,23 +335,7 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**
@@ -407,14 +396,20 @@ export default {
 		},
 
 		/**
-		 * Open the full vulnerability record (the app's canonical "open record"
-		 * gesture) so its fields, affected applications and exposure are readable.
+		 * Open the vulnerability's own page (KwetsbaarheidDetail: its fields,
+		 * affected applications and versions, and the Exposure tab with the
+		 * organisations and usages exposed to it). Without a router or a uuid it
+		 * falls back to the record modal.
 		 *
 		 * @param {object} row A row view-model.
 		 * @return {void}
-		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md#requirement-the-vulnerability-page-lists-the-organisations-and-usages-exposed-to-it-req-clr-018
 		 */
 		openDetail(row) {
+			if (this.$router && row.uuid) {
+				this.$router.push({ name: 'KwetsbaarheidDetail', params: { id: row.uuid } })
+				return
+			}
 			if (typeof objectStore.setActiveObject === 'function') {
 				objectStore.setActiveObject('vulnerability', row.raw)
 			}

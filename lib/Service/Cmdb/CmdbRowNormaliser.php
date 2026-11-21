@@ -3,6 +3,9 @@
 /**
  * CMDB row normaliser.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns a row from {@see CmdbWorkbookReader} into the flat
  * `column => string` row OpenRegister's `MappingEngine` expects (design D4):
  *
@@ -27,9 +30,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -104,24 +104,14 @@ class CmdbRowNormaliser {
 	 */
 	public function normaliseDate(mixed $value, bool $date1904 = false): string {
 		$text = $this->toText(value: $value);
-		if (is_numeric($text) === false) {
-			return $text;
-		}
-
-		$serial = (float)$text;
-		if ($serial < 1 || $serial > self::MAX_SERIAL) {
+		$serial = self::excelSerial(text: $text);
+		if ($serial === null) {
 			return $text;
 		}
 
 		$days = (int)floor($serial);
-		// 1900 system: 1899-12-30 plus the serial, which absorbs Excel's
-		// phantom 1900-02-29 for every serial after it. Before it (serial < 61)
-		// the base is one day later. 1904 system: serial 0 is 1904-01-01.
-		$base = '1899-12-30';
-		if ($days < 61) {
-			$base = '1899-12-31';
-		}
-
+		$base = self::serialBase1900(days: $days);
+		// 1904 system: serial 0 is 1904-01-01.
 		if ($date1904 === true) {
 			$base = '1904-01-01';
 		}
@@ -130,6 +120,44 @@ class CmdbRowNormaliser {
 
 		return $base->add(new DateInterval('P' . $days . 'D'))->format('Y-m-d');
 	}//end normaliseDate()
+
+	/**
+	 * The Excel serial a text holds.
+	 *
+	 * @param string $text The trimmed value.
+	 *
+	 * @return float|null The serial, or null when the text is not a number from 1 to the last Excel day.
+	 */
+	private static function excelSerial(string $text): ?float {
+		if (is_numeric($text) === false) {
+			return null;
+		}
+
+		$serial = (float)$text;
+		if ($serial < 1 || $serial > self::MAX_SERIAL) {
+			return null;
+		}
+
+		return $serial;
+	}//end excelSerial()
+
+	/**
+	 * The day the 1900 date system counts a serial from.
+	 *
+	 * 1899-12-30 plus the serial, which absorbs Excel's phantom 1900-02-29 for
+	 * every serial after it. Before it (serial < 61) the base is one day later.
+	 *
+	 * @param int $days The whole days of the serial.
+	 *
+	 * @return string The base date.
+	 */
+	private static function serialBase1900(int $days): string {
+		if ($days < 61) {
+			return '1899-12-31';
+		}
+
+		return '1899-12-30';
+	}//end serialBase1900()
 
 	/**
 	 * A numeric identifier without a decimal part, as a string.
@@ -187,27 +215,44 @@ class CmdbRowNormaliser {
 	 * @return string
 	 */
 	private function toText(mixed $value): string {
-		if ($value === null) {
-			return '';
-		}
-
-		if (is_bool($value) === true) {
-			if ($value === true) {
-				return 'TRUE';
-			}
-
-			return 'FALSE';
-		}
-
-		if (is_float($value) === true && floor($value) === $value && abs($value) < PHP_INT_MAX) {
-			return (string)(int)$value;
-		}
-
 		if (is_scalar($value) === false) {
 			return '';
 		}
 
-		$text = (string)$value;
+		if ($value === true) {
+			return 'TRUE';
+		}
+
+		if ($value === false) {
+			return 'FALSE';
+		}
+
+		if (self::isWholeFloat(value: $value) === true) {
+			return (string)(int)$value;
+		}
+
+		return self::trimmedText(text: (string)$value);
+	}//end toText()
+
+	/**
+	 * Whether a value is a float holding a whole number within integer range.
+	 *
+	 * @param mixed $value The raw value.
+	 *
+	 * @return bool True for a float such as 3.0 that converts to an integer exactly.
+	 */
+	private static function isWholeFloat(mixed $value): bool {
+		return is_float($value) === true && floor($value) === $value && abs($value) < PHP_INT_MAX;
+	}//end isWholeFloat()
+
+	/**
+	 * Text with leading and trailing Unicode whitespace removed.
+	 *
+	 * @param string $text The text.
+	 *
+	 * @return string
+	 */
+	private static function trimmedText(string $text): string {
 		$trimmed = preg_replace('/^[\s\x{00A0}\x{200B}\x{FEFF}]+|[\s\x{00A0}\x{200B}\x{FEFF}]+$/u', '', $text);
 		if ($trimmed === null) {
 			// Not valid UTF-8: trim the ASCII whitespace only.
@@ -215,5 +260,5 @@ class CmdbRowNormaliser {
 		}
 
 		return $trimmed;
-	}//end toText()
+	}//end trimmedText()
 }//end class

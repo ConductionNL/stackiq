@@ -21,22 +21,25 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
-use OCA\Stackiq\Service\DemoDataService;
 
 /**
  * First-time setup wizard endpoints.
@@ -83,7 +86,7 @@ class SetupController extends Controller {
 	 * @param IRequest        $request         The request.
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
-	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
+	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
 	 *
 	 * @return void
 	 */
@@ -91,9 +94,9 @@ class SetupController extends Controller {
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
-		private readonly DemoDataService $demoDataService,
+		private readonly DemoDataServiceInterface $demoDataService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -110,8 +113,7 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(StackiqAdmin::class)]
 	public function status(): JSONResponse {
-		$demoDecided = $this->appConfig->getValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
-		$picked      = $this->appConfig->getValueString(Application::APP_ID, self::DATASET_KEY, '');
+		$steps = $this->stepStatus();
 
 		return new JSONResponse(
 			data: [
@@ -124,18 +126,31 @@ class SetupController extends Controller {
 				// Every id of `manifest.setup.steps`, asserted by the status
 				// contract test: a step the server never reports stays open,
 				// and an open step reopens the wizard on every page.
-				'steps'     => [
-					'welcome' => ['done' => true],
-					// Answered once a card was picked ("None" included) or a load
-					// ran. A pick without a load still counts: a wizard that
-					// predates `loadAction` can only record the pick.
-					'demo-data' => ['done' => ($demoDecided === true || $picked !== '')],
-					'done' => ['done' => true],
-				],
+				'steps'     => $steps,
 			]
 		);
 
 	}//end status()
+
+	/**
+	 * Whether each setup step is done.
+	 *
+	 * @return array<string, array{done: bool}>
+	 */
+	private function stepStatus(): array {
+		$demoDecided = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
+		$picked      = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
+
+		return [
+			'welcome' => ['done' => true],
+			// Answered once a card was picked ("None" included) or a load
+			// ran. A pick without a load still counts: a wizard that
+			// predates `loadAction` can only record the pick.
+			'demo-data' => ['done' => ($demoDecided === true || $picked !== '')],
+			'done' => ['done' => true],
+		];
+
+	}//end stepStatus()
 
 	/**
 	 * Persist the wizard's `choice` answer.
@@ -156,12 +171,7 @@ class SetupController extends Controller {
 			return new JSONResponse(data: ['success' => true, 'config' => []]);
 		}
 
-		// The step is not `multiple`, but the wizard's contract allows a list, so
-		// both shapes are read rather than one of them reaching `(string)`.
-		$submitted = $value;
-		if (is_array($value) === true) {
-			$submitted = ($value[0] ?? null);
-		}
+		$submitted = self::submittedValue(value: $value);
 
 		$refusal = $this->refuseDataset(value: $submitted);
 		if ($refusal !== null) {
@@ -169,11 +179,30 @@ class SetupController extends Controller {
 		}
 
 		$datasetId = (string)$submitted;
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, $datasetId);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $datasetId);
 
 		return new JSONResponse(data: ['success' => true, 'config' => [self::DATASET_KEY => $datasetId]]);
 
 	}//end saveConfig()
+
+	/**
+	 * The single value a posted answer carries.
+	 *
+	 * The step is not `multiple`, but the wizard's contract allows a list, so
+	 * both shapes are read rather than one of them reaching `(string)`.
+	 *
+	 * @param mixed $value The posted value.
+	 *
+	 * @return mixed The value, or the first element of a posted list.
+	 */
+	private static function submittedValue(mixed $value): mixed {
+		if (is_array($value) === true) {
+			return ($value[0] ?? null);
+		}
+
+		return $value;
+
+	}//end submittedValue()
 
 	/**
 	 * Run a privileged server-side setup action.
@@ -201,10 +230,7 @@ class SetupController extends Controller {
 		// run-action step; closing only the second leaves the first outstanding,
 		// and CnAppRoot opens the wizard while ANY optional step is outstanding.
 		if ($actionId === 'skip-demo-data') {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
-
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+			return $this->skipDataset();
 		}
 
 		return new JSONResponse(
@@ -230,7 +256,35 @@ class SetupController extends Controller {
 	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(string $actionId): JSONResponse {
-		$picked = $this->appConfig->getValueString(Application::APP_ID, self::DATASET_KEY, '');
+		$picked = $this->pickedDataset(actionId: $actionId);
+		if ($picked instanceof JSONResponse) {
+			return $picked;
+		}
+
+		// 🔴 NO SILENT DEFAULT. Importing here because the operator clicked Run
+		// one step early would plant example objects nobody asked for, which is
+		// the failure this whole step exists to avoid.
+		if ($picked === '') {
+			return $this->noDatasetResponse();
+		}
+
+		if ($picked === DemoDataServiceInterface::NONE_DATASET) {
+			return $this->skipDataset();
+		}
+
+		return $this->installDataset(picked: $picked);
+	}//end loadDataset()
+
+	/**
+	 * The dataset to load: the posted one when it is known, the stored choice
+	 * otherwise, and the shipped dataset for the legacy id without a choice.
+	 *
+	 * @param string $actionId The action id.
+	 *
+	 * @return string|JSONResponse The dataset, '' for none, or the refusal of the posted one.
+	 */
+	private function pickedDataset(string $actionId): string|JSONResponse {
+		$picked = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
 
 		// The card's Load button names its dataset in the body. An older wizard
 		// posts nothing and relies on the choice stored a step earlier. Nothing
@@ -249,43 +303,51 @@ class SetupController extends Controller {
 		// The legacy id carries no answer, so it means the shipped dataset. A
 		// caller that posts it has said which one by posting it.
 		if ($actionId === 'install-demo-data' && $picked === '') {
-			$picked = DemoDataService::DEMO_DATASET;
+			$picked = DemoDataServiceInterface::DEMO_DATASET;
 		}
 
-		// 🔴 NO SILENT DEFAULT. Importing here because the operator clicked Run
-		// one step early would plant example objects nobody asked for, which is
-		// the failure this whole step exists to avoid.
-		if ($picked === '') {
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'Pick a dataset first.'],
-				statusCode: Http::STATUS_BAD_REQUEST,
-			);
-		}
+		return $picked;
+	}//end pickedDataset()
 
-		if ($picked === DemoDataService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
+	/**
+	 * The 400 when no dataset was chosen.
+	 *
+	 * @return JSONResponse
+	 */
+	private function noDatasetResponse(): JSONResponse {
+		return new JSONResponse(
+			data: ['success' => false, 'message' => 'Pick a dataset first.'],
+			statusCode: Http::STATUS_BAD_REQUEST,
+		);
+	}//end noDatasetResponse()
 
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
-		}
+	/**
+	 * Record that no example data is wanted, which answers both dataset steps.
+	 *
+	 * @return JSONResponse
+	 */
+	private function skipDataset(): JSONResponse {
+		$this->recordDataset(dataset: DemoDataServiceInterface::NONE_DATASET, decided: 'skipped');
 
+		return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+	}//end skipDataset()
+
+	/**
+	 * Import the demo data and record the dataset as chosen; a failure is logged and leaves the step open.
+	 *
+	 * @param string $picked The dataset.
+	 *
+	 * @return JSONResponse
+	 */
+	private function installDataset(string $picked): JSONResponse {
 		try {
 			$imported = $this->demoDataService->install();
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'Setup install-demo-data failed: ' . $e->getMessage(),
-				['app' => Application::APP_ID, 'exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'Could not import the demo data: ' . $e->getMessage()],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
-			);
+			return $this->installFailure(error: $e);
 		}
 
 		// Loading IS choosing the set, so the pick is recorded too.
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, $picked);
-		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
+		$this->recordDataset(dataset: $picked, decided: 'installed');
 
 		return new JSONResponse(
 			data: [
@@ -293,8 +355,39 @@ class SetupController extends Controller {
 				'message' => 'Imported ' . $imported['objects'] . ' demo object(s).',
 			]
 		);
+	}//end installDataset()
 
-	}//end loadDataset()
+	/**
+	 * The logged 500 of a failed import.
+	 *
+	 * @param \Throwable $error The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function installFailure(\Throwable $error): JSONResponse {
+		$this->logger->error(
+			'Setup install-demo-data failed: ' . $error->getMessage(),
+			['app' => AppIdentity::APP_ID, 'exception' => $error]
+		);
+
+		return new JSONResponse(
+			data: ['success' => false, 'message' => 'Could not import the demo data: ' . $error->getMessage()],
+			statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
+		);
+	}//end installFailure()
+
+	/**
+	 * Store the chosen dataset and how the demo data step was decided.
+	 *
+	 * @param string $dataset The dataset.
+	 * @param string $decided 'installed' or 'skipped'.
+	 *
+	 * @return void
+	 */
+	private function recordDataset(string $dataset, string $decided): void {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $dataset);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, $decided);
+	}//end recordDataset()
 
 	/**
 	 * Refuse a dataset id no dataset answers to.
@@ -310,10 +403,7 @@ class SetupController extends Controller {
 	 */
 	private function refuseDataset(mixed $value): ?JSONResponse {
 		if (is_scalar($value) === false) {
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'A dataset is named by a string.'],
-				statusCode: Http::STATUS_BAD_REQUEST,
-			);
+			return self::datasetRefusal(message: 'A dataset is named by a string.');
 		}
 
 		$known = array_column($this->demoDataService->listChoices(), 'id');
@@ -321,10 +411,22 @@ class SetupController extends Controller {
 			return null;
 		}
 
+		return self::datasetRefusal(message: 'No dataset is called "' . (string)$value . '".');
+
+	}//end refuseDataset()
+
+	/**
+	 * The 400 answered for a dataset value that is refused.
+	 *
+	 * @param string $message Why it is refused.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function datasetRefusal(string $message): JSONResponse {
 		return new JSONResponse(
-			data: ['success' => false, 'message' => 'No dataset is called "' . (string)$value . '".'],
+			data: ['success' => false, 'message' => $message],
 			statusCode: Http::STATUS_BAD_REQUEST,
 		);
 
-	}//end refuseDataset()
+	}//end datasetRefusal()
 }//end class

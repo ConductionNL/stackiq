@@ -10,8 +10,8 @@
   - GIVEN the merged register WHEN it loads THEN `vng-gemma` lists `view-version` with magic mapping on
   - GIVEN the view lifecycle WHEN the shape test reads it THEN every `from` and `to` value is a member of the status enum
   - GIVEN the fragment WHEN it is compared with development THEN `view`, `element` and `relation` carry bumped versions
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchitectureViewsRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchitectureViewsRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Views index page and Architecture menu group
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-004-the-views-list-shall-filter-on-tag-status-and-owner
@@ -19,8 +19,8 @@
 - **acceptance_criteria**:
   - GIVEN the effective manifest WHEN it is built THEN `Views` is an index page at `/views` over `@resolve:amef_register` and `view` with the quick filters All, Mine, Drawn and Imported
   - GIVEN the effective menu WHEN it renders THEN Standards and Views sit under an Architecture group and the top-level count is unchanged
-- [ ] Implement
-- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag and Mine filters)
+- [x] Implement
+- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag, status and Mine filters)
 
 ### Task 3: Canvas shape mapping
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -28,8 +28,8 @@
 - **acceptance_criteria**:
   - GIVEN an imported GEMMA view WHEN it is mapped to canvas nodes and back THEN every node keeps its absolute position, size and parent
   - GIVEN a canvas with a child node WHEN it is mapped to the save shape THEN the child carries its parent's `viewNodeId`
-- [ ] Implement
-- [ ] Test (vitest `viewGraph.spec.js`)
+- [x] Implement
+- [x] Test (vitest `viewGraph.spec.js`)
 
 ### Task 4: View editor page on CnGraphCanvas
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -38,7 +38,7 @@
   - GIVEN the editor WHEN the user places two elements, connects them and saves THEN a `view` with `origin` drawn holds both nodes and the connection
   - GIVEN a new element from the palette WHEN the view is saved THEN an `element` with `origin` drawn and the chosen ArchiMate type exists
   - GIVEN a colleague holds the lock WHEN the user opens the view THEN it is read-only with a notice naming the colleague
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `architecture-views.spec.ts` draw and reopen, lock notice)
 
 ### Task 5: Relations behind connections
@@ -48,8 +48,8 @@
   - GIVEN no relation of the chosen type between two elements WHEN they are connected THEN one `relation` with `origin` drawn is created
   - GIVEN such a relation exists WHEN they are connected again THEN it is reused
   - GIVEN the view write fails after the relation write WHEN the user saves again THEN no second relation is created
-- [ ] Implement
-- [ ] Test (vitest `architectureViewStore.spec.js`)
+- [x] Implement
+- [x] Test (vitest `architectureViewStore.spec.js`)
 
 ### Task 6: Read-only imported views and Copy to edit
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
@@ -58,7 +58,7 @@
   - GIVEN an imported view WHEN it opens THEN no edit control renders and Copy to edit is offered
   - GIVEN Copy to edit WHEN it completes THEN a drawn view with a fresh identifier and `basedOn` opens in edit mode
   - GIVEN a re-import WHEN it runs THEN the drawn copy is unchanged
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright copy flow, PHPUnit `ArchitectureViewsImportIsolationTest`)
 
 ### Task 7: Save version and compare versions
@@ -68,7 +68,7 @@
   - GIVEN Save version WHEN it completes THEN a `view-version` holds the next number, the label and a copy of the nodes and connections
   - GIVEN two snapshots WHEN they are compared THEN added, removed and changed are keyed by node and connection id, and order alone is no change
   - GIVEN the compare page WHEN it renders THEN colours use `--color-success`, `--color-error` and `--color-warning` and the text list names every change
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `viewDiff.spec.js`, Playwright compare scenario)
 
 ### Task 8: Keep drawn objects out of the shared list, the single view read and the full export
@@ -79,8 +79,8 @@
   - GIVEN a drawn view WHEN `GET /api/views/{viewId}` is called with its uuid THEN the answer is 404
   - GIVEN drawn objects WHEN the full ArchiMate export runs THEN none of them is in the file
   - GIVEN a view imported before this change with no origin WHEN either reader runs THEN it is kept as imported
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
 
 ### Task 9: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -90,6 +90,11 @@
   - GIVEN a Dutch instance WHEN the Views page renders THEN every new string reads in Dutch
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+
+## Build notes (round 2, 2026-11-17)
+
+- `tests/e2e/workflows/architecture-views.spec.ts` is written: the Drawn, Imported and Mine quick filters and the tag and status queries (task 2), drawing two elements with a connection, saving and reopening, and the lock notice for a colleague (task 4), Copy to edit (task 6), and two saved versions compared (task 7). It lints, type-checks and `playwright --list` collects its 5 tests, but it has not run against a live instance yet, so those Test boxes stay open until it has.
+- Task 9: `docs/features/architecture-views.md` and the English and Dutch strings are on development; its screenshots still need a Playwright capture on a live instance.
 
 ## Verification
 

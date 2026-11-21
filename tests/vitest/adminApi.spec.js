@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 // @vitest-environment jsdom
 
 /**
@@ -99,16 +103,37 @@ describe('adminApi.normaliseFederationStatus', () => {
 		expect(out.peers).toHaveLength(2)
 		expect(out.peers[1]).toEqual({
 			url: 'https://b.org',
+			name: 'https://b.org',
+			lastPulledAt: null,
+			objectCount: 0,
+			lastError: null,
 			failures: 4,
 			stale: true,
 			allowed: true,
 		})
 	})
 
+	it('keeps the peers table fields: catalogue, last pull, objects and error', () => {
+		const out = normaliseFederationStatus({
+			peers: [
+				{ url: 'https://a.org', name: 'Catalogue A', lastPulledAt: '2026-11-20T08:00:00+00:00', objectCount: 1204, lastError: '' },
+				{ url: 'https://b.org', lastPulledAt: '', objectCount: '3', lastError: 'not reachable' },
+			],
+		})
+		expect(out.peers.map(({ name, lastPulledAt, objectCount, lastError }) => ({ name, lastPulledAt, objectCount, lastError }))).toEqual([
+			{ name: 'Catalogue A', lastPulledAt: '2026-11-20T08:00:00+00:00', objectCount: 1204, lastError: null },
+			{ name: 'https://b.org', lastPulledAt: null, objectCount: 0, lastError: 'not reachable' },
+		])
+	})
+
 	it('tolerates a legacy string[] peers payload', () => {
 		const out = normaliseFederationStatus({ peers: ['https://legacy.org'] })
 		expect(out.peers[0]).toEqual({
 			url: 'https://legacy.org',
+			name: 'https://legacy.org',
+			lastPulledAt: null,
+			objectCount: 0,
+			lastError: null,
 			failures: 0,
 			stale: false,
 			allowed: true,

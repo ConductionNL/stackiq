@@ -19,7 +19,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,6 +64,13 @@ final class FakeMigrationPackService {
 	 * @var Throwable|null
 	 */
 	public ?Throwable $failure = null;
+
+	/**
+	 * A failure find() by id throws, while the other calls answer normally.
+	 *
+	 * @var Throwable|null
+	 */
+	public ?Throwable $findFailure = null;
 
 	/**
 	 * When set, called at the start of every create, as a concurrent request would act.
@@ -176,6 +183,10 @@ final class FakeMigrationPackService {
 	 */
 	public function find(int $id): object {
 		$this->failIfAsked();
+		if ($this->findFailure !== null) {
+			throw $this->findFailure;
+		}
+
 		if (isset($this->rows[$id]) === false) {
 			throw new DoesNotExistException('No migration pack ' . $id);
 		}

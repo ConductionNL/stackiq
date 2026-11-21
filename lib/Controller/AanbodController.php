@@ -13,15 +13,20 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\AanbodService;
+use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\PublishedAanbodInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -44,23 +49,79 @@ use Psr\Log\LoggerInterface;
  */
 class AanbodController extends Controller {
 	/**
+	 * The object the accept and deny actions work on.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTION_OBJECT = [
+		'idParam' => 'uuid',
+		'idLabel' => 'Aanbod UUID',
+		'logIdKey' => 'aanbod_id',
+		'notFoundError' => 'Aanbod object not found',
+	];
+
+	/**
+	 * The accept and deny actions: route, log messages and error body fields.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const ACTIONS = [
+		'accept' => [
+			'endpoint' => '/api/aanbod/%s/accept',
+			'method' => 'PUT',
+			'started' => 'API: Accepting aanbod object',
+			'completed' => 'API: Accept aanbod request completed',
+			'failed' => 'API: Failed to accept aanbod object',
+			'emptyResult' => ['aanbod' => null],
+			'reportsDeleted' => false,
+		],
+		'deny' => [
+			'endpoint' => '/api/aanbod/%s/deny',
+			'method' => 'DELETE',
+			'started' => 'API: Denying aanbod object',
+			'completed' => 'API: Deny aanbod request completed',
+			'failed' => 'API: Failed to deny aanbod object',
+			'emptyResult' => ['deleted' => false],
+			'reportsDeleted' => true,
+		],
+	];
+
+	/**
 	 * Constructor for AanbodController.
 	 *
 	 * @param string $appName The name of the app
 	 * @param IRequest $request The HTTP request object
 	 * @param IUserSession $userSession The user session service for getting the current user
-	 * @param AanbodService $aanbodService The business logic service
+	 * @param AanbodServiceInterface $aanbodService The business logic service
 	 * @param LoggerInterface $logger The logger service for debugging and error reporting
+	 * @param PublishedAanbodInterface|null $publishedAanbod The published entries an anonymous caller reads; without it an anonymous caller is rejected
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly AanbodService $aanbodService,
+		private readonly AanbodServiceInterface $aanbodService,
 		private readonly LoggerInterface $logger,
+		private readonly ?PublishedAanbodInterface $publishedAanbod = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
+
+	/**
+	 * The aanbod listing: endpoint and log messages.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const LISTINGS = [
+		'aanbod' => [
+			'endpoint' => '/api/aanbod',
+			'rejected' => 'API: Rejecting unauthenticated aanbod request',
+			'started' => 'API: Getting aanbod objects',
+			'completed' => 'API: Aanbod request completed',
+			'failed' => 'API: Failed to get aanbod objects',
+			'failureLogsEndpoint' => false,
+		],
+	];
 
 	/**
 	 * Get all aanbod objects (modules, diensten, koppelingen, gebruiks).
@@ -79,105 +140,66 @@ class AanbodController extends Controller {
 	 *
 	 * @return JSONResponse JSON response with aanbod objects array
 	 *
-	 * REQ-009 requires an authenticated caller, and the body enforces it.
-	 * The PublicPage annotation told Nextcloud's middleware to admit
-	 * anonymous requests anyway, so declared and enforced contract disagreed:
-	 * every anonymous call was admitted, routed, and only then rejected by
-	 * the controller. @NoAdminRequired is the annotation that matches —
-	 * any logged-in user, rejected at the middleware. The in-body guard
-	 * stays as deny-before-grant (REQ-001).
+	 * REQ-009 (decision 392): the controller decides explicitly what an
+	 * anonymous caller gets, before AanbodService::getAanbod() runs. An
+	 * anonymous caller reads the published modules, diensten and koppelingen
+	 * in the open-data projection (PublishedAanbod), with no organisation
+	 * resolved; everything else needs login. @PublicPage admits the anonymous
+	 * request so this branch can answer it, rate-limited like the other
+	 * anonymous open-data reads.
 	 *
 	 * @NoCSRFRequired
-	 * @NoAdminRequired
+	 * @PublicPage
 	 *
 	 * @spec openspec/specs/aanbod-listings/spec.md
-	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
+	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAanbod(): JSONResponse {
-		// REQ-009: explicit authentication guard, mirroring
-		// AangebodenGebruikController::getGebruiksWhereAfnemer() (REQ-004). Do
-		// NOT rely on AanbodService::getAanbod()'s internal
+		// REQ-009: the anonymous branch is decided here, before
+		// AanbodService::getAanbod() is ever invoked. Do NOT rely on its
 		// getCurrentOrganisation() resolving to null for an anonymous session
-		// as the sole safeguard — reject before the service is ever invoked
-		// (deny-before-grant, REQ-001).
-		if ($this->userSession->getUser() === null) {
-			$this->logger->info(
-				'API: Rejecting unauthenticated aanbod request',
-				[
-					'endpoint' => '/api/aanbod',
-					'method' => 'GET',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'Not authenticated',
-				],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}//end if
-
-		$this->logger->info(
-			'API: Getting aanbod objects',
-			[
-				'endpoint' => '/api/aanbod',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
-		);
-
-		try {
-			// Parse query parameters for filtering options.
-			$options = $this->parseQueryOptions();
-
-			// Get aanbod objects from service.
-			$result = $this->aanbodService->getAanbod($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
+		// (deny-before-grant, REQ-001): an anonymous caller reads only the
+		// published entries, and is rejected when that reader is missing.
+		$listing = $this->objectListing(name: 'aanbod', idContext: []);
+		$user    = $this->userSession->getUser();
+		if ($user === null) {
+			if ($this->publishedAanbod === null) {
+				return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
 			}
 
-			$this->logger->info(
-				'API: Aanbod request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
+			return $this->listingResponder()->respond(
+				listing: $listing,
+				fetch: fn (): array => $this->publishedAanbod->page(options: $this->parseQueryOptions())
 			);
+		}
 
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get aanbod objects',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array => $this->aanbodService->getAanbod($this->parseQueryOptions())
+		);
 	}//end getAanbod()
+
+	/**
+	 * The responder that runs this controller's listing reads.
+	 *
+	 * @return ListingResponder
+	 */
+	private function listingResponder(): ListingResponder {
+		return new ListingResponder(logger: $this->logger, request: $this->request);
+	}//end listingResponder()
+
+	/**
+	 * Build a listing from the listing table.
+	 *
+	 * @param string $name      The listing name in the listing table.
+	 * @param array  $idContext Identifying fields of the log lines.
+	 *
+	 * @return ObjectListing
+	 */
+	private function objectListing(string $name, array $idContext): ObjectListing {
+		return new ObjectListing(idContext: $idContext, definition: self::LISTINGS[$name]);
+	}//end objectListing()
 
 	/**
 	 * Accept an aanbod object (set @self.organisation to current organisation).
@@ -202,84 +224,10 @@ class AanbodController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Accepting aanbod object',
-			[
-				'endpoint' => "/api/aanbod/{$uuid}/accept",
-				'method' => 'PUT',
-				'aanbod_id' => $uuid,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $uuid, name: 'accept'),
+			perform: fn (array $options): array => $this->aanbodService->acceptAanbod(aanbodId: $uuid, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($uuid) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Aanbod UUID is required',
-						'aanbod' => null,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['uuid']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Accept aanbod object via service.
-			$result = $this->aanbodService->acceptAanbod(aanbodId: $uuid, options: $options);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Aanbod object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Accept aanbod request completed',
-				[
-					'aanbod_id' => $uuid,
-					'success' => $result['success'],
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to accept aanbod object',
-				[
-					'aanbod_id' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'aanbod' => null,
-				],
-				500
-			);
-		}//end try
 	}//end acceptAanbod()
 
 	/**
@@ -305,86 +253,32 @@ class AanbodController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Denying aanbod object',
-			[
-				'endpoint' => "/api/aanbod/{$uuid}/deny",
-				'method' => 'DELETE',
-				'aanbod_id' => $uuid,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $uuid, name: 'deny'),
+			perform: fn (array $options): array => $this->aanbodService->denyAanbod(aanbodId: $uuid, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($uuid) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Aanbod UUID is required',
-						'deleted' => false,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['uuid']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Deny aanbod object via service.
-			$result = $this->aanbodService->denyAanbod(aanbodId: $uuid, options: $options);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Aanbod object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Deny aanbod request completed',
-				[
-					'aanbod_id' => $uuid,
-					'success' => $result['success'],
-					'deleted' => $result['deleted'] ?? false,
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to deny aanbod object',
-				[
-					'aanbod_id' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'deleted' => false,
-				],
-				500
-			);
-		}//end try
 	}//end denyAanbod()
+
+	/**
+	 * The responder that runs this controller's object actions.
+	 *
+	 * @return ObjectActionResponder
+	 */
+	private function actionResponder(): ObjectActionResponder {
+		return new ObjectActionResponder(logger: $this->logger, request: $this->request);
+	}//end actionResponder()
+
+	/**
+	 * Build an object action from the action table.
+	 *
+	 * @param string $id   The object id from the route.
+	 * @param string $name The action name in the action table.
+	 *
+	 * @return ObjectAction
+	 */
+	private function objectAction(string $id, string $name): ObjectAction {
+		return new ObjectAction(id: $id, definition: self::ACTIONS[$name] + self::ACTION_OBJECT);
+	}//end objectAction()
 
 	/**
 	 * Parse query parameters into options array.
@@ -394,27 +288,9 @@ class AanbodController extends Controller {
 	 * @spec openspec/specs/aanbod-listings/spec.md
 	 */
 	private function parseQueryOptions(): array {
-		$options = [];
-
-		// Parse pagination parameters.
-		$limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-		if ($limit !== null && is_numeric($limit) === true) {
-			$options['_limit'] = (int)$limit;
-			// Keep both for compatibility.
-			$options['limit'] = (int)$limit;
-		}
-
-		$offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-		if ($offset !== null && is_numeric($offset) === true) {
-			$options['_offset'] = (int)$offset;
-			// Keep both for compatibility.
-			$options['offset'] = (int)$offset;
-		}
-
-		$page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-		if ($page !== null && is_numeric($page) === true) {
-			$options['_page'] = (int)$page;
-		}
+		$pagination = new ListingPagination(request: $this->request);
+		$raw        = $pagination->rawParams();
+		$options    = $pagination->options(raw: $raw);
 
 		// Force database source for real-time data.
 		$options['_source'] = 'database';
@@ -422,11 +298,7 @@ class AanbodController extends Controller {
 		$this->logger->debug(
 			'Parsed query options for Aanbod',
 			[
-				'raw_params' => [
-					'limit' => $limit,
-					'offset' => $offset,
-					'page' => $page,
-				],
+				'raw_params' => $raw,
 				'parsed_options' => $options,
 			]
 		);

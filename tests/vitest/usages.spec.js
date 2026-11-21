@@ -37,7 +37,25 @@ function widget(pageId, widgetId) {
 	return page(pageId).config.widgets.find((w) => w.id === widgetId)
 }
 
-const usage = register.components.schemas.usage
+/**
+ * The usage schema as OpenRegister holds it: the main register's properties
+ * plus the ones register.d fragments add.
+ *
+ * @return {object} The schema.
+ */
+function effectiveUsage() {
+	const schema = JSON.parse(JSON.stringify(register.components.schemas.usage))
+	const dir = path.resolve(__dirname, '../../lib/Settings/register.d')
+	for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+		const fragment = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
+		const extra = fragment?.components?.schemas?.usage?.properties ?? {}
+		schema.properties = { ...schema.properties, ...extra }
+	}
+	return schema
+}
+
+const usage = effectiveUsage()
+const columnKey = (column) => (typeof column === 'string' ? column : column.key)
 
 /**
  * A validator built from the real usage properties. A relation is checked as
@@ -81,7 +99,7 @@ describe('the usage pages', () => {
 		const index = page('Gebruik')
 		expect(index.route).toBe('/gebruik')
 		expect(index.config.schema).toBe('usage')
-		expect(index.config.columns).toEqual(
+		expect(index.config.columns.map(columnKey)).toEqual(
 			expect.arrayContaining([
 				'module',
 				'moduleVersion',
@@ -90,7 +108,7 @@ describe('the usage pages', () => {
 				'technicalOwner',
 			]),
 		)
-		for (const column of index.config.columns) {
+		for (const column of index.config.columns.map(columnKey)) {
 			expect(usage.properties, column).toHaveProperty(column)
 		}
 		const statuses = index.config.quickFilters

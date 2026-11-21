@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +25,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
@@ -50,6 +57,8 @@ use RuntimeException;
  * user exists, that the caller is allowed to change that membership, and that the derived
  * organisation groups stay consistent — and each of those has to fail closed rather than silently
  * no-op. The branching is authorization checking, which is exactly where it belongs in view.
+ *
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  */
 class GroupHandler {
 	/**
@@ -60,6 +69,22 @@ class GroupHandler {
 	private const APP_NAME = 'stackiq';
 
 	/**
+	 * The role-based groups ensured next to the generic user groups.
+	 */
+	private const ROLE_BASED_GROUPS = [
+		'aanbod-beheerder',
+		'gebruik-beheerder',
+		'gebruik-raadpleger',
+		'functioneel-beheerder',
+		'vng-raadpleger',
+		'organisatie-beheerder',
+		// Plural form for organization contacts.
+		'organisaties-beheerder',
+		// For users from Gemeente organizations.
+		'ambtenaar',
+	];
+
+	/**
 	 * GroupHandler constructor
 	 *
 	 * @param IGroupManager $_groupManager Group manager interface
@@ -68,6 +93,9 @@ class GroupHandler {
 	 * @param ContainerInterface $_container Container interface
 	 * @param IAppManager $_appManager App manager interface
 	 * @param LoggerInterface $_logger Logger interface
+	 * @param RoleGrantSync|null $_roleGrantSync Keeps the role groups in step; null builds it on first use.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function __construct(
 		private readonly IGroupManager $_groupManager,
@@ -76,8 +104,27 @@ class GroupHandler {
 		private readonly ContainerInterface $_container,
 		private readonly IAppManager $_appManager,
 		private readonly LoggerInterface $_logger,
+		private ?RoleGrantSync $_roleGrantSync = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * The role sync, built from this handler's own collaborators when none was injected.
+	 *
+	 * @return RoleGrantSync The role sync.
+	 */
+	private function roleGrantSync(): RoleGrantSync {
+		if ($this->_roleGrantSync === null) {
+			$this->_roleGrantSync = new RoleGrantSync(
+				roleGroupMap: new RoleGroupMap(appConfig: $this->_appConfig),
+				groupManager: $this->_groupManager,
+				registerConfig: $this->_container->get(RegisterConfigReaderInterface::class),
+				logger: $this->_logger
+			);
+		}
+
+		return $this->_roleGrantSync;
+	}//end roleGrantSync()
 
 	/**
 	 * Gets the OpenRegister ObjectService if available
@@ -147,50 +194,58 @@ class GroupHandler {
 	 */
 	public function ensureGenericUserGroupsExist(): array {
 		$genericGroups = $genericGroups = $this->getGenericUserGroups();
-		$createdGroups = [];
-
-		foreach ($genericGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created generic user group',
-						['groupName' => $groupName]
-					);
-				}
-			}
-		}
+		$createdGroups = $this->createMissingGroups(groupNames: $genericGroups, logMessage: 'Created generic user group');
 
 		// Also ensure role-based groups exist.
-		$roleBasedGroups = [
-			'aanbod-beheerder',
-			'gebruik-beheerder',
-			'gebruik-raadpleger',
-			'functioneel-beheerder',
-			'vng-raadpleger',
-			'organisatie-beheerder',
-			// Plural form for organization contacts.
-			'organisaties-beheerder',
-			// For users from Gemeente organizations.
-			'ambtenaar',
-		];
+		return array_merge(
+			$createdGroups,
+			$this->createMissingGroups(groupNames: self::ROLE_BASED_GROUPS, logMessage: 'Created role-based group')
+		);
+	}//end ensureGenericUserGroupsExist()
 
-		foreach ($roleBasedGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created role-based group',
-						['groupName' => $groupName]
-					);
-				}
+	/**
+	 * Create the groups that do not exist yet.
+	 *
+	 * @param array  $groupNames The groups to ensure.
+	 * @param string $logMessage The message logged for each group created.
+	 *
+	 * @return array The groups that were created, in order.
+	 */
+	private function createMissingGroups(array $groupNames, string $logMessage): array {
+		$createdGroups = [];
+		foreach ($groupNames as $groupName) {
+			if ($this->createMissingGroup(groupName: $groupName, logMessage: $logMessage) === true) {
+				$createdGroups[] = $groupName;
 			}
 		}
 
 		return $createdGroups;
-	}//end ensureGenericUserGroupsExist()
+	}//end createMissingGroups()
+
+	/**
+	 * Create a group when it does not exist yet.
+	 *
+	 * @param mixed  $groupName  The group to ensure.
+	 * @param string $logMessage The message logged when the group is created.
+	 *
+	 * @return bool True when the group was created.
+	 */
+	private function createMissingGroup(mixed $groupName, string $logMessage): bool {
+		if ($this->_groupManager->get($groupName) !== null) {
+			return false;
+		}
+
+		$group = $this->_groupManager->createGroup($groupName);
+		if ($group === null) {
+			return false;
+		}
+
+		$this->_logger->info(
+			$logMessage,
+			['groupName' => $groupName]
+		);
+		return true;
+	}//end createMissingGroup()
 
 	/**
 	 * Creates a group if it doesn't exist
@@ -253,9 +308,6 @@ class GroupHandler {
 			// Handle organization groups.
 			$this->updateOrganizationGroups(user: $user, objectData: $objectData);
 
-			// Handle special gemeente groups.
-			$this->updateGemeenteGroups(user: $user, objectData: $objectData);
-
 			$this->_logger->info(
 				'Updated user groups successfully',
 				[
@@ -277,73 +329,30 @@ class GroupHandler {
 	/**
 	 * Updates role-based groups for a user
 	 *
+	 * Delegates to RoleGrantSync, the one role service every path uses: the
+	 * user ends up in exactly the role groups of the roles they derive from
+	 * their contact person's `roles`, their mapped groups and their
+	 * organisation's type, compared without regard to case. Only the role
+	 * groups RoleGroupMap names are changed, never a generic or other group.
+	 *
 	 * @param IUser $user The user to update
 	 * @param array $objectData The contactpersoon data
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function updateRoleBasedGroups(IUser $user, array $objectData): void {
-		$userRoles = $objectData['roles'] ?? [];
-		if (is_array($userRoles) === false) {
-			$userRoles = [];
-		}
+		$changes = $this->roleGrantSync()->sync(user: $user, contactPerson: $objectData);
 
 		$this->_logger->info(
-			'Updating role-based groups for user',
+			'Updated role-based groups for user',
 			[
 				'username' => $user->getUID(),
-				'userRoles' => $userRoles,
+				'added' => $changes['added'],
+				'removed' => $changes['removed'],
 			]
 		);
-
-		// Role names are compared without regard to case: the roles enum is
-		// capitalised (Aanbod-beheerder) while the role groups are lower case
-		// (aanbod-beheerder), stackiq#1137.
-		$userRolesLower = array_map(
-			static function ($role): string {
-				return strtolower(trim((string)$role));
-			},
-			$userRoles
-		);
-
-		// Get the configured generic user groups.
-		$genericGroups = $this->getGenericUserGroups();
-
-		foreach ($genericGroups as $groupName) {
-			$group = $this->createGroupIfNotExists(groupName: $groupName);
-
-			if ($group !== null) {
-				$hasRole = in_array(needle: strtolower(trim($groupName)), haystack: $userRolesLower, strict: true);
-				$inGroup = $group->inGroup($user);
-
-				if ($hasRole === true && $inGroup === false) {
-					// Add user to group.
-					$group->addUser($user);
-					$this->_logger->info(
-						'Added user to role-based group',
-						[
-							'username' => $user->getUID(),
-							'group' => $groupName,
-							'role' => $groupName,
-						]
-					);
-				} elseif ($hasRole === false && $inGroup === true) {
-					// Remove user from group (except for system groups).
-					// Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned.
-					if (in_array(needle: $groupName, haystack: ['software-catalog-users']) === false) {
-						$group->removeUser($user);
-						$this->_logger->info(
-							'Removed user from role-based group',
-							[
-								'username' => $user->getUID(),
-								'group' => $groupName,
-							]
-						);
-					}
-				}//end if
-			}//end if
-		}//end foreach
 	}//end updateRoleBasedGroups()
 
 	/**
@@ -406,7 +415,7 @@ class GroupHandler {
 	 */
 	private function resolveOrganisationData(string $organisationUuid): ?array {
 		$objectService = $this->getObjectService();
-		$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+		$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 		$registerId = $settingsService->getVoorzieningenRegisterId();
 		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -415,7 +424,10 @@ class GroupHandler {
 			return null;
 		}
 
-		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisationSchemaId);
+		$organizationObject = $objectService->find(
+			id: $organisationUuid,
+			options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
+		);
 		if ($organizationObject === null) {
 			return null;
 		}
@@ -454,54 +466,6 @@ class GroupHandler {
 		);
 
 	}//end assignOrganizationGroup()
-
-	/**
-	 * Updates gemeente-specific groups for a user
-	 *
-	 * @param IUser $user The user to update
-	 * @param array $objectData The contactpersoon data
-	 *
-	 * @return void
-	 * @spec   openspec/specs/sc-handlers/spec.md
-	 */
-	public function updateGemeenteGroups(IUser $user, array $objectData): void {
-		$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
-
-		if (empty($organizationUuid) === true) {
-			return;
-		}
-
-		try {
-			$orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
-			if ($orgData === null) {
-				return;
-			}
-
-			$actualUuid = $orgData['id'] ?? $organizationUuid;
-			$orgType = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
-
-			// Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations.
-			// The 'ambtenaar' group can still be created if needed, but users are not automatically assigned.
-			if ($orgType === 'gemeente') {
-				$this->_logger->debug(
-					'User from gemeente organization (no automatic ambtenaar group assignment)',
-					[
-						'username' => $user->getUID(),
-						'organizationUuid' => $actualUuid,
-						'organizationType' => $orgType,
-					]
-				);
-			}
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to process gemeente group: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'organizationUuid' => $organizationUuid,
-				]
-			);
-		}//end try
-	}//end updateGemeenteGroups()
 
 	/**
 	 * Gets all available groups with their information

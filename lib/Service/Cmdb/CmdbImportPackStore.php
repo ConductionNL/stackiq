@@ -3,6 +3,9 @@
 /**
  * The CMDB import packs in OpenRegister's migration-pack store.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The four sheet packs (module, manufacturer, usage, business owner) are
  * seeded into OpenRegister's `MigrationPackService` as built-in packs, so an
  * administrator can view and edit them in OpenRegister. Each seeded definition
@@ -28,18 +31,16 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Cmdb;
 
-use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -48,9 +49,9 @@ use Throwable;
 /**
  * Seeds, finds and updates the CMDB import packs in OpenRegister.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
-class CmdbImportPackStore {
+class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	/**
 	 * OpenRegister's migration-pack service (not a public contract).
 	 */
@@ -65,16 +66,6 @@ class CmdbImportPackStore {
 	 * The store resolved the pack as it was.
 	 */
 	public const FOUND = 'found';
-
-	/**
-	 * The store created the pack from the shipped file.
-	 */
-	public const SEEDED = 'seeded';
-
-	/**
-	 * The store replaced an unedited pack with a newer shipped one.
-	 */
-	public const UPDATED = 'updated';
 
 	/**
 	 * A class only an OpenRegister with the hardened pack store has.
@@ -93,7 +84,6 @@ class CmdbImportPackStore {
 	 * The exception OpenRegister throws when a pack was saved after the caller read it.
 	 */
 	public const PACK_CHANGED_CLASS = 'OCA\OpenRegister\Exception\PackChangedException';
-
 
 	/**
 	 * Decides whether OpenRegister's store may be used, and hands out its service.
@@ -117,7 +107,7 @@ class CmdbImportPackStore {
 	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
 	 * @param string $controllerClass The controller whose write methods must be guarded.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -143,7 +133,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isAvailable(): bool {
 		return $this->service() !== null;
@@ -157,7 +147,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return array<string, int>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function recordedPackIds(): array {
 		$config = $this->appConfig();
@@ -165,11 +155,22 @@ class CmdbImportPackStore {
 			return [];
 		}
 
-		$decoded = json_decode($config->getValueString(Application::APP_ID, self::CONFIG_KEY, ''), true);
+		$decoded = json_decode($config->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}
 
+		return $this->validPackIds(decoded: $decoded);
+	}//end recordedPackIds()
+
+	/**
+	 * The recorded entries that are a pack slug with a positive row id.
+	 *
+	 * @param array<mixed, mixed> $decoded The decoded config value.
+	 *
+	 * @return array<string, int>
+	 */
+	private function validPackIds(array $decoded): array {
 		$ids = [];
 		foreach ($decoded as $slug => $id) {
 			if (is_string($slug) === true && is_int($id) === true && $id > 0) {
@@ -178,7 +179,7 @@ class CmdbImportPackStore {
 		}
 
 		return $ids;
-	}//end recordedPackIds()
+	}//end validPackIds()
 
 	/**
 	 * Refuse the shipped files once the packs were stored in OpenRegister.
@@ -191,7 +192,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE naming the packs the store held.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function assertShippedFallbackAllowed(): void {
 		$named = [];
@@ -226,7 +227,7 @@ class CmdbImportPackStore {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is missing or fails,
 	 *                             or when the pack was renamed in OpenRegister.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function find(array $shipped): ?array {
 		$service = $this->requireService();
@@ -259,7 +260,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function updateWouldRun(object $entity, array $shipped): bool {
 		return $entity->getUpdatedAt() !== null
@@ -283,7 +284,7 @@ class CmdbImportPackStore {
 	 *                             that fails because another request seeded the pack
 	 *                             first is no failure: that pack is used.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function resolve(array $shipped): array {
 		$service = $this->requireService();
@@ -331,7 +332,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the update fails otherwise.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function updateUnedited(object $service, object $entity, string $slug, array $shipped): array {
 		$id = (int)$entity->getId();
@@ -367,7 +368,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function describe(object $entity, string $slug, array $shipped, string $outcome): array {
 		$definition = self::definitionOf(entity: $entity);
@@ -392,7 +393,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is not available.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function requireService(): object {
 		$service = $this->service();
@@ -413,7 +414,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function definitionOf(object $entity): array {
 		$definition = $entity->getDefinitionArray();
@@ -434,7 +435,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the lookup fails otherwise.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function findBySlug(object $service, string $slug): ?object {
 		try {
@@ -464,7 +465,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack was renamed or the lookup fails.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function assertNotRenamed(object $service, string $slug): void {
 		$id = ($this->recordedPackIds()[$slug] ?? null);
@@ -505,7 +506,7 @@ class CmdbImportPackStore {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the call fails.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function write(string $slug, string $action, callable $call): object {
 		try {
@@ -528,7 +529,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function record(string $slug, int $id): void {
 		$config = $this->appConfig();
@@ -543,7 +544,7 @@ class CmdbImportPackStore {
 
 		$ids[$slug] = $id;
 		ksort($ids);
-		$config->setValueString(Application::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
+		$config->setValueString(AppIdentity::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
 	}//end record()
 
 	/**
@@ -551,7 +552,7 @@ class CmdbImportPackStore {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function service(): ?object {
 		return $this->probe->service();
@@ -562,25 +563,35 @@ class CmdbImportPackStore {
 	 *
 	 * @return IAppConfig|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function appConfig(): ?IAppConfig {
 		if ($this->appConfig !== null) {
 			return $this->appConfig;
 		}
 
+		$this->appConfig = $this->containerAppConfig();
+		return $this->appConfig;
+	}//end appConfig()
+
+	/**
+	 * The app config the container holds, or null when it holds none.
+	 *
+	 * @return IAppConfig|null
+	 */
+	private function containerAppConfig(): ?IAppConfig {
 		try {
 			if ($this->container->has(IAppConfig::class) === true) {
 				$config = $this->container->get(IAppConfig::class);
 				if ($config instanceof IAppConfig) {
-					$this->appConfig = $config;
+					return $config;
 				}
 			}
 		} catch (Throwable $e) {
 			// No app config in this container: nothing is recorded.
-			$this->appConfig = null;
+			return null;
 		}
 
-		return $this->appConfig;
-	}//end appConfig()
+		return null;
+	}//end containerAppConfig()
 }//end class

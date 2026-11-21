@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Resolves OpenRegister's pack service when the store may be used.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 final class CmdbImportPackStoreProbe {
 	/**
@@ -74,7 +74,7 @@ final class CmdbImportPackStoreProbe {
 	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
 	 * @param string $controllerClass The controller whose write methods must be guarded.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -89,7 +89,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function service(): ?object {
 		if ($this->service === null) {
@@ -114,23 +114,42 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return object|false
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function resolve(): object|false {
-		if (class_exists($this->hardenedClass) === false
-			|| self::writesAreGuarded(controllerClass: $this->controllerClass) === false
-			|| $this->container->has($this->serviceClass) === false
-		) {
+		if ($this->storeIsOffered() === false) {
 			return false;
 		}
 
 		$service = $this->container->get($this->serviceClass);
-		if (is_object($service) === false || self::hasMethods(service: $service) === false) {
+		if (self::isPackStoreService(service: $service) === false) {
 			return false;
 		}
 
 		return $service;
 	}//end resolve()
+
+	/**
+	 * Whether OpenRegister offers the hardened store: its class, admin-only CSRF-protected writes, and the service.
+	 *
+	 * @return bool
+	 */
+	private function storeIsOffered(): bool {
+		return class_exists($this->hardenedClass) === true
+			&& self::writesAreGuarded(controllerClass: $this->controllerClass) === true
+			&& $this->container->has($this->serviceClass) === true;
+	}//end storeIsOffered()
+
+	/**
+	 * Whether the container's answer is a service with every pack store method.
+	 *
+	 * @param mixed $service What the container answered.
+	 *
+	 * @return bool
+	 */
+	private static function isPackStoreService(mixed $service): bool {
+		return is_object($service) === true && self::hasMethods(service: $service) === true;
+	}//end isPackStoreService()
 
 	/**
 	 * Whether every pack write method of the controller is admin-only and CSRF-protected.
@@ -143,7 +162,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool False when the class or a write method is missing, or a write method is opened.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function writesAreGuarded(string $controllerClass): bool {
 		if (class_exists($controllerClass) === false) {
@@ -167,7 +186,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function isOpened(ReflectionMethod $method): bool {
 		$attributes = array_map(
@@ -191,7 +210,7 @@ final class CmdbImportPackStoreProbe {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private static function hasMethods(object $service): bool {
 		foreach (self::SERVICE_METHODS as $method) {

@@ -1,0 +1,62 @@
+{
+	"linear": [
+		{
+			"key": "Migrate",
+			"x": 70,
+			"y": 10,
+			"width": 120,
+			"height": 180
+		},
+		{
+			"key": "Invest",
+			"x": 190,
+			"y": 10,
+			"width": 180,
+			"height": 180
+		},
+		{
+			"key": "Eliminate",
+			"x": 70,
+			"y": 190,
+			"width": 120,
+			"height": 120
+		},
+		{
+			"key": "Tolerate",
+			"x": 190,
+			"y": 190,
+			"width": 180,
+			"height": 120
+		}
+	],
+	"odd": [
+		{
+			"key": "Migrate",
+			"x": -0.75,
+			"y": 1.0769230769230769,
+			"width": 6,
+			"height": 0.9230769230769231
+		},
+		{
+			"key": "Invest",
+			"x": 5.25,
+			"y": 1.0769230769230769,
+			"width": 24,
+			"height": 0.9230769230769231
+		},
+		{
+			"key": "Eliminate",
+			"x": -0.75,
+			"y": 2,
+			"width": 6,
+			"height": 2.666666666666667
+		},
+		{
+			"key": "Tolerate",
+			"x": 5.25,
+			"y": 2,
+			"width": 24,
+			"height": 2.666666666666667
+		}
+	]
+}

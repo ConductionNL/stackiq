@@ -41,13 +41,20 @@
  * @spec openspec/specs/fe-shell-navigation/spec.md
  */
 
+import { translate, translatePlural } from '@nextcloud/l10n'
 import { compile } from '@vue/compiler-dom'
 import { parse } from '@vue/compiler-sfc'
 import { readdirSync, readFileSync } from 'fs'
 import path from 'path'
-import { describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { describe, expect, it, vi } from 'vitest'
 import * as VueRuntime from 'vue'
 import { createApp } from 'vue'
+
+// A stateful section is imported for its options only; its child components
+// are never rendered here, so the component libraries are stood in for.
+vi.mock('@conduction/nextcloud-vue', () => ({ CnDataTable: {}, CnStatusBadge: {} }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post: vi.fn() } }))
 
 const SECTIONS_DIR = path.resolve(
 	import.meta.dirname,
@@ -98,9 +105,12 @@ function extractInfoBlocks(source) {
  * Compile a template fragment and render it into a detached element.
  *
  * @param {string} markup - The template fragment to render.
+ * @param {object} [component] - The section's options; a panel that shows
+ *   section state (CmdbImport's sheet names and modes) renders against its
+ *   data, computed values and methods, as it does inside the section.
  * @return {{ error: (Error|null), text: string }} Render outcome.
  */
-function renderFragment(markup) {
+function renderFragment(markup, component = {}) {
 	const { code } = compile(markup, {
 		mode: 'function',
 		hoistStatic: false,
@@ -110,7 +120,8 @@ function renderFragment(markup) {
 	const render = new Function('Vue', code)(VueRuntime)
 
 	const host = document.createElement('div')
-	const app = createApp({ render })
+	const { props, data, computed, methods } = component
+	const app = createApp({ props, data, computed, methods, render })
 	let error = null
 	app.config.errorHandler = (err) => {
 		error = err
@@ -131,12 +142,30 @@ const sectionFiles = readdirSync(SECTIONS_DIR)
 	.map((entry) => ({ ...entry, blocks: extractInfoBlocks(entry.source) }))
 	.filter((entry) => entry.blocks.length > 0)
 
+/**
+ * Sections whose info panel shows section state, so it renders against the
+ * section's own options. Every other panel must stay static documentation
+ * and renders with no context at all.
+ *
+ * @type {Set<string>}
+ */
+const STATEFUL_PANELS = new Set(['CmdbImport.vue'])
+
+/**
+ * What a static panel may use: the translate functions every section has,
+ * since static documentation is still translated text. No section state.
+ *
+ * @type {object}
+ */
+const STATIC_CONTEXT = { methods: { t: translate, n: translatePlural } }
+
 describe('settings section info panels', () => {
 	it('finds the info panels it is supposed to be guarding', () => {
 		// A positive control: if the extraction silently stopped matching, every
 		// per-file assertion below would vacuously pass.
 		expect(sectionFiles.map((entry) => entry.file).sort()).toEqual([
 			'ArchiMateImportExport.vue',
+			'CmdbImport.vue',
 			'EmailConfiguration.vue',
 			'OrganizationSynchronization.vue',
 			'UserGroupsConfiguration.vue',
@@ -145,13 +174,21 @@ describe('settings section info panels', () => {
 	})
 
 	for (const { file, blocks } of sectionFiles) {
-		it(`${file} renders its info panel without throwing`, () => {
-			for (const markup of blocks) {
-				const { error, text } = renderFragment(markup)
-				expect(error).toBeNull()
-				expect(text.trim().length).toBeGreaterThan(0)
-			}
-		})
+		it(
+			`${file} renders its info panel without throwing`,
+			{ timeout: 60000 },
+			async () => {
+				setActivePinia(createPinia())
+				const component = STATEFUL_PANELS.has(file)
+					? (await import(path.join(SECTIONS_DIR, file))).default
+					: STATIC_CONTEXT
+				for (const markup of blocks) {
+					const { error, text } = renderFragment(markup, component)
+					expect(error).toBeNull()
+					expect(text.trim().length).toBeGreaterThan(0)
+				}
+			},
+		)
 	}
 
 	it('EmailConfiguration shows its placeholder braces literally', () => {

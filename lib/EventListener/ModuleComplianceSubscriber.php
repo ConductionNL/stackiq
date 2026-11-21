@@ -13,17 +13,18 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
-use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Stackiq\Service\ModuleComplianceService;
-use OCA\Stackiq\Service\ModuleVersionService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -43,6 +44,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/stackiq
  */
 class ModuleComplianceSubscriber implements IEventListener {
+	use ObjectEventPayload;
+
 	/**
 	 * Constructor for ModuleComplianceSubscriber.
 	 *
@@ -90,29 +93,6 @@ class ModuleComplianceSubscriber implements IEventListener {
 	}//end handle()
 
 	/**
-	 * Extract the object payload from a supported event type.
-	 *
-	 * Returns null for unsupported event types or when the event carries no
-	 * object (ObjectCreatedEvent → getObject(); ObjectUpdatedEvent →
-	 * getNewObject()).
-	 *
-	 * @param Event $event The dispatched event
-	 *
-	 * @return object|null The object payload or null
-	 */
-	private function extractObjectFromEvent(Event $event): ?object {
-		if ($event instanceof ObjectCreatedEvent) {
-			return $event->getObject();
-		}
-
-		if ($event instanceof ObjectUpdatedEvent) {
-			return $event->getNewObject();
-		}
-
-		return null;
-	}//end extractObjectFromEvent()
-
-	/**
 	 * Decide whether the given object is a module — i.e. its schema id
 	 * matches the configured module schema id.
 	 *
@@ -122,8 +102,8 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 * @return bool True when the object is a module
 	 */
 	private function isModuleObject(object $object, LoggerInterface $logger): bool {
-		$settingsService = $this->container->get(SettingsService::class);
-		$moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
+		$catalogue = $this->container->get(ObjectTypeLocatorInterface::class);
+		$moduleSchemaId = $catalogue->getSchemaIdForObjectType('module');
 
 		if ($moduleSchemaId === null) {
 			$logger->debug(
@@ -149,7 +129,7 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 */
 	private function dispatchComplianceUpdate(object $object, LoggerInterface $logger): void {
 		try {
-			$complianceSvc = $this->container->get(ModuleComplianceService::class);
+			$complianceSvc = $this->container->get(ModuleComplianceServiceInterface::class);
 			$complianceSvc->handleModuleComplianceUpdate($object);
 
 			$logger->info(
@@ -183,7 +163,7 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 */
 	private function dispatchEnsureDefaultVersion(object $object, LoggerInterface $logger): void {
 		try {
-			$moduleVersionService = $this->container->get(ModuleVersionService::class);
+			$moduleVersionService = $this->container->get(ModuleVersionServiceInterface::class);
 			$moduleVersionService->ensureDefaultVersion($object);
 		} catch (\Exception $e) {
 			$logger->error(
