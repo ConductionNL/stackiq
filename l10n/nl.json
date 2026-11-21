@@ -2484,6 +2484,15 @@
         "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "Het gebruik waarin de wijziging is weggeschreven toen het scenario werd doorgevoerd, zodat een tweede keer doorvoeren niets verandert.",
         "DPIA": "DPIA",
         "No AI system supports this process yet": "Nog geen AI-systeem ondersteunt dit proces",
-        "The business processes this AI system supports.": "De bedrijfsprocessen die dit AI-systeem ondersteunt."
+        "The business processes this AI system supports.": "De bedrijfsprocessen die dit AI-systeem ondersteunt.",
+        "SaaS subscriptions": "SaaS-abonnementen",
+        "Filter the subscriptions": "Filter de abonnementen",
+        "All subscriptions": "Alle abonnementen",
+        "Bought outside IT": "Buiten IT aangeschaft",
+        "No subscriptions bought outside IT": "Geen abonnementen buiten IT aangeschaft",
+        "No SaaS subscriptions": "Geen SaaS-abonnementen",
+        "Buying department": "Inkopende afdeling",
+        "The department that bought this application, when it is not IT.": "De afdeling die deze applicatie heeft aangeschaft, als dat niet IT is.",
+        "Whether the department bought this application without IT being involved.": "Of de afdeling deze applicatie heeft aangeschaft zonder dat IT erbij betrokken was."
     }
 }

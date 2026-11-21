@@ -105,6 +105,57 @@
 				</table>
 			</section>
 
+			<!-- SaaS subscriptions, including the ones bought outside IT -->
+			<section class="pv-section" data-testid="posture-saas">
+				<h3 class="pv-sectionTitle">
+					{{ t('stackiq', 'SaaS subscriptions') }}
+				</h3>
+				<div class="pv-filter" role="group" :aria-label="t('stackiq', 'Filter the subscriptions')">
+					<NcButton
+						:variant="saasOutsideItOnly ? 'tertiary' : 'secondary'"
+						:aria-pressed="saasOutsideItOnly ? 'false' : 'true'"
+						data-testid="posture-saas-all"
+						@click="saasOutsideItOnly = false">
+						{{ t('stackiq', 'All subscriptions') }}
+					</NcButton>
+					<NcButton
+						:variant="saasOutsideItOnly ? 'secondary' : 'tertiary'"
+						:aria-pressed="saasOutsideItOnly ? 'true' : 'false'"
+						data-testid="posture-saas-outside-it"
+						@click="saasOutsideItOnly = true">
+						{{ t('stackiq', 'Bought outside IT') }}
+					</NcButton>
+				</div>
+				<NcEmptyContent
+					v-if="saasRows.length === 0"
+					:name="saasOutsideItOnly ? t('stackiq', 'No subscriptions bought outside IT') : t('stackiq', 'No SaaS subscriptions')" />
+				<table v-else class="pv-table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('stackiq', 'Application') }}</th>
+							<th scope="col">{{ t('stackiq', 'Supplier') }}</th>
+							<th scope="col">{{ t('stackiq', 'Organisation') }}</th>
+							<th scope="col">{{ t('stackiq', 'Buying department') }}</th>
+							<th scope="col">{{ t('stackiq', 'Bought outside IT') }}</th>
+							<th scope="col">{{ t('stackiq', 'Annual cost') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="row in saasRows"
+							:key="row.usageId"
+							data-testid="posture-saas-row">
+							<td>{{ row.applicationName }}</td>
+							<td>{{ row.supplierName }}</td>
+							<td>{{ row.organisationName }}</td>
+							<td>{{ row.department }}</td>
+							<td>{{ row.boughtOutsideItLabel }}</td>
+							<td>{{ row.costLabel }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
 			<!-- Per-organisation report -->
 			<section class="pv-section" data-testid="posture-org">
 				<h3 class="pv-sectionTitle">
@@ -227,6 +278,7 @@ import {
 } from '../utils/licensePosture.js'
 import { indexByUuid } from '../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
+import { saasSubscriptionRows } from '../utils/saasSubscriptions.js'
 import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
 
 /**
@@ -293,6 +345,7 @@ export default {
 		return {
 			loading: true,
 			selectedOrg: null,
+			saasOutsideItOnly: false,
 		}
 	},
 
@@ -404,6 +457,27 @@ export default {
 			return perVendorRollup(this.modules, this.usages, this.contracts)
 				.map((row) => this.vendorRow(row))
 				.sort((a, b) => b.deployments - a.deployments)
+		},
+
+		/**
+		 * The SaaS subscriptions, all or only those bought outside IT, with
+		 * their names, buying department and yearly cost resolved.
+		 *
+		 * @return {Array<object>} The subscription rows.
+		 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/saas-subscriptions/spec.md#requirement-the-licences-page-lists-saas-subscriptions-with-their-yearly-cost-including-ones-bought-outside-it-req-clr-001
+		 */
+		saasRows() {
+			return saasSubscriptionRows(
+				{ usages: this.usages, contracts: this.contracts, modules: this.modules },
+				this.saasOutsideItOnly,
+			).map((row) => ({
+				...row,
+				applicationName: this.moduleNameIndex[row.moduleId] || row.moduleId || t('stackiq', 'Unknown application'),
+				supplierName: row.supplierId ? this.vendorLabel(row.supplierId) : '',
+				organisationName: this.organisatieIndex[row.consumerId] || '',
+				boughtOutsideItLabel: row.boughtOutsideIt ? t('stackiq', 'Yes') : t('stackiq', 'No'),
+				costLabel: this.costText(row.annualCost),
+			}))
 		},
 
 		/**
@@ -640,6 +714,12 @@ export default {
 
 .pv-row--over td {
 	color: var(--color-error-text);
+}
+
+.pv-filter {
+	display: flex;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	margin-block-end: calc(var(--default-grid-baseline, 4px) * 2);
 }
 
 .pv-table {
