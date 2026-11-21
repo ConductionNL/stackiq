@@ -8,7 +8,7 @@
  * (applications, contracts). Webhooks on other registers are not ours and
  * are left out of the list.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 
 import axios from '@nextcloud/axios'
@@ -26,7 +26,7 @@ export const OBJECT_EVENTS = Object.freeze([
  * named by its key in the voorzieningen configuration.
  *
  * @return {Array<{id: string, label: string, configKey: string}>} The events.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function catalogueEvents() {
 	return [
@@ -41,7 +41,7 @@ export function catalogueEvents() {
  *
  * @param {object} config The voorzieningen configuration.
  * @return {{register: string, schemas: {[event: string]: string}}|null} The catalogue.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function catalogueTarget(config) {
 	const register = config?.register
@@ -63,7 +63,7 @@ export function catalogueTarget(config) {
  * @param {object} webhook An OpenRegister webhook.
  * @param {{register: string}} target The catalogue.
  * @return {boolean} True for a catalogue webhook.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function isCatalogueWebhook(webhook, target) {
 	const register = webhook?.filters?.register
@@ -76,7 +76,7 @@ export function isCatalogueWebhook(webhook, target) {
  * @param {object} webhook An OpenRegister webhook.
  * @param {{schemas: {[event: string]: string}}} target The catalogue.
  * @return {string[]} The event ids.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function webhookEvents(webhook, target) {
 	const filter = webhook?.filters?.schema
@@ -89,7 +89,7 @@ export function webhookEvents(webhook, target) {
  *
  * @param {object} webhook An OpenRegister webhook.
  * @return {{at: string, ok: boolean}|null} The last delivery, or null when there was none.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function lastDelivery(webhook) {
 	const success = webhook?.lastSuccessAt || null
@@ -109,7 +109,7 @@ export function lastDelivery(webhook) {
  * @param {{name?: string, url: string, events: string[]}} form What the administrator entered.
  * @param {{register: string, schemas: {[event: string]: string}}} target The catalogue.
  * @return {object} The webhook body.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export function webhookBody(form, target) {
 	const url = String(form.url || '').trim()
@@ -131,7 +131,7 @@ export function webhookBody(form, target) {
  *
  * @param {{register: string}} target The catalogue.
  * @return {Promise<object[]>} The catalogue's webhooks.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export async function listCatalogueWebhooks(target) {
 	const { data } = await axios.get(generateUrl('/apps/openregister/api/webhooks'))
@@ -145,7 +145,7 @@ export async function listCatalogueWebhooks(target) {
  * @param {object} body The webhook body.
  * @param {number|null} id The webhook to update, or null to create one.
  * @return {Promise<object>} The stored webhook.
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export async function saveWebhook(body, id = null) {
 	if (id === null || id === undefined) {
@@ -159,7 +159,7 @@ export async function saveWebhook(body, id = null) {
  *
  * @param {number} id The webhook.
  * @return {Promise<void>}
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 export async function removeWebhook(id) {
 	await axios.delete(generateUrl('/apps/openregister/api/webhooks/{id}', { id }))

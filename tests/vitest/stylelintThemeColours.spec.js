@@ -5,7 +5,7 @@
  * Components take their colours from the theme: stylelint fails on a hex
  * colour outside a var() fallback, and the components under src/ pass.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
  */
 import { createRequire } from 'node:module'
 import path from 'node:path'

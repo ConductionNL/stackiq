@@ -5,7 +5,7 @@
  * Components take their colours from the Nextcloud theme: a hex colour in a
  * `.vue` file under `src/` is an error unless it is the fallback of a var().
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
  */
 module.exports = {
 	extends: '@nextcloud/stylelint-config',

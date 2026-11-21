@@ -9,7 +9,7 @@
 // `color: #c62828` fails, and so does a hex next to a var() rather than in
 // its fallback (`border: 1px solid #000, var(--x)`).
 //
-// @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
+// @spec openspec/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
 
 const valueParser = require('postcss-value-parser')
 const stylelint = require('stylelint')
@@ -25,7 +25,7 @@ const HEX = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i
  * The hex colours in a declaration value that are not inside the fallback of
  * a `var()`.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
  * @param {string} value The declaration value.
  * @return {string[]} The offending hex colours, in order.
  */
@@ -56,7 +56,7 @@ function hexOutsideVarFallback(value) {
 /**
  * The rule: reports every hex colour that is not a var() fallback.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
  * @param {boolean} primary Whether the rule is on.
  * @return {(root: object, result: object) => void} The PostCSS walker.
  */

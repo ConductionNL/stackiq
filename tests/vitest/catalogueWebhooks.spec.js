@@ -8,7 +8,7 @@
  * OpenRegister webhook filtered to the chosen schemas; edit and remove go
  * through the same API; without webhooks it shows an empty state.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+ * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
  */
 
 import axios from '@nextcloud/axios'

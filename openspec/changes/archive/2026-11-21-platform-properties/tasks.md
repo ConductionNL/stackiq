@@ -64,4 +64,5 @@
 - **files**: `openspec/parity/capabilities.json`
 - **acceptance_criteria**:
   - GIVEN the tasks are done WHEN the change is archived THEN the seven rows point at `built.spec: openspec/specs/platform-properties`
-- [ ] Implement
+- [x] Implement
+  > Archived 21 Nov: the seven rows name `2026-11-21-platform-properties` and their requirement in `openspec/specs/platform-properties`; share-lifecycle-conditional-sync and share-webhooks move from building to built now that tasks 4 and 5 are in, and the `@spec` tags point at the synced spec.

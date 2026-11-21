@@ -8,7 +8,7 @@
  * state on: the select lists the usage lifecycle states, starts at the stored
  * choice (or "In production") and the set-up posts the chosen state.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+ * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
