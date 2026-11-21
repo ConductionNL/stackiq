@@ -372,7 +372,7 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 		$this->services['OCA\\OpenCatalogi\\Service\\BroadcastService'] = $broadcast;
 		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('federationPeersChanged')
-			->with($this->callback(static fn (array $status): bool => $status['enabled'] === true));
+			->with($this->callback(callback: static fn (array $status): bool => $status['enabled'] === true));
 
 		$status = $this->service(reports: $reports)->setEnabled(enabled: true);
 

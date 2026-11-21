@@ -64,6 +64,8 @@ class FederationConfig implements FederationConfigInterface {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the setter stores, not a mode
+	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
 	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
 	 */

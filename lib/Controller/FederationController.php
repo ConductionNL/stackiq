@@ -137,6 +137,8 @@ class FederationController extends Controller {
 	 *
 	 * @return JSONResponse The status after the switch, with the registration.
 	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the switch sets, not a mode
+	 *
 	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
 	 * @spec                                                                               openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status

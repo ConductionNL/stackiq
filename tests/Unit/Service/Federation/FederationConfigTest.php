@@ -302,7 +302,7 @@ class FederationConfigTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheSwitchWritesTheEnabledFlag(): void {
-		$this->appConfig->expects($this->exactly(2))->method('setValueBool')
+		$this->appConfig->expects($this->exactly(count: 2))->method('setValueBool')
 			->willReturnCallback(
 				function (string $app, string $key, bool $value): bool {
 					$this->assertSame(expected: ['stackiq', 'federation_enabled'], actual: [$app, $key]);
