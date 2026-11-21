@@ -526,12 +526,17 @@ class ViewController extends Controller {
 	 *
 	 * API Endpoint: GET /api/views/docs
 	 *
+	 * Deprecated for new integrations: the body keeps its hand-written
+	 * description and carries a `documentation` entry that points to the API
+	 * documentation page and the OpenAPI document.
+	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
 	 * @return JSONResponse JSON response with API documentation
 	 *
 	 * @spec openspec/specs/dashboard-views-api/spec.md
+	 * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
 	 */
 	public function getApiDocumentation(): JSONResponse {
 		if ($this->userSession->getUser() === null) {

@@ -5,6 +5,11 @@
             "api_version": "2.0.0",
             "description": "Stackiq AangebodenGebruik API",
             "base_url": "/api/aangeboden-gebruik",
+            "documentation": {
+                "page": "/apps/stackiq/api-docs",
+                "openapi": "/apps/stackiq/api/openapi.json",
+                "note": "This hand-written description is deprecated. The API documentation page and the OpenAPI document describe every endpoint."
+            },
             "endpoints": [
                 {
                     "method": "GET",
@@ -157,6 +162,11 @@
             "api_version": "1.0.0",
             "description": "Stackiq View API - Query and enrich ArchiMate views",
             "base_url": "/api/views",
+            "documentation": {
+                "page": "/apps/stackiq/api-docs",
+                "openapi": "/apps/stackiq/api/openapi.json",
+                "note": "This hand-written description is deprecated. The API documentation page and the OpenAPI document describe every endpoint."
+            },
             "endpoints": [
                 {
                     "method": "GET",

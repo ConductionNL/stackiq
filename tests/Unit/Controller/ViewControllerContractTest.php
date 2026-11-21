@@ -321,6 +321,8 @@ class ViewControllerContractTest extends TestCase {
 		$paths = array_column($data['endpoints'], 'path');
 		$this->assertContains('/api/views', $paths);
 		$this->assertContains('/api/views/{viewId}', $paths);
+		$this->assertSame('/apps/stackiq/api-docs', $data['documentation']['page']);
+		$this->assertSame('/apps/stackiq/api/openapi.json', $data['documentation']['openapi']);
 
 	}//end testGetApiDocumentationDescribesTheRegisteredViewEndpoints()
 }//end class

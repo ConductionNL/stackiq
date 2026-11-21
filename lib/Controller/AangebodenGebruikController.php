@@ -695,12 +695,17 @@ class AangebodenGebruikController extends Controller {
 	 *
 	 * API Endpoint: GET /api/aangeboden-gebruik/docs
 	 *
+	 * Deprecated for new integrations: the body keeps its hand-written
+	 * description and carries a `documentation` entry that points to the API
+	 * documentation page and the OpenAPI document.
+	 *
 	 * @return JSONResponse JSON response with API documentation
 	 *
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 *
 	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
+	 * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getApiDocumentation(): JSONResponse {
