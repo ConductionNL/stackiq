@@ -2513,6 +2513,16 @@
         "In the file": "In het bestand",
         "After the round trip": "Na de rondgang",
         "Extra": "Extra",
-        "Examples: {category}": "Voorbeelden: {category}"
+        "Examples: {category}": "Voorbeelden: {category}",
+        "API documentation": "API-documentatie",
+        "API documents": "API-documenten",
+        "Catalogue objects": "Catalogusobjecten",
+        "Stackiq endpoints": "Stackiq-endpoints",
+        "The catalogue objects are read and written through the OpenRegister API; the endpoints the app adds on top have their own document.": "De catalogusobjecten lees en schrijf je via de OpenRegister-API; de endpoints die de app daarbovenop toevoegt hebben een eigen document.",
+        "Loading the API documentation": "De API-documentatie wordt geladen",
+        "Loading the API document": "Het API-document wordt geladen",
+        "This API document is not available on this instance.": "Dit API-document is op deze installatie niet beschikbaar.",
+        "You may not read this API document.": "Je mag dit API-document niet lezen.",
+        "The API document could not be loaded.": "Het API-document kon niet worden geladen."
     }
 }
