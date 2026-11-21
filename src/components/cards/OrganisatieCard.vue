@@ -582,18 +582,18 @@ export default {
 }
 
 .typeBadge.type-gemeente {
-	background: #e3f2fd;
-	color: #1565c0;
+	background: var(--color-primary-element-light, #e3f2fd);
+	color: var(--color-primary-element-light-text, #1565c0);
 }
 
 .typeBadge.type-leverancier {
-	background: #f3e5f5;
-	color: #7b1fa2;
+	background: var(--color-background-hover, #f3e5f5);
+	color: var(--color-info-text, #7b1fa2);
 }
 
 .typeBadge.type-samenwerking {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge {
@@ -602,18 +602,18 @@ export default {
 }
 
 .statusBadge.status-actief {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge.status-concept {
-	background: #fff3e0;
-	color: #f57c00;
+	background: var(--color-background-hover, #fff3e0);
+	color: var(--color-warning-text, #f57c00);
 }
 
 .statusBadge.status-deactief {
-	background: #ffebee;
-	color: #c62828;
+	background: var(--color-background-hover, #ffebee);
+	color: var(--color-error-text, #c62828);
 }
 
 .organisatieDescription {
