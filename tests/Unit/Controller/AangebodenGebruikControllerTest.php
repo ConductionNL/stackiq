@@ -148,12 +148,12 @@ class AangebodenGebruikControllerTest extends TestCase {
 		$response = $controller->getApiDocumentation();
 		$data     = $response->getData();
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame('/api/aangeboden-gebruik', $data['base_url']);
-		$this->assertNotEmpty($data['endpoints']);
-		$this->assertSame('/apps/stackiq/api-docs', $data['documentation']['page']);
-		$this->assertSame('/apps/stackiq/api/openapi.json', $data['documentation']['openapi']);
-		$this->assertStringContainsString('deprecated', $data['documentation']['note']);
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: '/api/aangeboden-gebruik', actual: $data['base_url']);
+		$this->assertNotEmpty(actual: $data['endpoints']);
+		$this->assertSame(expected: '/apps/stackiq/api-docs', actual: $data['documentation']['page']);
+		$this->assertSame(expected: '/apps/stackiq/api/openapi.json', actual: $data['documentation']['openapi']);
+		$this->assertStringContainsString(needle: 'deprecated', haystack: $data['documentation']['note']);
 
 	}//end testDocsCarryALinkToTheApiDocumentationPage()
 
