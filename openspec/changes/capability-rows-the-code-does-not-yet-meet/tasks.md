@@ -70,6 +70,7 @@
 - **acceptance_criteria**:
   - REQ-CLR-005, 009, 011, 013, 014, 015, 016 and 017 each have a test that passes against the current code
 - [ ] Test
+- Progress 21 Nov: `tests/e2e/workflows/catalog-ratings.spec.ts` (REQ-CLR-009) is written; like the other specs this task lists, it has not run against a live instance yet.
 
 ### Task 11: Open a vulnerability on its own page with the exposed organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
@@ -82,6 +83,7 @@
 - **files**: `src/views/public/SignUpView.vue`, `src/manifest.json`, `lib/Settings/softwarecatalogus_register.json` (organization authorization.create without public)
 - [ ] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/self-registration.spec.ts`, PHPUnit `tests/Unit/Settings/OrganisationCreateRuleTest.php`)
+- Open 21 Nov: stackiq serves no public (signed-out) page, so where the form lives is a decision (a public stackiq page, or the portal site posting to `POST /api/intake/register`). Dropping `public` from the organisation schema's create also needs the intake to save without RBAC, and a check that no other client creates organisations anonymously through the objects API. `tests/e2e/workflows/self-registration.spec.ts` is written against the intake and marked fixme until the form exists.
 
 ### Task 13: Record the requirements in the capability matrix
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/proposal.md
