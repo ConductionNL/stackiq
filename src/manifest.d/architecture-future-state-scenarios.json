@@ -1,0 +1,205 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-future-state-scenarios: scenarios of one organisation's landscape (additions, phase-outs and replacements on top of the plan) and the comparison of today with the plan or a scenario on a date. Scenarios sits under the Architecture group through src/menu-layout.json, so the top-level menu does not grow (ADR-097); the comparison page has no menu entry of its own and opens from the Portfolio roadmap's Compare with the plan.",
+	"menu": [
+		{
+			"id": "Scenarios",
+			"label": "Scenarios",
+			"icon": "CompareHorizontal",
+			"route": "Scenarios",
+			"order": 53
+		}
+	],
+	"pages": [
+		{
+			"id": "Scenarios",
+			"route": "/scenarios",
+			"type": "index",
+			"title": "Scenarios",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "scenario",
+				"description": "Future states of an organisation's landscape, each compared with today on its target date.",
+				"columns": [
+					"name",
+					"organisation",
+					"targetDate",
+					"status"
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						}
+					},
+					{
+						"label": "Proposed",
+						"filter": {
+							"status": "proposed"
+						}
+					},
+					{
+						"label": "Adopted",
+						"filter": {
+							"status": "adopted"
+						},
+						"icon": "CheckCircle"
+					}
+				],
+				"rowRoute": "ScenarioDetail",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ScenarioDetail",
+			"route": "/scenarios/:id",
+			"type": "detail",
+			"title": "Scenario",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "scenario",
+				"_note": "A scenario reads top-down: its data, its changes in order of effective date, then today's landscape next to the scenario's on the target date, where an adopted scenario that was not applied offers Apply to landscape. Status transitions come from the schema's x-openregister-lifecycle.",
+				"lifecycleActions": {
+					"field": "status"
+				},
+				"widgets": [
+					{
+						"id": "sc-data",
+						"type": "data",
+						"title": "Scenario",
+						"icon": "CompareHorizontal",
+						"content": {
+							"columns": 2,
+							"include": [
+								"name",
+								"description",
+								"organisation",
+								"targetDate",
+								"status",
+								"appliedAt"
+							]
+						}
+					},
+					{
+						"id": "sc-changes",
+						"type": "object-list",
+						"title": "Changes",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "@resolve:voorzieningen_register",
+							"schema": "scenarioChange",
+							"filter": {
+								"scenario": "@objectId"
+							},
+							"columns": [
+								"action",
+								"usage",
+								"module",
+								"effectiveDate"
+							],
+							"sort": {
+								"effectiveDate": "asc"
+							},
+							"limit": 100,
+							"allowCreate": true,
+							"addLabel": "Add change",
+							"formIncludeFields": [
+								"action",
+								"usage",
+								"module",
+								"referenceComponents",
+								"effectiveDate",
+								"note"
+							],
+							"emptyText": "No changes in this scenario yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "sc-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": "2",
+						"widgetId": "sc-changes",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "sc-comparison",
+						"component": "LandscapeComparisonView",
+						"props": {
+							"objectId": "@objectId"
+						},
+						"placement": "after-data",
+						"colSpan": 12
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "LandscapeComparison",
+			"route": "/landscape-comparison",
+			"type": "dashboard",
+			"title": "Compare with the plan",
+			"config": {
+				"widgets": [
+					{
+						"id": "landscape-comparison",
+						"type": "landscape-comparison",
+						"title": "Compare with the plan",
+						"_note": "Today's landscape next to the plan on a chosen date for one organisation, from one organisation-scoped GET /api/landscape-comparison answer (design D3). A widget TYPE registered in main.js, like cmdb-overview, because it joins usages, planned dates and reference components across two registers, which no built-in widget does. The Portfolio roadmap opens the page with ?organisation=."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "landscape-comparison",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 10,
+						"showTitle": false
+					}
+				]
+			}
+		}
+	]
+}

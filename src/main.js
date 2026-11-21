@@ -31,6 +31,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import CatalogPanels from './components/CatalogPanels.vue'
 import UpcomingMaintenanceWidget from './components/maintenance/UpcomingMaintenanceWidget.vue'
+import LandscapeComparisonView from './views/architecture/LandscapeComparisonView.vue'
 import CmdbOverview from './views/cmdb/CmdbOverview.vue'
 import customComponents from './customComponents.js'
 import appIcons from './icons.js'
@@ -91,6 +92,15 @@ registerDashboardWidget('cmdb-overview', {
 	defaultContent: {},
 	displayName: 'CMDB',
 	icon: 'Sitemap',
+	card: true,
+})
+// The Compare with the plan page (architecture-future-state-scenarios): today's
+// landscape next to the plan on a date, from GET /api/landscape-comparison.
+registerDashboardWidget('landscape-comparison', {
+	renderer: LandscapeComparisonView,
+	defaultContent: {},
+	displayName: 'Compare with the plan',
+	icon: 'CompareHorizontal',
 	card: true,
 })
 try {

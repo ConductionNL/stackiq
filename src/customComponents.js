@@ -54,6 +54,7 @@ import AccessReviewView from './views/access/AccessReviewView.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
 import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
+import LandscapeComparisonView from './views/architecture/LandscapeComparisonView.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
@@ -345,6 +346,12 @@ export default {
 	// facet bucket, so no index or dashboard page can show the gaps.
 	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	GemmaPlateView,
+	// --- Lib gap: today's landscape next to the plan or a scenario. ---
+	// GET /api/landscape-comparison derives both landscapes from the usage
+	// dates and a scenario's change set; the scenario page also applies an
+	// adopted scenario through OpenRegister's objects API.
+	// @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	LandscapeComparisonView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
 	// (name/version/purl/licenses), summary counts, an upload control, and a
