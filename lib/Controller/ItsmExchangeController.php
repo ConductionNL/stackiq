@@ -113,7 +113,7 @@ class ItsmExchangeController extends Controller {
 	 * @return JSONResponse The outcome; 422 when nothing was created.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function setUp(string $desk = '', string $organisation = '', string $templateId = '', string $sendFrom = ''): JSONResponse {

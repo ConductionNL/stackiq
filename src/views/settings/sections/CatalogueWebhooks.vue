@@ -7,7 +7,7 @@
   - last delivery; add, edit and remove go through OpenRegister's webhooks
   - API (admin-only there). Webhooks on other registers are not listed.
   -
-  - @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+  - @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
   -->
 <template>
 	<AlwaysVisibleSection
@@ -152,7 +152,7 @@ export default {
 		 * Read the catalogue register and its webhooks.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		async load() {
 			this.loading = true
@@ -175,7 +175,7 @@ export default {
 		/**
 		 * @param {object} webhook A catalogue webhook.
 		 * @return {string} The catalogue events it sends, in words.
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		eventLabels(webhook) {
 			const ids = webhookEvents(webhook, this.target)
@@ -185,7 +185,7 @@ export default {
 		/**
 		 * @param {object} webhook A catalogue webhook.
 		 * @return {string} Its last delivery, in words.
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		deliveryText(webhook) {
 			const last = lastDelivery(webhook)
@@ -203,7 +203,7 @@ export default {
 		 *
 		 * @param {object|null} webhook The webhook, or null.
 		 * @return {void}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		openEditor(webhook) {
 			this.editing = {
@@ -217,7 +217,7 @@ export default {
 		 *
 		 * @param {{name: string, url: string, events: string[]}} form The entered webhook.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		async save(form) {
 			this.saving = true
@@ -238,7 +238,7 @@ export default {
 		 *
 		 * @param {object} webhook The webhook.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		async remove(webhook) {
 			try {

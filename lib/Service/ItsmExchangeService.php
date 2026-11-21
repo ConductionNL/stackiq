@@ -164,7 +164,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 *                              state applications are sent from and the states to choose from.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function status(): array {
 		$config = $this->config();
@@ -203,7 +203,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @throws InvalidArgumentException When the desk is unknown or a template is missing.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function buildFlows(string $desk, string $organisation, string $runAs, string $location, string $templateId = ''): array {
 		if (isset(self::DESKS[$desk]) === false) {
@@ -265,7 +265,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 *
 	 * @return string|null Why the state is refused, or null when it is stored.
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function chooseSendFrom(string $state): ?string {
 		return (new ItsmSendFrom(appConfig: $this->appConfig))->choose(state: $state);

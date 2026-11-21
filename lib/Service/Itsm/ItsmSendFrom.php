@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+ * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,7 +30,7 @@ use OCP\IAppConfig;
 /**
  * The usage lifecycle and the states sent from a chosen one on.
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+ * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
  */
 final class ItsmSendFrom {
 	/**
@@ -53,7 +53,7 @@ final class ItsmSendFrom {
 	 *
 	 * @param IAppConfig $appConfig The app settings holding the choice.
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
@@ -66,7 +66,7 @@ final class ItsmSendFrom {
 	 *
 	 * @return string The state.
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function current(): string {
 		$state = $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY, self::DEFAULT);
@@ -84,7 +84,7 @@ final class ItsmSendFrom {
 	 *
 	 * @return string|null Why the state is refused, or null when it is stored.
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function choose(string $state): ?string {
 		if ($state === '') {
@@ -104,7 +104,7 @@ final class ItsmSendFrom {
 	 *
 	 * @return array<int, string> The states.
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function states(): array {
 		return array_slice(self::STATES, (int) array_search($this->current(), self::STATES, true));

@@ -6,7 +6,7 @@
   - the catalogue events sent to it. Own file per ADR-012; the section stores
   - what it emits through OpenRegister's webhooks API.
   -
-  - @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+  - @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
   -->
 <template>
 	<NcDialog
@@ -88,7 +88,7 @@ export default {
 	computed: {
 		/**
 		 * @return {boolean} Whether an http(s) address and at least one event are given.
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		valid() {
 			return /^https?:\/\/\S+$/i.test(this.url.trim()) && this.chosen.length > 0
@@ -104,7 +104,7 @@ export default {
 		 * @param {string} id The event.
 		 * @param {boolean} on Whether it is chosen.
 		 * @return {void}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		toggle(id, on) {
 			this.chosen = on ? [...new Set([...this.chosen, id])] : this.chosen.filter((event) => event !== id)
@@ -114,7 +114,7 @@ export default {
 		 * Emit what was entered, when it is complete.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
 		 */
 		save() {
 			if (!this.valid) {

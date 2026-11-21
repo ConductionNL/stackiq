@@ -32,8 +32,9 @@
 - **acceptance_criteria**:
   - GIVEN `stylelint.config.js` WHEN `npm run stylelint` runs THEN `color-no-hex` fails on a hex colour outside a `var()` fallback
   - GIVEN the 10 files WHEN the rule runs THEN each colour is a Nextcloud theme variable (`--color-primary-element`, `--color-main-text`, `--color-error`, ...), with a hex only as a `var()` fallback
-- [ ] Implement
-- [ ] Test (`npm run stylelint`)
+- [x] Implement
+- [x] Test (`npm run stylelint`)
+  > Built 21 Nov: the built-in `color-no-hex` also refuses a hex inside a `var()` fallback, which the requirement allows, so the rule is `stackiq/color-no-hex-outside-var` (`scripts/stylelint/color-no-hex-outside-var.js`), on for `src/**/*.vue` in `stylelint.config.js`. It reports a hex outside a var() fallback as an error and leaves custom property definitions alone. The four files still carrying bare hex colours on development (`ContactpersonenList.vue`, `OrganisatieCard.vue`, `MigrationObject.vue`, `ArchiMateImportExport.vue`) now read Nextcloud theme variables (`--color-success-text`, `--color-warning-text`, `--color-error-text`, `--color-info-text`, `--color-primary-element-light`, `--color-background-hover`, `--color-border`, ...) with the old hex as fallback; the other six of the ten had been fixed already. Test: `tests/vitest/stylelintThemeColours.spec.js` (8), including a stylelint run over every `.vue` under `src/`.
 
 ### Task 4: Lifecycle threshold on the service desk exchange (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
@@ -63,4 +64,5 @@
 - **files**: `openspec/parity/capabilities.json`
 - **acceptance_criteria**:
   - GIVEN the tasks are done WHEN the change is archived THEN the seven rows point at `built.spec: openspec/specs/platform-properties`
-- [ ] Implement
+- [x] Implement
+  > Archived 21 Nov: the seven rows name `2026-11-21-platform-properties` and their requirement in `openspec/specs/platform-properties`; share-lifecycle-conditional-sync and share-webhooks move from building to built now that tasks 4 and 5 are in, and the `@spec` tags point at the synced spec.

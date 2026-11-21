@@ -156,7 +156,7 @@ class ItsmExchangeControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	public function testSetUpChoosesTheLifecycleStateFirst(): void {
 		$user = $this->createMock(originalClassName: IUser::class);
