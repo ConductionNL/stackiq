@@ -24,8 +24,9 @@
 - **acceptance_criteria**:
   - GIVEN the page WHEN the developer opens Catalogue objects THEN the operations of the stackiq register show grouped by schema
   - GIVEN the page WHEN the developer clicks Download JSON on Stackiq endpoints THEN openapi.json downloads
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `tests/vitest/openApiReader.spec.js`; Playwright `tests/e2e/workflows/api-docs.spec.ts`)
+- Done 21 Nov: `ApiDocumentation` (`/api-docs`), a dashboard page whose one widget is the `api-documentation` type registered in `src/main.js` (`src/components/api/ApiDocumentationWidget.vue`, instead of a custom page), with a footer entry beside Documentation. Two lazy `CnTab`s, Catalogue objects and Stackiq endpoints, each an `ApiDocumentPanel` that fetches its document from this instance and renders it with the library's `CnApiReference` (operations by tag, parameters, responses, models, Download). The library component replaces the planned `OpenApiReader.vue`, and the existing `GET /api/openapi.json` (`OpenApiController`, api-contract) replaces the planned `ApiDocsController`; the catalogue register id comes from `GET /api/settings` (register slug `stackiq`), as other pages read it. `src/utils/apiDocuments.js` holds the paths and the reading. Test: `tests/vitest/apiDocumentation.spec.js` (13) and the widget registration in `tests/vitest/entryPoints.spec.js`. Left: the Playwright spec `tests/e2e/workflows/api-docs.spec.ts` is written from the two scenarios and not run (needs a live instance).
 
 ### Task 4: Point the hand-written docs at the generated ones
 - **spec_ref**: openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents

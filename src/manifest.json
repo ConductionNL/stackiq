@@ -198,6 +198,14 @@
 			"order": 90
 		},
 		{
+			"id": "ApiDocumentationMenu",
+			"label": "API documentation",
+			"icon": "Api",
+			"route": "ApiDocumentation",
+			"section": "footer",
+			"order": 91
+		},
+		{
 		  "id": "StoreMenu",
 		  "label": "Marketplace",
 		  "icon": "StoreOutline",
@@ -1071,6 +1079,33 @@
 			"title": "Assistant actions",
 			"component": "AssistantActionsView",
 			"_note": "insight-assistant-answers-and-action-trail D3 (REQ-ASK-003): every OpenRegister audit record with an action starting mcp. and a tool id starting stackiq., read from GET /apps/openregister/api/audit-trails in cursor mode with actionPrefix and toolPrefix, filtered on tool, user and period. Stackiq keeps no copy; OpenRegister decides who may read the trail (administrators), anyone else sees a notice."
+		},
+		{
+			"id": "ApiDocumentation",
+			"route": "/api-docs",
+			"type": "dashboard",
+			"title": "API documentation",
+			"config": {
+				"widgets": [
+					{
+						"id": "api-documentation",
+						"type": "api-documentation",
+						"title": "API documentation",
+						"_note": "sharing-generated-api-docs D2 (REQ-GAD-002): two tabs, Catalogue objects (OpenRegister's GET /apps/openregister/api/registers/{id}/oas for the register with slug stackiq, the id from GET /api/settings) and Stackiq endpoints (GET /api/openapi.json, OpenApiController), both rendered by the library's CnApiReference with its Download button; no third-party viewer is loaded. A widget TYPE registered in main.js, like landscape-comparison, because no built-in widget fetches and renders an OpenAPI document."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "api-documentation",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12,
+						"showTitle": false
+					}
+				]
+			}
 		},
 		{
 			"id": "ComplianceMatrix",

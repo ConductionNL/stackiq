@@ -2451,6 +2451,16 @@
         "In the file": "In the file",
         "After the round trip": "After the round trip",
         "Extra": "Extra",
-        "Examples: {category}": "Examples: {category}"
+        "Examples: {category}": "Examples: {category}",
+        "API documentation": "API documentation",
+        "API documents": "API documents",
+        "Catalogue objects": "Catalogue objects",
+        "Stackiq endpoints": "Stackiq endpoints",
+        "The catalogue objects are read and written through the OpenRegister API; the endpoints the app adds on top have their own document.": "The catalogue objects are read and written through the OpenRegister API; the endpoints the app adds on top have their own document.",
+        "Loading the API documentation": "Loading the API documentation",
+        "Loading the API document": "Loading the API document",
+        "This API document is not available on this instance.": "This API document is not available on this instance.",
+        "You may not read this API document.": "You may not read this API document.",
+        "The API document could not be loaded.": "The API document could not be loaded."
     }
 }
