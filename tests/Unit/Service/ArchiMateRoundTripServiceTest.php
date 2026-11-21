@@ -47,7 +47,7 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 	 * @return ArchiMateRoundTripService
 	 */
 	private function service(): ArchiMateRoundTripService {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->expects($this->never())->method('saveObjects');
 		$objects->expects($this->never())->method('saveObject');
 
@@ -63,9 +63,9 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 	 * @return list<array<string, mixed>>
 	 */
 	private function storedObjects(): array {
-		$converted = $this->importService(objectService: $this->createMock(ObjectServiceInterface::class))
+		$converted = $this->importService(objectService: $this->createMock(originalClassName: ObjectServiceInterface::class))
 			->convertFileToObjects(filePath: self::FIXTURE);
-		$this->assertNotNull($converted);
+		$this->assertNotNull(actual: $converted);
 
 		return $converted['objects'];
 	}//end storedObjects()
@@ -78,14 +78,14 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 	public function testBeforeImportReportsEveryCategoryAndSavesNothing(): void {
 		$report = $this->service()->checkBeforeImport(filePath: self::FIXTURE);
 
-		$this->assertSame(ArchiMateRoundTripService::MODE_BEFORE_IMPORT, $report['mode']);
-		$this->assertSame('id-model-golden', $report['modelIdentifier']);
-		$this->assertTrue($report['imported']);
-		$this->assertIsBool($report['lossless']);
-		$this->assertSame(ArchiMateModelComparator::CATEGORIES, array_keys($report['categories']));
-		$this->assertGreaterThan(0, $report['categories']['elements']['source']);
+		$this->assertSame(expected: ArchiMateRoundTripService::MODE_BEFORE_IMPORT, actual: $report['mode']);
+		$this->assertSame(expected: 'id-model-golden', actual: $report['modelIdentifier']);
+		$this->assertTrue(condition: $report['imported']);
+		$this->assertIsBool(actual: $report['lossless']);
+		$this->assertSame(expected: ArchiMateModelComparator::CATEGORIES, actual: array_keys(array: $report['categories']));
+		$this->assertGreaterThan(expected: 0, actual: $report['categories']['elements']['source']);
 		foreach ($report['categories'] as $category) {
-			$this->assertSame(['source', 'result', 'missing', 'extra', 'changed', 'examples'], array_keys($category));
+			$this->assertSame(expected: ['source', 'result', 'missing', 'extra', 'changed', 'examples'], actual: array_keys(array: $category));
 		}
 	}//end testBeforeImportReportsEveryCategoryAndSavesNothing()
 
@@ -108,10 +108,10 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 		];
 		$mixed = $this->service()->checkAgainstImported(filePath: self::FIXTURE, storedObjects: [...$stored, $foreign]);
 
-		$this->assertSame(ArchiMateRoundTripService::MODE_AGAINST_IMPORTED, $mixed['mode']);
-		$this->assertTrue($mixed['imported']);
-		$this->assertSame($own['categories'], $mixed['categories']);
-		$this->assertSame(ArchiMateModelComparator::CATEGORIES, array_keys($mixed['categories']));
+		$this->assertSame(expected: ArchiMateRoundTripService::MODE_AGAINST_IMPORTED, actual: $mixed['mode']);
+		$this->assertTrue(condition: $mixed['imported']);
+		$this->assertSame(expected: $own['categories'], actual: $mixed['categories']);
+		$this->assertSame(expected: ArchiMateModelComparator::CATEGORIES, actual: array_keys(array: $mixed['categories']));
 	}//end testAgainstImportedComparesOnlyTheObjectsOfTheModel()
 
 	/**
@@ -125,13 +125,13 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 		$report = $this->service()->checkAgainstImported(filePath: self::FIXTURE, storedObjects: [$other]);
 
 		$this->assertSame(
-			[
+			expected: [
 				'mode' => ArchiMateRoundTripService::MODE_AGAINST_IMPORTED,
 				'modelIdentifier' => 'id-model-golden',
 				'imported' => false,
 				'message' => 'This model is not imported.',
 			],
-			$report
+			actual: $report
 		);
 	}//end testAModelThatWasNeverImportedIsNamedAsSuch()
 
@@ -155,7 +155,7 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 			modelIdentifier: 'm1'
 		);
 
-		$this->assertSame(['id-a', 'id-b'], array_column($ofModel, 'identifier'));
+		$this->assertSame(expected: ['id-a', 'id-b'], actual: array_column(array: $ofModel, column_key: 'identifier'));
 	}//end testObjectsOfModelReadsArraysAndSerialisableObjects()
 
 	/**
@@ -164,7 +164,7 @@ final class ArchiMateRoundTripServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMissingFileIsRefused(): void {
-		$this->expectException(\Throwable::class);
+		$this->expectException(exception: \Throwable::class);
 
 		$this->service()->checkBeforeImport(filePath: '/nonexistent/model.xml');
 	}//end testAMissingFileIsRefused()

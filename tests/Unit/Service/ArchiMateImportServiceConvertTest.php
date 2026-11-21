@@ -53,7 +53,7 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	 * @return ObjectServiceInterface
 	 */
 	private function recordingObjects(): ObjectServiceInterface {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('saveObjects')->willReturnCallback(
 			function (array $batch): array {
 				foreach ($batch as $object) {
@@ -77,8 +77,9 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	 */
 	private static function sorted(array $objects): array {
 		usort(
-			$objects,
-			fn (array $left, array $right): int => [$left['section'] ?? '', $left['identifier'] ?? ''] <=> [$right['section'] ?? '', $right['identifier'] ?? '']
+			array: $objects,
+			callback: fn (array $left, array $right): int => [$left['section'] ?? '', $left['identifier'] ?? '']
+				<=> [$right['section'] ?? '', $right['identifier'] ?? '']
 		);
 
 		return $objects;
@@ -92,17 +93,17 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	public function testTheImportSavesWhatTheConversionBuilds(): void {
 		$result = $this->importService(objectService: $this->recordingObjects())
 			->importArchiMateFileFromPathOptimized(options: ['file_path' => self::FIXTURE]);
-		$this->assertTrue($result['success'], (string) ($result['error'] ?? ''));
+		$this->assertTrue(condition: $result['success'], message: (string) ($result['error'] ?? ''));
 
-		$converted = $this->importService(objectService: $this->createMock(ObjectServiceInterface::class))
+		$converted = $this->importService(objectService: $this->createMock(originalClassName: ObjectServiceInterface::class))
 			->convertFileToObjects(filePath: self::FIXTURE);
 
-		$this->assertNotNull($converted);
-		$this->assertNotSame([], $converted['objects']);
-		$this->assertSame(self::sorted(objects: $this->saved), self::sorted(objects: $converted['objects']));
+		$this->assertNotNull(actual: $converted);
+		$this->assertNotSame(expected: [], actual: $converted['objects']);
+		$this->assertSame(expected: self::sorted(objects: $this->saved), actual: self::sorted(objects: $converted['objects']));
 		$this->assertSame(
-			['parse', 'memoryCleanup', 'modelIdentifier', 'transform'],
-			array_keys($converted['timings'])
+			expected: ['parse', 'memoryCleanup', 'modelIdentifier', 'transform'],
+			actual: array_keys(array: $converted['timings'])
 		);
 	}//end testTheImportSavesWhatTheConversionBuilds()
 
@@ -112,14 +113,14 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheConversionSavesNothing(): void {
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->expects($this->never())->method('saveObjects');
 
 		$converted = $this->importService(objectService: $objects)->convertFileToObjects(filePath: self::FIXTURE);
 
-		$this->assertNotNull($converted);
+		$this->assertNotNull(actual: $converted);
 		foreach ($converted['objects'] as $object) {
-			$this->assertSame($converted['modelIdentifier'], $object['model_identifier']);
+			$this->assertSame(expected: $converted['modelIdentifier'], actual: $object['model_identifier']);
 		}
 	}//end testTheConversionSavesNothing()
 
@@ -129,12 +130,12 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheModelIdentifierOfAFileMatchesTheConversion(): void {
-		$service = $this->importService(objectService: $this->createMock(ObjectServiceInterface::class));
+		$service = $this->importService(objectService: $this->createMock(originalClassName: ObjectServiceInterface::class));
 
 		$converted = $service->convertFileToObjects(filePath: self::FIXTURE);
 
-		$this->assertNotNull($converted);
-		$this->assertSame($converted['modelIdentifier'], $service->modelIdentifierOfFile(filePath: self::FIXTURE));
+		$this->assertNotNull(actual: $converted);
+		$this->assertSame(expected: $converted['modelIdentifier'], actual: $service->modelIdentifierOfFile(filePath: self::FIXTURE));
 	}//end testTheModelIdentifierOfAFileMatchesTheConversion()
 
 	/**
@@ -143,9 +144,9 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheExportGeneratesWithTheSharedGeneration(): void {
-		$converted = $this->importService(objectService: $this->createMock(ObjectServiceInterface::class))
+		$converted = $this->importService(objectService: $this->createMock(originalClassName: ObjectServiceInterface::class))
 			->convertFileToObjects(filePath: self::FIXTURE);
-		$this->assertNotNull($converted);
+		$this->assertNotNull(actual: $converted);
 
 		$bySchema = [];
 		$schemaIdMap = [];
@@ -154,7 +155,7 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 			$schemaIdMap[$object['@self']['schema']] = $object['section'];
 		}
 
-		$stored = $this->createMock(ObjectServiceInterface::class);
+		$stored = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$stored->method('searchObjects')->willReturnCallback(
 			fn (array $query): array => $bySchema[$query['@self']['schema']] ?? []
 		);
@@ -165,6 +166,6 @@ final class ArchiMateImportServiceConvertTest extends TestCase {
 			objects: $export->getObjectsFromDatabase(objectService: $stored, registerId: 7, schemaIdMap: $schemaIdMap)
 		);
 
-		$this->assertSame($generated, $exported);
+		$this->assertSame(expected: $generated, actual: $exported);
 	}//end testTheExportGeneratesWithTheSharedGeneration()
 }//end class

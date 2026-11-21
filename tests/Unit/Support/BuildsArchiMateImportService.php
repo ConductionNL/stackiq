@@ -62,25 +62,37 @@ trait BuildsArchiMateImportService {
 	 * @return ArchiMateImportService
 	 */
 	private function importService(ObjectServiceInterface $objectService): ArchiMateImportService {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
-			fn (string $app, string $key, string $default = '') => $key === 'amef_config' ? json_encode(self::$amefConfig) : $default
+			function (string $app, string $key, string $default = ''): string {
+				if ($key === 'amef_config') {
+					return (string) json_encode(value: self::$amefConfig);
+				}
+
+				return $default;
+			}
 		);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('importer');
-		$userSession = $this->createMock(IUserSession::class);
+		$userSession = $this->createMock(originalClassName: IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('isInstalled')->willReturn(true);
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			fn (string $id) => $id === ObjectService::class ? $objectService : null
+			function (string $id) use ($objectService): ?ObjectServiceInterface {
+				if ($id === ObjectService::class) {
+					return $objectService;
+				}
+
+				return null;
+			}
 		);
 
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->method('getSchemaIdForObjectType')->willReturnCallback(
 			function (string $type): ?int {
 				$ids = ['model' => 10, 'element' => 11, 'relationship' => 12, 'view' => 13, 'organization' => 14, 'property_definition' => 15];
@@ -90,12 +102,12 @@ trait BuildsArchiMateImportService {
 
 		$organisation = new Organisation();
 		$organisation->setUuid('org-default');
-		$organisations = $this->createMock(OrganisationService::class);
+		$organisations = $this->createMock(originalClassName: OrganisationService::class);
 		$organisations->method('ensureDefaultOrganisation')->willReturn($organisation);
 
-		$result = $this->createMock(IResult::class);
+		$result = $this->createMock(originalClassName: IResult::class);
 		$result->method('fetch')->willReturn(false);
-		$database = $this->createMock(IDBConnection::class);
+		$database = $this->createMock(originalClassName: IDBConnection::class);
 		$database->method('executeQuery')->willReturn($result);
 		$database->method('executeStatement')->willReturn(0);
 
@@ -108,7 +120,7 @@ trait BuildsArchiMateImportService {
 			settingsService: $settings,
 			organisationService: $organisations,
 			dbConnection: $database,
-			progressTracker: $this->createMock(ProgressTracker::class)
+			progressTracker: $this->createMock(originalClassName: ProgressTracker::class)
 		);
 	}//end importService()
 }//end trait
