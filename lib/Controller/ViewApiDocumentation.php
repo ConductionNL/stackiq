@@ -73,6 +73,7 @@ final class ViewApiDocumentation {
 		'api_version' => '1.0.0',
 		'description' => 'Stackiq View API - Query and enrich ArchiMate views',
 		'base_url' => '/api/views',
+		'documentation' => ApiDocumentationLink::LINK,
 		'endpoints' => [
 			[
 				'method' => 'GET',

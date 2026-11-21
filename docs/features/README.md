@@ -34,6 +34,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Data quality](./data-quality.md) | A data quality score on every application and usage, a confirm-current action and a Data quality page per organisation |
+| [API documentation](api-documentation.md) | Read OpenRegister's document of the catalogue objects and stackiq's own endpoints in the app, and download either as JSON |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
 | [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap |

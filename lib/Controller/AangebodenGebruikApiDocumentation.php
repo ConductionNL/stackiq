@@ -85,6 +85,7 @@ final class AangebodenGebruikApiDocumentation {
 		'api_version' => '2.0.0',
 		'description' => 'Stackiq AangebodenGebruik API',
 		'base_url' => '/api/aangeboden-gebruik',
+		'documentation' => ApiDocumentationLink::LINK,
 		'endpoints' => [
 			[
 				'method' => 'GET',
