@@ -2422,6 +2422,15 @@
         "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "The usage the change was written to when the scenario was applied, so a second apply changes nothing.",
         "DPIA": "DPIA",
         "No AI system supports this process yet": "No AI system supports this process yet",
-        "The business processes this AI system supports.": "The business processes this AI system supports."
+        "The business processes this AI system supports.": "The business processes this AI system supports.",
+        "SaaS subscriptions": "SaaS subscriptions",
+        "Filter the subscriptions": "Filter the subscriptions",
+        "All subscriptions": "All subscriptions",
+        "Bought outside IT": "Bought outside IT",
+        "No subscriptions bought outside IT": "No subscriptions bought outside IT",
+        "No SaaS subscriptions": "No SaaS subscriptions",
+        "Buying department": "Buying department",
+        "The department that bought this application, when it is not IT.": "The department that bought this application, when it is not IT.",
+        "Whether the department bought this application without IT being involved.": "Whether the department bought this application without IT being involved."
     }
 }

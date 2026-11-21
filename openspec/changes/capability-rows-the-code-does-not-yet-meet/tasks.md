@@ -7,8 +7,8 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json`, `src/manifest.json`, `lib/Service/PortfolioReportService.php`
 - **acceptance_criteria**:
   - GIVEN a SaaS usage bought outside IT WHEN the filter Bought outside IT is chosen THEN it is listed with its yearly cost and department
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/saas-subscriptions.spec.ts`)
+- [x] Implement (`register.d/saas-subscriptions.json`: `usage.buyingDepartment` and `usage.boughtOutsideIt` (default false), usage version 1.6.4, shown on GebruikDetail's data widget; the License posture page (`/license-posture`, `LicensePostureView`) gets a SaaS subscriptions section over `src/utils/saasSubscriptions.js`: every usage hosted as SaaS with its supplier, organisation, buying department and the yearly cost of its contracts (contract-administration's `totalAnnualisedCost`, one-off costs left out), and the filters All subscriptions and Bought outside IT. Derived in the browser like the rest of that page, so `PortfolioReportService.php` is not touched. Tests: vitest `saasSubscriptions.spec.js` (8), `licensePostureSaas.spec.js` (3))
+- [ ] Test (Playwright `tests/e2e/workflows/saas-subscriptions.spec.ts`: written from both scenarios, not yet run against a live instance)
 
 ### Task 2: Alert the organisations that use the affected software, and name the right fields
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/softwarecatalog-notifications/spec.md
