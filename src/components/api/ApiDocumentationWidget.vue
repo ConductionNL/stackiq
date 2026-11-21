@@ -3,9 +3,12 @@
   - SPDX-License-Identifier: EUPL-1.2
   -->
 <!--
-  The API documentation page (footer menu): the OpenRegister document of the
-  catalogue register and the document of the app's own endpoints, one tab each,
-  both rendered in the app. Each tab fetches its document when first opened.
+  The body of the API documentation page (footer menu), a dashboard widget
+  type registered in main.js: the OpenRegister document of the catalogue
+  register and the document of the app's own endpoints, one tab each, both
+  rendered in the app. Each tab fetches its document when first opened.
+
+  @visual exclude A screenshot baseline needs a live instance serving both documents; tests/e2e/workflows/api-docs.spec.ts drives the page and is not run yet.
 
   @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
 -->
@@ -43,12 +46,12 @@
 import { CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import ApiDocumentPanel from '../components/api/ApiDocumentPanel.vue'
-import { objectStore } from '../store/store.js'
-import { API_DOCUMENT_TABS, documentPaths } from '../utils/apiDocuments.js'
+import ApiDocumentPanel from './ApiDocumentPanel.vue'
+import { objectStore } from '../../store/store.js'
+import { API_DOCUMENT_TABS, documentPaths } from '../../utils/apiDocuments.js'
 
 export default {
-	name: 'ApiDocumentationView',
+	name: 'ApiDocumentationWidget',
 	components: { ApiDocumentPanel, CnTab, CnTabs, NcLoadingIcon },
 
 	data() {
@@ -59,6 +62,12 @@ export default {
 		}
 	},
 
+	/**
+	 * Read the catalogue register id from the app settings, then show the tabs.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+	 */
 	async mounted() {
 		try {
 			if (

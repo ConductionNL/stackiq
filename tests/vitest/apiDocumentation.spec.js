@@ -165,15 +165,16 @@ describe('API documentation page in the manifest', () => {
 		menuLayout,
 	)
 
-	it('is a custom page on /api-docs rendered by ApiDocumentationView', () => {
-		expect(merged.pages.find((p) => p.id === 'ApiDocumentation')).toMatchObject({
-			route: '/api-docs',
-			type: 'custom',
-			component: 'ApiDocumentationView',
-		})
+	it('is a dashboard page on /api-docs whose one widget is the api-documentation type main.js registers', () => {
+		const page = merged.pages.find((p) => p.id === 'ApiDocumentation')
+		expect(page).toMatchObject({ route: '/api-docs', type: 'dashboard' })
+		expect(page.config.widgets.map((w) => w.type)).toEqual(['api-documentation'])
+		expect(page.config.layout.map((l) => l.widgetId)).toEqual(['api-documentation'])
+		const main = fs.readFileSync(path.resolve(__dirname, '../../src/main.js'), 'utf8')
+		expect(main).toMatch(/registerDashboardWidget\('api-documentation', \{\n\trenderer: ApiDocumentationWidget,/)
 	})
 
-	it('has a footer entry beside Documentation, with a registered icon and component', () => {
+	it('has a footer entry beside Documentation, with a registered icon', () => {
 		const entry = merged.menu.find((m) => m.id === 'ApiDocumentationMenu')
 		expect(entry).toMatchObject({ route: 'ApiDocumentation', section: 'footer' })
 		const documentation = merged.menu.find((m) => m.id === 'Documentation')
@@ -181,12 +182,11 @@ describe('API documentation page in the manifest', () => {
 		const read = (file) =>
 			fs.readFileSync(path.resolve(__dirname, '../../src', file), 'utf8')
 		expect(read('icons.js')).toMatch(new RegExp('^\\t' + entry.icon + ',$', 'm'))
-		expect(read('customComponents.js')).toMatch(/^\tApiDocumentationView,$/m)
 	})
 
 	it('loads no third-party viewer', () => {
 		const sources = [
-			'views/ApiDocumentationView.vue',
+			'components/api/ApiDocumentationWidget.vue',
 			'components/api/ApiDocumentPanel.vue',
 			'utils/apiDocuments.js',
 		]

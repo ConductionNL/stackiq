@@ -51,7 +51,6 @@ import UsageParticipantsCard from './components/usages/UsageParticipantsCard.vue
 import UsageRunsOnPanel from './components/usages/UsageRunsOnPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import AccessReviewView from './views/access/AccessReviewView.vue'
-import ApiDocumentationView from './views/ApiDocumentationView.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
 import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
@@ -304,11 +303,6 @@ export default {
 	// The audit list is not an OpenRegister object collection, so no index
 	// page type can read it.
 	AssistantActionsView,
-
-	// API documentation (sharing-generated-api-docs D2): two OpenAPI documents
-	// fetched from this instance and rendered with CnApiReference in tabs. The
-	// documents are not object collections, so no index page type reads them.
-	ApiDocumentationView,
 
 	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
 	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every

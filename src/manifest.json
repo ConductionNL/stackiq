@@ -1083,10 +1083,29 @@
 		{
 			"id": "ApiDocumentation",
 			"route": "/api-docs",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "API documentation",
-			"component": "ApiDocumentationView",
-			"_note": "sharing-generated-api-docs D2 (REQ-GAD-002): two tabs, Catalogue objects (OpenRegister's GET /apps/openregister/api/registers/{id}/oas for the register with slug stackiq, the id from GET /api/settings) and Stackiq endpoints (GET /api/openapi.json, OpenApiController). Both render in the app through the library's CnApiReference with its Download button; no third-party viewer is loaded."
+			"config": {
+				"widgets": [
+					{
+						"id": "api-documentation",
+						"type": "api-documentation",
+						"title": "API documentation",
+						"_note": "sharing-generated-api-docs D2 (REQ-GAD-002): two tabs, Catalogue objects (OpenRegister's GET /apps/openregister/api/registers/{id}/oas for the register with slug stackiq, the id from GET /api/settings) and Stackiq endpoints (GET /api/openapi.json, OpenApiController), both rendered by the library's CnApiReference with its Download button; no third-party viewer is loaded. A widget TYPE registered in main.js, like landscape-comparison, because no built-in widget fetches and renders an OpenAPI document."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "api-documentation",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 12,
+						"showTitle": false
+					}
+				]
+			}
 		},
 		{
 			"id": "ComplianceMatrix",

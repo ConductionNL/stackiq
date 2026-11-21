@@ -60,6 +60,11 @@ export default {
 	watch: {
 		path: {
 			immediate: true,
+			/**
+			 * Load the document again when the path changes.
+			 *
+			 * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+			 */
 			handler() {
 				this.load()
 			},
