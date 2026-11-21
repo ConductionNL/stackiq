@@ -96,4 +96,16 @@ interface ArchiMateServiceInterface {
 	 * @spec   openspec/specs/archimate-import/spec.md
 	 */
 	public function importArchiMateFileFromPathOptimized(array $options = []): array;
+
+	/**
+	 * Run the round-trip check on an uploaded exchange file, writing nothing.
+	 *
+	 * @param string $filePath Path of the uploaded exchange file.
+	 * @param string $mode     before-import or against-imported.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 */
+	public function checkRoundTrip(string $filePath, string $mode): array;
 }//end interface

@@ -2452,7 +2452,27 @@ OC.L10N.register(
         "No SaaS subscriptions": "Geen SaaS-abonnementen",
         "Buying department": "Inkopende afdeling",
         "The department that bought this application, when it is not IT.": "De afdeling die deze applicatie heeft aangeschaft, als dat niet IT is.",
-        "Whether the department bought this application without IT being involved.": "Of de afdeling deze applicatie heeft aangeschaft zonder dat IT erbij betrokken was."
+        "Whether the department bought this application without IT being involved.": "Of de afdeling deze applicatie heeft aangeschaft zonder dat IT erbij betrokken was.",
+        "Relationships": "Relaties",
+        "View nodes": "Viewknopen",
+        "Property definitions": "Eigenschapdefinities",
+        "Organization folders": "Organisatiemappen",
+        "This model is not imported.": "Dit model is niet geïmporteerd.",
+        "No losses found": "Geen verliezen gevonden",
+        "Losses in: {categories}": "Verliezen in: {categories}",
+        "The check failed": "De controle is mislukt",
+        "Check a model file": "Een modelbestand controleren",
+        "See what an exchange file loses on its way through the import and the export.": "Zie wat een uitwisselbestand verliest op weg door de import en de export.",
+        "Model file to check": "Te controleren modelbestand",
+        "Check mode": "Controlemodus",
+        "Before import (nothing is written)": "Vóór de import (er wordt niets weggeschreven)",
+        "Against the imported model": "Tegen het geïmporteerde model",
+        "Checking…": "Bezig met controleren…",
+        "Check": "Controleren",
+        "In the file": "In het bestand",
+        "After the round trip": "Na de rondgang",
+        "Extra": "Extra",
+        "Examples: {category}": "Voorbeelden: {category}"
     },
     "nplurals=2; plural=(n != 1);"
 )

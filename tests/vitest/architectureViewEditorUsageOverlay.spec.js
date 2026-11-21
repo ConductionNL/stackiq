@@ -79,6 +79,10 @@ function passthrough(name, tag = 'div') {
 	})
 }
 
+// The Export menu has its own spec (viewExportMenu.spec.js).
+vi.mock('../../src/components/architecture/ViewExportMenu.vue', () => ({
+	default: { name: 'ViewExportMenu', props: ['viewId', 'viewName'], template: '<div class="view-export-stub" :data-view="viewId" />' },
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: passthrough('NcButton', 'button'),
 	NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),

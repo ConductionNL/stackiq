@@ -1095,6 +1095,7 @@ XML;
 	 *
 	 * @return string Generated XML.
 	 * @spec   openspec/specs/archimate-export/spec.md
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function exportArchiMateXml(
 		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
@@ -1121,7 +1122,7 @@ XML;
 		$dbTime = microtime(true) - $startTime;
 
 		// Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-		$xml = $this->generateXmlDirectly(objects: $objects);
+		$xml = $this->generateXmlFromObjects(objects: $objects);
 
 		// Step 3: Run Quality Assurance checks on generated XML.
 		$this->runQualityAssuranceChecks(xmlString: $xml);
@@ -1150,11 +1151,16 @@ XML;
 	 * - Direct XML generation per section
 	 * - No unnecessary loops or checks
 	 *
-	 * @param array $objects Raw objects from database.
+	 * The one generation the full export and the round-trip check share. It takes
+	 * the objects as stored, or as the import's conversion builds them.
+	 *
+	 * @param array $objects Raw objects from database, or converted from a file.
 	 *
 	 * @return string Generated XML.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
-	private function generateXmlDirectly(array $objects): string {
+	public function generateXmlFromObjects(array $objects): string {
 		$this->logger->info(
 			'Starting section-based XML generation from objects',
 			[
@@ -1291,7 +1297,7 @@ XML;
 		);
 
 		return $this->formatXmlOutput(xmlString: $xml->asXML());
-	}//end generateXmlDirectly()
+	}//end generateXmlFromObjects()
 
 	/**
 	 * Create section element in XML (matching original ArchiMate structure).

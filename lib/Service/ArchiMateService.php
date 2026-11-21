@@ -256,6 +256,48 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	}//end exportToArchiMate()
 
 	/**
+	 * Run the round-trip check on an uploaded exchange file, writing nothing.
+	 *
+	 * Before import, the file is converted and generated back. Against the
+	 * imported model, the AMEF register's stored objects of the file's model are
+	 * generated back. Either way the result is compared with the file.
+	 *
+	 * @param string $filePath Path of the uploaded exchange file.
+	 * @param string $mode     {@see ArchiMateRoundTripService::MODES}.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @throws \InvalidArgumentException When the mode is unknown.
+	 * @throws \RuntimeException         When the stored objects cannot be read.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 */
+	public function checkRoundTrip(string $filePath, string $mode): array {
+		$check = new ArchiMateRoundTripService(importService: $this->importService, exportService: $this->exportService);
+
+		if ($mode === ArchiMateRoundTripService::MODE_BEFORE_IMPORT) {
+			return $check->checkBeforeImport(filePath: $filePath);
+		}
+
+		if ($mode !== ArchiMateRoundTripService::MODE_AGAINST_IMPORTED) {
+			throw new \InvalidArgumentException('Unknown round-trip mode: ' . $mode);
+		}
+
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			throw new \RuntimeException('ObjectService not available');
+		}
+
+		$stored = $this->exportService->getObjectsFromDatabase(
+			objectService: $objectService,
+			registerId: $this->requireAmefRegisterId(),
+			schemaIdMap: $this->createSchemaIdMap()
+		);
+
+		return $check->checkAgainstImported(filePath: $filePath, storedObjects: $stored);
+	}//end checkRoundTrip()
+
+	/**
 	 * Export organization-specific ArchiMate data to XML
 	 *
 	 * Produces an enriched AMEFF file with the base GEMMA model plus the

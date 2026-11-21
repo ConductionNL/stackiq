@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Stackiq",
-        "version": "0.2.8-unstable.20261119065125",
+        "version": "0.2.9-unstable.20261121125615",
         "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -1241,6 +1241,43 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/archimate/round-trip-check": {
+            "post": {
+                "operationId": "settings-check-archi-mate-round-trip",
+                "summary": "Check what an uploaded exchange file loses on its way through stackiq",
+                "description": "Check what an uploaded exchange file loses on its way through stackiq. Admins only, refused before the service runs. Accepts only a multipart upload (field `archiMateFile`): a `file_path` parameter is refused with 400. The `mode` is `before-import` (the default: the file is converted and generated back) or `against-imported` (the stored objects of the file's model are generated back). Nothing is written.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The report: mode, modelIdentifier, imported, and when imported lossless and a row per category with the counts and up to 50 examples.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"

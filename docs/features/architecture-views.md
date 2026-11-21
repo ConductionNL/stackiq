@@ -37,6 +37,15 @@ A view from the GEMMA import opens read-only, because the next import would over
 
 In the editor, type a **Version label** and click **Save version** to keep a numbered copy of the saved view. Click **Compare versions** to compare two versions, or a version with the current view: both are drawn side by side, with added items marked in green, removed items in red and changed items in yellow, and the same changes listed as text below.
 
+## Exporting a view
+
+On a saved view, the **Export** menu in the header has three actions:
+
+- **Download SVG** downloads the view as an SVG image, named after the view. It is drawn from the view's stored positions and sizes, so it looks like the editor, and it always works.
+- **Create Word document** and **Create PowerPoint slide** ask the document app filinq for a Word document or a PowerPoint slide holding the view: its name, description, viewpoint, a legend of the element types, the date, a link back to the view and the image. filinq files the result in your Files, and **Open in Files** opens it.
+
+Without filinq on the instance, the two document actions are disabled and the menu says "Word and PowerPoint need the document app filinq". Download SVG still works.
+
 ## Views drafted by an assistant
 
 An assistant in Hermiq can draft a view for you from a description, such as "draw how our case system talks to document management". It uses two stackiq tools:
