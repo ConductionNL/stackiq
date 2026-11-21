@@ -39,6 +39,8 @@ vi.mock('../../src/views/settings/sections/archiMateConfig.js', () => config)
 const { default: ArchiMateImportExport } = await import('../../src/views/settings/sections/ArchiMateImportExport.vue')
 
 const stubs = {
+	// The round-trip check has its own spec (archiMateRoundTripCheck.spec.js).
+	ArchiMateRoundTripCheck: true,
 	AlwaysVisibleSection: {
 		props: ['loading'],
 		template: '<section :data-loading="String(loading)"><slot /><slot name="info-content" /></section>',
