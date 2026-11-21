@@ -18,6 +18,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
 | [Applications on GEMMA views](shared-usage-on-views.md) | Show your own and partners' shared applications inside the components of a GEMMA view |
 | [Data model](data-model.md) | The GGM data entities and your own, their relations and attributes, and the applications that hold their data |
+| [Future-state scenarios](future-state-scenarios.md) | Compare today's landscape with the plan or a scenario on a date, and apply an adopted scenario |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Application Components](application-components.md) | Record the applications an application is made of, and list them on its page |
 | [Change Entry Type](change-entry-type.md) | Turn an application into a service or system software and back, keeping its identity |

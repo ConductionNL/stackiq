@@ -118,7 +118,7 @@ describe('ItsmExchange mounted', () => {
 		await wrapper.find('[data-testid="setup"]').trigger('click')
 		await flushPromises()
 		expect(api.calls.slice(1)).toEqual([
-			['itsm/setup', { method: 'POST', body: { desk: 'topdesk', organisation: 'o1', templateId: 'tpl-9' } }],
+			['itsm/setup', { method: 'POST', body: { desk: 'topdesk', organisation: 'o1', templateId: 'tpl-9', sendFrom: 'In production' } }],
 			['itsm/config'],
 		])
 		expect(dialogs.showSuccess).toHaveBeenCalledWith('2 flows are set up. The first import runs tonight.')

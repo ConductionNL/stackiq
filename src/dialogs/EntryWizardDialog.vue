@@ -14,7 +14,7 @@
  Types are registered by SCHEMA SLUG against `voorzieningenConfig.register`,
  as SuiteWizardDialog does (sc#392).
 
- @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 -->
 <template>
 	<CnWizardDialog
@@ -147,7 +147,7 @@ export default {
 		/**
 		 * The kind's configuration.
 		 *
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		config() {
 			return wizardKind(this.kind)
@@ -156,7 +156,7 @@ export default {
 		/**
 		 * Fresh step data for the kind.
 		 *
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		defaults() {
 			return wizardDefaults(this.kind)
@@ -165,7 +165,7 @@ export default {
 		/**
 		 * Details, related records, summary.
 		 *
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		wizardSteps() {
 			return [
@@ -184,7 +184,7 @@ export default {
 			 *
 			 * @param {boolean} shown Whether the wizard is shown.
 			 * @return {void}
-			 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+			 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 			 */
 			handler(shown) {
 				if (shown) {
@@ -203,7 +203,7 @@ export default {
 		 * @param {string} stepId The step.
 		 * @param {object} stepData The data entered.
 		 * @return {true|string}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		validateStep(stepId, stepData) {
 			return validateWizardStep(this.kind, stepId, stepData)
@@ -214,7 +214,7 @@ export default {
 		 *
 		 * @param {string} stepId `details` or `related`.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		relationsOf(stepId) {
 			return wizardRelations(this.kind, stepId)
@@ -225,7 +225,7 @@ export default {
 		 *
 		 * @param {object} stepData The data entered.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		summary(stepData) {
 			return wizardSummary(this.kind, stepData)
@@ -236,7 +236,7 @@ export default {
 		 *
 		 * @param {string} schema The schema slug.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		optionsFor(schema) {
 			const collection = objectStore.getCollection ? objectStore.getCollection(schema) : null
@@ -247,7 +247,7 @@ export default {
 		 * The voorzieningen register id, under either settings key.
 		 *
 		 * @return {string|undefined}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		registerId() {
 			const settings = objectStore.settings?.voorzieningen || objectStore.settings?.voorzieningenConfig || {}
@@ -259,7 +259,7 @@ export default {
 		 *
 		 * @param {string} schema The schema slug.
 		 * @return {void}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		registerType(schema) {
 			const registerId = this.registerId()
@@ -272,7 +272,7 @@ export default {
 		 * Load the records the related step offers.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		async loadRelated() {
 			this.loading = true
@@ -303,7 +303,7 @@ export default {
 		 *
 		 * @param {object} stepData The data entered.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		async onSubmit(stepData) {
 			try {
@@ -322,7 +322,7 @@ export default {
 		/**
 		 * Close the wizard.
 		 *
-		 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+		 * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 		 */
 		onClose() {
 			this.$emit('update:show', false)

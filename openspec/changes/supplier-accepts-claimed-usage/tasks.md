@@ -28,4 +28,5 @@
 - **acceptance_criteria**:
   - GIVEN a usage with `providerResponse: declined` WHEN its owner opens GebruikDetail THEN a notice says the supplier does not recognise this usage, with the date
 - [x] Implement
-- [ ] Test (`tests/validate-manifest.js`)
+- [x] Test (`tests/validate-manifest.js`)
+  > Built 20 Nov: `tests/vitest/claimAnswerNotice.spec.js` checks the `gb-claim-answer` widget on GebruikDetail, the schema fields it reads, the decline notice with its date, and no notice for an accepted, unanswered or unreadable usage; `npm run check:manifest` passes.

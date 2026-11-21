@@ -32,8 +32,9 @@
 - **acceptance_criteria**:
   - GIVEN `stylelint.config.js` WHEN `npm run stylelint` runs THEN `color-no-hex` fails on a hex colour outside a `var()` fallback
   - GIVEN the 10 files WHEN the rule runs THEN each colour is a Nextcloud theme variable (`--color-primary-element`, `--color-main-text`, `--color-error`, ...), with a hex only as a `var()` fallback
-- [ ] Implement
-- [ ] Test (`npm run stylelint`)
+- [x] Implement
+- [x] Test (`npm run stylelint`)
+  > Built 21 Nov: the built-in `color-no-hex` also refuses a hex inside a `var()` fallback, which the requirement allows, so the rule is `stackiq/color-no-hex-outside-var` (`scripts/stylelint/color-no-hex-outside-var.js`), on for `src/**/*.vue` in `stylelint.config.js`. It reports a hex outside a var() fallback as an error and leaves custom property definitions alone. The four files still carrying bare hex colours on development (`ContactpersonenList.vue`, `OrganisatieCard.vue`, `MigrationObject.vue`, `ArchiMateImportExport.vue`) now read Nextcloud theme variables (`--color-success-text`, `--color-warning-text`, `--color-error-text`, `--color-info-text`, `--color-primary-element-light`, `--color-background-hover`, `--color-border`, ...) with the old hex as fallback; the other six of the ten had been fixed already. Test: `tests/vitest/stylelintThemeColours.spec.js` (8), including a stylelint run over every `.vue` under `src/`.
 
 ### Task 4: Lifecycle threshold on the service desk exchange (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
@@ -42,8 +43,9 @@
   - GIVEN the exchange settings WHEN they render THEN a select "Send only from lifecycle state" lists the usage lifecycle states, default "In gebruik"
   - GIVEN a chosen state WHEN the administrator saves THEN `ItsmExchangeService::buildFlows()` writes it into the filter node of the outbound template and the stored config keeps it
   - GIVEN an application in use below the threshold WHEN it is saved THEN the outbound flow does not send it
-- [ ] Implement
-- [ ] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+  > Built 20 Nov: the usage schema's lifecycle (`status`: Acquisition, Planned, In production, To be phased out, Phased out) gives the order (`lib/Service/Itsm/ItsmSendFrom.php`). The chosen state is an app setting (`itsm_exchange_send_from`, default "In production"): `ItsmExchangeService::chooseSendFrom()` stores it, an unknown state is refused, and `ItsmExchangeController::setUp(sendFrom:)` chooses it before the set-up runs, answering 422 for an unknown state. `buildFlows()` writes the chosen state and every later one into an `in` condition on `json.status` in the outbound template's `ours` filter (`%SEND_STATES%`), so the stored config keeps it and the next set-up publishes it. `status()` returns `sendFrom` and `lifecycleStates`, and the exchange section has the select "Send only from lifecycle state". The spec's examples name "Gepland", "In gebruik" and "Concept"; the schema's English states take their place (Planned, In production), and there is no Concept state. Tests: `ItsmExchangeLifecycleThresholdTest` (5), `ItsmExchangeControllerTest`, `itsmExchangeSendFrom.spec.js`.
 
 ### Task 5: Webhooks section in the exchange settings (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
@@ -53,12 +55,14 @@
   - GIVEN an administrator WHEN they add a webhook with an address and the events "Applicatie gewijzigd" and "Contract gewijzigd" THEN it is created through OpenRegister's webhooks API, filtered to the module and contract schemas
   - GIVEN a listed webhook WHEN the administrator edits or removes it from its actions menu THEN OpenRegister holds the new state
   - GIVEN no webhook WHEN the section loads THEN it shows an empty state with "Add webhook"
-- [ ] Implement
-- [ ] Test (vitest `catalogueWebhooks.spec.js`)
+- [x] Implement
+- [x] Test (vitest `catalogueWebhooks.spec.js`)
+  > Built 20 Nov: `src/utils/catalogueWebhooks.js` reads the catalogue register and the module and contract schema ids from the voorzieningen config. It lists the OpenRegister webhooks whose `filters.register` is the catalogue register, and builds a webhook on `ObjectCreatedEvent` and `ObjectUpdatedEvent`, filtered to the register and the chosen events' schemas ("Application changed", "Contract changed"). `CatalogueWebhooks.vue` (in StackiqSettings after the service desk exchange) lists address, events and last delivery (the later of the last success and failure). Its actions menu edits and removes through `/apps/openregister/api/webhooks`; without webhooks it shows an empty state with "Add webhook". `src/modals/webhook/EditWebhookModal.vue` takes the address, a name and the events. Test: `catalogueWebhooks.spec.js` (7).
 
 ### Task 6: Matrix
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md
 - **files**: `openspec/parity/capabilities.json`
 - **acceptance_criteria**:
   - GIVEN the tasks are done WHEN the change is archived THEN the seven rows point at `built.spec: openspec/specs/platform-properties`
-- [ ] Implement
+- [x] Implement
+  > Archived 21 Nov: the seven rows name `2026-11-21-platform-properties` and their requirement in `openspec/specs/platform-properties`; share-lifecycle-conditional-sync and share-webhooks move from building to built now that tasks 4 and 5 are in, and the `@spec` tags point at the synced spec.

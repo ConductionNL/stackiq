@@ -121,7 +121,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 *
 	 * @return string The email address, or '' when there is none.
 	 *
-	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 * @spec openspec/specs/contactpersoon-sync/spec.md
 	 */
 	private function contactPersonEmail(array $contactData): string {
 		if ($this->contactPersonEmail !== null) {

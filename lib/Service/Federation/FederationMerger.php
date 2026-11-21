@@ -95,6 +95,27 @@ class FederationMerger {
 	}//end plan()
 
 	/**
+	 * How many of a peer's entries become a mirror: those with a stable id.
+	 *
+	 * @param array<int,array<string,mixed>> $peerEntries The peer's published entries.
+	 *
+	 * @return int The number of mergeable entries.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function countMergeable(array $peerEntries): int {
+		$ids = [];
+		foreach ($peerEntries as $entry) {
+			$peerId = $this->stableId(entry: $entry);
+			if ($peerId !== null) {
+				$ids[$peerId] = true;
+			}
+		}
+
+		return count($ids);
+	}//end countMergeable()
+
+	/**
 	 * Index the local mirrors of THIS peer by their stable peer-entry id.
 	 *
 	 * @param array<int,array<string,mixed>> $localMirrors The locally-stored mirrors of THIS peer.

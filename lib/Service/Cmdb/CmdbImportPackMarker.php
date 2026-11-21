@@ -18,7 +18,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ namespace OCA\Stackiq\Service\Cmdb;
 /**
  * Adds, reads and compares the seed marker of a stored pack.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  */
 class CmdbImportPackMarker {
 	/**
@@ -46,7 +46,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function hash(array $pack): string {
 		$json = json_encode($this->canonical(value: $pack), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
@@ -60,7 +60,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function seed(array $shipped): array {
 		$definition = $this->strip(definition: $shipped);
@@ -79,7 +79,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function strip(array $definition): array {
 		unset($definition[self::KEY]);
@@ -93,7 +93,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return bool|null Null when it carries no marker, so nobody knows what was seeded.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isEdited(array $definition): ?bool {
 		$recorded = $this->recordedHash(definition: $definition);
@@ -112,7 +112,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isOutdated(array $definition, array $shipped): bool {
 		return $this->isEdited(definition: $definition) === false
@@ -127,7 +127,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isNewerShipped(array $definition, array $shipped): bool {
 		return $this->isEdited(definition: $definition) === true
@@ -141,7 +141,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function recordedHash(array $definition): ?string {
 		$hash = ($definition[self::KEY]['shippedHash'] ?? null);
@@ -159,7 +159,7 @@ class CmdbImportPackMarker {
 	 *
 	 * @return mixed
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function canonical(mixed $value): mixed {
 		if (is_array($value) === false) {

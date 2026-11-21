@@ -510,7 +510,7 @@ class CmdbImportController extends Controller {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch per contract error code.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function message(string $code, array $details): string {
 		$megabytes = (string)round((int)($details['maxBytes'] ?? $this->importService->maxFileBytes()) / 1048576, 1);
@@ -551,7 +551,7 @@ class CmdbImportController extends Controller {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function mappingMessage(array $details): string {
 		$pack = ($details['pack'] ?? null);

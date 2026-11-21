@@ -31,6 +31,7 @@ import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
+import ProvenanceNotice from './components/federation/ProvenanceNotice.vue'
 import IntegrationLeafTab from './components/integrations/IntegrationLeafTab.vue'
 import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import ModuleClassificationSummary from './components/modules/ModuleClassificationSummary.vue'
@@ -53,6 +54,7 @@ import AccessReviewView from './views/access/AccessReviewView.vue'
 import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import DataEntityAttributes from './views/architecture/DataEntityAttributes.vue'
 import DataEntityRelations from './views/architecture/DataEntityRelations.vue'
+import LandscapeComparisonView from './views/architecture/LandscapeComparisonView.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
@@ -252,6 +254,8 @@ export default {
 	ClaimedUsageList,
 	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
 	ClaimAnswerNotice,
+	// On a mirrored entry's page, the peer catalogue it came from (federation-pull-fetches-the-peer).
+	ProvenanceNotice,
 
 	// The Merged into banner on a merged application's page
 	// (operations-record-reconciliation D4): it shows the survivor only when
@@ -342,6 +346,12 @@ export default {
 	// facet bucket, so no index or dashboard page can show the gaps.
 	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	GemmaPlateView,
+	// --- Lib gap: today's landscape next to the plan or a scenario. ---
+	// GET /api/landscape-comparison derives both landscapes from the usage
+	// dates and a scenario's change set; the scenario page also applies an
+	// adopted scenario through OpenRegister's objects API.
+	// @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	LandscapeComparisonView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
 	// (name/version/purl/licenses), summary counts, an upload control, and a
@@ -361,7 +371,7 @@ export default {
 	// --- The Connections page's Add opens the guided entry wizard. ---
 	// Rendered in the declarative index page's actions slot
 	// (`actionsComponent`), so the page keeps its columns and filters.
-	// @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+	// @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
 	ConnectionWizardAction,
 	// --- Ratings & reviews (stackiq#375). ---
 	// Approved-only aggregate (average + count) + a bounded approved-review

@@ -126,6 +126,9 @@
 		<!-- Service desk exchange (sharing-itsm-exchange) -->
 		<ItsmExchange />
 
+		<!-- Catalogue webhooks (platform-properties REQ-PLAT-005) -->
+		<CatalogueWebhooks />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</CnAdminSettingsShell>
@@ -141,6 +144,7 @@ import { defineComponent } from 'vue'
 import Web from 'vue-material-design-icons/Web.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
+import CatalogueWebhooks from './sections/CatalogueWebhooks.vue'
 import CmdbImport from './sections/CmdbImport.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
@@ -185,6 +189,7 @@ export default defineComponent({
 		FederationSettings,
 		EolSyncSettings,
 		ItsmExchange,
+		CatalogueWebhooks,
 		AlwaysVisibleSection,
 		Web,
 	},

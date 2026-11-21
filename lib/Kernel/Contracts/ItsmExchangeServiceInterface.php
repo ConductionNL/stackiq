@@ -55,6 +55,15 @@ interface ItsmExchangeServiceInterface {
 	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array;
 
 	/**
+	 * Choose the lifecycle state from which applications are sent; empty means the default.
+	 *
+	 * @param string $state The lifecycle state, or empty.
+	 *
+	 * @return string|null Why the state is refused, or null when it is stored.
+	 */
+	public function chooseSendFrom(string $state): ?string;
+
+	/**
 	 * What is set up today.
 	 *
 	 * @return array<string, mixed> The desk, the organisation, the flows and the desks on offer.

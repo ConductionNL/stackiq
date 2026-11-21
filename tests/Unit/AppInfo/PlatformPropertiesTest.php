@@ -16,8 +16,8 @@
  *
  * @link https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-catalogue-data-is-read-and-written-through-a-rest-api-req-plat-002
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
+ * @spec openspec/specs/platform-properties/spec.md#requirement-catalogue-data-is-read-and-written-through-a-rest-api-req-plat-002
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

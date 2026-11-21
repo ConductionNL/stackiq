@@ -316,4 +316,20 @@ class FederationMergerTest extends TestCase {
 			actual: $this->merger->applyStale(mirror: ['name' => 'B', '_source' => 'not-an-array'], stale: false)
 		);
 	}//end testApplyStaleSetsTheFlagOnProvenance()
+	/**
+	 * The mergeable count counts each stable id once and skips entries without one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function testCountMergeableCountsStableIdsOnce(): void {
+		$merger = new FederationMerger();
+
+		$this->assertSame(expected: 0, actual: $merger->countMergeable(peerEntries: []));
+		$this->assertSame(
+			expected: 3,
+			actual: $merger->countMergeable(peerEntries: [['id' => 'a'], ['uuid' => 'b'], ['id' => 7], ['id' => 'a'], ['id' => '  '], ['name' => 'x']])
+		);
+	}//end testCountMergeableCountsStableIdsOnce()
 }//end class

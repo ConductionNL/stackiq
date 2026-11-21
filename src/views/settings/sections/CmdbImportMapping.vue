@@ -393,7 +393,7 @@ import {
  * rendered as text; the error's reason names a file or a pack and the rule
  * it breaks, never a cell value.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 /**
  * The non-empty texts of a list; anything that is not a list gives none.
@@ -467,7 +467,7 @@ export default {
 		 * and the key, name, required and date columns.
 		 *
 		 * @return {Array<{key: string, label: string, values: Array<string>}>} One row per setting
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		profileFacts() {
 			const labels = {
@@ -491,7 +491,7 @@ export default {
 		 * has nothing to show or edit here.
 		 *
 		 * @return {Array<object>} The packs, in the endpoint's order
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		sheetPacks() {
 			return (this.mapping?.packs || []).filter(
@@ -503,7 +503,7 @@ export default {
 		 * The words for the current error, if any, and the link to the editor of the stored pack at fault.
 		 *
 		 * @return {{code: string, reason: string, message: string, pack: string, editUrl: string|null}|null} The code, the loader's reason, the server's message, the pack and its editor
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		errorView() {
 			if (!this.error) {
@@ -525,7 +525,7 @@ export default {
 	 * rendered empty by then, so the loading text and a failure are changes to
 	 * it and assistive technology announces them.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	mounted() {
 		this.$nextTick(() => this.loadMapping())
@@ -544,7 +544,7 @@ export default {
 		 * Read the mapping from the server and tell the section about it.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+		 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		async loadMapping() {
 			this.loading = true

@@ -8,7 +8,8 @@
  -
  - Federation settings admin section: view federation availability + the
  - configured peers, add/remove a peer (subject to the server-side SSRF
- - allowlist), trigger a manual pull, and show per-peer status (failure streak
+ - allowlist), trigger a manual pull, and show per-peer status (catalogue
+ - name, address, last pull, mirrored objects, last error, failure streak
  - + stale flag). Rendered inside the admin settings panel — admin-gated by the
  - IDelegatedSettings framework and by the AuthorizedAdminSetting attribute on
  - every FederationController method; NOT registered in the in-app router.
@@ -122,6 +123,7 @@
 			<ul v-else class="peer-list">
 				<li v-for="peer in status.peers" :key="peer.url" class="peer-item">
 					<div class="peer-info">
+						<span class="peer-name">{{ peer.name }}</span>
 						<span class="peer-url">{{ peer.url }}</span>
 						<span class="peer-badges">
 							<span
@@ -137,6 +139,19 @@
 							<span v-else class="peer-badge peer-badge--ok">
 								{{ t('stackiq', 'Healthy') }}
 							</span>
+						</span>
+						<span class="peer-last-pulled help-text">
+							{{
+								peer.lastPulledAt
+									? t('stackiq', 'Last pulled {date}', { date: pulledAt(peer.lastPulledAt) })
+									: t('stackiq', 'Never pulled')
+							}}
+						</span>
+						<span class="peer-objects help-text">
+							{{ n('stackiq', '{count} object', '{count} objects', peer.objectCount, { count: peer.objectCount }) }}
+						</span>
+						<span v-if="peer.lastError" class="peer-error" role="status">
+							{{ t('stackiq', 'Error: {reason}', { reason: errorReason(peer.lastError) }) }}
 						</span>
 						<span class="peer-failures help-text">
 							{{
@@ -248,6 +263,34 @@ export default defineComponent({
 	methods: {
 		t,
 		n,
+
+		/**
+		 * A pull moment as date and time in UTC, the zone the server records.
+		 *
+		 * @param {string} iso - The ISO-8601 moment.
+		 * @return {string} For example "2026-11-20 08:00 UTC".
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		pulledAt(iso) {
+			const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
+			return match ? match[1] + ' ' + match[2] + ' UTC' : iso
+		},
+
+		/**
+		 * The words for a peer's last error: the known codes translated, any
+		 * other reason as the server gave it.
+		 *
+		 * @param {string} reason - The recorded error.
+		 * @return {string} The words.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		errorReason(reason) {
+			const known = {
+				'not reachable': t('stackiq', 'not reachable'),
+				blocked: t('stackiq', 'blocked by the SSRF guard'),
+			}
+			return known[reason] || reason
+		},
 
 		/**
 		 * Load federation status from the admin endpoint.
@@ -401,9 +444,17 @@ export default defineComponent({
 	min-width: 0;
 }
 
-.peer-url {
+.peer-name {
 	font-weight: 600;
+}
+
+.peer-url {
 	word-break: break-all;
+}
+
+.peer-error {
+	color: var(--color-error-text);
+	font-size: 12px;
 }
 
 .peer-badge {

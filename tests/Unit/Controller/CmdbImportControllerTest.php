@@ -515,7 +515,7 @@ class CmdbImportControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	#[DataProvider('mappingMessages')]
 	public function testTheMappingMessageNamesThePack(array $details, string $message): void {

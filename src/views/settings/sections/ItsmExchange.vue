@@ -7,8 +7,8 @@
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - Service desk exchange admin section (sharing-itsm-exchange): choose the
- - service desk and the organisation whose applications are exchanged, then
- - set up the flows. The source and its credential live in integriq; this
+ - service desk, the organisation whose applications are exchanged and the
+ - lifecycle state from which an application is sent, then set up the flows. The source and its credential live in integriq; this
  - section never sees them. Admin-gated server-side by
  - #[AuthorizedAdminSetting(StackiqAdmin::class)] on every endpoint it calls.
  -->
@@ -65,6 +65,20 @@
 			<NcNoteCard v-if="organisationLoadError" type="warning">
 				{{ organisationLoadError }}
 			</NcNoteCard>
+			<NcSelect
+				v-model="sendFrom"
+				:options="status.lifecycleStates || []"
+				:clearable="false"
+				:inputLabel="t('stackiq', 'Send only from lifecycle state')"
+				data-testid="itsm-send-from" />
+			<p class="help-text">
+				{{
+					t(
+						'stackiq',
+						'An application in an earlier lifecycle state stays in stackiq until it reaches this state.',
+					)
+				}}
+			</p>
 			<NcTextField
 				v-if="desk && desk.id === 'topdesk'"
 				v-model="templateId"
@@ -173,6 +187,7 @@ export default defineComponent({
 			organisation: null,
 			refusal: '',
 			templateId: '',
+			sendFrom: 'In production',
 		}
 	},
 
@@ -207,10 +222,11 @@ export default defineComponent({
 		t,
 
 		/**
-		 * Read the set-up and the organisations to choose from.
+		 * Read the set-up, the lifecycle state it sends from and the organisations to choose from.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 		 */
 		async load() {
 			this.loading = true
@@ -225,6 +241,7 @@ export default defineComponent({
 					this.organisations.find(
 						(org) => org.id === this.status.organisation,
 					) || null
+				this.sendFrom = this.status.sendFrom || this.sendFrom
 			} catch (error) {
 				this.refusal = error.message
 			} finally {
@@ -280,10 +297,11 @@ export default defineComponent({
 		},
 
 		/**
-		 * Set up the exchange; show what the server refused, word for word.
+		 * Set up the exchange with the chosen lifecycle state; show what the server refused, word for word.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+		 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 		 */
 		async setUp() {
 			this.saving = true
@@ -295,6 +313,7 @@ export default defineComponent({
 						desk: this.desk.id,
 						organisation: this.organisation.id,
 						templateId: this.templateId,
+						sendFrom: this.sendFrom,
 					},
 				})
 				showSuccess(

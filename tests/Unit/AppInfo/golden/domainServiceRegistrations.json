@@ -136,6 +136,11 @@
     ],
     [
         "service",
+        "OCA\\Stackiq\\Service\\Federation\\PeerCatalogClient",
+        true
+    ],
+    [
+        "service",
         "OCA\\Stackiq\\Service\\Federation\\FederationMerger",
         true
     ],

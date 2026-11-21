@@ -7,7 +7,7 @@
  * status, offers the "Planned releases" quick filter, and both version pages
  * cite the requirement.
  *
- * @spec openspec/changes/landscape-services-and-module-versions/specs/module-versions/spec.md#requirement-a-released-version-of-an-application-is-recorded-with-its-lifecycle-dates-req-mvr-001
+ * @spec openspec/specs/module-versions/spec.md#requirement-a-released-version-of-an-application-is-recorded-with-its-lifecycle-dates-req-mvr-001
  */
 
 import * as fs from 'fs'

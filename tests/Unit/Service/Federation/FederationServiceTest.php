@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Federation;
 
+require_once __DIR__ . '/../../Support/FakePeerCatalogClient.php';
+
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
@@ -32,6 +34,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Unit\Support\FakePeerCatalogClient;
+use OCA\Stackiq\Service\Federation\PeerCatalogClient;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
@@ -89,6 +93,13 @@ class FederationServiceTest extends TestCase {
 	private ?object $directory = null;
 
 	/**
+	 * The peer catalogue client double, or null for none.
+	 *
+	 * @var FakePeerCatalogClient|null
+	 */
+	private ?FakePeerCatalogClient $peerCatalog = null;
+
+	/**
 	 * The OpenRegister object service fake, or null when the container lacks it.
 	 *
 	 * @var FakeFederationObjectService|null
@@ -128,6 +139,7 @@ class FederationServiceTest extends TestCase {
 				$service = match ($id) {
 					'OCA\\OpenCatalogi\\Service\\DirectoryService' => $this->directory,
 					'OCA\\OpenRegister\\Service\\ObjectService' => $this->objects,
+					PeerCatalogClient::class => $this->peerCatalog,
 					default => null,
 				};
 				if ($service === null) {
@@ -171,45 +183,14 @@ class FederationServiceTest extends TestCase {
 	}//end configuredLocator()
 
 	/**
-	 * A directory double answering getDirectory() with the given listing.
+	 * A peer catalogue client answering fetch() with the given listing.
 	 *
-	 * @param mixed $listing The listing (a Throwable is thrown instead).
+	 * @param mixed $listing The listing (a Throwable fails the fetch instead).
 	 *
 	 * @return void
 	 */
 	private function directoryReturning(mixed $listing): void {
-		$this->directory = new class($listing) {
-			/**
-			 * The queries received.
-			 *
-			 * @var array<int,array<string,mixed>>
-			 */
-			public array $queries = [];
-
-			/**
-			 * Constructor.
-			 *
-			 * @param mixed $listing The canned listing.
-			 */
-			public function __construct(private mixed $listing) {
-			}
-
-			/**
-			 * Answer a directory query.
-			 *
-			 * @param array<string,mixed> $query The query.
-			 *
-			 * @return mixed
-			 */
-			public function getDirectory(array $query): mixed {
-				$this->queries[] = $query;
-				if ($this->listing instanceof \Throwable) {
-					throw $this->listing;
-				}
-
-				return $this->listing;
-			}
-		};
+		$this->peerCatalog = new FakePeerCatalogClient(listing: $listing);
 	}//end directoryReturning()
 
 	/**
@@ -262,7 +243,8 @@ class FederationServiceTest extends TestCase {
 		$this->store['federation_peer_failures'] = json_encode([self::PEER => 3]);
 		$this->store['federation_enabled']       = true;
 
-		$status = $this->service()->getStatus();
+		$status      = $this->service()->getStatus();
+		$neverPulled = ['lastPulledAt' => null, 'objectCount' => 0, 'lastError' => null];
 
 		$this->assertSame(
 			expected: [
@@ -271,8 +253,8 @@ class FederationServiceTest extends TestCase {
 				'staleAfter' => 3,
 				'directoryUrl' => $status['directoryUrl'],
 				'peers' => [
-					['url' => self::PEER, 'failures' => 3, 'stale' => true, 'allowed' => true],
-					['url' => 'http://10.0.0.1', 'failures' => 0, 'stale' => false, 'allowed' => false],
+					['url' => self::PEER, 'name' => 'peer.example.org'] + $neverPulled + ['failures' => 3, 'stale' => true, 'allowed' => true],
+					['url' => 'http://10.0.0.1', 'name' => '10.0.0.1'] + $neverPulled + ['failures' => 0, 'stale' => false, 'allowed' => false],
 				],
 				'message' => 'Federation unavailable — requires OpenCatalogi',
 			],
@@ -318,6 +300,7 @@ class FederationServiceTest extends TestCase {
 		$this->assertSame(expected: ['ok' => true, 'reason' => 'peer removed'], actual: $service->removePeer(peerUrl: self::PEER));
 		$this->assertSame(expected: json_encode(['https://other.example.org']), actual: $this->store['federation_peers']);
 		$this->assertSame(expected: '[]', actual: $this->store['federation_peer_failures']);
+		$this->assertSame(expected: '[]', actual: $this->store['federation_peer_state']);
 	}//end testRemovePeer()
 
 	/**
@@ -374,7 +357,6 @@ class FederationServiceTest extends TestCase {
 	 */
 	public function testFailedFetchCountsAFailure(): void {
 		$this->directoryReturning(listing: new RuntimeException(message: 'timeout'));
-		$this->logger->expects($this->once())->method('error')->with('[Federation] peer fetch failed', ['peer' => self::PEER, 'error' => 'timeout']);
 
 		$result = $this->service()->pullPeer(peerUrl: self::PEER);
 
@@ -383,6 +365,8 @@ class FederationServiceTest extends TestCase {
 			actual: $result
 		);
 		$this->assertSame(expected: json_encode([self::PEER => 1]), actual: $this->store['federation_peer_failures']);
+		$this->assertSame(expected: [self::PEER], actual: $this->peerCatalog->fetched);
+		$this->assertSame(expected: 'timeout', actual: json_decode($this->store['federation_peer_state'], true)[self::PEER]['lastError']);
 	}//end testFailedFetchCountsAFailure()
 
 	/**
@@ -492,7 +476,7 @@ class FederationServiceTest extends TestCase {
 			expected: ['ok' => true, 'reason' => 'pulled', 'created' => 1, 'updated' => 1, 'withdrawn' => 1, 'stale' => false],
 			actual: $result
 		);
-		$this->assertSame(expected: [['url' => self::PEER]], actual: $this->directory->queries);
+		$this->assertSame(expected: [self::PEER], actual: $this->peerCatalog->fetched);
 		$this->assertSame(expected: '[]', actual: $this->store['federation_peer_failures']);
 
 		$saved = $this->objects->saved;
@@ -513,6 +497,61 @@ class FederationServiceTest extends TestCase {
 			$this->assertSame(expected: [7, 9], actual: [$call['register'], $call['schema']]);
 		}
 	}//end testSuccessfulPullAppliesThePlan()
+
+	/**
+	 * A successful pull records the catalogue name, the time, the number of
+	 * mirrored objects and clears the last error; the status reads it back.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function testASuccessfulPullRecordsThePeerState(): void {
+		$this->appManager->method('getInstalledApps')->willReturn([]);
+		$this->store['federation_peers']      = json_encode([self::PEER]);
+		$this->store['federation_peer_state'] = json_encode([self::PEER => ['lastError' => 'not reachable']]);
+		$this->directoryReturning(listing: [
+			'organisation' => 'Softwarecatalogus Drechtsteden',
+			'results' => [['id' => 'a'], ['uuid' => 'b'], ['id' => 'a'], ['name' => 'no id']],
+		]);
+		$this->objects = new FakeFederationObjectService(stored: []);
+		$service       = $this->service(locator: $this->configuredLocator());
+
+		$this->assertTrue(condition: $service->pullPeer(peerUrl: self::PEER)['ok']);
+
+		$peer = $service->getStatus()['peers'][0];
+		$this->assertSame(expected: 'Softwarecatalogus Drechtsteden', actual: $peer['name']);
+		$this->assertSame(expected: 2, actual: $peer['objectCount']);
+		$this->assertNull(actual: $peer['lastError']);
+		$this->assertMatchesRegularExpression(pattern: '/^\d{4}-\d{2}-\d{2}T/', string: (string)$peer['lastPulledAt']);
+	}//end testASuccessfulPullRecordsThePeerState()
+
+	/**
+	 * A blocked host is never fetched and shows as blocked; without the peer
+	 * catalogue client a pull fails and keeps the last successful pull.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 */
+	public function testABlockedHostOrAMissingClientRecordsTheError(): void {
+		$lastPull = ['name' => 'Peer', 'lastPulledAt' => '2026-11-19T10:00:00+00:00', 'objectCount' => 3];
+		$this->store['federation_peer_state'] = json_encode([self::PEER => $lastPull]);
+		$this->directoryReturning(listing: ['results' => [['id' => 'a']]]);
+		$this->service()->pullPeer(peerUrl: 'http://10.0.0.1');
+		$this->assertSame(expected: [], actual: $this->peerCatalog->fetched);
+
+		$this->peerCatalog = null;
+		$result = $this->service()->pullPeer(peerUrl: self::PEER);
+
+		$this->assertSame(expected: 'peer catalogue client unavailable', actual: $result['reason']);
+		$state = json_decode($this->store['federation_peer_state'], true);
+		$this->assertSame(expected: 'blocked', actual: $state['http://10.0.0.1']['lastError']);
+		$this->assertSame(
+			expected: $lastPull + ['lastError' => 'peer catalogue client unavailable'],
+			actual: $state[self::PEER]
+		);
+	}//end testABlockedHostOrAMissingClientRecordsTheError()
 
 	/**
 	 * A bare-list listing without organisation falls back to the peer URL, and a

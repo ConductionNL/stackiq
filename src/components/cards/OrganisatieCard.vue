@@ -33,7 +33,7 @@
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
-						v-for="action in objectActions"
+						v-for="action in availableActions"
 						:key="action.id"
 						closeAfterClick
 						:disabled="action.condition && !action.condition(item)"
@@ -58,6 +58,13 @@
 						class="typeBadge"
 						:class="`type-${item.type.toLowerCase()}`">
 						{{ item.type }}
+					</span>
+					<span
+						v-if="provenance"
+						class="sourceBadge"
+						data-testid="organisatie-source"
+						:title="t('stackiq', 'Mirrored from {catalogue}; edit it there.', { catalogue: provenance.name })">
+						{{ t('stackiq', 'From: {catalogue}', { catalogue: provenance.name }) }}
 					</span>
 					<span
 						v-if="item.status"
@@ -185,7 +192,7 @@
 </template>
 
 <script>
-import { translatePlural as n } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import Certificate from 'vue-material-design-icons/Certificate.vue'
@@ -194,6 +201,7 @@ import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
+import { provenanceOf } from '../../utils/provenance.js'
 import { participantsOf } from '../../utils/sharedUsage.js'
 
 /**
@@ -269,6 +277,25 @@ export default {
 
 	computed: {
 		/**
+		 * @return {{name: string, url: string|null}|null} The peer catalogue a mirrored organisation came from, or null.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		provenance() {
+			return provenanceOf(this.item)
+		},
+
+		/**
+		 * @return {Array<object>} The card's actions: a mirror, read only here, offers no edit or delete.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		availableActions() {
+			if (!this.provenance) {
+				return this.objectActions
+			}
+			return this.objectActions.filter((action) => !['edit', 'delete'].includes(action?.id))
+		},
+
+		/**
 		 * @return {boolean} Whether the organisation is a cooperation.
 		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
@@ -319,6 +346,7 @@ export default {
 
 	methods: {
 		n,
+		t,
 
 		/**
 		 * Emit the `click` event CnCardGrid/CnIndexPage listen on for
@@ -526,6 +554,15 @@ export default {
 }
 
 .typeBadge,
+.sourceBadge {
+	padding: 4px 8px;
+	border-radius: var(--border-radius-pill);
+	font-size: 12px;
+	font-weight: 600;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
 .statusBadge {
 	padding: 4px 8px;
 	border-radius: var(--border-radius-pill);
@@ -545,18 +582,18 @@ export default {
 }
 
 .typeBadge.type-gemeente {
-	background: #e3f2fd;
-	color: #1565c0;
+	background: var(--color-primary-element-light, #e3f2fd);
+	color: var(--color-primary-element-light-text, #1565c0);
 }
 
 .typeBadge.type-leverancier {
-	background: #f3e5f5;
-	color: #7b1fa2;
+	background: var(--color-background-hover, #f3e5f5);
+	color: var(--color-info-text, #7b1fa2);
 }
 
 .typeBadge.type-samenwerking {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge {
@@ -565,18 +602,18 @@ export default {
 }
 
 .statusBadge.status-actief {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .statusBadge.status-concept {
-	background: #fff3e0;
-	color: #f57c00;
+	background: var(--color-background-hover, #fff3e0);
+	color: var(--color-warning-text, #f57c00);
 }
 
 .statusBadge.status-deactief {
-	background: #ffebee;
-	color: #c62828;
+	background: var(--color-background-hover, #ffebee);
+	color: var(--color-error-text, #c62828);
 }
 
 .organisatieDescription {

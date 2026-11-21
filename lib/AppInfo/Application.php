@@ -53,8 +53,8 @@ use Psr\Container\ContainerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-catalogue-data-is-read-and-written-through-a-rest-api-req-plat-002
+ * @spec openspec/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
+ * @spec openspec/specs/platform-properties/spec.md#requirement-catalogue-data-is-read-and-written-through-a-rest-api-req-plat-002
  */
 class Application extends App implements IBootstrap {
 	/**

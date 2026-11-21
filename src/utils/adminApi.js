@@ -152,11 +152,12 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 /**
  * Normalise a federation status payload to a stable shape the UI renders,
  * tolerating older `peers: string[]` payloads as well as the enriched
- * `peers: {url, failures, stale, allowed}[]` shape.
+ * `peers: {url, name, lastPulledAt, objectCount, lastError, failures, stale, allowed}[]` shape.
  *
  * @param {object} status - The raw `/api/federation/status` response.
- * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
+ * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
  * @spec openspec/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
  */
 export function normaliseFederationStatus(status) {
 	const raw = status || {}
@@ -167,16 +168,43 @@ export function normaliseFederationStatus(status) {
 		directoryUrl: raw.directoryUrl || '',
 		staleAfter: typeof raw.staleAfter === 'number' ? raw.staleAfter : 3,
 		message: raw.message || '',
-		peers: peers.map((peer) => {
-			if (typeof peer === 'string') {
-				return { url: peer, failures: 0, stale: false, allowed: true }
-			}
-			return {
-				url: peer.url || '',
-				failures: typeof peer.failures === 'number' ? peer.failures : 0,
-				stale: peer.stale === true,
-				allowed: peer.allowed !== false,
-			}
-		}),
+		peers: peers.map((peer) => normaliseFederationPeer(typeof peer === 'string' ? { url: peer } : peer)),
 	}
+}
+
+/**
+ * One peer of a federation status in the shape the peers list renders.
+ *
+ * @param {object} peer - The raw peer.
+ * @return {{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}} The peer.
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ */
+function normaliseFederationPeer(peer) {
+	const url = peer.url || ''
+	return {
+		url,
+		name: peer.name || url,
+		lastPulledAt: textOrNull(peer.lastPulledAt),
+		objectCount: numberOrZero(peer.objectCount),
+		lastError: textOrNull(peer.lastError),
+		failures: numberOrZero(peer.failures),
+		stale: peer.stale === true,
+		allowed: peer.allowed !== false,
+	}
+}
+
+/**
+ * @param {unknown} value - A value.
+ * @return {?string} The value when it is a non-empty string, else null.
+ */
+function textOrNull(value) {
+	return typeof value === 'string' && value !== '' ? value : null
+}
+
+/**
+ * @param {unknown} value - A value.
+ * @return {number} The value when it is a number, else 0.
+ */
+function numberOrZero(value) {
+	return typeof value === 'number' ? value : 0
 }

@@ -571,7 +571,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function runImport(CmdbImportRequest $request): array {
@@ -810,7 +810,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-7
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function addRunWarnings(CmdbImportRun $run): void {
 		if ($this->profile->usesShippedFallback() === true) {
@@ -1542,7 +1542,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *                                            unarchived when the stored usage was revived first.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertUsage(CmdbImportRow $row, array $data): array {

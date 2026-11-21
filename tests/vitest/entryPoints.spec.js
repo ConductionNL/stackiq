@@ -68,6 +68,7 @@ vi.mock('../../src/App.vue', () => marker('App', ['manifest', 'customComponents'
 vi.mock('../../src/components/CatalogPanels.vue', () => ({ default: { name: 'CatalogPanels' } }))
 vi.mock('../../src/components/maintenance/UpcomingMaintenanceWidget.vue', () => ({ default: { name: 'UpcomingMaintenanceWidget' } }))
 vi.mock('../../src/views/cmdb/CmdbOverview.vue', () => ({ default: { name: 'CmdbOverview' } }))
+vi.mock('../../src/views/architecture/LandscapeComparisonView.vue', () => ({ default: { name: 'LandscapeComparisonView' } }))
 vi.mock('../../src/customComponents.js', () => ({ default: { Custom: 'custom' } }))
 vi.mock('../../src/icons.js', () => ({ default: { Icon: 'icon' } }))
 vi.mock('../../src/registry.js', () => ({ default: { Registry: 'registry' } }))
@@ -114,7 +115,7 @@ describe('main.js', () => {
 		vi.restoreAllMocks()
 	})
 
-	it('registers the icons and the three app dashboard widgets', async () => {
+	it('registers the icons and the four app dashboard widgets', async () => {
 		await import('../../src/main.js')
 		await flushPromises()
 
@@ -124,6 +125,7 @@ describe('main.js', () => {
 			['catalog-panels', 'CatalogPanels', 'Catalogue panels', 'DatabaseOutline', true],
 			['upcoming-maintenance', 'UpcomingMaintenanceWidget', 'Planned maintenance', 'Calendar', true],
 			['cmdb-overview', 'CmdbOverview', 'CMDB', 'Sitemap', true],
+			['landscape-comparison', 'LandscapeComparisonView', 'Compare with the plan', 'CompareHorizontal', true],
 		])
 		expect(l10n.loadTranslations).toHaveBeenCalledWith('stackiq', expect.any(Function))
 	})

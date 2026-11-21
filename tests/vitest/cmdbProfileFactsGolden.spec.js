@@ -8,7 +8,7 @@
  * profile: the sheets read and the match, name, required and date columns,
  * for well-formed and malformed profiles. Recorded with RECORD_GOLDEN=1.
  *
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 
 import { readFileSync, writeFileSync } from 'fs'

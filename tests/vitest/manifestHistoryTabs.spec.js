@@ -7,7 +7,7 @@
  * History tab drawn by the `audit` widget, so every catalogue entry shows who
  * changed what (platform-properties, REQ-PLAT-006).
  *
- * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md
+ * @spec openspec/specs/platform-properties/spec.md
  */
 import * as fs from 'fs'
 import * as path from 'path'

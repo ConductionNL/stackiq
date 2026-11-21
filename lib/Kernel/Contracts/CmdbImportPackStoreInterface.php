@@ -58,7 +58,7 @@ interface CmdbImportPackStoreInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function isAvailable(): bool;
 
@@ -79,7 +79,7 @@ interface CmdbImportPackStoreInterface {
 	 *                             that fails because another request seeded the pack
 	 *                             first is no failure: that pack is used.
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function resolve(array $shipped): array;
 }//end interface

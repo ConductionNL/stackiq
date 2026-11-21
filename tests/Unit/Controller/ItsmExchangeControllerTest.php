@@ -152,6 +152,39 @@ class ItsmExchangeControllerTest extends TestCase {
 	}//end testSetUpRunsAsTheSignedInUser()
 
 	/**
+	 * The lifecycle state to send from is chosen, trimmed, before the set-up; a refused one stops it with 422.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	public function testSetUpChoosesTheLifecycleStateFirst(): void {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('beheerder');
+		$this->session->method('getUser')->willReturn($user);
+		$chosen = [];
+		$this->exchange->method('chooseSendFrom')->willReturnCallback(
+			static function (string $state) use (&$chosen): ?string {
+				$chosen[] = $state;
+				if ($state === 'Concept') {
+					return 'Unknown lifecycle state.';
+				}
+
+				return null;
+			}
+		);
+		$this->exchange->expects($this->once())->method('setUp')->willReturn(['created' => true]);
+
+		$set     = $this->controller()->setUp(desk: 'topdesk', organisation: 'org-1', templateId: '', sendFrom: ' Planned ');
+		$refused = $this->controller()->setUp(desk: 'topdesk', organisation: 'org-1', templateId: '', sendFrom: 'Concept');
+
+		$this->assertSame(expected: ['Planned', 'Concept'], actual: $chosen);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $set->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $refused->getStatus());
+		$this->assertSame(expected: ['created' => false, 'message' => 'Unknown lifecycle state.'], actual: $refused->getData());
+	}//end testSetUpChoosesTheLifecycleStateFirst()
+
+	/**
 	 * A set-up the service refuses answers 422 with the service's reason.
 	 *
 	 * @return void

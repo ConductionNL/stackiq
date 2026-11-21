@@ -7,7 +7,7 @@
  * name the missing field, the saved record and the summary; the dialog's
  * steps, validation and save; the action that opens the record's page.
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

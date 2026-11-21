@@ -8,7 +8,7 @@
  * (`src/dialogs/EntryWizardDialog.vue`) reads these, so a kind is added by
  * configuration, not by another dialog.
  *
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 
 /**
@@ -78,7 +78,7 @@ export const ENTRY_WIZARD_KINDS = Object.freeze({
  * @param {string} kind The kind, for example `connection`.
  * @return {object} Its configuration.
  * @throws {Error} When the kind is unknown.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function wizardKind(kind) {
 	const config = ENTRY_WIZARD_KINDS[kind]
@@ -93,7 +93,7 @@ export function wizardKind(kind) {
  *
  * @param {string} kind The kind.
  * @return {object} The defaults.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function wizardDefaults(kind) {
 	const config = wizardKind(kind)
@@ -114,7 +114,7 @@ export function wizardDefaults(kind) {
  * @param {string} kind The kind.
  * @param {string} stepId `details` or `related`.
  * @return {Array<object>} The relations of that step.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function wizardRelations(kind, stepId) {
 	return wizardKind(kind).relations.filter((relation) => (relation.step || 'related') === stepId)
@@ -148,7 +148,7 @@ function firstMissing(entries, data) {
  * @param {string} stepId `details`, `related` or `confirm`.
  * @param {object} data The step data.
  * @return {true|string} True, or why the step stays open.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function validateWizardStep(kind, stepId, data) {
 	const config = wizardKind(kind)
@@ -199,7 +199,7 @@ function relationIds(relation, chosen) {
  * @param {string} kind The kind.
  * @param {object} data The step data.
  * @return {object} The object to save.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function buildWizardPayload(kind, data) {
 	const config = wizardKind(kind)
@@ -225,7 +225,7 @@ export function buildWizardPayload(kind, data) {
  * @param {string} kind The kind.
  * @param {object} data The step data.
  * @return {Array<{key: string, label: string, value: string}>} The rows; an empty value for nothing entered.
- * @spec openspec/changes/capability-requirements-from-the-matrix/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
+ * @spec openspec/specs/guided-entry-wizard/spec.md#requirement-req-gew-001-applications-services-and-connections-are-added-through-a-step-by-step-wizard
  */
 export function wizardSummary(kind, data) {
 	const config = wizardKind(kind)

@@ -24,8 +24,9 @@
 - **files**: `package.json`, `package-lock.json`
 - **acceptance_criteria**:
   - GIVEN the application form WHEN the licence type is Closed source THEN the licence field offers no options
-- [ ] Implement (after ConductionNL/nextcloud-vue releases CnFormDialog support for x-openregister-dependent-values)
-- [ ] Test (Playwright `tests/e2e/workflows/dependent-field-options.spec.ts`)
+- [x] Implement (after ConductionNL/nextcloud-vue releases CnFormDialog support for x-openregister-dependent-values)
+  > 21 Nov: released; `package.json` already requires `@conduction/nextcloud-vue` `^2.181.0` (lock 2.181.0), whose CnFormDialog narrows a field's options with `narrowToDependentValues()` and clears a value its new row does not allow. `tests/vitest/dependentFieldOptionsForm.spec.js` (5) runs the library's own methods over the merged module and organisation schemas: no licence for Closed source, the five open-source licences for Open source, the full list with no licence type, and collaboration types only for a collaboration.
+- [ ] Test (Playwright `tests/e2e/workflows/dependent-field-options.spec.ts`: written from the scenario, not yet run against a live instance)
 
 ## Verification
 

@@ -155,6 +155,101 @@ class FederationConfig implements FederationConfigInterface {
 	}//end getPeerTimeout()
 
 	/**
+	 * The most entries one pull reads from a peer (default 10000, the ceiling
+	 * the app's other bounded reads use).
+	 *
+	 * @return int The cap.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 */
+	public function getMaxEntries(): int {
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_max_entries', 10000);
+		if ($value > 0) {
+			return $value;
+		}
+
+		return 10000;
+	}//end getMaxEntries()
+
+	/**
+	 * What the last pulls of a peer left: its catalogue name, the last
+	 * successful pull, the number of mirrored objects and the last error.
+	 *
+	 * @param string $peerUrl The peer base URL.
+	 *
+	 * @return array{name:string, lastPulledAt:?string, objectCount:int, lastError:?string}
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function getPeerState(string $peerUrl): array {
+		$state = ($this->readPeerStates()[$peerUrl] ?? []);
+		if (is_array($state) === false) {
+			$state = [];
+		}
+
+		return [
+			'name' => (string)($state['name'] ?? ''),
+			'lastPulledAt' => $this->stringOrNull(value: $state['lastPulledAt'] ?? null),
+			'objectCount' => (int)($state['objectCount'] ?? 0),
+			'lastError' => $this->stringOrNull(value: $state['lastError'] ?? null),
+		];
+	}//end getPeerState()
+
+	/**
+	 * Merge fields into a peer's recorded state; null forgets the peer.
+	 *
+	 * @param string                    $peerUrl The peer base URL.
+	 * @param array<string, mixed>|null $changes The fields to set, or null to forget the peer.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	public function setPeerState(string $peerUrl, ?array $changes): void {
+		$current = $this->getPeerState(peerUrl: $peerUrl);
+		$states = $this->readPeerStates();
+		unset($states[$peerUrl]);
+		if ($changes !== null) {
+			$states[$peerUrl] = array_merge($current, $changes);
+		}
+
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'federation_peer_state', json_encode($states));
+	}//end setPeerState()
+
+	/**
+	 * Every recorded peer state, by peer URL.
+	 *
+	 * @return array<string, mixed> The states.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	private function readPeerStates(): array {
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peer_state', '{}'), true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return $decoded;
+	}//end readPeerStates()
+
+	/**
+	 * A non-empty string, or null.
+	 *
+	 * @param mixed $value The stored value.
+	 *
+	 * @return string|null The string, or null.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	private function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === true && $value !== '') {
+			return $value;
+		}
+
+		return null;
+	}//end stringOrNull()
+
+	/**
 	 * The current consecutive-failure count for a peer (keyed by its base URL).
 	 *
 	 * @param string $peerUrl The peer base URL.

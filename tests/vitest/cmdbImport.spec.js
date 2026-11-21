@@ -576,7 +576,7 @@ describe('errorText', () => {
 })
 
 /**
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 describe('the archive sheet in the help texts', () => {
 	it("takes the profile's archive sheet once the mapping has loaded, and the shipped one until then", () => {
