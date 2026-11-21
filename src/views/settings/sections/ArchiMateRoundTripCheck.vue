@@ -143,18 +143,46 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * One row per category of the report.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 */
 		rows() {
 			return roundTripRows(this.report)
 		},
 
+		/**
+		 * The rows with losses and examples, each shown as an expandable list.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 */
 		lossyRows() {
 			return this.rows.filter((row) => row.lossy && row.examples.length > 0)
 		},
 
+		/**
+		 * The summary line of the report.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 */
 		summary() {
 			return roundTripSummary(this.report)
 		},
 
+		/**
+		 * The note type of the summary: warning for losses or a model not imported, success otherwise.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 */
 		summaryType() {
 			if (this.report?.imported === false) {
 				return 'warning'
@@ -171,6 +199,8 @@ export default {
 		 *
 		 * @param {Event} event The change event of the file input.
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		onFileChange(event) {
 			this.file = event.target.files?.[0] ?? null
@@ -182,6 +212,8 @@ export default {
 		 * Run the check on the picked file in the chosen mode.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		async runCheck() {
 			if (!this.file) {
@@ -204,6 +236,8 @@ export default {
 		 *
 		 * @param {object} example An example from the report.
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		exampleLine(example) {
 			const kinds = {
