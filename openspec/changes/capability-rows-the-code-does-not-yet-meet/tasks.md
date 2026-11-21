@@ -37,8 +37,8 @@
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/ai-system-inventory/spec.md
 - **files**: `lib/Settings/softwarecatalogus_register.json` (aiSystem.processes), `src/manifest.d/ai-systems.json`
 - **depends_on**: architecture-process-mapping
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/ai-systems.spec.ts`)
+- [x] Implement (`register.d/ai-system-processes.json`: `aiSystem.processes`, related business processes labelled by name, version 0.1.1, shown by AiSystemDetail's data widget; ProcesDetail lists the AI systems that support the process (`process-ai-systems`, filter `processes` = the process, rows open AiSystemDetail). Test: vitest `tests/vitest/aiSystemProcesses.spec.js`)
+- [ ] Test (Playwright `tests/e2e/workflows/ai-systems.spec.ts`: the process scenario is written, not yet run against a live instance)
 
 ### Task 6: Offer the reference components on the application form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/reference-component-placement/spec.md

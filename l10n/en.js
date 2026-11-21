@@ -2379,7 +2379,9 @@ OC.L10N.register(
         "Why this change.": "Why this change.",
         "Applied to": "Applied to",
         "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "The usage the change was written to when the scenario was applied, so a second apply changes nothing.",
-        "DPIA": "DPIA"
+        "DPIA": "DPIA",
+        "No AI system supports this process yet": "No AI system supports this process yet",
+        "The business processes this AI system supports.": "The business processes this AI system supports."
     },
     "nplurals=2; plural=(n != 1);"
 )
