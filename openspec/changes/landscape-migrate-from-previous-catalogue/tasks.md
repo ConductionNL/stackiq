@@ -38,6 +38,7 @@
   - GIVEN the modal WHEN used THEN it has three steps: file, preview (rows with match or create, a checkbox per row) and result (created, updated, skipped with reasons)
 - [ ] Implement
 - [ ] Test (vitest `legacyCatalogueImportModal.spec.js`, Playwright `legacy-catalogue-import.spec.ts`)
+  - Written 21 Nov: `tests/e2e/spec-coverage/legacy-catalogue-import.spec.ts` from the four scenarios, every case marked fixme until the profile, the endpoints, the dialog and the fixture exist; not run.
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md
