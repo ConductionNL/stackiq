@@ -46,6 +46,7 @@
 					<NcButton v-if="!imported" :to="{ name: 'ViewCompare', params: { id: viewId } }">
 						{{ t('stackiq', 'Compare versions') }}
 					</NcButton>
+					<ViewExportMenu v-if="viewId" :viewId="viewId" :viewName="view.name || ''" />
 				</div>
 			</header>
 
@@ -174,6 +175,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { computed, reactive, ref } from 'vue'
 import UsageOverlayLegend from '../../components/architecture/UsageOverlayLegend.vue'
+import ViewExportMenu from '../../components/architecture/ViewExportMenu.vue'
 import { createArchitectureViewStore, ELEMENT_TYPES, isImported, RELATION_TYPES, uuidOf } from '../../store/modules/architectureView.js'
 import { useViewStore } from '../../store/modules/view.js'
 import { usageOverlayNodes } from '../../utils/usageOverlay.js'
@@ -205,6 +207,7 @@ export default {
 		NcSelect,
 		NcTextField,
 		UsageOverlayLegend,
+		ViewExportMenu,
 	},
 
 	props: {

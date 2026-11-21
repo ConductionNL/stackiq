@@ -18,8 +18,9 @@
 - **acceptance_criteria**:
   - GIVEN the fixture `lib/Settings/GEMMA_testdata_below_1_5mb.xml` WHEN it is converted by the optimised import with the save mocked and by `convertFileToObjects` THEN the object lists are equal
   - GIVEN `exportArchiMateXml` WHEN it runs THEN it calls `generateXmlFromObjects`, and the existing decomposition tests stay green
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
+- Built 21 Nov: `ArchiMateImportService::convertFileToObjects()` (parse, model identifier, transform, with the import's parsing and analyzing phases and both cancel checks; returns null when cancelled) is what `importArchiMateFileFromPathOptimized()` now calls, so its timings, phases and the recorded import goldens are unchanged. `ArchiMateExportService::generateXmlFromObjects()` (the former private `generateXmlDirectly()`) is what `exportArchiMateXml()` calls. `ArchiMateImportServiceConvertTest` uses `tests/data/archimate_golden.xml`: the 1.5 MB GEMMA fixture takes minutes through the mocked import, too slow for the unit suite.
 
 ### Task 3: Round-trip service with two modes
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
@@ -28,8 +29,9 @@
   - GIVEN the before-import mode WHEN it runs on the fixture THEN no save method is called and every category is reported
   - GIVEN the against-imported mode and stored objects of the model WHEN it runs THEN it compares only objects with that model identifier
   - GIVEN no stored object with the model identifier WHEN the against-imported mode runs THEN it answers that the model is not imported
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
+- Built 21 Nov: `ArchiMateRoundTripService::checkBeforeImport()` and `checkAgainstImported($filePath, $storedObjects)`; the caller (task 4) hands it the AMEF register's stored objects, and only those whose `model_identifier` is the file's take part.
 
 ### Task 4: Admin route and removal of the old round trip
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
@@ -39,8 +41,9 @@
   - GIVEN a body with `file_path` WHEN it is posted THEN the answer is 400
   - GIVEN the route table WHEN it is read THEN `settings#testArchiMateRoundTrip` is gone and `settings#checkArchiMateRoundTrip` exists
   - GIVEN the source WHEN it is searched THEN `testRoundTrip`, `createTestArchiMateXml` and `createTempFile` are gone
-- [ ] Implement
-- [ ] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
+- [x] Implement
+- [x] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
+- Built 21 Nov: `POST /api/archimate/round-trip-check` (`settings#checkArchiMateRoundTrip`): admin refusal first, 400 on `file_path`, on an unknown mode and on no upload; `ArchiMateService::checkRoundTrip()` reads the AMEF register's stored objects for the against-imported mode (`ArchiMateServiceRoundTripTest`). The old round trip, its route and the store action were already gone (`SettingsRouteTableTest::testTheOldArchiMateRoundTripIsNotRoutedOrCallable`), so `SettingsControllerEmailArchiMateContractTest` needed no change.
 
 ### Task 5: Report on the admin settings page
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
@@ -48,8 +51,9 @@
 - **acceptance_criteria**:
   - GIVEN the admin settings page WHEN the ArchiMate section renders THEN Check a model file offers a file picker, the two modes and a Check button
   - GIVEN a result WHEN it renders THEN a row per category shows the counts, examples expand per category, and the summary names the categories with losses or reads "No losses found"
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `archimate-round-trip-check.spec.ts`)
+- Built 21 Nov: `ArchiMateRoundTripCheck.vue` under the ArchiMate import and export (file picker, the two modes, Check, the table per category, examples per category with losses, the summary) over `src/utils/archiMateRoundTrip.js` (the upload request, rows and summary). Tests: `tests/vitest/archiMateRoundTrip.spec.js` and `tests/vitest/archiMateRoundTripCheck.spec.js`. The request lives in the util, not in `src/store/modules/settings.js`, because the section is its only reader. The Playwright spec `tests/e2e/workflows/archimate-round-trip-check.spec.ts` is written and not yet run against a live instance. English and Dutch strings are in `l10n/en.json` and `l10n/nl.json`.
 
 ### Task 6: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
@@ -59,8 +63,9 @@
   - GIVEN a Dutch instance WHEN the check renders THEN every label and summary reads in Dutch
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
+- Progress 21 Nov: `docs/features/archimate-import-export.md` explains both modes, the report columns, the comparison rules and the API, and the features index links it. The labels and the summary are in English and Dutch (`l10n/en.json`, `l10n/nl.json`, PR for task 5), and `npm run test:l10n` passes. Left: the screenshot of a report, which needs a live instance. That is why Implement stays open.
 
-Built: Task 1. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 2 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
+Built: Tasks 1 to 4. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 5 and 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
 
 ## Verification
 

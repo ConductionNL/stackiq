@@ -15,8 +15,8 @@
  * tests/Unit/Controller/ViewControllerDocumentTest.php and
  * tests/vitest/viewExport.spec.js.
  *
- * Both tests are fixme: the Export menu (src/services/viewExport.js) is not
- * mounted in ArchitectureViewEditor.vue yet (task 4 of the change).
+ * The Export menu is src/components/architecture/ViewExportMenu.vue in the
+ * header of ArchitectureViewEditor.vue (tests/vitest/viewExportMenu.spec.js).
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
@@ -119,7 +119,7 @@ test.afterAll(async () => {
 
 // @e2e architecture-view-office-export::an-application-owner-downloads-a-view-as-svg
 // The Export menu is not mounted in ArchitectureViewEditor.vue; src/services/viewExport.js holds its actions only.
-test.fixme('Export, then Download SVG, gives an SVG file named after the view holding its nodes', async ({ page }) => {
+test('Export, then Download SVG, gives an SVG file named after the view holding its nodes', async ({ page }) => {
 	await openExportMenu(page, ids.view)
 	const downloading = page.waitForEvent('download')
 	await page.getByRole('menuitem', { name: 'Download SVG' }).click()
@@ -139,7 +139,7 @@ test.fixme('Export, then Download SVG, gives an SVG file named after the view ho
 
 // @e2e architecture-view-office-export::without-filinq-the-image-still-downloads
 // The Export menu is not mounted in ArchitectureViewEditor.vue; src/services/viewExport.js holds its actions only.
-test.fixme('without filinq the document actions are disabled with the reason and Download SVG is enabled', async ({ page }) => {
+test('without filinq the document actions are disabled with the reason and Download SVG is enabled', async ({ page }) => {
 	await openExportMenu(page, ids.view)
 	const word = page.getByRole('menuitem', { name: 'Create Word document' })
 	const slide = page.getByRole('menuitem', { name: 'Create PowerPoint slide' })

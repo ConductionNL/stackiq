@@ -21,6 +21,7 @@ namespace OCA\Stackiq\Tests\Unit\Support;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * An ObjectServiceInterface double base on OpenRegister main's saveObject()
@@ -34,16 +35,16 @@ abstract class MainApiObjectService implements ObjectServiceInterface {
 	/**
 	 * Save an object (main's options form).
 	 *
-	 * @param array             $object        The object to store.
-	 * @param ObjectSaveOptions $options       Where and how it is saved.
-	 * @param bool              $_rbac         Apply register RBAC.
-	 * @param bool              $_multitenancy Apply organisation scoping.
+	 * @param array                                        $object        The object to store.
+	 * @param ObjectSaveOptions|PublishedObjectSaveOptions $options       Where and how it is saved.
+	 * @param bool                                         $_rbac         Apply register RBAC.
+	 * @param bool                                         $_multitenancy Apply organisation scoping.
 	 *
 	 * @return ObjectEntityInterface The stored object.
 	 */
 	abstract public function saveObject(
 		array $object,
-		ObjectSaveOptions $options=new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options=new ObjectSaveOptions(),
 		bool $_rbac=true,
 		bool $_multitenancy=true
 	): ObjectEntityInterface;

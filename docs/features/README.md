@@ -30,6 +30,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Role Mapping and Access Review](role-mapping-and-access-review.md) | Map catalogue roles onto your own groups, and review who still needs access |
 | [Security classification (BIO)](baseline-classification.md) | Classify each application in use on availability, integrity and confidentiality, with a GEMMA suggestion and an anonymous comparison |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [ArchiMate round-trip check](archimate-import-export.md) | Check what a model file loses through the import and export, before or after importing it |
 | [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Data quality](./data-quality.md) | A data quality score on every application and usage, a confirm-current action and a Data quality page per organisation |
@@ -172,6 +173,8 @@ The ArchiMate integration maps GEMMA Softwarecatalogus objects to ArchiMate appl
 | Organisatie | BusinessActor |
 
 **Key services:** `lib/Service/ArchiMateService.php`, `lib/Service/ArchiMateImportService.php`, `lib/Service/ArchiMateExportService.php`
+
+To see what a model file loses on its way through stackiq, before or after importing it, see [ArchiMate import and export](archimate-import-export.md).
 
 ## CMDB Import
 

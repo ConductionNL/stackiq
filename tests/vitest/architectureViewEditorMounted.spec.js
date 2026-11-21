@@ -84,6 +84,10 @@ function passthrough (name, tag = 'div') {
 })
 }
 
+// The Export menu has its own spec (viewExportMenu.spec.js).
+vi.mock('../../src/components/architecture/ViewExportMenu.vue', () => ({
+	default: { name: 'ViewExportMenu', props: ['viewId', 'viewName'], template: '<div class="view-export-stub" :data-view="viewId" />' },
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: passthrough('NcButton', 'button'),
 	NcCheckboxRadioSwitch: passthrough('NcCheckboxRadioSwitch'),
@@ -256,6 +260,16 @@ describe('the view editor', () => {
 		expect(points.every((point) => !point.includes('undefined'))).toBe(true)
 		expect(new Set(points).size).toBe(2)
 		expect(wrapper.find('[data-testid="view-editor-draft-notice"]').exists()).toBe(true)
+	})
+
+	it('offers the Export menu on a saved view, and not on /views/new', async () => {
+		db.view.push({ name: 'Mine', origin: 'drawn', status: 'draft', xml: { viewNodes: [nodeA], viewRelationships: [] }, '@self': { id: 'd1' } })
+
+		const saved = await open(ArchitectureViewEditor, 'd1')
+		const fresh = await open(ArchitectureViewEditor, 'new')
+
+		expect(saved.wrapper.get('.view-export-stub').attributes('data-view')).toBe('d1')
+		expect(fresh.wrapper.find('.view-export-stub').exists()).toBe(false)
 	})
 
 	it('asks for a name and creates a drawn draft on /views/new', async () => {
