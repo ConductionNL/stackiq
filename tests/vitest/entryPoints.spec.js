@@ -65,6 +65,7 @@ async function marker(name, props = []) {
 }
 
 vi.mock('../../src/App.vue', () => marker('App', ['manifest', 'customComponents', 'pageTypes', 'registry']))
+vi.mock('../../src/components/api/ApiDocumentationWidget.vue', () => ({ default: { name: 'ApiDocumentationWidget' } }))
 vi.mock('../../src/components/CatalogPanels.vue', () => ({ default: { name: 'CatalogPanels' } }))
 vi.mock('../../src/components/maintenance/UpcomingMaintenanceWidget.vue', () => ({ default: { name: 'UpcomingMaintenanceWidget' } }))
 vi.mock('../../src/views/cmdb/CmdbOverview.vue', () => ({ default: { name: 'CmdbOverview' } }))
@@ -115,7 +116,7 @@ describe('main.js', () => {
 		vi.restoreAllMocks()
 	})
 
-	it('registers the icons and the four app dashboard widgets', async () => {
+	it('registers the icons and the five app dashboard widgets', async () => {
 		await import('../../src/main.js')
 		await flushPromises()
 
@@ -126,6 +127,7 @@ describe('main.js', () => {
 			['upcoming-maintenance', 'UpcomingMaintenanceWidget', 'Planned maintenance', 'Calendar', true],
 			['cmdb-overview', 'CmdbOverview', 'CMDB', 'Sitemap', true],
 			['landscape-comparison', 'LandscapeComparisonView', 'Compare with the plan', 'CompareHorizontal', true],
+			['api-documentation', 'ApiDocumentationWidget', 'API documentation', 'Api', true],
 		])
 		expect(l10n.loadTranslations).toHaveBeenCalledWith('stackiq', expect.any(Function))
 	})

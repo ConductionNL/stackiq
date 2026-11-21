@@ -24,7 +24,7 @@
             "switch": {
                 "configKey": "federation_enabled"
             },
-            "disabledMessage": "Federation is switched off. Set the federation_enabled app setting to true with occ to switch it on.",
+            "disabledMessage": "Federation is switched off. Switch it on in the Catalog federation section of the admin settings.",
             "unconfiguredMessage": "Not checked yet. Choose Pull now in the Catalog federation section to check the peers."
         },
         {

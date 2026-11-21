@@ -111,6 +111,7 @@ class FederationService implements FederationServiceInterface {
 	 * `staleAfter` is the threshold those streaks are compared against.
 	 *
 	 * @return array{available:bool, enabled:bool, directoryUrl:string,
+	 *               registration:array{state:string, reason:string, at:string|null},
 	 *               peers:array<int,array{url:string, name:string, lastPulledAt:?string,
 	 *               objectCount:int, lastError:?string, failures:int, stale:bool,
 	 *               allowed:bool}>, staleAfter:int, message:string}
@@ -147,10 +148,69 @@ class FederationService implements FederationServiceInterface {
 			'enabled' => $this->config->isEnabled(),
 			'staleAfter' => $staleAfter,
 			'directoryUrl' => $this->config->getDirectoryUrl(),
+			'registration' => $this->config->getRegistration(),
 			'peers' => $peers,
 			'message' => $message,
 		];
 	}//end getStatus()
+
+	/**
+	 * Switch federation on or off; switching it on announces the instance.
+	 *
+	 * The outcome of the announce is recorded as the registration the settings
+	 * show: registered, unavailable (OpenCatalogi missing) or failed with the
+	 * reason. Switching off records `off`. Integriq is told the new state.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return array<string, mixed> The status after the switch, as getStatus() gives it.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the switch sets, not a mode
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	#[\Override]
+	public function setEnabled(bool $enabled): array {
+		$this->config->setEnabled(enabled: $enabled);
+		$state  = 'off';
+		$reason = '';
+		if ($enabled === true) {
+			$announced = $this->announce();
+			$state     = $this->registrationState(announced: $announced);
+			$reason    = $announced['reason'];
+			if ($state === 'registered') {
+				$reason = '';
+			}
+		}
+
+		$this->config->setRegistration(state: $state, reason: $reason, at: $this->now());
+		$status = $this->getStatus();
+		$this->connectionReports?->federationPeersChanged(status: $status);
+
+		return $status;
+	}//end setEnabled()
+
+	/**
+	 * The registration state an announce result stands for.
+	 *
+	 * @param array{ok: bool, reason: string} $announced The result of announce().
+	 *
+	 * @return string registered, unavailable or failed.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 */
+	private function registrationState(array $announced): string {
+		if ($announced['ok'] === true) {
+			return 'registered';
+		}
+
+		if ($announced['reason'] === 'OpenCatalogi unavailable') {
+			return 'unavailable';
+		}
+
+		return 'failed';
+	}//end registrationState()
 
 	/**
 	 * Add a peer to the federation allowlist (idempotent).

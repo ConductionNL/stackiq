@@ -155,9 +155,10 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
  * `peers: {url, name, lastPulledAt, objectCount, lastError, failures, stale, allowed}[]` shape.
  *
  * @param {object} status - The raw `/api/federation/status` response.
- * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
+ * @return {{available: boolean, enabled: boolean, directoryUrl: string, registration: {state: string, reason: string, at: ?string}, staleAfter: number, peers: Array<{url: string, name: string, lastPulledAt: ?string, objectCount: number, lastError: ?string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
  * @spec openspec/specs/federated-catalog-sync/spec.md
  * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
  */
 export function normaliseFederationStatus(status) {
 	const raw = status || {}
@@ -166,9 +167,58 @@ export function normaliseFederationStatus(status) {
 		available: raw.available === true,
 		enabled: raw.enabled === true,
 		directoryUrl: raw.directoryUrl || '',
+		registration: normaliseFederationRegistration(raw.registration),
 		staleAfter: typeof raw.staleAfter === 'number' ? raw.staleAfter : 3,
 		message: raw.message || '',
 		peers: peers.map((peer) => normaliseFederationPeer(typeof peer === 'string' ? { url: peer } : peer)),
+	}
+}
+
+/** The registration states the server records. */
+const REGISTRATION_STATES = ['none', 'off', 'registered', 'unavailable', 'failed']
+
+/**
+ * The registration of a federation status: the outcome of the last announce
+ * to the directory, `none` when the server sent none.
+ *
+ * @param {object|undefined} registration - The raw registration.
+ * @return {{state: string, reason: string, at: ?string}} The registration.
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+ */
+function normaliseFederationRegistration(registration) {
+	const raw = registration || {}
+	return {
+		state: REGISTRATION_STATES.includes(raw.state) ? raw.state : 'none',
+		reason: typeof raw.reason === 'string' ? raw.reason : '',
+		at: textOrNull(raw.at),
+	}
+}
+
+/**
+ * The line under the federation switch that says whether this catalog is
+ * registered with the directory, and if not why.
+ *
+ * @param {{state: string, reason: string, at: ?string}} registration - The normalised registration.
+ * @param {function(string, object=): string} translate - Translates an English text with placeholders.
+ * @return {string} The line.
+ * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+ */
+export function federationRegistrationText(registration, translate) {
+	const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(registration.at || '')
+	const date = match ? match[1] + ' ' + match[2] + ' UTC' : ''
+	switch (registration.state) {
+	case 'registered':
+		return date === ''
+			? translate('Registered with the directory.')
+			: translate('Registered with the directory on {date}.', { date })
+	case 'failed':
+		return translate('Registration with the directory failed: {reason}', { reason: registration.reason || translate('unknown reason') })
+	case 'unavailable':
+		return translate('Not registered: the OpenCatalogi app is not installed.')
+	case 'off':
+		return translate('Not registered: federation is switched off.')
+	default:
+		return translate('Not registered with the directory yet.')
 	}
 }
 

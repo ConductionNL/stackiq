@@ -58,6 +58,66 @@ class FederationConfig implements FederationConfigInterface {
 	}//end isEnabled()
 
 	/**
+	 * Switch federation on or off.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the setter stores, not a mode
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	public function setEnabled(bool $enabled): void {
+		$this->appConfig->setValueBool(AppIdentity::APP_ID, 'federation_enabled', $enabled);
+	}//end setEnabled()
+
+	/**
+	 * The outcome of the last registration with the directory.
+	 *
+	 * `state` is `none` (never tried), `off` (federation switched off),
+	 * `registered`, `unavailable` (OpenCatalogi missing) or `failed`.
+	 *
+	 * @return array{state: string, reason: string, at: string|null} The registration.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	public function getRegistration(): array {
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_registration', ''), true);
+		if (is_array($decoded) === false) {
+			$decoded = [];
+		}
+
+		return [
+			'state' => $this->stringOrNull(value: ($decoded['state'] ?? null)) ?? 'none',
+			'reason' => $this->stringOrNull(value: ($decoded['reason'] ?? null)) ?? '',
+			'at' => $this->stringOrNull(value: ($decoded['at'] ?? null)),
+		];
+	}//end getRegistration()
+
+	/**
+	 * Record the outcome of a registration with the directory.
+	 *
+	 * @param string      $state  One of the states getRegistration() names.
+	 * @param string      $reason Why, for a state other than registered.
+	 * @param string|null $at     When, as ISO-8601.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	public function setRegistration(string $state, string $reason, ?string $at): void {
+		$this->appConfig->setValueString(
+			AppIdentity::APP_ID,
+			'federation_registration',
+			(string) json_encode(['state' => $state, 'reason' => $reason, 'at' => $at])
+		);
+	}//end setRegistration()
+
+	/**
 	 * The configured directory URL (default directory.opencatalogi.nl).
 	 *
 	 * @return string The directory URL.

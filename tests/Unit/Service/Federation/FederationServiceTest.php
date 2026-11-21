@@ -252,6 +252,7 @@ class FederationServiceTest extends TestCase {
 				'enabled' => true,
 				'staleAfter' => 3,
 				'directoryUrl' => $status['directoryUrl'],
+				'registration' => ['state' => 'none', 'reason' => '', 'at' => null],
 				'peers' => [
 					['url' => self::PEER, 'name' => 'peer.example.org'] + $neverPulled + ['failures' => 3, 'stale' => true, 'allowed' => true],
 					['url' => 'http://10.0.0.1', 'name' => '10.0.0.1'] + $neverPulled + ['failures' => 0, 'stale' => false, 'allowed' => false],

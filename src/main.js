@@ -29,6 +29,7 @@ import { generateUrl } from '@nextcloud/router'
 import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import ApiDocumentationWidget from './components/api/ApiDocumentationWidget.vue'
 import CatalogPanels from './components/CatalogPanels.vue'
 import UpcomingMaintenanceWidget from './components/maintenance/UpcomingMaintenanceWidget.vue'
 import LandscapeComparisonView from './views/architecture/LandscapeComparisonView.vue'
@@ -101,6 +102,15 @@ registerDashboardWidget('landscape-comparison', {
 	defaultContent: {},
 	displayName: 'Compare with the plan',
 	icon: 'CompareHorizontal',
+	card: true,
+})
+// The API documentation page (sharing-generated-api-docs): the catalogue
+// register's OpenRegister document and the app's own, rendered in tabs.
+registerDashboardWidget('api-documentation', {
+	renderer: ApiDocumentationWidget,
+	defaultContent: {},
+	displayName: 'API documentation',
+	icon: 'Api',
 	card: true,
 })
 try {

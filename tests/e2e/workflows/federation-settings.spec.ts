@@ -11,9 +11,10 @@
  * no longer holds it. Afterwards the peer is removed again if a failed run
  * left it behind.
  *
- * Switching federation on and showing the registration status (task 21) is
- * not built: the section only tells the admin to enable federation in the
- * app configuration. That test is marked fixme.
+ * Switching federation on shows the registration status (task 21): the
+ * section's switch sends PUT /api/federation/enabled and the line under it
+ * says registered, or why not (OpenCatalogi missing, the directory refused).
+ * The switch is put back as it was afterwards.
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
@@ -96,9 +97,34 @@ test('an admin removes a peer and it is gone from the list and from the next pul
 	expect(await subscribedPeers()).not.toContain(peerUrl)
 })
 
-// Task 21 is not built: FederationSettings.vue has no control to switch federation on and shows no registration status.
-test.fixme('an admin switches federation on and the section shows the registration status', async ({
+// @e2e federated-catalog-sync::admin-enables-federation-and-the-instance-announces-itself
+test('an admin switches federation on and the section shows the registration status', async ({
 	page,
 }) => {
-	await gotoFederationSettings(page)
+	const before = await apiCtx.get(`${FEDERATION_API}/status`)
+	const wasEnabled = (await before.json())?.enabled === true
+	try {
+		if (wasEnabled) {
+			await apiCtx.put(`${FEDERATION_API}/enabled`, { data: { enabled: false } })
+		}
+		await gotoFederationSettings(page)
+		const toggle = page.getByRole('checkbox', { name: 'Federation is on' }).first()
+		await expect(toggle).not.toBeChecked()
+		await expect(page.getByText('Not registered: federation is switched off.').first()).toBeVisible()
+
+		await toggle.click({ force: true })
+		await expect(toggle).toBeChecked({ timeout: 30000 })
+		const line = page.locator('[data-testid="federation-registration"]').first()
+		await expect(line).toHaveText(
+			/Registered with the directory|Registration with the directory failed: .+|Not registered: the OpenCatalogi app is not installed\./,
+			{ timeout: 30000 },
+		)
+
+		// The status the section shows is the one the server keeps.
+		const after = await (await apiCtx.get(`${FEDERATION_API}/status`)).json()
+		expect(after.enabled).toBe(true)
+		expect(['registered', 'failed', 'unavailable']).toContain(after.registration?.state)
+	} finally {
+		await apiCtx.put(`${FEDERATION_API}/enabled`, { data: { enabled: wasEnabled } })
+	}
 })

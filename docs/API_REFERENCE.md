@@ -1,5 +1,7 @@
 # API Reference
 
+> **The generated documents are the reference.** Open **API documentation** in stackiq's footer (`/apps/stackiq/api-docs`) to read both OpenAPI documents in the app: OpenRegister's document of the catalogue objects (`GET /apps/openregister/api/registers/{id}/oas`) and stackiq's own endpoints (`GET /apps/stackiq/api/openapi.json`). This page is a hand-written overview and can lag behind them. See [API documentation](features/api-documentation.md).
+
 ## Overview
 
 The Software Catalog app provides a REST API for configuration management and programmatic access to user and group management functionality.
