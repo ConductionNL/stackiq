@@ -170,6 +170,7 @@ class FederationService implements FederationServiceInterface {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
 	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
 	 */
+	#[\Override]
 	public function setEnabled(bool $enabled): array {
 		$this->config->setEnabled(enabled: $enabled);
 		$state  = 'off';
