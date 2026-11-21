@@ -16,6 +16,7 @@ import {
 	comparisonParams,
 	coverageRows,
 	landscapeNames,
+	organisationPickerOptions,
 	sourceLabel,
 } from '../../src/utils/landscapeComparison.js'
 
@@ -97,5 +98,20 @@ describe('applyFailureNotice', () => {
 
 	it('says when only the scenario could not be marked', () => {
 		expect(applyFailureNotice({ change: null, message: 'no' })).toBe('The scenario was not marked as applied: no')
+	})
+})
+
+describe('organisationPickerOptions', () => {
+	it('labels each organisation by name, falling back to its uuid', () => {
+		expect(organisationPickerOptions([
+			{ uuid: 'o1', name: 'Gemeente A' },
+			{ '@self': { id: 'o2' }, object: { title: 'Samenwerking B' } },
+			{ id: 'o3' },
+		])).toEqual([
+			{ uuid: 'o1', label: 'Gemeente A' },
+			{ uuid: 'o2', label: 'Samenwerking B' },
+			{ uuid: 'o3', label: 'o3' },
+		])
+		expect(organisationPickerOptions(null)).toEqual([])
 	})
 })

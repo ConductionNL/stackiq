@@ -177,10 +177,29 @@
 		{
 			"id": "LandscapeComparison",
 			"route": "/landscape-comparison",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Compare with the plan",
-			"component": "LandscapeComparisonView",
-			"_note": "Today's landscape next to the plan on a chosen date for one organisation, from one organisation-scoped GET /api/landscape-comparison answer (design D3). Opened from the Portfolio roadmap with ?organisation=; no standard page type joins usages, planned dates and reference components across two registers."
+			"config": {
+				"widgets": [
+					{
+						"id": "landscape-comparison",
+						"type": "landscape-comparison",
+						"title": "Compare with the plan",
+						"_note": "Today's landscape next to the plan on a chosen date for one organisation, from one organisation-scoped GET /api/landscape-comparison answer (design D3). A widget TYPE registered in main.js, like cmdb-overview, because it joins usages, planned dates and reference components across two registers, which no built-in widget does. The Portfolio roadmap opens the page with ?organisation=."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "landscape-comparison",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 10,
+						"showTitle": false
+					}
+				]
+			}
 		}
 	]
 }

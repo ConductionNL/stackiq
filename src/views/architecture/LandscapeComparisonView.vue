@@ -76,21 +76,14 @@
 
 		<template v-else>
 			<div class="landscape-comparison__columns">
-				<section class="landscape-comparison__column" data-testid="landscape-today">
-					<h3>{{ t('stackiq', 'Today ({date})', { date: report.today }) }}</h3>
-					<ul v-if="todayNames.length > 0">
-						<li v-for="(name, index) in todayNames" :key="'t' + index">
-							{{ name }}
-						</li>
-					</ul>
-					<p v-else class="landscape-comparison__hint">
-						{{ t('stackiq', 'No applications in use') }}
-					</p>
-				</section>
-				<section class="landscape-comparison__column" data-testid="landscape-future">
-					<h3>{{ t('stackiq', 'On {date}', { date: report.date }) }}</h3>
-					<ul v-if="futureNames.length > 0">
-						<li v-for="(name, index) in futureNames" :key="'f' + index">
+				<section
+					v-for="column in columns"
+					:key="column.side"
+					class="landscape-comparison__column"
+					:data-testid="'landscape-' + column.side">
+					<h3>{{ column.title }}</h3>
+					<ul v-if="column.names.length > 0">
+						<li v-for="(name, index) in column.names" :key="column.side + index">
 							{{ name }}
 						</li>
 					</ul>
@@ -143,8 +136,8 @@ import {
 	comparisonParams,
 	coverageRows,
 	landscapeNames,
+	organisationPickerOptions,
 } from '../../utils/landscapeComparison.js'
-import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import { ensureObjectTypeOrSlug, loadObjectTypeCollection } from '../../utils/objectTypes.js'
 
 /** The types the comparison reads and an apply writes. */
@@ -188,11 +181,11 @@ export default {
 
 	data() {
 		return {
+			report: null,
+			date: '',
+			selectedOrg: null,
 			loading: false,
 			error: null,
-			report: null,
-			selectedOrg: null,
-			date: '',
 			scenario: null,
 			applying: false,
 			applyNotice: null,
@@ -217,11 +210,7 @@ export default {
 		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organization')?.results || []).map((org) => {
-				const data = org.object || org
-				const uuid = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				return { uuid, label: data.name || data.title || uuid }
-			})
+			return organisationPickerOptions(objectStore.getCollection('organization')?.results)
 		},
 
 		/**
@@ -251,19 +240,16 @@ export default {
 		},
 
 		/**
-		 * @return {Array<string>} Today's applications.
+		 * The two landscapes side by side: today and the date.
+		 *
+		 * @return {Array<{side: string, title: string, names: Array<string>}>} The columns.
 		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
-		todayNames() {
-			return landscapeNames(this.report, 'today')
-		},
-
-		/**
-		 * @return {Array<string>} The applications on the date.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
-		 */
-		futureNames() {
-			return landscapeNames(this.report, 'future')
+		columns() {
+			return [
+				{ side: 'today', title: t('stackiq', 'Today ({date})', { date: this.report?.today }), names: landscapeNames(this.report, 'today') },
+				{ side: 'future', title: t('stackiq', 'On {date}', { date: this.report?.date }), names: landscapeNames(this.report, 'future') },
+			]
 		},
 
 		/**
@@ -294,15 +280,15 @@ export default {
 	},
 
 	watch: {
-		/**
-		 * Preselect the organisation the roadmap passed, or the only one there is.
-		 *
-		 * @param {Array<object>} options The organisation options.
-		 * @return {void}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
-		 */
 		organisationOptions: {
 			immediate: true,
+			/**
+			 * Preselect the organisation the roadmap passed, or the only one there is.
+			 *
+			 * @param {Array<object>} options The organisation options.
+			 * @return {void}
+			 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+			 */
 			handler(options) {
 				if (this.scenarioId || this.selectedOrg) {
 					return

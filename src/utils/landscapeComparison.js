@@ -8,6 +8,7 @@
  */
 
 import { translate as t } from '@nextcloud/l10n'
+import { resolveUuid } from './lifecyclePhase.js'
 
 /** The URL of the comparison endpoint, relative to the app. */
 export const COMPARISON_PATH = '/apps/stackiq/api/landscape-comparison'
@@ -177,5 +178,20 @@ export function applyFailureNotice(failed) {
 	return t('stackiq', 'Applying stopped at the change "{change}": {message}. The changes before it are written; apply again to continue.', {
 		change: subject,
 		message: failed.message,
+	})
+}
+
+/**
+ * Organisation records as picker options, labelled by name.
+ *
+ * @param {Array<object>|null|undefined} records The organisation records.
+ * @return {Array<{uuid: string, label: string}>} The options.
+ * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ */
+export function organisationPickerOptions(records) {
+	return (records || []).map((record) => {
+		const data = record.object || record
+		const uuid = resolveUuid(record.uuid ?? record.id ?? record['@self']?.id ?? record)
+		return { uuid, label: data.name || data.title || uuid }
 	})
 }

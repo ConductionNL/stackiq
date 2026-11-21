@@ -40,6 +40,7 @@ import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue'
 import CommentQuestionOutline from 'vue-material-design-icons/CommentQuestionOutline.vue'
+import CompareHorizontal from 'vue-material-design-icons/CompareHorizontal.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import Cube from 'vue-material-design-icons/Cube.vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
@@ -53,6 +54,7 @@ import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FileTableOutline from 'vue-material-design-icons/FileTableOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import Handshake from 'vue-material-design-icons/Handshake.vue'
@@ -121,6 +123,7 @@ export default {
 	CogOutline,
 	CommentOutline,
 	CommentQuestionOutline,
+	CompareHorizontal,
 	ContentDuplicate,
 	Cube,
 	CurrencyEur,
@@ -134,6 +137,7 @@ export default {
 	FileSign,
 	FileTableOutline,
 	FolderOutline,
+	FormatListBulleted,
 	Gauge,
 	Gavel,
 	Handshake,

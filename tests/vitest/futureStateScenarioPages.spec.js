@@ -82,14 +82,13 @@ describe('the scenario pages', () => {
 		expect(detail.config.sidebar.tabs.map((tab) => tab.id)).toContain('audit')
 	})
 
-	it('offers the comparison page the roadmap opens, with a registered component', () => {
-		expect(page('LandscapeComparison')).toMatchObject({
-			type: 'custom',
-			route: '/landscape-comparison',
-			component: 'LandscapeComparisonView',
-		})
+	it('offers the comparison page the roadmap opens, over a registered widget', () => {
+		const comparison = page('LandscapeComparison')
+		expect(comparison).toMatchObject({ type: 'dashboard', route: '/landscape-comparison' })
+		expect(comparison.config.widgets.map((w) => w.type)).toEqual(['landscape-comparison'])
+		const main = fs.readFileSync(path.resolve(__dirname, '../../src/main.js'), 'utf8')
+		expect(main).toMatch(/registerDashboardWidget\('landscape-comparison', \{\n\trenderer: LandscapeComparisonView,/)
 		const registry = fs.readFileSync(path.resolve(__dirname, '../../src/customComponents.js'), 'utf8')
-		expect(registry).toMatch(/import LandscapeComparisonView from '\.\/views\/architecture\/LandscapeComparisonView\.vue'/)
 		expect(registry).toMatch(/^\tLandscapeComparisonView,$/m)
 	})
 })
