@@ -126,6 +126,9 @@ class TechnologyComponentEolStamper {
 	 * @param array                  $query         The search: `@self` register and schema, `software` the version, `_limit`.
 	 *
 	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 */
 	private function components(ObjectServiceInterface $objectService, array $query): array {
 		try {

@@ -58,7 +58,7 @@
 - [x] 5.3 Run `composer check:strict` (PHPCS/PHPMD/Psalm/PHPStan) — no new
   violations.
   - 17 Nov 2026: the build added a PHPMD `StaticAccess` on every `SearchBounds::bounded()` call; each of those methods now carries the repository's reasoned `@SuppressWarnings(PHPMD.StaticAccess)`, so PHPMD reports none for `SearchBounds`. PHPCS (no new findings) and PHPStan (no errors) are clean on the touched files. Left: Psalm, which needs PHP >= 8.3.16 and the build container runs 8.3.6.
-  - 21 Nov 2026: Psalm 7.6 ran on development (its own PHP patch-version check skipped locally; vendor is not committed). It reports 736 findings, all from before this change: `git blame` puts none of them on a line written by this change's commits (`ba019ecee`, `cd2856b20`, `903d38ebb`), and none are in `lib/Service/SearchBounds.php`. No new violations.
+  - 21 Nov 2026: Psalm 7.6 ran on development (its own PHP patch-version check skipped locally; vendor is not committed). It reports 736 findings, all from before this change: `git blame` puts none of them on a line written by this change's commits (`ba019ecee`, `cd2856b20`, `903d38ebb`), and none are in `lib/Service/SearchBounds.php`. PHPMD still reported one `StaticAccess` on `SearchBounds::bounded()`, in `TechnologyComponentEolStamper::components()`; that method now carries the same reasoned suppression as the other call sites. No new violations.
 
 ## Build notes
 
