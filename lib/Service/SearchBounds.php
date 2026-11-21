@@ -25,7 +25,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/bound-unbounded-searchobjects-scans/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
+ * @spec openspec/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ namespace OCA\Stackiq\Service;
 /**
  * The explicit ceiling on an otherwise unbounded object search.
  *
- * @spec openspec/changes/bound-unbounded-searchobjects-scans/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
+ * @spec openspec/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
  */
 final class SearchBounds {
 
@@ -53,7 +53,7 @@ final class SearchBounds {
 	 *
 	 * @return array<string, mixed> The bounded query.
 	 *
-	 * @spec openspec/changes/bound-unbounded-searchobjects-scans/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
+	 * @spec openspec/specs/query-performance/spec.md#requirement-every-searchobjects-call-must-set-an-explicit-_limit
 	 */
 	public static function bounded(array $query): array {
 		if (isset($query['_limit']) === false) {
