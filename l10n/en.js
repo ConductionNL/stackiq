@@ -2378,7 +2378,8 @@ OC.L10N.register(
         "Note": "Note",
         "Why this change.": "Why this change.",
         "Applied to": "Applied to",
-        "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "The usage the change was written to when the scenario was applied, so a second apply changes nothing."
+        "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "The usage the change was written to when the scenario was applied, so a second apply changes nothing.",
+        "DPIA": "DPIA"
     },
     "nplurals=2; plural=(n != 1);"
 )

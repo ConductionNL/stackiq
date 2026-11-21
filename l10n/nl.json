@@ -2481,6 +2481,7 @@
         "Note": "Notitie",
         "Why this change.": "Waarom deze wijziging.",
         "Applied to": "Doorgevoerd in",
-        "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "Het gebruik waarin de wijziging is weggeschreven toen het scenario werd doorgevoerd, zodat een tweede keer doorvoeren niets verandert."
+        "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "Het gebruik waarin de wijziging is weggeschreven toen het scenario werd doorgevoerd, zodat een tweede keer doorvoeren niets verandert.",
+        "DPIA": "DPIA"
     }
 }
