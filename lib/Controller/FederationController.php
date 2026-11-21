@@ -129,4 +129,20 @@ class FederationController extends Controller {
 
 		return new JSONResponse(data: $result);
 	}//end pull()
+
+	/**
+	 * Switch federation on or off; switching it on announces the instance.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return JSONResponse The status after the switch, with the registration.
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
+	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec                                                                               openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
+	public function setEnabled(bool $enabled = false): JSONResponse {
+		return new JSONResponse(data: $this->federation->setEnabled(enabled: $enabled));
+	}//end setEnabled()
 }//end class

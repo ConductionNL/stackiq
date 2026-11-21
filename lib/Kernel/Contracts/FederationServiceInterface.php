@@ -76,6 +76,7 @@ interface FederationServiceInterface {
 	 * top-level `staleAfter` is the threshold those streaks are compared against.
 	 *
 	 * @return array{available:bool, enabled:bool, directoryUrl:string,
+	 *               registration:array{state:string, reason:string, at:string|null},
 	 *               peers:array<int,array{url:string, failures:int, stale:bool,
 	 *               allowed:bool}>, staleAfter:int, message:string}
 	 *
@@ -124,4 +125,16 @@ interface FederationServiceInterface {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function removePeer(string $peerUrl): array;
+
+	/**
+	 * Switch federation on or off; switching it on announces the instance and
+	 * records the registration the settings show.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return array<string, mixed> The status after the switch.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 */
+	public function setEnabled(bool $enabled): array;
 }//end interface

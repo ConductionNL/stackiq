@@ -2482,7 +2482,19 @@ OC.L10N.register(
         "Loading the API document": "Het API-document wordt geladen",
         "This API document is not available on this instance.": "Dit API-document is op deze installatie niet beschikbaar.",
         "You may not read this API document.": "Je mag dit API-document niet lezen.",
-        "The API document could not be loaded.": "Het API-document kon niet worden geladen."
+        "The API document could not be loaded.": "Het API-document kon niet worden geladen.",
+        "Federation is available but disabled. Switch it on below to announce this catalog and pull peer catalogs.": "Federatie is beschikbaar maar uitgeschakeld. Zet hem hieronder aan om deze catalogus aan te melden en catalogi van peers op te halen.",
+        "Federation is on": "Federatie staat aan",
+        "Registered with the directory.": "Aangemeld bij de directory.",
+        "Registered with the directory on {date}.": "Aangemeld bij de directory op {date}.",
+        "Registration with the directory failed: {reason}": "Aanmelden bij de directory is mislukt: {reason}",
+        "unknown reason": "onbekende reden",
+        "Not registered: the OpenCatalogi app is not installed.": "Niet aangemeld: de app OpenCatalogi is niet geïnstalleerd.",
+        "Not registered: federation is switched off.": "Niet aangemeld: federatie staat uit.",
+        "Not registered with the directory yet.": "Nog niet aangemeld bij de directory.",
+        "Federation is on and this catalog is registered": "Federatie staat aan en deze catalogus is aangemeld",
+        "Federation is off": "Federatie staat uit",
+        "Could not switch federation": "Federatie kon niet worden omgezet"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -293,4 +293,62 @@ class FederationConfigTest extends TestCase {
 		$this->strings(values: ['local_federation_hosts' => '  ']);
 		$this->assertSame(expected: [], actual: (new FederationConfig(appConfig: $this->appConfig))->getLocalFederationHosts());
 	}//end testBlankLocalHostsMeanNone()
+
+	/**
+	 * The switch writes federation_enabled.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testTheSwitchWritesTheEnabledFlag(): void {
+		$this->appConfig->expects($this->exactly(2))->method('setValueBool')
+			->willReturnCallback(
+				function (string $app, string $key, bool $value): bool {
+					$this->assertSame(expected: ['stackiq', 'federation_enabled'], actual: [$app, $key]);
+					return true;
+				}
+			);
+
+		$config = new FederationConfig(appConfig: $this->appConfig);
+		$config->setEnabled(enabled: true);
+		$config->setEnabled(enabled: false);
+	}//end testTheSwitchWritesTheEnabledFlag()
+
+	/**
+	 * A recorded registration reads back; nothing recorded or garbage reads as none.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testTheRegistrationRoundTripsAndDefaultsToNone(): void {
+		$store = [];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use (&$store): string {
+				return (string) ($store[$key] ?? $default);
+			}
+		);
+		$this->appConfig->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$store): bool {
+				$store[$key] = $value;
+				return true;
+			}
+		);
+		$config = new FederationConfig(appConfig: $this->appConfig);
+
+		$this->assertSame(expected: ['state' => 'none', 'reason' => '', 'at' => null], actual: $config->getRegistration());
+
+		$config->setRegistration(state: 'failed', reason: 'directory refused', at: '2026-11-21T17:00:00+00:00');
+		$this->assertSame(
+			expected: ['state' => 'failed', 'reason' => 'directory refused', 'at' => '2026-11-21T17:00:00+00:00'],
+			actual: $config->getRegistration()
+		);
+
+		$store['federation_registration'] = 'not json';
+		$this->assertSame(expected: ['state' => 'none', 'reason' => '', 'at' => null], actual: $config->getRegistration());
+
+		$store['federation_registration'] = json_encode(['state' => 7, 'reason' => ['x']]);
+		$this->assertSame(expected: ['state' => 'none', 'reason' => '', 'at' => null], actual: $config->getRegistration());
+	}//end testTheRegistrationRoundTripsAndDefaultsToNone()
 }//end class

@@ -86,11 +86,12 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	/**
 	 * The service under test.
 	 *
-	 * @param ConnectionReportService|null $reports The connection reports.
+	 * @param ConnectionReportService|null $reports   The connection reports.
+	 * @param bool                         $installed Whether OpenCatalogi counts as installed.
 	 *
 	 * @return FederationService
 	 */
-	private function service(?ConnectionReportService $reports = null): FederationService {
+	private function service(?ConnectionReportService $reports = null, bool $installed = true): FederationService {
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => (string)($this->store[$key] ?? $default)
@@ -107,9 +108,20 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 				return true;
 			}
 		);
+		$appConfig->method('setValueBool')->willReturnCallback(
+			function (string $app, string $key, bool $value): bool {
+				$this->store[$key] = $value;
+				return true;
+			}
+		);
+
+		$installedApps = ['openregister'];
+		if ($installed === true) {
+			$installedApps[] = FederationService::OPENCATALOGI_APP_ID;
+		}
 
 		$appManager = $this->createMock(originalClassName: IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['openregister', FederationService::OPENCATALOGI_APP_ID]);
+		$appManager->method('getInstalledApps')->willReturn($installedApps);
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
@@ -346,4 +358,87 @@ class FederationServiceOpenCatalogiTest extends TestCase {
 	public function testPullAllPeersWithoutPeers(): void {
 		$this->assertSame(expected: ['ok' => true, 'reason' => 'ok', 'peers' => []], actual: $this->service()->pullAllPeers());
 	}//end testPullAllPeersWithoutPeers()
+
+	/**
+	 * Switching federation on announces the instance and records it as registered.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testSwitchingOnAnnouncesAndRecordsTheRegistration(): void {
+		$this->store     = ['federation_enabled' => false];
+		$broadcast       = $this->broadcast();
+		$this->services['OCA\\OpenCatalogi\\Service\\BroadcastService'] = $broadcast;
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$reports->expects($this->once())->method('federationPeersChanged')
+			->with($this->callback(static fn (array $status): bool => $status['enabled'] === true));
+
+		$status = $this->service(reports: $reports)->setEnabled(enabled: true);
+
+		$this->assertTrue(condition: $this->store['federation_enabled']);
+		$this->assertSame(expected: [FederationConfig::DEFAULT_DIRECTORY_URL], actual: $broadcast->urls);
+		$this->assertTrue(condition: $status['enabled']);
+		$this->assertSame(expected: 'registered', actual: $status['registration']['state']);
+		$this->assertSame(expected: '', actual: $status['registration']['reason']);
+		$this->assertMatchesRegularExpression(pattern: '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', string: (string) $status['registration']['at']);
+	}//end testSwitchingOnAnnouncesAndRecordsTheRegistration()
+
+	/**
+	 * A refused broadcast is recorded as failed, with the directory's reason.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testARefusedAnnounceIsRecordedAsFailedWithItsReason(): void {
+		$this->store = ['federation_enabled' => false];
+		$this->services['OCA\\OpenCatalogi\\Service\\BroadcastService'] = $this->broadcast(failure: new RuntimeException('directory refused'));
+
+		$status = $this->service()->setEnabled(enabled: true);
+
+		$this->assertTrue(condition: $status['enabled']);
+		$this->assertSame(expected: 'failed', actual: $status['registration']['state']);
+		$this->assertSame(expected: 'directory refused', actual: $status['registration']['reason']);
+	}//end testARefusedAnnounceIsRecordedAsFailedWithItsReason()
+
+	/**
+	 * Without OpenCatalogi the switch is kept and the registration says unavailable.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenCatalogiTheRegistrationIsUnavailable(): void {
+		$this->store = ['federation_enabled' => false];
+		$broadcast   = $this->broadcast();
+		$this->services['OCA\\OpenCatalogi\\Service\\BroadcastService'] = $broadcast;
+
+		$status = $this->service(installed: false)->setEnabled(enabled: true);
+
+		$this->assertSame(expected: [], actual: $broadcast->urls);
+		$this->assertFalse(condition: $status['available']);
+		$this->assertTrue(condition: $status['enabled']);
+		$this->assertSame(expected: 'unavailable', actual: $status['registration']['state']);
+		$this->assertSame(expected: 'OpenCatalogi unavailable', actual: $status['registration']['reason']);
+	}//end testWithoutOpenCatalogiTheRegistrationIsUnavailable()
+
+	/**
+	 * Switching off announces nothing and records the registration as off.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testSwitchingOffAnnouncesNothingAndRecordsOff(): void {
+		$broadcast = $this->broadcast();
+		$this->services['OCA\\OpenCatalogi\\Service\\BroadcastService'] = $broadcast;
+
+		$status = $this->service()->setEnabled(enabled: false);
+
+		$this->assertFalse(condition: $this->store['federation_enabled']);
+		$this->assertSame(expected: [], actual: $broadcast->urls);
+		$this->assertFalse(condition: $status['enabled']);
+		$this->assertSame(expected: 'off', actual: $status['registration']['state']);
+	}//end testSwitchingOffAnnouncesNothingAndRecordsOff()
 }//end class

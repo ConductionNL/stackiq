@@ -126,4 +126,22 @@ final class FederationControllerTest extends TestCase {
 		self::assertSame(400, $refused->getStatus());
 		self::assertSame(['message' => 'No peers configured'], $refused->getData());
 	}//end testPullAnswersTheResultOrTheReason()
+
+	/**
+	 * The switch passes the flag and answers the status after it.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 *
+	 * @return void
+	 */
+	public function testTheSwitchPassesTheFlagAndAnswersTheStatus(): void {
+		$controller = $this->controller();
+		$status     = ['enabled' => true, 'registration' => ['state' => 'registered', 'reason' => '', 'at' => '2026-11-21T17:00:00+00:00']];
+		$this->federation->expects($this->once())->method('setEnabled')->with(true)->willReturn($status);
+
+		$response = $controller->setEnabled(enabled: true);
+
+		self::assertSame(expected: 200, actual: $response->getStatus());
+		self::assertSame(expected: $status, actual: $response->getData());
+	}//end testTheSwitchPassesTheFlagAndAnswersTheStatus()
 }//end class

@@ -62,10 +62,29 @@
 			{{
 				t(
 					'stackiq',
-					'Federation is available but disabled. Enable it in the app configuration to pull peer catalogs.',
+					'Federation is available but disabled. Switch it on below to announce this catalog and pull peer catalogs.',
 				)
 			}}
 		</NcNoteCard>
+
+		<!-- The switch, and whether this catalog is registered with the directory. -->
+		<div class="federation-switch">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				data-testid="federation-switch"
+				:modelValue="status.enabled"
+				:disabled="switching"
+				@update:modelValue="setEnabled">
+				{{ t('stackiq', 'Federation is on') }}
+			</NcCheckboxRadioSwitch>
+			<p
+				class="help-text federation-registration"
+				:class="{ 'federation-registration--failed': status.registration.state === 'failed' }"
+				data-testid="federation-registration"
+				role="status">
+				{{ registrationText }}
+			</p>
+		</div>
 
 		<div class="federation-directory">
 			<h3>{{ t('stackiq', 'Directory') }}</h3>
@@ -196,6 +215,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
@@ -207,7 +227,7 @@ import LanDisconnect from 'vue-material-design-icons/LanDisconnect.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-import { apiRequest, normaliseFederationStatus } from '../../../utils/adminApi.js'
+import { apiRequest, federationRegistrationText, normaliseFederationStatus } from '../../../utils/adminApi.js'
 
 /**
  * Federation settings admin section.
@@ -219,6 +239,7 @@ export default defineComponent({
 	components: {
 		AlwaysVisibleSection,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -237,6 +258,7 @@ export default defineComponent({
 			loading: false,
 			adding: false,
 			pulling: false,
+			switching: false,
 			removingUrl: null,
 			newPeerUrl: '',
 			pullSummary: '',
@@ -244,11 +266,24 @@ export default defineComponent({
 				available: false,
 				enabled: false,
 				directoryUrl: '',
+				registration: { state: 'none', reason: '', at: null },
 				staleAfter: 3,
 				message: '',
 				peers: [],
 			},
 		}
+	},
+
+	computed: {
+		/**
+		 * Whether this catalog is registered with the directory, and if not why.
+		 *
+		 * @return {string} The line under the switch.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+		 */
+		registrationText() {
+			return federationRegistrationText(this.status.registration, (text, vars) => t('stackiq', text, vars))
+		},
 	},
 
 	/**
@@ -311,6 +346,34 @@ export default defineComponent({
 				)
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Switch federation on or off. Switching it on announces this catalog to
+		 * the directory; the answer is the status with the registration.
+		 *
+		 * @param {boolean} enabled - Whether federation is on.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+		 */
+		async setEnabled(enabled) {
+			this.switching = true
+			try {
+				const data = await apiRequest('federation/enabled', {
+					method: 'PUT',
+					body: { enabled: enabled === true },
+				})
+				this.status = normaliseFederationStatus(data)
+				if (enabled === true && this.status.registration.state === 'registered') {
+					showSuccess(t('stackiq', 'Federation is on and this catalog is registered'))
+				} else if (enabled !== true) {
+					showSuccess(t('stackiq', 'Federation is off'))
+				}
+			} catch (error) {
+				showError(t('stackiq', 'Could not switch federation') + ': ' + error.message)
+			} finally {
+				this.switching = false
 			}
 		},
 
@@ -402,6 +465,14 @@ export default defineComponent({
 	font-size: 12px;
 	color: var(--color-text-lighter);
 	margin: 0;
+}
+
+.federation-switch {
+	margin-bottom: calc(var(--default-grid-baseline) * 4);
+}
+
+.federation-registration--failed {
+	color: var(--color-error-text);
 }
 
 .federation-directory,
