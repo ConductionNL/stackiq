@@ -134,6 +134,32 @@
 							],
 							"emptyText": "No steps recorded for this process yet"
 						}
+					},
+					{
+						"id": "process-ai-systems",
+						"type": "object-list",
+						"title": "AI systems",
+						"icon": "RobotOutline",
+						"content": {
+							"register": "@resolve:voorzieningen_register",
+							"schema": "aiSystem",
+							"filter": {
+								"processes": "@objectId"
+							},
+							"columns": [
+								"name",
+								"kind",
+								"module",
+								"aiActRiskCategory",
+								"status"
+							],
+							"sort": {
+								"name": "asc"
+							},
+							"limit": 100,
+							"rowRoute": "AiSystemDetail",
+							"emptyText": "No AI system supports this process yet"
+						}
 					}
 				],
 				"layout": [
@@ -152,6 +178,14 @@
 						"gridY": 5,
 						"gridWidth": 12,
 						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "process-ai-systems",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 4
 					}
 				],
 				"bodyWidgets": [

@@ -2482,6 +2482,8 @@
         "Why this change.": "Waarom deze wijziging.",
         "Applied to": "Doorgevoerd in",
         "The usage the change was written to when the scenario was applied, so a second apply changes nothing.": "Het gebruik waarin de wijziging is weggeschreven toen het scenario werd doorgevoerd, zodat een tweede keer doorvoeren niets verandert.",
-        "DPIA": "DPIA"
+        "DPIA": "DPIA",
+        "No AI system supports this process yet": "Nog geen AI-systeem ondersteunt dit proces",
+        "The business processes this AI system supports.": "De bedrijfsprocessen die dit AI-systeem ondersteunt."
     }
 }

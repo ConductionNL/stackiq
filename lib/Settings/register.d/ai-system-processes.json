@@ -1,0 +1,29 @@
+{
+  "$comment": "capability-rows-the-code-does-not-yet-meet task 5 (REQ-CLR-006): an AI system names the business processes it supports. The AI system page shows them in its data widget; a business process page lists the AI systems that support it (ProcesDetail process-ai-systems, filter processes = the process).",
+  "components": {
+    "schemas": {
+      "aiSystem": {
+        "slug": "aiSystem",
+        "version": "0.1.1",
+        "properties": {
+          "processes": {
+            "description": "The business processes this AI system supports.",
+            "type": "array",
+            "visible": true,
+            "order": 5,
+            "facetable": false,
+            "title": "Business processes",
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/process",
+              "x-label-field": "name"
+            }
+          }
+        }
+      }
+    }
+  }
+}
