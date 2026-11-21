@@ -26,6 +26,16 @@
 				</template>
 				{{ t('stackiq', 'Refresh') }}
 			</NcButton>
+			<NcButton
+				variant="secondary"
+				:disabled="!selectedOrg"
+				data-testid="compare-with-plan"
+				@click="compareWithPlan">
+				<template #icon>
+					<CompareHorizontal :size="20" />
+				</template>
+				{{ t('stackiq', 'Compare with the plan') }}
+			</NcButton>
 		</div>
 
 		<div class="rm-filters">
@@ -130,6 +140,7 @@ import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vu
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
+import CompareHorizontal from 'vue-material-design-icons/CompareHorizontal.vue'
 import MapClock from 'vue-material-design-icons/MapClock.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
@@ -174,6 +185,7 @@ export default {
 		AlertCircle,
 		ClockAlert,
 		CloseCircle,
+		CompareHorizontal,
 	},
 
 	/**
@@ -344,6 +356,22 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Open the comparison of today with the plan for the selected organisation.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 */
+		compareWithPlan() {
+			if (!this.selectedOrg?.uuid) {
+				return
+			}
+			this.$router.push({
+				name: 'LandscapeComparison',
+				query: { organisation: this.selectedOrg.uuid },
+			})
 		},
 
 		/**

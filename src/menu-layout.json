@@ -12,7 +12,8 @@
 		"Views": "Architecture",
 		"Gegevensmodel": "Architecture",
 		"KnowledgeBaseMenu": "Modules",
-		"Architectuurbesluiten": "Architecture"
+		"Architectuurbesluiten": "Architecture",
+		"Scenarios": "Architecture"
 	},
 	"removals": [],
 	"settingsSection": []
