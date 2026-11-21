@@ -55,6 +55,7 @@ import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FileTableOutline from 'vue-material-design-icons/FileTableOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import FormatListNumbered from 'vue-material-design-icons/FormatListNumbered.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import Handshake from 'vue-material-design-icons/Handshake.vue'
@@ -84,6 +85,7 @@ import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import SitemapOutline from 'vue-material-design-icons/SitemapOutline.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
@@ -138,6 +140,7 @@ export default {
 	FileTableOutline,
 	FolderOutline,
 	FormatListBulleted,
+	FormatListNumbered,
 	Gauge,
 	Gavel,
 	Handshake,
@@ -167,6 +170,7 @@ export default {
 	ShieldLockOutline,
 	ShieldOutline,
 	Sitemap,
+	SitemapOutline,
 	SourceBranch,
 	Star,
 	StoreOutline,
