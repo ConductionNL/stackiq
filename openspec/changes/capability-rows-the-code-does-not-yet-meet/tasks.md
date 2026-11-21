@@ -149,5 +149,6 @@
 - **files**: `src/views/settings/sections/FederationSettings.vue`, `src/manifest.d/connections.json`
 - **acceptance_criteria**:
   - GIVEN federation is off WHEN an admin switches it on in the exchange settings THEN the instance registers with the directory and the page shows the registration status
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/federation-settings.spec.ts`)
+- Done 21 Nov: the Catalog federation section has a switch (Federation is on) that sends `PUT /api/federation/enabled` (`FederationController::setEnabled`, admin setting). Switching on writes `federation_enabled`, announces the instance through OpenCatalogi's BroadcastService and records the registration (`federation_registration`: registered, unavailable when OpenCatalogi is missing, failed with the reason; `off` when switched off); integriq is told the new state. `GET /api/federation/status` carries `registration`, and the line under the switch says registered on a date or why not. The integriq disabled message now points to the section instead of occ. Tests: PHPUnit `FederationServiceOpenCatalogiTest` (on/registered, refused/failed, unavailable, off), `FederationConfigTest` (switch, registration round trip), `FederationControllerTest` (switch); vitest `tests/vitest/federationSwitch.spec.js` (8). The Playwright case in `federation-settings.spec.ts` is written (no longer fixme) and not run, so Test stays open.

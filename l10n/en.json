@@ -2461,6 +2461,18 @@
         "Loading the API document": "Loading the API document",
         "This API document is not available on this instance.": "This API document is not available on this instance.",
         "You may not read this API document.": "You may not read this API document.",
-        "The API document could not be loaded.": "The API document could not be loaded."
+        "The API document could not be loaded.": "The API document could not be loaded.",
+        "Federation is available but disabled. Switch it on below to announce this catalog and pull peer catalogs.": "Federation is available but disabled. Switch it on below to announce this catalog and pull peer catalogs.",
+        "Federation is on": "Federation is on",
+        "Registered with the directory.": "Registered with the directory.",
+        "Registered with the directory on {date}.": "Registered with the directory on {date}.",
+        "Registration with the directory failed: {reason}": "Registration with the directory failed: {reason}",
+        "unknown reason": "unknown reason",
+        "Not registered: the OpenCatalogi app is not installed.": "Not registered: the OpenCatalogi app is not installed.",
+        "Not registered: federation is switched off.": "Not registered: federation is switched off.",
+        "Not registered with the directory yet.": "Not registered with the directory yet.",
+        "Federation is on and this catalog is registered": "Federation is on and this catalog is registered",
+        "Federation is off": "Federation is off",
+        "Could not switch federation": "Could not switch federation"
     }
 }

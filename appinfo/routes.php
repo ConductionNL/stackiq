@@ -306,6 +306,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],
         ['name' => 'federation#removePeer', 'url' => '/api/federation/peers', 'verb' => 'DELETE'],
         ['name' => 'federation#pull', 'url' => '/api/federation/pull', 'verb' => 'POST'],
+        ['name' => 'federation#setEnabled', 'url' => '/api/federation/enabled', 'verb' => 'PUT'],
 
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)

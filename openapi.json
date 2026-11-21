@@ -3228,6 +3228,49 @@
                 ]
             }
         },
+        "/federation/enabled": {
+            "put": {
+                "operationId": "federation-set-enabled",
+                "summary": "Switch federation on or off; switching it on announces the instance",
+                "description": "Switch federation on or off; switching it on announces the instance to the configured directory through OpenCatalogi and records the registration: registered, unavailable (OpenCatalogi missing) or failed with the reason. Answers the federation status after the switch.",
+                "tags": [
+                    "federation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The federation status after the switch, with `registration` `{state, reason, at}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/federation/peers": {
             "post": {
                 "operationId": "federation-add-peer",
