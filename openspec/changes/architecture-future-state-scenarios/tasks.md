@@ -62,7 +62,7 @@
   - GIVEN the feature page WHEN it is read THEN it shows the plan comparison, a scenario page and the apply result, each in a screenshot
   - GIVEN a Dutch instance WHEN the scenario pages render THEN every new label and enum value reads in Dutch
 - [ ] Implement
-  > 21 Nov: the English and Dutch strings of the comparison, the scenario pages and the `scenario` and `scenarioChange` schemas (titles, descriptions and enum values) are in `l10n/en.json`, `l10n/nl.json` and their `.js`. Left: `docs/features/future-state-scenarios.md` with its three screenshots, which need a live instance.
+  > 21 Nov: the English and Dutch strings of the comparison, the scenario pages and the `scenario` and `scenarioChange` schemas (titles, descriptions and enum values) are in `l10n/en.json`, `l10n/nl.json` and their `.js`. `docs/features/future-state-scenarios.md` is written (the plan comparison, writing a scenario, the lifecycle, the apply and the API) and linked from `docs/features/README.md`. Left: its three screenshots, which need a live instance.
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
 
 ## Verification
