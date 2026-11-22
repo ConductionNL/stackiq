@@ -9,8 +9,8 @@
   - GIVEN imported GEMMA views WHEN the plate loads THEN a picker lists them with the GEMMA release, and `useViewStore` fetches the chosen view with `include_gebruik`
   - GIVEN a chosen view WHEN it renders THEN reference components are grouped by the view's groups, keeping the gap, covered and overlap states
   - GIVEN `?view=<id>` in the URL WHEN the page opens THEN that view is chosen
-- [ ] Implement
-- [ ] Test (vitest `gemmaPlateViews.spec.js`)
+- [x] Implement
+- [x] Test (vitest `gemmaPlateViews.spec.js`)
 
 ### Task 2: Inhabitants on the organisation
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
@@ -37,7 +37,7 @@
 - **acceptance_criteria**:
   - GIVEN the Layers control WHEN "What comparable organisations use" is switched on THEN the table shows per component the own applications and the peer applications with counts, under a heading naming the band
   - GIVEN a selected component WHEN the side panel renders THEN it lists the peer applications with counts
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `peerUsageTable.spec.js`, Playwright `gemma-plate-peers.spec.ts`)
 
 ### Task 5: Definitions in the reference component facet
@@ -47,8 +47,8 @@
   - GIVEN the reference component facet WHEN it renders THEN each value has an information button whose popover shows the name, "from GEMMA", `element.documentation` and a "More in GEMMA Online" link to `element.gemmaUrl`
   - GIVEN the facet endpoint WHEN it returns reference component buckets THEN each bucket carries `documentation` and `gemmaUrl`
   - GIVEN a component without documentation WHEN its popover opens THEN only the name and the link show
-- [ ] Implement
-- [ ] Test (vitest `gemmaDefinitionPopover.spec.js`, PHPUnit `FacetServiceDefinitionTest`)
+- [x] Implement
+- [x] Test (vitest `gemmaDefinitionPopover.spec.js`, PHPUnit `FacetServiceDefinitionTest`)
 
 ### Task 6: Documentation and matrix
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md
@@ -56,4 +56,4 @@
 - **acceptance_criteria**:
   - GIVEN the feature doc WHEN read THEN it explains the view picker, the comparable organisations layer and the anonymity rule
   - GIVEN the tasks are done WHEN the change is archived THEN the three rows move back to built with new evidence
-- [ ] Implement
+- [x] Implement

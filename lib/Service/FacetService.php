@@ -255,7 +255,7 @@ class FacetService implements FacetServiceInterface {
 			baseObjects: $baseObjects
 		);
 
-		$dimValsByObjId = $this->buildDimensionValueMap(modulesByObjectId: $modulesByObjectId);
+		[$dimValsByObjId, $definitions] = $this->dimensionValuesAndDefinitions(modulesByObjectId: $modulesByObjectId);
 
 		// Supplier (insight-supplier-facet D3): the base object's OWN provider,
 		// for a service too, keyed by organisation id and labelled by name (D2).
@@ -272,6 +272,7 @@ class FacetService implements FacetServiceInterface {
 			selectedFilters: $request['filters'],
 			labels: ['supplier' => $this->organisationNames(objectService: $objectService, identifiers: array_values(array_unique($supplierIds)))]
 		);
+		$facets['referenceComponent'] = self::withDefinitions(buckets: $facets['referenceComponent'], definitions: $definitions);
 
 		$matchedObjectIds = $this->filterObjectIds(
 			dimValsByObjId: $dimValsByObjId,
@@ -740,15 +741,17 @@ class FacetService implements FacetServiceInterface {
 	 * Build the per-object GEMMA dimension value map: for every base object,
 	 * the set of referenceComponent/standard names it carries directly, and
 	 * the set of domain/applicationService names resolved transitively via its
-	 * linked `element` objects.
+	 * linked `element` objects. From the same element lookup, the GEMMA
+	 * definition of each referenceComponent value by its display name.
 	 *
 	 * @param array<string,array<int,array>> $modulesByObjectId Object id => module objects.
 	 *
-	 * @return array<string,array<string,string[]>> Object id => dimension => distinct values.
+	 * @return array{0: array<string,array<string,string[]>>, 1: array<string,array{documentation: string, gemmaUrl: string}>}
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 	 */
-	private function buildDimensionValueMap(array $modulesByObjectId): array {
+	private function dimensionValuesAndDefinitions(array $modulesByObjectId): array {
 		// Pass 1: direct fields (referenceComponent identifiers + standard identifiers).
 		$direct = array_map(fn (array $modules): array => $this->directDimensions(modules: $modules), $modulesByObjectId);
 		$allRefCompIds = array_values(array_unique(array_merge([], ...array_values(array_column($direct, 'refCompIds')))));
@@ -765,8 +768,77 @@ class FacetService implements FacetServiceInterface {
 		);
 
 		// Assemble the final per-object dimension map.
-		return array_map(fn (array $values): array => $this->objectDimensions(resolution: $resolution, direct: $values), $direct);
-	}//end buildDimensionValueMap()
+		return [
+			array_map(fn (array $values): array => $this->objectDimensions(resolution: $resolution, direct: $values), $direct),
+			$this->definitionsByName(elementsById: $elementsById, refCompIds: $allRefCompIds),
+		];
+	}//end dimensionValuesAndDefinitions()
+
+	/**
+	 * The GEMMA definition and GEMMA Online link of each referenceComponent,
+	 * by the display name its facet value carries. The first element with a
+	 * name keeps it.
+	 *
+	 * @param array<string,array> $elementsById Element identifier => element object.
+	 * @param array<int,string> $refCompIds The referenceComponent identifiers.
+	 *
+	 * @return array<string,array{documentation: string, gemmaUrl: string}>
+	 *
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 */
+	private function definitionsByName(array $elementsById, array $refCompIds): array {
+		$definitions = [];
+		foreach ($refCompIds as $refCompId) {
+			$element = ($elementsById[$refCompId] ?? []);
+			$name = $this->elementDisplayName(element: $element, fallbackIdentifier: $refCompId);
+			if (isset($definitions[$name]) === true) {
+				continue;
+			}
+
+			$definitions[$name] = [
+				'documentation' => self::trimmedString(value: ($element['documentation'] ?? null)),
+				'gemmaUrl' => self::trimmedString(value: ($element['gemmaUrl'] ?? null)),
+			];
+		}
+
+		return $definitions;
+	}//end definitionsByName()
+
+	/**
+	 * A value as a trimmed string, '' when it is not a string.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string The string.
+	 */
+	private static function trimmedString(mixed $value): string {
+		if (is_string($value) === true) {
+			return trim($value);
+		}
+
+		return '';
+	}//end trimmedString()
+
+	/**
+	 * The referenceComponent buckets, each with its GEMMA definition and
+	 * GEMMA Online link ('' when the element has none).
+	 *
+	 * @param array<int,array{value:string,label:string,count:int}> $buckets The buckets.
+	 * @param array<string,array{documentation: string, gemmaUrl: string}> $definitions By display name.
+	 *
+	 * @return array<int,array{value:string,label:string,count:int,documentation:string,gemmaUrl:string}>
+	 *
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 */
+	private static function withDefinitions(array $buckets, array $definitions): array {
+		return array_map(
+			static fn (array $bucket): array => array_merge(
+				$bucket,
+				($definitions[$bucket['value']] ?? ['documentation' => '', 'gemmaUrl' => ''])
+			),
+			$buckets
+		);
+	}//end withDefinitions()
 
 	/**
 	 * The referenceComponent identifiers and the standard names an object's modules carry, each distinct.

@@ -8,6 +8,19 @@
  use offers it) or overlap. A thin renderer over the bounded,
  organisation-scoped `GET /api/reference-component-coverage`.
 
+ A picker chooses one imported GEMMA view (plate); the plate then draws that
+ view's reference components in the view's own groups, read through
+ `GET /api/views/{viewId}` with `include_gebruik`, and keeps the choice in
+ the URL as `?view=<id>`. Without a chosen view it groups the whole model.
+
+ The layer "What comparable organisations use" adds, from
+ `GET /api/reference-component-coverage/peers`, the applications comparable
+ organisations use per component with their counts, as a table and in the
+ side panel; the endpoint never names an organisation.
+
+ @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+
+ @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 -->
 <template>
@@ -47,6 +60,25 @@
 			trackBy="uuid"
 			label="label"
 			@update:modelValue="loadCoverage" />
+
+		<NcSelect
+			v-model="selectedView"
+			class="gemma-plate__org"
+			:options="viewChoices"
+			:inputLabel="t('stackiq', 'GEMMA view')"
+			:placeholder="t('stackiq', 'The whole GEMMA model')"
+			:loading="viewStore.loading"
+			trackBy="id"
+			label="label"
+			data-testid="gemma-plate-view"
+			@update:modelValue="pickView" />
+
+		<NcNoteCard
+			v-if="viewsLoaded && !viewChoices.length"
+			type="info"
+			data-testid="gemma-plate-no-views">
+			{{ t('stackiq', 'Import the GEMMA model to pick a GEMMA view.') }}
+		</NcNoteCard>
 
 		<NcLoadingIcon v-if="loading" :size="44" />
 
@@ -132,6 +164,17 @@
 				</NcButton>
 			</div>
 
+			<fieldset class="gemma-plate__layers" data-testid="gemma-plate-layers">
+				<legend>{{ t('stackiq', 'Layers') }}</legend>
+				<NcCheckboxRadioSwitch
+					v-model="showPeers"
+					type="switch"
+					data-testid="gemma-plate-layer-peers"
+					@update:modelValue="togglePeers">
+					{{ t('stackiq', 'What comparable organisations use') }}
+				</NcCheckboxRadioSwitch>
+			</fieldset>
+
 			<div class="gemma-plate__body">
 				<div class="gemma-plate__plate" data-testid="gemma-plate-groups">
 					<section
@@ -195,9 +238,35 @@
 							)
 						}}
 					</p>
+					<template v-if="showPeers && peers">
+						<h4 class="gemma-plate__detail-heading">
+							{{ t('stackiq', 'Comparable organisations use') }}
+						</h4>
+						<ul
+							v-if="selectedPeers.length"
+							class="gemma-plate__peers"
+							data-testid="gemma-plate-detail-peers">
+							<li
+								v-for="application in selectedPeers"
+								:key="application.moduleId">
+								{{ peerLabel(application) }}
+							</li>
+						</ul>
+						<p v-else class="gemma-plate__hint">
+							{{ t('stackiq', 'None') }}
+						</p>
+					</template>
 				</aside>
 			</div>
 
+			<NcLoadingIcon v-if="showPeers && peersLoading" :size="32" />
+			<NcNoteCard v-else-if="showPeers && peersError" type="error">
+				{{ peersError }}
+			</NcNoteCard>
+			<PeerUsageTable
+				v-else-if="showPeers && peers"
+				:components="plateComponents"
+				:peers="peers" />
 			<CoverageViewMap :components="coverage.components" />
 		</template>
 	</div>
@@ -210,20 +279,30 @@ import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import PeerUsageTable from '../../components/gemma/PeerUsageTable.vue'
 import CoverageViewMap from './CoverageViewMap.vue'
+import { peerLabel } from '../../components/gemma/peerLabel.js'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
+import pinia from '../../pinia.js'
+import { useViewStore } from '../../store/modules/view.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
+import { peerApplicationsOf, peerIndex } from '../../utils/peerUsage.js'
 import {
 	filterCoverage,
+	filterGroups,
 	groupCoverage,
+	viewGroups,
+	viewId,
+	viewOptions,
 } from '../../utils/referenceComponentCoverage.js'
 
 /**
@@ -243,10 +322,12 @@ export default {
 		CoverageViewMap,
 		Download,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
+		PeerUsageTable,
 	},
 
 	/**
@@ -258,7 +339,7 @@ export default {
 	 */
 	setup() {
 		useLiveCollections(objectStore, ['organization'])
-		return {}
+		return { viewStore: useViewStore(pinia) }
 	},
 
 	data() {
@@ -269,6 +350,12 @@ export default {
 			coverage: null,
 			filter: 'all',
 			selected: null,
+			selectedView: null,
+			viewsLoaded: false,
+			showPeers: false,
+			peers: null,
+			peersLoading: false,
+			peersError: null,
 		}
 	},
 
@@ -313,10 +400,66 @@ export default {
 		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		groups() {
+			if (this.shownView) {
+				return filterGroups(
+					viewGroups(
+						this.shownView,
+						this.coverage?.components || [],
+						t('stackiq', 'Other'),
+					),
+					this.filter,
+				)
+			}
 			return groupCoverage(
 				filterCoverage(this.coverage?.components || [], this.filter),
 				t('stackiq', 'Other'),
 			)
+		},
+
+		/**
+		 * The components on the plate, in plate order.
+		 *
+		 * @return {Array<object>} Coverage rows.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 */
+		plateComponents() {
+			return this.groups.flatMap((group) => group.components)
+		},
+
+		/**
+		 * What comparable organisations use for the selected component.
+		 *
+		 * @return {Array<object>} Peer applications.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 */
+		selectedPeers() {
+			return this.selected
+				? peerApplicationsOf(peerIndex(this.peers), this.selected)
+				: []
+		},
+
+		/**
+		 * The imported GEMMA views to pick from, each with its release.
+		 *
+		 * @return {Array<{id: string, label: string}>} Options.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		viewChoices() {
+			return viewOptions(this.viewStore?.views)
+		},
+
+		/**
+		 * The fetched view the plate draws, once it is the chosen one.
+		 *
+		 * @return {object|null} The view.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		shownView() {
+			const active = this.viewStore?.activeView
+			if (!this.selectedView || !active) {
+				return null
+			}
+			return viewId(active) === this.selectedView.id ? active : null
 		},
 
 		/**
@@ -354,6 +497,24 @@ export default {
 	},
 
 	/**
+	 * Load the views to pick from and open the view the URL names.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+	 */
+	async created() {
+		this.viewStore.setIncludeGebruik(true)
+		await this.viewStore.fetchViews()
+		this.viewsLoaded = true
+		const wanted = this.routeView()
+		const option = this.viewChoices.find((choice) => choice.id === wanted)
+		if (option) {
+			this.selectedView = option
+			await this.viewStore.fetchView(option.id)
+		}
+	},
+
+	/**
 	 * Load the organisations the picker offers.
 	 *
 	 * @return {Promise<void>}
@@ -365,6 +526,107 @@ export default {
 
 	methods: {
 		t,
+		peerLabel,
+
+		/**
+		 * Load what comparable organisations use when the layer is switched on.
+		 *
+		 * @param {boolean} on Whether the layer is on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 */
+		async togglePeers(on) {
+			if (on && !this.peers) {
+				await this.loadPeers()
+			}
+		},
+
+		/**
+		 * Load what comparable organisations use, for the selected organisation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 */
+		async loadPeers() {
+			this.peers = null
+			this.peersError = null
+			if (!this.selectedOrg?.uuid) {
+				return
+			}
+			this.peersLoading = true
+			try {
+				const response = await axios.get(
+					generateUrl('/apps/stackiq/api/reference-component-coverage/peers'),
+					{ params: { organisation: this.selectedOrg.uuid } },
+				)
+				this.peers = response.data
+			} catch (error) {
+				this.peersError =
+					error?.response?.data?.message
+					|| error?.response?.data?.error
+					|| t('stackiq', 'What comparable organisations use could not be loaded.')
+			} finally {
+				this.peersLoading = false
+			}
+		},
+
+		/**
+		 * The view id in the URL, or ''.
+		 *
+		 * @return {string} The id.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		routeView() {
+			const fromRoute = this.$route?.query?.view
+			if (typeof fromRoute === 'string') {
+				return fromRoute
+			}
+			return new URLSearchParams(window.location.search).get('view') || ''
+		},
+
+		/**
+		 * Draw the picked view and name it in the URL; no pick draws the whole model.
+		 *
+		 * @param {{id: string}|null} option The picked view.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		async pickView(option) {
+			this.selected = null
+			this.writeRouteView(option?.id || '')
+			if (option?.id) {
+				await this.viewStore.fetchView(option.id)
+			}
+		},
+
+		/**
+		 * Keep the chosen view in the URL.
+		 *
+		 * @param {string} id The view id, '' to drop it.
+		 * @return {void}
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 */
+		writeRouteView(id) {
+			if (this.$router && this.$route) {
+				const query = { ...this.$route.query }
+				if (id) {
+					query.view = id
+				} else {
+					delete query.view
+				}
+				this.$router.replace({ query }).catch(() => {
+					// NavigationDuplicated: the same query, nothing to do.
+				})
+				return
+			}
+			const url = new URL(window.location.href)
+			if (id) {
+				url.searchParams.set('view', id)
+			} else {
+				url.searchParams.delete('view')
+			}
+			window.history.replaceState(window.history.state, '', url.toString())
+		},
 
 		/**
 		 * Load the coverage of the selected organisation.
@@ -374,6 +636,11 @@ export default {
 		 */
 		async loadCoverage() {
 			this.selected = null
+			this.peers = null
+			this.peersError = null
+			if (this.showPeers) {
+				this.loadPeers()
+			}
 			if (!this.selectedOrg?.uuid) {
 				this.coverage = null
 				return
@@ -482,6 +749,30 @@ export default {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--default-grid-baseline, 4px);
+}
+
+.gemma-plate__layers {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+.gemma-plate__layers legend {
+	font-weight: 600;
+}
+
+.gemma-plate__detail-heading {
+	margin: 0;
+	font-size: 0.95rem;
+}
+
+.gemma-plate__peers {
+	margin: 0;
+	padding-inline-start: calc(var(--default-grid-baseline, 4px) * 5);
 }
 
 .gemma-plate__body {

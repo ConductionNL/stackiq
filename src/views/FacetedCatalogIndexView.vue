@@ -44,6 +44,12 @@ generic route-query-to-filter passthrough never sees it (see the
 @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
 @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
 @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-catalog-can-be-filtered-by-bbn-level-and-dpia-status
+
+Under the sidebar, each reference component value of the facet has an
+information button whose popover shows its GEMMA definition and a link to
+GEMMA Online, from the `documentation` and `gemmaUrl` the facet buckets carry
+(the library sidebar lists the values in a select, which has no place for it).
+@spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 -->
 
 <template>
@@ -125,16 +131,37 @@ generic route-query-to-filter passthrough never sees it (see the
 		</p>
 
 		<div class="faceted-catalog-index__body">
-			<CnFacetSidebar
-				:title="t('stackiq', 'GEMMA filters')"
-				:schema="facetDimensionSchema"
-				:facetData="facetStore.facetDataFor(schema)"
-				:activeFilters="facetStore[schema].activeFilters"
-				:loading="facetStore[schema].loading"
-				:clearLabel="t('stackiq', 'Clear all')"
-				class="faceted-catalog-index__sidebar"
-				@filterChange="onFacetFilterChange"
-				@clearAll="onClearAllFacets" />
+			<div class="faceted-catalog-index__aside">
+				<CnFacetSidebar
+					:title="t('stackiq', 'GEMMA filters')"
+					:schema="facetDimensionSchema"
+					:facetData="facetStore.facetDataFor(schema)"
+					:activeFilters="facetStore[schema].activeFilters"
+					:loading="facetStore[schema].loading"
+					:clearLabel="t('stackiq', 'Clear all')"
+					class="faceted-catalog-index__sidebar"
+					@filterChange="onFacetFilterChange"
+					@clearAll="onClearAllFacets" />
+				<section
+					v-if="referenceComponentDefinitions.length"
+					class="faceted-catalog-index__definitions"
+					data-testid="gemma-definitions">
+					<h3 class="faceted-catalog-index__definitions-title">
+						{{ t('stackiq', 'What the reference components are') }}
+					</h3>
+					<ul class="faceted-catalog-index__definitions-list">
+						<li
+							v-for="value in referenceComponentDefinitions"
+							:key="value.value">
+							<span>{{ value.label || value.value }}</span>
+							<GemmaDefinitionPopover
+								:name="value.label || value.value"
+								:documentation="value.documentation || ''"
+								:gemmaUrl="value.gemmaUrl || ''" />
+						</li>
+					</ul>
+				</section>
+			</div>
 
 			<div class="faceted-catalog-index__list">
 				<CnIndexPage
@@ -220,6 +247,7 @@ import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
+import GemmaDefinitionPopover from '../components/gemma/GemmaDefinitionPopover.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import {
 	selectedEntries,
@@ -280,6 +308,7 @@ export default {
 		ContentDuplicate,
 		CnFacetSidebar,
 		CnIndexPage,
+		GemmaDefinitionPopover,
 		// Loaded when a page asks for it: the wizard reads the object store.
 		EntryWizardAction: defineAsyncComponent(() => import('../components/entryWizard/EntryWizardAction.vue')),
 		SaveFacetViewModal,
@@ -451,6 +480,19 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The reference component values of the facet, in facet order, each
+		 * with the GEMMA definition and link its bucket carries.
+		 *
+		 * @return {Array<object>} The facet values.
+		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+		 */
+		referenceComponentDefinitions() {
+			return (
+				this.facetStore.facetDataFor(this.schema)?.referenceComponent?.values || []
+			).filter((value) => value && value.value)
+		},
+
 		/**
 		 * `CnFacetSidebar`'s `schema` prop — a schema-shaped document whose
 		 * facetable properties are the four GEMMA dimensions.
@@ -865,6 +907,35 @@ export default {
 
 .faceted-catalog-index__sidebar {
 	flex-shrink: 0;
+}
+
+.faceted-catalog-index__aside {
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.faceted-catalog-index__definitions {
+	padding: calc(var(--default-grid-baseline, 4px) * 4);
+	border-right: 1px solid var(--color-border);
+}
+
+.faceted-catalog-index__definitions-title {
+	margin: 0 0 calc(var(--default-grid-baseline, 4px) * 2);
+	font-size: 1rem;
+}
+
+.faceted-catalog-index__definitions-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.faceted-catalog-index__definitions-list li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--default-grid-baseline, 4px);
 }
 
 .faceted-catalog-index__list {
