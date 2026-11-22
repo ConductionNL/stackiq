@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 ### Added
+- Health and metrics documentation (adopt-apphost): `docs/features/observability.md`
+  describes the public `/api/health` check, the administrator-only Prometheus
+  `/api/metrics`, the manifest's `observability` block that drives both, and
+  why `/api/settings/status` is not a health check.
 - MCP action surface (mcp-full-action-surface), for hermiq agents: 28 derived
   read tools (search and get on 14 catalogue schemas), create and update on
   `vulnerability`, and 27 curated tools in the `stackiq` provider. The curated

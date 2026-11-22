@@ -29,7 +29,8 @@
 
 ## 4. Docs
 
-- [ ] 4.1 Update app docs: observability page documenting the real `/api/health` + `/api/metrics` endpoints (probe/scrape examples), the manifest `observability` block as the source of truth, and an explicit note that `/api/settings/status` is a settings endpoint, not health
+- [x] 4.1 Update app docs: observability page documenting the real `/api/health` + `/api/metrics` endpoints (probe/scrape examples), the manifest `observability` block as the source of truth, and an explicit note that `/api/settings/status` is a settings endpoint, not health
+  > `docs/features/observability.md`, linked from `docs/features/README.md`.
 
 ## 5. Quality gates + delivery
 
