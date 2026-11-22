@@ -50,5 +50,6 @@
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens either page THEN it explains what is searched, what is sent to hermiq, and where to review assistant actions
 - [x] Implement
-  > Written: `docs/features/ask-the-catalogue.md` (what is searched, what is sent to hermiq, the answer) and `docs/features/assistant-actions.md` (columns, filters, source, who can see it, the History tab). The docs build is left to the docs pipeline.
-- [ ] Test (docs build)
+  > Written: `docs/features/ask-the-catalogue.md` (what is searched, what is sent to hermiq, the answer) and `docs/features/assistant-actions.md` (columns, filters, source, who can see it, the History tab).
+- [x] Test (docs build)
+  > 22 Nov: `npm ci --legacy-peer-deps && npm run build` in `docs/` passes (English and Dutch, all ten AI-baseline checks), and both pages render as `docs/features/ask-the-catalogue/` and `docs/features/assistant-actions/` with no broken-link warning.
