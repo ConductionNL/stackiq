@@ -82,9 +82,9 @@ class FieldUpdateRulesTest extends TestCase {
 	public function testTheImportKeyIsUpdatedByAdminsOnly(): void {
 		$key = $this->register()['components']['schemas']['module']['properties']['externalKey'];
 
-		$this->assertSame('string', $key['type'], 'externalKey is a real property, not a rule on nothing');
-		$this->assertSame(['admin'], $key['authorization']['update']);
-		$this->assertSame(['authenticated'], $key['authorization']['read'], 'the publication fragment\'s read rule survives the merge');
+		$this->assertSame(expected: 'string', actual: $key['type'], message: 'externalKey is a real property, not a rule on nothing');
+		$this->assertSame(expected: ['admin'], actual: $key['authorization']['update']);
+		$this->assertSame(expected: ['authenticated'], actual: $key['authorization']['read'], message: 'the publication fragment\'s read rule survives the merge');
 	}//end testTheImportKeyIsUpdatedByAdminsOnly()
 
 	/**
@@ -96,7 +96,7 @@ class FieldUpdateRulesTest extends TestCase {
 		$window = $this->register()['components']['schemas']['maintenanceWindow'];
 
 		foreach (['notifyUserIds', 'recipientsResolvedAt'] as $field) {
-			$this->assertSame(['software-catalog-admins'], $window['properties'][$field]['authorization']['update'], $field);
+			$this->assertSame(expected: ['software-catalog-admins'], actual: $window['properties'][$field]['authorization']['update'], message: $field);
 		}
 	}//end testTheMaintenanceRecipientFieldsDeclareTheirUpdateGroup()
 
@@ -109,8 +109,8 @@ class FieldUpdateRulesTest extends TestCase {
 		$module = $this->register()['components']['schemas']['module'];
 		$update = ($module['authorization']['update'] ?? null);
 
-		$this->assertNotSame(['admin'], $update, 'the schema-level update rule is not narrowed to the field\'s rule');
-		$this->assertArrayNotHasKey('authorization', $module['properties']['name'] ?? [], 'an ordinary field carries no rule of its own');
+		$this->assertNotSame(expected: ['admin'], actual: $update, message: 'the schema-level update rule is not narrowed to the field\'s rule');
+		$this->assertArrayNotHasKey(key: 'authorization', array: ($module['properties']['name'] ?? []), message: 'an ordinary field carries no rule of its own');
 	}//end testTheRestOfTheApplicationStaysEditable()
 
 	/**
@@ -121,23 +121,23 @@ class FieldUpdateRulesTest extends TestCase {
 	 */
 	public function testEveryFieldUpdateRuleIsWellFormed(): void {
 		$register = $this->register();
-		$rules    = self::updateRules($register);
+		$rules    = self::updateRules(register: $register);
 
-		$this->assertArrayHasKey('module.externalKey', $rules);
+		$this->assertArrayHasKey(key: 'module.externalKey', array: $rules);
 		foreach ($rules as $path => $rule) {
 			[$slug, $name] = explode('.', $path, 2);
-			$this->assertArrayHasKey('type', $register['components']['schemas'][$slug]['properties'][$name], $path . ' is a real property');
-			$this->assertIsArray($rule, $path);
-			$this->assertNotEmpty($rule, $path . ' names at least one group');
-			$this->assertTrue(array_is_list($rule), $path . ' is a list');
+			$this->assertArrayHasKey(key: 'type', array: $register['components']['schemas'][$slug]['properties'][$name], message: $path . ' is a real property');
+			$this->assertIsArray(actual: $rule, message: $path);
+			$this->assertNotEmpty(actual: $rule, message: $path . ' names at least one group');
+			$this->assertTrue(condition: array_is_list($rule), message: $path . ' is a list');
 			foreach ($rule as $entry) {
 				if (is_string($entry) === true) {
-					$this->assertNotSame('', $entry, $path);
+					$this->assertNotSame(expected: '', actual: $entry, message: $path);
 					continue;
 				}
 
-				$this->assertIsArray($entry, $path);
-				$this->assertIsString($entry['group'] ?? null, $path . ' entry names its group');
+				$this->assertIsArray(actual: $entry, message: $path);
+				$this->assertIsString(actual: ($entry['group'] ?? null), message: $path . ' entry names its group');
 			}
 		}
 	}//end testEveryFieldUpdateRuleIsWellFormed()
