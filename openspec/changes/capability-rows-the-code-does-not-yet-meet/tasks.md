@@ -71,6 +71,7 @@
   - REQ-CLR-005, 009, 011, 013, 014, 015, 016 and 017 each have a test that passes against the current code
 - [ ] Test
 - Progress 21 Nov: `tests/e2e/workflows/catalog-ratings.spec.ts` (REQ-CLR-009) is written; like the other specs this task lists, it has not run against a live instance yet.
+- Progress 23 Nov: `tests/Unit/Settings/FieldUpdateRulesTest.php` (REQ-CLR-017) is written and passes: the import key is updated by admins only and stays readable, the maintenance notification fields declare their update group, the application keeps its own rules, and every field-level update rule is well formed. The task stays open until the e2e specs run against a live instance.
 
 ### Task 11: Open a vulnerability on its own page with the exposed organisations
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-vulnerability-tracking/spec.md
