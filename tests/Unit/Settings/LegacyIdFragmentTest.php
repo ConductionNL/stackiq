@@ -93,8 +93,10 @@ class LegacyIdFragmentTest extends TestCase {
 		$base    = json_decode((string) file_get_contents($root.'/lib/Settings/softwarecatalogus_register.json'), true)['components']['schemas'];
 		$schemas = self::mergedRegister()['components']['schemas'];
 		foreach (self::VERSIONS as $key => $version) {
-			$this->assertTrue(condition: version_compare($schemas[$key]['version'], $version, '>='), message: $key.' '.$schemas[$key]['version'].' below '.$version);
-			$this->assertTrue(condition: version_compare($version, (string) ($base[$key]['version'] ?? '0'), '>'), message: $key.' must be above the base register');
+			$merged = (string) $schemas[$key]['version'];
+			$this->assertTrue(condition: version_compare($merged, $version, '>='), message: $key.' '.$merged.' below '.$version);
+			$baseVersion = (string) ($base[$key]['version'] ?? '0');
+			$this->assertTrue(condition: version_compare($version, $baseVersion, '>'), message: $key.' must be above the base register');
 		}
 	}//end testTheVersionsDeployTheField()
 }//end class

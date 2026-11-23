@@ -116,7 +116,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @param array<string, mixed> $row The normalised row: `supplierKvk`, `supplierName`, `product` and `version`.
 	 *
-	 * @return array{supplier: array{decision: string, id: string|null}, product: array{decision: string, id: string|null}, version: array{decision: string, id: string|null}}
+	 * @return array<string, array{decision: string, id: string|null}> The `supplier`, `product` and `version` decisions.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */

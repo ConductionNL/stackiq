@@ -71,7 +71,8 @@ class LegacyCatalogueMatcherTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheKvkNumberMatchesBeforeTheName(): void {
-		$decision = $this->matcher()->decide(row: ['supplierKvk' => '1234 5678', 'supplierName' => 'Centric B.V.', 'product' => 'Key2Financiën', 'version' => '2026.1']);
+		$row      = ['supplierKvk' => '1234 5678', 'supplierName' => 'Centric B.V.', 'product' => 'Key2Financiën', 'version' => '2026.1'];
+		$decision = $this->matcher()->decide(row: $row);
 
 		$this->assertSame(expected: 'org-centric', actual: $decision['supplier']['id']);
 		$this->assertSame(expected: 'mod-key2', actual: $decision['product']['id']);
@@ -83,7 +84,8 @@ class LegacyCatalogueMatcherTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnknownKvkNumberFallsBackToTheName(): void {
-		$decision = $this->matcher()->decide(row: ['supplierKvk' => '87654321', 'supplierName' => 'Andere Leverancier', 'product' => 'Zaaksysteem', 'version' => '3']);
+		$row      = ['supplierKvk' => '87654321', 'supplierName' => 'Andere Leverancier', 'product' => 'Zaaksysteem', 'version' => '3'];
+		$decision = $this->matcher()->decide(row: $row);
 
 		$this->assertSame(expected: 'org-other', actual: $decision['supplier']['id']);
 		$this->assertSame(expected: 'mod-other', actual: $decision['product']['id']);
@@ -178,7 +180,8 @@ class LegacyCatalogueMatcherTest extends TestCase {
 		);
 
 		$this->assertSame(expected: LegacyCatalogueMatcher::CREATE, actual: $matcher->decide(row: ['supplierKvk' => '11112222'])['supplier']['decision']);
-		$this->assertSame(expected: LegacyCatalogueMatcher::CREATE, actual: $matcher->decide(row: ['supplierKvk' => '00000001234567890000'])['supplier']['decision']);
+		$oin = $matcher->decide(row: ['supplierKvk' => '00000001234567890000']);
+		$this->assertSame(expected: LegacyCatalogueMatcher::CREATE, actual: $oin['supplier']['decision']);
 
 		$long = $matcher->decide(row: ['supplierName' => 'Lang', 'product' => '', 'version' => '1']);
 		$this->assertSame(expected: 'org-long', actual: $long['supplier']['id']);

@@ -67,6 +67,7 @@ class ChangeEntryTypeFragmentTest extends TestCase {
 		$this->assertTrue(condition: $module['properties']['type']['visible']);
 		$this->assertSame(expected: 'string', actual: $module['properties']['type']['type']);
 		// A later fragment may bump module above 0.3.15; the import must still compare a version no lower than this change's.
-		$this->assertTrue(condition: version_compare($module['version'], '0.3.15', '>='), message: 'module '.$module['version'].' must not be below 0.3.15');
+		$version = (string) $module['version'];
+		$this->assertTrue(condition: version_compare($version, '0.3.15', '>='), message: 'module '.$version.' must not be below 0.3.15');
 	}//end testTheModuleTypeIsVisibleAtTheHighestVersion()
 }//end class
