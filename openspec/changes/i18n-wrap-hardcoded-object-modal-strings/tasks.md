@@ -47,7 +47,7 @@
 
 ## 5. Follow-up scope (tracked, not blocking this change)
 
-- [ ] 5.1 File a follow-up issue for the remaining untranslated files
+- [x] 5.1 File a follow-up issue for the remaining untranslated files
   found in the same repo-wide scan: `src/views/Dashboard.vue`,
   `src/views/settings/sections/UserGroupsConfiguration.vue`,
   `EmailConfiguration.vue`, `OrganizationSynchronization.vue`,
@@ -60,3 +60,7 @@
   `src/modals/Modals.vue`, `src/components/PublishedIcon.vue` — same
   defect, same fix pattern, scoped out here only to keep this change
   reviewable.
+  > Filed 23 Nov as #2129, with the list re-checked on development: the settings
+  > sections (email, user groups, statistics, organisation sync, OpenRegister,
+  > version) and the directory and search sidebars still carry unwrapped text;
+  > `Dashboard.vue` and `navigation/Configuration.vue` are gone, the other files are clean.
