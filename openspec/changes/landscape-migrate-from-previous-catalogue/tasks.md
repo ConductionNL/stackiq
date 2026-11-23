@@ -10,6 +10,7 @@
   - GIVEN the fixture WHEN read THEN rows normalise to supplier, module, version and usage records; a file without the required columns is refused with their names
 - [ ] Implement
 - [ ] Test (PHPUnit `VngSwcProfileTest`)
+  - Open 23 Nov: the profile has to name the export's sheet and column headers, and those are not in this repository. Needed: a real export of the previous Softwarecatalogus (or its column list) to write the profile and the fixture from.
 
 ### Task 2: Matching and the preview (dry run)
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-preview-shows-the-mapping-before-anything-is-written-req-lcm-002
@@ -19,6 +20,7 @@
   - GIVEN a caller without that right WHEN calling THEN 403 before the file is read
 - [ ] Implement
 - [ ] Test (PHPUnit `LegacyCatalogueMigrationServiceTest`)
+  - Built 23 Nov: `lib/Service/LegacyCatalogue/LegacyCatalogueMatcher.php` decides match or create per row for supplier (KvK number on the organisation's `registrationNumber`, then exact name; a name two organisations share matches neither), product (a module of the matched supplier, exact name) and version (number); below a created object everything is created. Test: `tests/Unit/Service/LegacyCatalogue/LegacyCatalogueMatcherTest.php`. Left: the preview endpoint, its permission check and the service that reads the file, which need the profile of Task 1.
 
 ### Task 3: Apply and the result
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-result-says-what-was-created-updated-and-skipped-req-lcm-003
@@ -29,6 +31,7 @@
   - GIVEN the same export twice WHEN applied THEN the second run creates no duplicates
 - [ ] Implement
 - [ ] Test (PHPUnit `LegacyCatalogueMigrationApplyTest`)
+  - Built 23 Nov: optional `legacyId` (admin-only update) on usage 1.6.5, module 0.3.16 and organization 0.5.7 in `lib/Settings/register.d/legacy-catalogue-migration.json`, tested by `tests/Unit/Settings/LegacyIdFragmentTest.php`. Left: the apply endpoint and its test.
 
 ### Task 4: The dialog (board SkApplicaties)
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-an-organisation-imports-its-export-from-the-previous-catalogue-req-lcm-001
