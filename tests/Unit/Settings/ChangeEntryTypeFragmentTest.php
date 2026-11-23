@@ -3,7 +3,7 @@
  * ChangeEntryTypeFragmentTest
  *
  * Landscape-change-entry-type: the merged register shows a module's type on
- * the form, with a module version above every other source's.
+ * the form, at a module version no lower than this change's.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Settings
@@ -58,7 +58,7 @@ class ChangeEntryTypeFragmentTest extends TestCase {
 
 	/**
 	 * The module's type is on the form, and the version the import compares
-	 * is this fragment's, above every other source's.
+	 * is no lower than this fragment's.
 	 *
 	 * @return void
 	 */
@@ -66,17 +66,7 @@ class ChangeEntryTypeFragmentTest extends TestCase {
 		$module = self::mergedRegister()['components']['schemas']['module'];
 		$this->assertTrue(condition: $module['properties']['type']['visible']);
 		$this->assertSame(expected: 'string', actual: $module['properties']['type']['type']);
-		$this->assertSame(expected: '0.3.15', actual: $module['version']);
-
-		$root = dirname(__DIR__, 3);
-		$sources = array_merge([$root.'/lib/Settings/softwarecatalogus_register.json'], glob($root.'/lib/Settings/register.d/*.json'));
-		foreach ($sources as $source) {
-			if (str_ends_with($source, 'landscape-change-entry-type.json') === true) {
-				continue;
-			}
-
-			$other = (string)(json_decode((string)file_get_contents($source), true)['components']['schemas']['module']['version'] ?? '0');
-			$this->assertTrue(condition: version_compare('0.3.15', $other, '>'), message: 'module 0.3.15 must be above '.$other.' in '.basename($source));
-		}
+		// A later fragment may bump module above 0.3.15; the import must still compare a version no lower than this change's.
+		$this->assertTrue(condition: version_compare($module['version'], '0.3.15', '>='), message: 'module '.$module['version'].' must not be below 0.3.15');
 	}//end testTheModuleTypeIsVisibleAtTheHighestVersion()
 }//end class

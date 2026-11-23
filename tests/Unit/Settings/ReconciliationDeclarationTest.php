@@ -40,7 +40,7 @@ class ReconciliationDeclarationTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const LATER_CHANGES = ['landscape-change-entry-type.json'];
+	private const LATER_CHANGES = ['landscape-change-entry-type.json', 'legacy-catalogue-migration.json'];
 
 	/**
 	 * The register with every fragment merged over it, the way the import

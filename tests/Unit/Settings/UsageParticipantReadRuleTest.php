@@ -101,6 +101,7 @@ final class UsageParticipantReadRuleTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVersionMovesSoTheImportApplies(): void {
-		$this->assertSame(expected: '1.6.3', actual: $this->merged()['components']['schemas']['usage']['version']);
+		// Later fragments (saas-subscriptions, legacy-catalogue-migration) raise usage further; the merged version only has to be at least this one.
+		$this->assertTrue(condition: version_compare((string) $this->merged()['components']['schemas']['usage']['version'], '1.6.3', '>='));
 	}//end testTheVersionMovesSoTheImportApplies()
 }//end class
