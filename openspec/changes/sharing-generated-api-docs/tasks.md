@@ -9,6 +9,7 @@
   - GIVEN the annotated controllers WHEN composer openapi runs THEN openapi.json lists the offer, offered usage and view paths
 - [ ] Implement
 - [ ] Test (`composer openapi:check` exit 0; PHPUnit unchanged)
+- Open 23 Nov, a decision: the design reads "`openapi.json` holds no paths", which no longer holds. `openapi.json` is now a curated OpenAPI document of 150 `/api/v1/` paths (problem details, `API-Version`, `x-provided-by`), served by `OpenApiController` and kept in step with `appinfo/routes.php` by `tests/Unit/Middleware/Support/OpenApiDocumentTest.php`. Running `nextcloud/openapi-extractor` would overwrite it with a different shape. Options: (a) keep the curated document and its route test as the freshness check, drop D1 and tick tasks 1 and 2 as superseded; (b) generate with the extractor and port the curated descriptions into annotations and `lib/ResponseDefinitions.php`; (c) generate a second, extractor-made document beside the curated one. Recommendation: (a), the route test already fails when a controller route changes without the document.
 
 ### Task 2: The remaining external controllers and the freshness check
 - **spec_ref**: openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-001-stackiqs-own-endpoints-are-described-by-a-generated-openapi-document
@@ -17,6 +18,7 @@
   - GIVEN a controller change without regenerating WHEN check:strict runs THEN openapi:check fails and names the difference
 - [ ] Implement
 - [ ] Test (`composer check:strict` including openapi:check)
+- Open 23 Nov: waits on the decision under task 1.
 
 ### Task 3: API documentation page
 - **spec_ref**: openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
