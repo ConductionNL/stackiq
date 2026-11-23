@@ -84,7 +84,7 @@ class FieldUpdateRulesTest extends TestCase {
 
 		$this->assertSame(expected: 'string', actual: $key['type'], message: 'externalKey is a real property, not a rule on nothing');
 		$this->assertSame(expected: ['admin'], actual: $key['authorization']['update']);
-		$this->assertSame(expected: ['authenticated'], actual: $key['authorization']['read'], message: 'the publication fragment\'s read rule survives the merge');
+		$this->assertSame(expected: ['authenticated'], actual: $key['authorization']['read'], message: 'the read rule survives the merge');
 	}//end testTheImportKeyIsUpdatedByAdminsOnly()
 
 	/**
@@ -110,7 +110,7 @@ class FieldUpdateRulesTest extends TestCase {
 		$update = ($module['authorization']['update'] ?? null);
 
 		$this->assertNotSame(expected: ['admin'], actual: $update, message: 'the schema-level update rule is not narrowed to the field\'s rule');
-		$this->assertArrayNotHasKey(key: 'authorization', array: ($module['properties']['name'] ?? []), message: 'an ordinary field carries no rule of its own');
+		$this->assertArrayNotHasKey(key: 'authorization', array: ($module['properties']['name'] ?? []), message: 'an ordinary field has no rule');
 	}//end testTheRestOfTheApplicationStaysEditable()
 
 	/**
@@ -126,7 +126,8 @@ class FieldUpdateRulesTest extends TestCase {
 		$this->assertArrayHasKey(key: 'module.externalKey', array: $rules);
 		foreach ($rules as $path => $rule) {
 			[$slug, $name] = explode('.', $path, 2);
-			$this->assertArrayHasKey(key: 'type', array: $register['components']['schemas'][$slug]['properties'][$name], message: $path . ' is a real property');
+			$property      = $register['components']['schemas'][$slug]['properties'][$name];
+			$this->assertArrayHasKey(key: 'type', array: $property, message: $path . ' is a real property');
 			$this->assertIsArray(actual: $rule, message: $path);
 			$this->assertNotEmpty(actual: $rule, message: $path . ' names at least one group');
 			$this->assertTrue(condition: array_is_list($rule), message: $path . ' is a list');
