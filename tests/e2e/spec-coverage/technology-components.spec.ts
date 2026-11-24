@@ -14,7 +14,7 @@
  *
  * Base URL from the Playwright config (PLAYWRIGHT_BASE_URL and friends).
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md
  */
 import type { Page } from '@playwright/test'
 

@@ -20,7 +20,7 @@
  * Data: one source application per run, named with RUN_ID, created over the
  * API and removed in afterAll together with every copy of it.
  *
- * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+ * @spec openspec/changes/archive/2026-11-24-applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

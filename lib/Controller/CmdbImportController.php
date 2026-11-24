@@ -106,7 +106,7 @@ class CmdbImportController extends Controller {
 	 * @auth admin-only the import writes with RBAC and multitenancy off, across tenants, so only a full Nextcloud admin may run it.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function import(): JSONResponse {
 		try {
@@ -288,7 +288,7 @@ class CmdbImportController extends Controller {
 	 * @return array{path: string, options: array<string, mixed>}|JSONResponse The import input, or the first error.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private function readOptions(string $path, string $fileName): array|JSONResponse {
 		$read = $this->missingRecordsOption();
@@ -334,7 +334,7 @@ class CmdbImportController extends Controller {
 	 *
 	 * @return array{missingRecords: string}|JSONResponse The option, or the error.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private function missingRecordsOption(): array|JSONResponse {
 		$missingRecords = $this->stringParam(name: 'missingRecords', default: CmdbExportImportServiceInterface::DEFAULT_MISSING_RECORDS);

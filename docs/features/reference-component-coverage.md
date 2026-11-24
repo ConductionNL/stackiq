@@ -13,7 +13,7 @@ question "where are we missing something, and where do we have too much?"
 Specifications:
 [`reference-component-coverage`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md)
 and
-[`gemma-plate`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md).
+[`gemma-plate`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md).
 
 > Screenshots of the coverage table, the map and the Overlap section are
 > still pending a live-instance capture; the Playwright-captured images

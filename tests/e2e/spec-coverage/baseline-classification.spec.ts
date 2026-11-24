@@ -20,7 +20,7 @@
  * tests/Unit/Service/UsageClassificationServiceTest.php and
  * tests/Unit/Controller/UsageClassificationControllerTest.php.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

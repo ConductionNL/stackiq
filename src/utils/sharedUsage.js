@@ -8,7 +8,7 @@
  * Pure helpers over a usage record, so the list cell, the detail card and the
  * connections column agree on what "shared" means.
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 
 /**
@@ -16,7 +16,7 @@
  *
  * @param {string|object|null|undefined} value The relation.
  * @return {string} The uuid, or ''.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export function relationId(value) {
 	if (value && typeof value === 'object') {
@@ -30,7 +30,7 @@ export function relationId(value) {
  *
  * @param {string|object|null|undefined} value The relation.
  * @return {string} The name, or ''.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export function relationName(value) {
 	if (value && typeof value === 'object' && typeof value.name === 'string') {
@@ -45,7 +45,7 @@ export function relationName(value) {
  *
  * @param {object|null} usage The usage record.
  * @return {Array<{id: string, name: string, since: string}>} The participants.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export function participantsOf(usage) {
 	const list = Array.isArray(usage?.participants) ? usage.participants : []
@@ -70,7 +70,7 @@ export function participantsOf(usage) {
  *
  * @param {object|null} usage The usage record.
  * @return {{owner: string, ownerName: string, count: number}|null} The summary.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export function sharedSummary(usage) {
 	const participants = participantsOf(usage)
@@ -97,7 +97,7 @@ export function sharedSummary(usage) {
  * @param {object|null} usage The usage record.
  * @param {string} organisation The signed-in user's organisation uuid.
  * @return {boolean} True for a participant that is not the owner.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export function isParticipantOnly(usage, organisation) {
 	if (!organisation || relationId(usage?.consumer) === organisation) {

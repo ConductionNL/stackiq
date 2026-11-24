@@ -29,7 +29,7 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

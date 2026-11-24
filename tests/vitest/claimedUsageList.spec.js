@@ -7,7 +7,7 @@
  * organisation's own page, Accept answers at once, Decline asks first, and an
  * answered claim leaves the list.
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 
 import axios from '@nextcloud/axios'

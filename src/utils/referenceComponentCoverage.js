@@ -155,7 +155,7 @@ export function coverageMapGraph(viewNodes = [], viewRelationships = [], compone
  *
  * @param {object} view A view from `GET /api/views`.
  * @return {string} The id, or '' when it has none.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function viewId(view) {
 	return String(view?.id ?? view?.['@self']?.id ?? view?.uuid ?? '')
@@ -166,7 +166,7 @@ export function viewId(view) {
  *
  * @param {object} view A view.
  * @return {string} The release.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function viewRelease(view) {
 	return String(view?.release ?? view?.gemmaRelease ?? view?.version ?? '')
@@ -177,7 +177,7 @@ export function viewRelease(view) {
  *
  * @param {Array<object>} views Views from `GET /api/views`.
  * @return {Array<{id: string, label: string}>} Options.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function viewOptions(views) {
 	return (Array.isArray(views) ? views : [])
@@ -237,7 +237,7 @@ function stateOf(count) {
  * @param {Array<object>} components Coverage rows of the organisation.
  * @param {string} fallback The name for components outside a group.
  * @return {Array<{name: string, components: Array<object>}>} Groups.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function viewGroups(view, components, fallback) {
 	const nodes = (view?.viewNodes || []).filter(
@@ -332,7 +332,7 @@ function groupName(node, byNodeId) {
  * @param {Array<{name: string, components: Array<object>}>} groups The view's groups.
  * @param {string} filter all, gap, fillable or overlap.
  * @return {Array<{name: string, components: Array<object>}>} The kept groups.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 export function filterGroups(groups, filter) {
 	return groups

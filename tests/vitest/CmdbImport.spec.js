@@ -408,7 +408,7 @@ describe('CmdbImport sheet names in the help texts', () => {
 })
 
 /**
- * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 describe('CmdbImport applications missing from the export', () => {
 	afterEach(() => {
@@ -514,7 +514,7 @@ describe('CmdbImport cancelling', () => {
 })
 
 /**
- * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 describe('CmdbImport finished announcement', () => {
 	afterEach(() => {
@@ -574,7 +574,7 @@ describe('CmdbImport finished announcement', () => {
 })
 
 /**
- * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 describe('CmdbImport the choice for missing applications, as the admin makes it', () => {
 	afterEach(() => {
@@ -659,7 +659,7 @@ describe('CmdbImport the choice for missing applications, as the admin makes it'
 })
 
 /**
- * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 describe('CmdbImport report rows of archived and deleted applications', () => {
 	afterEach(() => {

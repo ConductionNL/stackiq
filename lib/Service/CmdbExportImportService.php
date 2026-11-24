@@ -39,7 +39,7 @@
  *   when the APPID is on the archive sheet, soft-deleted when it is on no
  *   sheet, archived only when the workbook has no archive sheet, the sheet
  *   has no APPID column or an APPID in it has no cached value
- *   (openspec/changes/cmdb-import-archive-reconciliation, design D5). A
+ *   (openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation, design D5). A
  *   module or usage matched among archived or soft-deleted objects is
  *   unarchived or restored before it is updated, never duplicated.
  * - Owners become contact persons, never Nextcloud user accounts, and no
@@ -418,7 +418,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function missingRecordsModes(): array {
 		return $this->profile->missingRecordsModes();
@@ -475,7 +475,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function import(string $path, array $options): array {
 		$this->resetRun();
@@ -572,7 +572,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function runImport(CmdbImportRequest $request): array {
 		$import = $this->readImport(request: $request);
@@ -809,7 +809,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-7
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function addRunWarnings(CmdbImportRun $run): void {
@@ -905,7 +905,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<string, array<int, int>> Sheet name => row numbers.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function unreadableKeyRows(array $rows, array $droppedRows): array {
 		$key = $this->profile->keyColumn();
@@ -1111,7 +1111,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *                else unchanged.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function rowOutcome(string $module, string $usage): string {
 		$revived = self::revivedOutcome(module: $module, usage: $usage);
@@ -1410,7 +1410,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *         The stored module with its state, the uuid to report for a skipped row, and why the row is skipped.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function matchModule(CmdbImportRow $row): array {
 		$municipalityUuid = $row->run->municipalityUuid();
@@ -1475,7 +1475,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @return bool
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function moduleBelongsTo(string $moduleUuid, string $municipalityUuid): bool {
 		if ($this->findInAnyState(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]) !== null) {
@@ -1498,7 +1498,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *                                            unarchived when the stored module was revived first.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertModule(CmdbImportRow $row, array $module): array {
 		$data = $module['data'];
@@ -1543,7 +1543,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertUsage(CmdbImportRow $row, array $data): array {
 		$municipalityUuid = $row->run->municipalityUuid();
@@ -2357,7 +2357,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array{entity: object, state: array{archived: bool, deleted: bool}}|null
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function findInAnyState(string $schemaKey, array $filters): ?array {
 		$entity = $this->search(schemaKey: $schemaKey, filters: $filters, lens: []);
@@ -2403,7 +2403,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return object|null The entity (ObjectEntityInterface).
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function search(string $schemaKey, array $filters, array $lens): ?object {
 		$coordinates = $this->coordinates();
@@ -2483,7 +2483,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private static function missingRecordsFrom(array $options): string {
 		$mode = ($options['missingRecords'] ?? null);
@@ -2501,7 +2501,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return ArchiveSheet
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function archiveSheet(array $workbook): array {
 		$archive = ($workbook['archive'] ?? []);
@@ -2533,7 +2533,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function archiveSheetWarning(array $archive): string {
 		if ($archive['uncachedRows'] !== []) {
@@ -2575,7 +2575,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function archiveServices(): array {
 		if ($this->archiveServices !== null) {
@@ -2646,7 +2646,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array{archived: bool, deleted: bool}
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function objectState(object $entity): array {
 		$self = [];
@@ -2680,7 +2680,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE when the archive services are missing.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function revive(array $found): array {
 		if ($found['state']['deleted'] === false && $found['state']['archived'] === false) {
@@ -2744,7 +2744,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE when the archive services are missing.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function restore(string $uuid): mixed {
 		$restored = $this->archiveServices()['mapper']->restoreObject(uuid: $uuid);
@@ -2775,7 +2775,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array{module: array<string, object>, usage: array<string, object>} Schema key => uuid => entity.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function trash(): array {
 		if ($this->trash !== null) {
@@ -2807,7 +2807,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array{module: array<string, object>, usage: array<string, object>} Schema key => uuid => entity.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function registerTrash(mixed $deleted, array $coordinates): array {
 		$trash = ['module' => [], 'usage' => []];
@@ -2875,7 +2875,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconcile(CmdbImportRun $run, int $processedItems): void {
 		$operationId = $run->operationId;
@@ -2919,7 +2919,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 * @return array<int, array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}>
 	 *         Per application, the APPID's match key, the usage, the module and the state of both by schema key.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconciliationScope(string $municipalityUuid): array {
 		$owned = $this->ownedUsages(municipalityUuid: $municipalityUuid);
@@ -3016,7 +3016,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<int, ScopeEntry>
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private static function onePerKey(array $scope): array {
 		$preferred = [];
@@ -3051,7 +3051,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<int, ScopeExtra> Usages first, then modules.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private static function extrasOf(array $application, array $entries): array {
 		$seen = [(string)$application['usage']->getUuid() => true, (string)$application['module']->getUuid() => true];
@@ -3076,7 +3076,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private static function stateRank(array $state): int {
 		if ($state['deleted'] === true) {
@@ -3101,7 +3101,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<int, array{entity: object, state: array{archived: bool, deleted: bool}}>
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function usagesInEveryState(string $municipalityUuid): array {
 		$coordinates = $this->coordinates();
@@ -3130,7 +3130,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<string, array{entity: object, state: array{archived: bool, deleted: bool}}> Uuid => entity and state.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function modulesByUuid(array $uuids): array {
 		$coordinates = $this->coordinates();
@@ -3158,7 +3158,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<string, array{entity: object, state: array{archived: bool, deleted: bool}}> Uuid => entity and state.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function modulesInChunk(array $chunk, array $coordinates): array {
 		$modules = [];
@@ -3216,7 +3216,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconcileApplication(array $application, CmdbImportRun $run): void {
 		$moduleData = $application['module']->getObject();
@@ -3272,7 +3272,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array{target: string, reason: string, sheet: string, onArchiveSheet: bool}
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconcileTarget(string $key, CmdbImportRun $run): array {
 		$archive = $run->archive;
@@ -3339,7 +3339,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<int, array{schemaKey: string, uuid: string, state: array{archived: bool, deleted: bool}, restore: bool}>
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private static function itemsOf(array $application, bool $restoreDeleted): array {
 		$items = [];
@@ -3375,7 +3375,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @return array<int, string> delete, restore and archive, in order; empty when nothing changes.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private static function transitions(array $item, string $target): array {
 		$state = $item['state'];
@@ -3436,7 +3436,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 *
 	 * @throws RuntimeException When OpenRegister does not delete the object.
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function transition(string $step, array $item): void {
 		$uuid = $item['uuid'];

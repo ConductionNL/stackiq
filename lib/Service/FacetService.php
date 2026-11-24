@@ -749,7 +749,7 @@ class FacetService implements FacetServiceInterface {
 	 * @return array{0: array<string,array<string,string[]>>, 1: array<string,array{documentation: string, gemmaUrl: string}>}
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 	 */
 	private function dimensionValuesAndDefinitions(array $modulesByObjectId): array {
 		// Pass 1: direct fields (referenceComponent identifiers + standard identifiers).
@@ -784,7 +784,7 @@ class FacetService implements FacetServiceInterface {
 	 *
 	 * @return array<string,array{documentation: string, gemmaUrl: string}>
 	 *
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 	 */
 	private function definitionsByName(array $elementsById, array $refCompIds): array {
 		$definitions = [];
@@ -828,7 +828,7 @@ class FacetService implements FacetServiceInterface {
 	 *
 	 * @return array<int,array{value:string,label:string,count:int,documentation:string,gemmaUrl:string}>
 	 *
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 	 */
 	private static function withDefinitions(array $buckets, array $definitions): array {
 		return array_map(

@@ -49,7 +49,7 @@ Under the sidebar, each reference component value of the facet has an
 information button whose popover shows its GEMMA definition and a link to
 GEMMA Online, from the `documentation` and `gemmaUrl` the facet buckets carry
 (the library sidebar lists the values in a select, which has no place for it).
-@spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+@spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 -->
 
 <template>
@@ -448,7 +448,7 @@ export default {
 		 * values a copy starts with (the publication dates cleared, so a copy is
 		 * never published with its source).
 		 *
-		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+		 * @spec openspec/changes/archive/2026-11-24-applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
 		 */
 		copy: {
 			type: Object,
@@ -485,7 +485,7 @@ export default {
 		 * with the GEMMA definition and link its bucket carries.
 		 *
 		 * @return {Array<object>} The facet values.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 		 */
 		referenceComponentDefinitions() {
 			return (
@@ -545,7 +545,7 @@ export default {
 		 * list sends it as `_search`, outside the filter.
 		 *
 		 * @return {boolean} True while such a tab is active.
-		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
 		archivedTabIgnoresFilters() {
 			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
@@ -574,7 +574,7 @@ export default {
 		 * default tab again, so the tab this view remembers goes back to it.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
 		indexPageKey() {
 			this.activeQuickFilterIndex = initialQuickFilterIndex(this.quickFilters)
@@ -638,7 +638,7 @@ export default {
 		 * @param {string} dialog The dialog key (`massPublishObjects`, ...).
 		 * @param {Array<string>} selectedIds The selected row ids.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
 		 */
 		async openSelectionDialog(dialog, selectedIds) {
 			// The app's object and navigation stores, loaded on first use so
@@ -690,7 +690,7 @@ export default {
 		 *
 		 * @param {number|number[]} index The tab index, or the selected indices
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
 		/**
 		 * Download the list as filtered: the GEMMA facets, the search and the

@@ -8,7 +8,7 @@
  * the peer applications per component and their counts, a held-back count as
  * "fewer than 3", the heading naming the band, and the side panel line.
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

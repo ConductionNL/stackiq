@@ -6,7 +6,7 @@
   - of its product. Declining keeps the usage as that organisation's record and
   - tells it the supplier does not recognise the claim.
   -
-  - @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+  - @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
   -->
 
 <template>

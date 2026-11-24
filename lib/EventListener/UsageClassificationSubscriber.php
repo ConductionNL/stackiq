@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * too, since every save passes here. The write-back is itself a save, so it
  * comes back as an update event; it then changes nothing and writes nothing.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
  */
 class UsageClassificationSubscriber implements IEventListener {
 	use ObjectEventPayload;
@@ -66,7 +66,7 @@ class UsageClassificationSubscriber implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
 	 */
 	public function handle(Event $event): void {
 		$object = $this->extractObjectFromEvent(event: $event);

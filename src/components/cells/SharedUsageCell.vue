@@ -9,7 +9,7 @@ names the organisation that runs a shared usage for the cooperation and how
 many organisations share it ("Drechtsteden-Zuid, 3"). Empty for a usage
 without participants.
 
-@spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+@spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 -->
 
 <template>
@@ -52,7 +52,7 @@ export default {
 	computed: {
 		/**
 		 * @return {{owner: string, ownerName: string, count: number}|null} The share summary.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		summary() {
 			return sharedSummary({ ...(this.row ?? {}), participants: Array.isArray(this.value) ? this.value : this.row?.participants })
@@ -60,7 +60,7 @@ export default {
 
 		/**
 		 * @return {string} The owner's name, else its uuid, else "a cooperation".
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		ownerLabel() {
 			return this.summary?.ownerName || this.ownerName || this.summary?.owner || t('stackiq', 'a cooperation')
@@ -75,7 +75,7 @@ export default {
 			 *
 			 * @param {string} owner The owner uuid.
 			 * @return {Promise<void>}
-			 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+			 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 			 */
 			async handler(owner) {
 				this.ownerName = ''

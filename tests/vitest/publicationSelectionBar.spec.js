@@ -5,7 +5,7 @@
  * refused entry with the endpoint's reason (publish-and-lock-from-the-list,
  * REQ-ODP-010).
  *
- * @spec openspec/changes/publish-and-lock-from-the-list/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

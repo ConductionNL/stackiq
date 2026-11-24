@@ -423,7 +423,7 @@ class EolSyncService implements EolSyncServiceInterface {
 	 * @return void
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
-	 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
+	 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
 	 */
 	private function saveStampedVersion(
 		ObjectServiceInterface $objectService,

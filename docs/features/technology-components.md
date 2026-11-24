@@ -9,7 +9,7 @@ A technology component is a piece of technology your organisation runs: a physic
 
 Stackiq **records** components; it does not discover them. Nothing scans your network. A component is in stackiq because someone added it, by hand or through an import.
 
-Specification: [`openspec/changes/operations-technology-components/specs/technology-components/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/operations-technology-components/specs/technology-components/spec.md).
+Specification: [`openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md).
 
 ## Who can see components
 

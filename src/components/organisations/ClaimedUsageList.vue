@@ -8,7 +8,7 @@
   - Shown only to members of the supplier (the page's organisation is the
   - user's active one); the server refuses an answer from anyone else.
   -
-  - @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+  - @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
   -->
 <template>
 	<CnWidgetWrapper
@@ -113,7 +113,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+	 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 	 */
 	async mounted() {
 		this.claims = await fetchClaims(this.objectId)
@@ -129,7 +129,7 @@ export default {
 		 * @param {object} claim The claim.
 		 * @param {'accept'|'decline'} action The answer.
 		 *
-		 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+		 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 		 */
 		async answer(claim, action) {
 			this.busy = claim.id

@@ -566,23 +566,33 @@ The service SHALL process every non-empty row in its own error boundary. An exce
 - **WHEN** it is imported
 - **THEN** it SHALL be `skipped` with reason `missing Applicatie Naam`
 
-### Requirement: Records missing from a newer export SHALL be left untouched (REQ-CMDB-012)
+### Requirement: Records missing from a newer export SHALL be archived by default or kept on request (REQ-CMDB-012)
 
-The import SHALL accept `missingRecords` with the value `keep`, which is also the default. It SHALL NOT change, depublish or delete a module, usage, organisation or contact person because its APPID is absent from the upload. Any other value, including the reserved `mark` and `remove`, SHALL be refused with 422 `MISSING_RECORDS_UNSUPPORTED`.
 
-#### Scenario: An application dropped from the export stays
-@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php imports two rows, then one, and asserts the other module and usage are unchanged.
+The import SHALL accept `missingRecords` with the values `keep` and `archive`; `archive` is the default. With `keep` it SHALL NOT change, archive, depublish or delete a module, usage, organisation or contact person because its APPID is absent from the upload. With `archive` it SHALL reconcile as REQ-CMDB-015 describes. Any other value, including the reserved `mark` and `remove`, SHALL be refused with 422 `MISSING_RECORDS_UNSUPPORTED`, naming both accepted values in `details.accepted`. The accepted values SHALL be declared in the import profile.
+
+(Previously: `keep` was the only accepted value and the default; records missing from a newer export were always left untouched.)
+
+#### Scenario: An application dropped from the export stays when records are kept
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testRecordsMissingFromTheExportStayWhenKept imports two rows, then one with `missingRecords` `keep`, and asserts the other module and usage are unchanged.
 
 - **GIVEN** the modules with APPID `1` and `7` were imported for "Gemeente Voorbeeldstad"
-- **WHEN** a newer export that only contains APPID `1` is imported
+- **WHEN** a newer export that only contains APPID `1` is imported with `missingRecords` `keep`
 - **THEN** the module with APPID `7` and its usage SHALL be unchanged
+
+#### Scenario: Without the option a missing application is reconciled
+@e2e exclude Validation; tests/Unit/Controller/CmdbImportControllerTest.php testMissingRecordsDefaultsToArchive asserts the service receives `archive` when the field is absent and the sent value otherwise.
+
+- **GIVEN** a valid export
+- **WHEN** a Nextcloud admin posts it without `missingRecords`
+- **THEN** the import SHALL run with `archive`
 
 #### Scenario: A reserved value is refused
 @e2e exclude Validation; tests/Unit/Controller/CmdbImportControllerTest.php testAReservedMissingRecordsValueIsRefused.
 
 - **GIVEN** a valid export
 - **WHEN** a Nextcloud admin posts it with `missingRecords=remove`
-- **THEN** the endpoint SHALL answer 422 with error `MISSING_RECORDS_UNSUPPORTED`
+- **THEN** the endpoint SHALL answer 422 with error `MISSING_RECORDS_UNSUPPORTED` and `details.accepted` `["keep", "archive"]`
 - **AND** no object SHALL be written
 
 ### Requirement: A running import SHALL report its progress and SHALL stop when cancelled (REQ-CMDB-013)
@@ -616,6 +626,7 @@ The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` unde
 - **AND** once the first import has returned or failed, a new import SHALL be accepted
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
+
 
 Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, choose what happens to applications missing from the export (archive, the default, or keep) with a one-sentence help text that says what each does and the details in the section's information panel, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary, including the archived, unarchived, deleted and restored counts when they are not zero, and a report table that can be filtered by outcome, including those four; a reconciliation row SHALL show no row number. The section SHALL also show the mapping the import uses (REQ-CMDB-020), as tables: the export's sheets and columns, and per sheet pack its source, its version, a hint when a newer shipped pack was not applied, and a link "Edit in OpenRegister" when the pack has an `editUrl`; the municipality pack, which maps the import options and no column, SHALL NOT be listed. When the endpoint answers 503 for a stored pack, the error SHALL carry the same link from `details.editUrl`. The section SHALL offer no editing of the mapping itself. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, and so SHALL the archive sheet its texts name, with no archive sheet when the profile names none; the shipped names are the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
 
@@ -765,6 +776,144 @@ On install and on every upgrade, after its register is initialised, stackiq SHAL
 - **WHEN** a Nextcloud admin lists OpenRegister's migration packs
 - **THEN** the store SHALL hold `stackiq-topdesk-module`, `stackiq-topdesk-manufacturer`, `stackiq-topdesk-usage` and `stackiq-topdesk-business-owner` as built-in packs with the `x-stackiq` marker
 - **AND** no municipality pack SHALL be stored
+
+### Requirement: An application missing from the CMDB sheets SHALL be archived when the archive sheet lists it and soft-deleted when no sheet does (REQ-CMDB-015)
+
+
+With `missingRecords` `archive`, after every row of an import that was not cancelled and did not fail, the import SHALL reconcile, under the register lock it already holds, every `usage` whose `consumer` is the imported municipality together with the `module` it points at, including archived and soft-deleted ones, and only those whose module carries this municipality's import key (`topdesk:<municipality uuid>:<APPID>`). It SHALL read the APPID column of the sheet "Gearchiveerde Applicaties" when the workbook has it, under the same size and row bounds as the CMDB sheets and without reading any other column of it. For an application whose APPID is on neither CMDB sheet: when the archive sheet lists the APPID, the import SHALL archive the usage and then the module through OpenRegister's archive state with a reason that names the import, restoring a soft-deleted one from the trash first; when no sheet lists it, the import SHALL soft-delete the usage and then the module through OpenRegister's trash. When the workbook has no archive sheet, or the sheet has no APPID column, or a row of the sheet holds an APPID formula without a cached value (read as empty, as REQ-CMDB-002 has it for the CMDB sheets, and listed by the reader in `archive.uncachedRows`), the import SHALL archive and SHALL NOT soft-delete, and SHALL add a warning to the report; for an uncached row the warning SHALL name the sheet and the row numbers. The same holds when a row of a CMDB sheet holds an APPID formula without a cached value (the row is skipped as empty, so its application may look absent): the import SHALL archive and SHALL NOT soft-delete, and the warning SHALL name that CMDB sheet and the rows. The same holds when the workbook lacks one of the profile's CMDB sheets while it has another (the reader lists the absent ones in `absentSheets`; a workbook with none of them is refused with `NO_SOURCE_SHEET`): the import SHALL archive and SHALL NOT soft-delete, and the warning SHALL name the missing sheet. When a municipality has more than one module or usage under the same import key (a module deleted by hand next to the one a later import created), the import SHALL reconcile as the application the one it would match, a working one before an archived one and an archived one before one in the trash, and SHALL bring every other usage of that key, and every other module of it that is not in the trash, to the same state, so no stray usage stays visible; it SHALL leave what is in the trash as it is, so a stale duplicate is never restored into the archive. An application that is already in the state the export asks for SHALL be left alone and not reported. The import SHALL NOT touch contact persons, organisations, modules that carry another municipality's import key or no import key, or usages of another organisation. Each application SHALL be reconciled in its own error boundary: a failure SHALL be a `failed` report row naming the step and the exception class, and the other applications SHALL still be reconciled. The reconciliation SHALL report its progress as the phase `reconciling` of the import's operation. A cancel SHALL also be honoured after the last row and before each application of the reconciliation: the import SHALL stop there, SHALL keep what it archived or deleted so far, and SHALL report the run as cancelled. The report SHALL count `archived` and `deleted` in its summary and SHALL list each as a row with the APPID, the application name and both uuids, never person data. When OpenRegister's archive handler or object mapper is not available, an import with `missingRecords` `archive` SHALL be refused with 503 `ARCHIVE_UNAVAILABLE` before the file is read.
+
+#### Scenario: An application that moved to the archive sheet is archived
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
+
+- **GIVEN** the modules with APPID `1234` and `2` were imported for "Gemeente Voorbeeldstad" with their usages
+- **WHEN** an export is imported in which `1234` is only on "Gearchiveerde Applicaties" and `2` is on no sheet
+- **THEN** the module and the usage of `1234` SHALL carry OpenRegister's archive state and the report row SHALL be `archived`
+- **AND** the module and the usage of `2` SHALL be in OpenRegister's trash and the report row SHALL be `deleted`
+- **AND** the Applications page SHALL list `1234` under the quick filter "Archived" and neither under "All"
+- **AND** the owner contact person SHALL be unchanged
+
+#### Scenario: Without the archive sheet a missing application is archived, never deleted
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testWithoutTheArchiveSheetMissingApplicationsAreArchivedNotDeleted imports a workbook without the sheet and asserts the archive state, no delete, and the warning naming the sheet.
+
+- **GIVEN** the module with APPID `7` and its usage were imported
+- **WHEN** a workbook without "Gearchiveerde Applicaties" that no longer lists `7` is imported
+- **THEN** the module and the usage of `7` SHALL be archived and SHALL NOT be deleted
+- **AND** the report SHALL carry a warning that the sheet "Gearchiveerde Applicaties" was not found
+
+#### Scenario: A stale duplicate under the same import key is left in the trash
+@e2e exclude Data condition from earlier imports; tests/Unit/Service/CmdbExportImportServiceTest.php testAStaleDuplicateIsNeverRestoredByTheReconciliation stores a working and a trashed module and usage for APPID `7`, lists `7` on the archive sheet, and asserts the working pair is archived, no `restore` happens and the trashed pair stays deleted; testEveryOtherUsageOfAKeyFollowsTheApplication asserts the stray and second usages follow.
+
+- **GIVEN** a working module with APPID `7` and its usage, and a module with the same import key in the trash with its own usage
+- **WHEN** an export without `7` on the CMDB sheets, with `7` on "Gearchiveerde Applicaties", is imported with `archive`
+- **THEN** the working module and usage SHALL be archived
+- **AND** the module and the usage in the trash SHALL stay there, and nothing SHALL be restored
+- **AND** a working usage that points at the module in the trash, or a second usage of the working module, SHALL be archived as well
+
+#### Scenario: An archive row whose APPID has no cached value never turns an archive into a deletion
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAnUncachedArchiveRowArchivesInsteadOfDeleting asserts the archive state, no delete, and the warning naming the sheet and the row; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php testAnUncachedArchiveKeyIsListedNotDropped asserts the reader lists the row.
+
+- **GIVEN** the module with APPID `7` and its usage were imported, and the workbook's archive sheet lists `7` in a formula that carries no cached value
+- **WHEN** the workbook is imported with `archive` and `7` is on no CMDB sheet
+- **THEN** the module and the usage of `7` SHALL be archived and SHALL NOT be deleted
+- **AND** the report SHALL carry a warning naming the sheet "Gearchiveerde Applicaties" and the row
+
+#### Scenario: A CMDB row whose APPID has no cached value never turns an archive into a deletion
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAnUncachedCmdbRowArchivesInsteadOfDeleting asserts the archive state, no delete, and the warning naming the CMDB sheet and the row.
+
+- **GIVEN** the module with APPID `8` and its usage were imported, `8` is on no readable row, and a row of a CMDB sheet holds its APPID in a formula that carries no cached value
+- **WHEN** the workbook is imported with `archive` and a readable archive sheet that does not list `8`
+- **THEN** the module and the usage of `8` SHALL be archived and SHALL NOT be deleted
+- **AND** the report SHALL carry a warning naming the CMDB sheet and the row
+
+#### Scenario: A workbook that lacks one of the CMDB sheets never turns an archive into a deletion
+@e2e exclude Covered by the service and reader tests; tests/Unit/Service/CmdbExportImportServiceTest.php testAMissingSourceSheetArchivesInsteadOfDeleting asserts the archive state, no delete, and the warning naming the missing sheet; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php testAWorkbookWithSomeSourceSheetsNamesTheAbsentOnes asserts the reader lists the absent sheet.
+
+- **GIVEN** the module with APPID `8` and its usage were imported from the sheet "Beheerde Applicaties CMDB"
+- **WHEN** a workbook with "Onbeh Applicaties CMDB" and a readable archive sheet, but without "Beheerde Applicaties CMDB", is imported with `archive`
+- **THEN** the module and the usage of `8` SHALL be archived and SHALL NOT be deleted
+- **AND** the report SHALL carry a warning naming "Beheerde Applicaties CMDB"
+
+#### Scenario: Keeping missing records, a cancelled import and another municipality leave everything as it is
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testRecordsMissingFromTheExportStayWhenKept, testACancelledImportDoesNotReconcile and testAnotherMunicipalitysUsagesAreNeverReconciled assert no archive, no delete and no reconciliation row.
+
+- **GIVEN** the modules with APPID `1` and `7` and their usages for "Gemeente Voorbeeldstad", and a usage of `7` for "Gemeente Anders"
+- **WHEN** an export with only `1` is imported with `missingRecords` `keep`, or with `archive` but cancelled after row 1
+- **THEN** no module or usage SHALL be archived or deleted
+- **AND** when it is imported with `archive` and completes, only the usage of "Gemeente Voorbeeldstad" for `7` and the module SHALL be archived; the usage of "Gemeente Anders" SHALL be untouched
+
+#### Scenario: A cancel after the last row or during the reconciliation stops it
+@e2e exclude Timing-dependent; tests/Unit/Service/CmdbExportImportServiceTest.php testACancelDuringTheLastRowArchivesNothing and testACancelDuringTheReconciliationStopsBeforeTheNextApplication request the cancel at those two moments and assert the transitions and the cancelled report.
+
+- **GIVEN** the modules with APPID `1`, `7` and `8` and their usages for "Gemeente Voorbeeldstad"
+- **WHEN** an export with only `1`, and `7` and `8` on the archive sheet, is imported with `archive` and a cancel arrives while row `1` is processed
+- **THEN** no module or usage SHALL be archived or deleted, and the report SHALL be cancelled
+- **AND** when the cancel arrives instead while `7` is archived, `7` SHALL stay archived, `8` SHALL be left as it is, and the report SHALL be cancelled
+
+#### Scenario: One application that cannot be archived does not stop the others
+@e2e exclude Fault injection; tests/Unit/Service/CmdbExportImportServiceTest.php testAFailingArchiveIsAFailedRowAndTheOthersAreReconciled makes the archive of one application throw and asserts a failed row naming the step, the other application archived, and the log line without a name.
+
+- **GIVEN** the modules with APPID `7` and `8` left the export and are on the archive sheet
+- **WHEN** archiving `7` throws
+- **THEN** the report SHALL list `7` as `failed` with the step `archive` and the exception class
+- **AND** `8` SHALL be archived
+
+#### Scenario: Without the archive services an archiving import is refused before reading
+@e2e exclude Environment condition; tests/Unit/Service/CmdbExportImportServiceTest.php testMissingArchiveServicesRefuseAnArchivingImport asserts 503 ARCHIVE_UNAVAILABLE with no read and no save, and that keep still imports; tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
+
+- **GIVEN** an OpenRegister without `ArchiveHandler`
+- **WHEN** an export is imported with `missingRecords` `archive`
+- **THEN** the endpoint SHALL answer 503 with error `ARCHIVE_UNAVAILABLE` and nothing SHALL be read or written
+- **AND** the same export with `keep` SHALL be imported
+
+### Requirement: An application that returns to the export SHALL be unarchived or restored, never duplicated (REQ-CMDB-016)
+
+
+The import SHALL match a module by its import key, and a usage by consumer and module, among archived and soft-deleted objects as well as working ones. Before it updates a matched module or usage that is archived, it SHALL unarchive it through OpenRegister's archive state; before it updates one that is soft-deleted, it SHALL restore it from the trash. It SHALL then update the row as REQ-CMDB-006 and REQ-CMDB-009 describe, and SHALL NOT create a second module or usage. The row's outcome SHALL be `restored` when a module or usage was restored, else `unarchived` when one was unarchived, else the usual outcome; the summary SHALL count both. With `updateExisting` false the row SHALL be skipped as `exists` and nothing SHALL be revived. When more than one module or usage matches, the import SHALL take a working one before an archived one, and an archived one before one in the trash, so a module deleted by hand next to the one a later import created SHALL NOT be restored. Organisations and contact persons SHALL keep matching among working objects only.
+
+#### Scenario: An archived application returns to the export
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
+
+- **GIVEN** the module and the usage of APPID `1234` are archived and those of APPID `2` are in the trash
+- **WHEN** an export that lists both on the CMDB sheets is imported
+- **THEN** the report SHALL show `1234` as `unarchived` and `2` as `restored`
+- **AND** there SHALL still be one module and one usage for each
+- **AND** both SHALL be listed again without a lens
+
+#### Scenario: A returning application is not revived when existing records are not updated
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testUpdateExistingFalseLeavesAnArchivedMatchArchived asserts the row is skipped as `exists`, the archive state stays and no object is created.
+
+- **GIVEN** the module and the usage of APPID `7` are archived
+- **WHEN** a row with APPID `7` is imported with `updateExisting` false
+- **THEN** the row SHALL be skipped with reason `exists`
+- **AND** both SHALL stay archived, and no module or usage SHALL be created
+
+#### Scenario: A working match wins over a deleted one with the same import key
+@e2e exclude Data condition from earlier imports; tests/Unit/Service/CmdbExportImportServiceTest.php testAWorkingMatchWinsOverADeletedOneWithTheSameKey stores a deleted module and usage ahead of the working ones and asserts the working ones are updated and nothing is restored.
+
+- **GIVEN** a module with APPID `7` in the trash and a working module with the same import key, each with a usage of "Gemeente Voorbeeldstad"
+- **WHEN** a row with APPID `7` is imported
+- **THEN** the working module and its usage SHALL be updated
+- **AND** the module and the usage in the trash SHALL stay there, and nothing SHALL be restored
+
+### Requirement: Archived applications and usages SHALL be listable in stackiq and SHALL stay out of OpenCatalogi and Portaliq by default (REQ-CMDB-017)
+
+
+The `module` and `usage` schemas SHALL declare `x-openregister-archive` with `enabled` true through the register fragment `topdesk-cmdb-import.json`, as `module` 0.3.9 and `usage` 1.5.7, so OpenRegister offers the archive state on both. Stackiq's Applications and Applications in use pages SHALL offer a quick filter "Archived" that lists the archive alone (`_archived=true`). No change SHALL be made to OpenCatalogi or Portaliq: both list through OpenRegister's default lens, so an archived or deleted application is not in OpenCatalogi's search results or in Portaliq's "Software we use", and an OpenCatalogi caller finds archived applications with `_archived=true` on the existing routes.
+
+#### Scenario: The merged register offers the archive state on both schemas
+@e2e exclude Configuration; tests/Unit/Settings/TopdeskCmdbFragmentTest.php testTheMergedSchemasOfferTheArchiveState asserts the versions and the annotation after merging every fragment.
+
+- **GIVEN** every register fragment merged in filename order
+- **THEN** `module` SHALL be version 0.3.9 and `usage` 1.5.7
+- **AND** both SHALL declare `configuration.x-openregister-archive.enabled` true, and the usage lifecycle of 1.5.6 SHALL still be declared
+
+#### Scenario: The Applications page lists the archive on request
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
+
+- **GIVEN** the module of APPID `1234` is archived
+- **WHEN** an admin opens the Applications page
+- **THEN** the module SHALL NOT be listed
+- **AND** under the quick filter "Archived" it SHALL be listed
 
 ## Non-Functional Requirements
 

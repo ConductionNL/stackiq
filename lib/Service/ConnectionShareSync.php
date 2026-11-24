@@ -14,7 +14,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
  * person saving a usage need not own the connections it lists, and only that
  * field changes.
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  * @SuppressWarnings(PHPMD.StaticAccess) RelationRefs reads relation values; SearchBounds::bounded() is the shared query guard.
  */
 class ConnectionShareSync {
@@ -77,7 +77,7 @@ class ConnectionShareSync {
 	 *
 	 * @return list<string> Connection uuids.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public static function affectedConnections(array $usage, array $previous): array {
 		$affected = [];
@@ -101,7 +101,7 @@ class ConnectionShareSync {
 	 *
 	 * @return list<string> Organisation uuids.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public static function participantsFor(array $usages, string $connection): array {
 		$organisations = [];
@@ -129,7 +129,7 @@ class ConnectionShareSync {
 	 *
 	 * @return array<string, list<string>>
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public static function patch(array $connection, array $organisations): array {
 		$stored = $connection[self::FIELD] ?? [];
@@ -158,7 +158,7 @@ class ConnectionShareSync {
 	 *
 	 * @return int The number of connections rewritten.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public function sync(array $connections, ?string $deletedUsage=null): int {
 		$written = 0;
@@ -182,7 +182,7 @@ class ConnectionShareSync {
 	 *
 	 * @return int The number of connections rewritten.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public function backfill(): int {
 		$target = $this->target(objectType: 'usage');

@@ -8,7 +8,7 @@
  * view it fetches with `include_gebruik`, the view's own groups with the
  * coverage states kept, and the view the URL names.
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

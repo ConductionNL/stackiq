@@ -297,7 +297,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the organisation is a cooperation.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		isCooperation() {
 			return ['Collaboration', 'Samenwerking'].includes(this.item?.type)
@@ -305,7 +305,7 @@ export default {
 
 		/**
 		 * @return {number} How many participant organisations the cooperation lists, each once.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		participantCount() {
 			return participantsOf({ participants: this.item?.participants }).length

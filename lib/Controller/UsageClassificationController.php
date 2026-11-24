@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * members of `ambtenaar`, and users whose active organisation is a
  * municipality or a collaboration; everyone else gets 403 before anything is read.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 class UsageClassificationController extends Controller {
 
@@ -55,7 +55,7 @@ class UsageClassificationController extends Controller {
 	 * @param ClassificationSummaryAccess $access         The caller, and whether they may read the summary.
 	 * @param LoggerInterface             $logger         Failed reads.
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function __construct(
 		string $appName,
@@ -74,7 +74,7 @@ class UsageClassificationController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	#[NoAdminRequired]
 	public function suggestion(string $usageId): JSONResponse {
@@ -103,7 +103,7 @@ class UsageClassificationController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	#[NoAdminRequired]
 	public function summary(string $moduleId): JSONResponse {

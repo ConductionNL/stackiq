@@ -47,7 +47,7 @@
  *    (CmdbReadFilter), which bounds the cell objects, not the parse.
  * 7. The archive sheet ("Gearchiveerde Applicaties"), when the workbook has
  *    it, counts as a read sheet for every bound above, and only its key
- *    column is resolved and read (openspec/changes/cmdb-import-archive-reconciliation).
+ *    column is resolved and read (openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -186,7 +186,7 @@ class CmdbWorkbookReader {
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
 		$oversized = $this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());

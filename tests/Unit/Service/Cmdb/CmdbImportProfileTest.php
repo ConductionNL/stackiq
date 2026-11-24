@@ -833,7 +833,7 @@ class CmdbImportProfileTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function testTheArchiveSheetAndTheMissingRecordsModes(): void {
 		$profile = new CmdbImportProfile(container: $this->emptyContainer());

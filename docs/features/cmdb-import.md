@@ -21,7 +21,7 @@ newer export later and the same applications are updated, not duplicated;
 applications that left the export are archived or moved to the trash (see
 [Repeat imports](#repeat-imports)).
 
-Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import); archiving and deleting on a repeat import in [`openspec/changes/cmdb-import-archive-reconciliation/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/cmdb-import-archive-reconciliation)).
+Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import); archiving and deleting on a repeat import in [`openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation)).
 
 ## Who can import
 

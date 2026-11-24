@@ -17,7 +17,7 @@
  *
  * Base URL and admin credentials come from the environment (`_fixtures.ts`).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 import type { APIRequestContext, Browser } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

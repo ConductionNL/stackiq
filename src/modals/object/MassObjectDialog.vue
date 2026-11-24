@@ -175,7 +175,7 @@ export default {
 		 *
 		 * @param {{entry: object}} item A refused entry and its reason.
 		 * @return {string} The entry's name, else its id.
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
 		 */
 		refusedName(item) {
 			const entry = (item && item.entry) || {}

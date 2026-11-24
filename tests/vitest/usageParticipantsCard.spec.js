@@ -9,7 +9,7 @@
  * note for a participant, and "owner, count" in the list
  * (shared-usage-visible-to-participants task 3).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

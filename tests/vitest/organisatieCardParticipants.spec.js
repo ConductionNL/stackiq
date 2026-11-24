@@ -8,7 +8,7 @@
  * card on Organisations, and the participant organisations, each linked, on
  * its own page (shared-usage-visible-to-participants task 5).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

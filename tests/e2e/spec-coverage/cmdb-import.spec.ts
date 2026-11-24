@@ -29,7 +29,7 @@
  * not readable anonymously: neither through OpenRegister's objects API nor
  * in an OpenCatalogi search hit (skipped when OpenCatalogi is not installed).
  *
- * openspec/changes/cmdb-import-archive-reconciliation: a later export that
+ * openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation: a later export that
  * moved APPID 1234 to "Gearchiveerde Applicaties" and dropped APPID 2 archives
  * the one and moves the other to the trash, the Applications page lists 1234
  * under "Archived", and the original export brings both back. The cleanup

@@ -388,7 +388,7 @@ export default {
 	// (now or on a date) and Withdraw, calling stackiq's guarded publication
 	// endpoint. No built-in header action can call a non-object-service
 	// endpoint per record and show its refusal, so it stays custom.
-	// @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+	// @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 	PublicationAction,
 
 	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---

@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
  * `providerResponse` yet. Only a member of the provider answers, and that
  * check runs before anything is written.
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 class ClaimedUsageService {
 
@@ -92,7 +92,7 @@ class ClaimedUsageService {
 	 *   status `ok`, or `no_organisation` / `unavailable` with no results; `organisation`
 	 *   is the active organisation the claims are of, so a page shows them only on its own page.
 	 *
-	 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+	 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 	 */
 	public function claimed(): array {
 		$where = $this->where();
@@ -135,7 +135,7 @@ class ClaimedUsageService {
 	 *   `forbidden` when the active organisation is not the usage's provider,
 	 *   or the usage is its own; `unavailable` when OpenRegister fails.
 	 *
-	 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+	 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 	 */
 	public function answer(string $uuid, string $answer): array {
 		if (in_array($answer, self::ANSWERS, true) === false || trim($uuid) === '') {

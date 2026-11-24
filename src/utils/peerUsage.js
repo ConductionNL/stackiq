@@ -6,7 +6,7 @@
  *
  * @param {object|null} peers The answer of `GET /api/reference-component-coverage/peers`.
  * @return {Map<string, Array<object>>} The applications by reference component id.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 export function peerIndex(peers) {
 	const index = new Map()
@@ -24,7 +24,7 @@ export function peerIndex(peers) {
  * @param {Map<string, Array<object>>} index From peerIndex().
  * @param {object} component A coverage row.
  * @return {Array<object>} The applications, most used first.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 export function peerApplicationsOf(index, component) {
 	return index.get(String(component?.id ?? '')) || index.get(String(component?.identifier ?? '')) || []
@@ -35,7 +35,7 @@ export function peerApplicationsOf(index, component) {
  *
  * @param {object} application A peer application.
  * @return {boolean} True when the count is shown as "fewer than".
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 export function isHeldBack(application) {
 	return application?.count === null || application?.count === undefined

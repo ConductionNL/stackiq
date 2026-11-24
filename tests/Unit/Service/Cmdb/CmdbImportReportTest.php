@@ -109,7 +109,7 @@ class CmdbImportReportTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheReconciliationOutcomesAreCounted(): void {
 		$report = new CmdbImportReport(operationId: 'cmdb-report-02', rowsRead: 2);

@@ -43,7 +43,7 @@ import { participantsOf } from '../../utils/sharedUsage.js'
  * organisation, linked to its own page. Not shown for an organisation that is
  * not a cooperation.
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
  */
 export default {
 	name: 'OrganisationParticipantsList',
@@ -73,7 +73,7 @@ export default {
 	computed: {
 		/**
 		 * @return {boolean} Whether to show the list: a cooperation, or a load that failed.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		shown() {
 			return this.error || ['Collaboration', 'Samenwerking'].includes(this.organisation?.type)
@@ -81,7 +81,7 @@ export default {
 
 		/**
 		 * @return {Array<{id: string, name: string}>} The participant organisations.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		participants() {
 			return participantsOf(this.organisation)
@@ -93,7 +93,7 @@ export default {
 		 * Reload when the page moves to another organisation.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		objectId() {
 			this.load()
@@ -111,7 +111,7 @@ export default {
 		 * Load the organisation and the names of the participants it holds as uuids.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-cooperation-shows-its-participants-req-dlg-012
 		 */
 		async load() {
 			this.error = false

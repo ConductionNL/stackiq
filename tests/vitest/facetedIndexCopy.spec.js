@@ -9,7 +9,7 @@
  * that `copy` config to its embedded CnIndexPage, whose single and mass copy
  * dialogs then list the links.
  *
- * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+ * @spec openspec/changes/archive/2026-11-24-applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
  */
 
 import { mount } from '@vue/test-utils'
