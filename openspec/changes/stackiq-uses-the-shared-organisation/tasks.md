@@ -27,10 +27,15 @@ shape, a catalog-value migration and the moderation field. See the proposal.
 
 ## 4. The migration, not in this change
 
-- [ ] 4.1 OpenRegister: make `OrganisationObjectSourceProvider` writable, so an
+- [x] 4.1 OpenRegister: make `OrganisationObjectSourceProvider` writable, so an
       app can register an organisation through the object API. Stackiq's
       walkthrough creates one with a New button; a read-only projection retires
       that flow. This blocks everything below.
+      > Landed in OpenRegister main (change `the-organisation-projection-is-writable`,
+      > openregister#3421): `insert()` goes through `createOrganisation()`,
+      > `update()` writes the projected fields for an organisation admin,
+      > `remove()` refuses. 4.2 to 4.4 are the data migration (rows move off the
+      > local schema, then `prune-retired` removes it) and wait for Ruben.
 - [ ] 4.2 Stackiq: a new schema carrying the 10 properties the projection has no
       column for, `$ref`-ing `nc-organisation` for the identity facet.
 - [ ] 4.3 Repoint the ~30 reading sites, the four manifest pages, the publish
