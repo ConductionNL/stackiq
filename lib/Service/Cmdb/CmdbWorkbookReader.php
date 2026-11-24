@@ -919,11 +919,13 @@ class CmdbWorkbookReader {
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function packSources(CmdbImportProfile $profile): array {
 		$constants = $profile->constantColumns();
 		$sources = [];
-		foreach (CmdbImportProfile::TARGETS as $target) {
+		foreach ($profile->targets() as $target) {
 			if ($target === 'municipality') {
 				continue;
 			}

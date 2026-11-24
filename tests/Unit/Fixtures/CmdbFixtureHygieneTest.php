@@ -56,7 +56,7 @@ class CmdbFixtureHygieneTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const PLACEHOLDER_NUMBERS = ['123456', '123457', '612345678', '0612345678', '143211234', '10000000001'];
+	private const PLACEHOLDER_NUMBERS = ['12345678', '123456', '123457', '612345678', '0612345678', '143211234', '10000000001'];
 
 	/**
 	 * The only values a person-name column may hold, besides a placeholder e-mail address
