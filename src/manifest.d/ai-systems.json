@@ -68,7 +68,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ] }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"

@@ -2160,6 +2160,7 @@ OC.L10N.register(
         "You asked many questions in a short time. Try again in a minute.": "You asked many questions in a short time. Try again in a minute.",
         "The assistant could not answer this question.": "The assistant could not answer this question.",
         "Assistant actions": "Assistant actions",
+        "Assistant: {toolId}": "Assistant: {toolId}",
         "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.": "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.",
         "Tool": "Tool",
         "From": "From",

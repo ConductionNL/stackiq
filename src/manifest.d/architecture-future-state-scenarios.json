@@ -165,7 +165,8 @@
 							"icon": "History",
 							"widgets": [
 								{
-									"type": "audit"
+									"type": "audit",
+									"props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } }
 								}
 							]
 						}

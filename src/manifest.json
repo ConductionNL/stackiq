@@ -481,7 +481,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "contacts", "label": "Contacts", "icon": "AccountBoxOutline", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "contacts" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the contacts leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -533,7 +533,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "contacts", "label": "Contacts", "icon": "AccountBoxOutline", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "contacts" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the contacts leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -608,7 +608,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "bookmarks", "label": "Bookmarks", "icon": "BookmarkOutline", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "bookmarks" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the bookmarks leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -695,7 +695,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "calendar", "label": "Calendar", "icon": "Calendar", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "calendar" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the calendar leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -848,7 +848,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -904,7 +904,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -954,7 +954,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1007,7 +1007,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "deck", "label": "Deck", "icon": "CardTextOutline", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "deck" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the deck leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1058,7 +1058,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1172,7 +1172,7 @@
 					"tabs": [
 						{ "id": "calendar", "label": "Calendar", "icon": "Calendar", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "calendar" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the calendar leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
 						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1208,7 +1208,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "exposure", "label": "Exposure", "icon": "ShieldOutline", "component": "VulnerabilityExposurePanel" },
-						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
+						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"

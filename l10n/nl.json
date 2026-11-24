@@ -2264,6 +2264,7 @@
         "You asked many questions in a short time. Try again in a minute.": "U hebt veel vragen in korte tijd gesteld. Probeer het over een minuut opnieuw.",
         "The assistant could not answer this question.": "De assistent kon deze vraag niet beantwoorden.",
         "Assistant actions": "Assistentacties",
+        "Assistant: {toolId}": "Assistent: {toolId}",
         "What assistants did on catalogue records through stackiq's tools, read from the OpenRegister audit trail.": "Wat assistenten met de tools van stackiq aan catalogusrecords hebben gedaan, gelezen uit de audittrail van OpenRegister.",
         "Tool": "Tool",
         "From": "Van",
