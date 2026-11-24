@@ -4346,16 +4346,16 @@
         },
         {
             "name": "edgedesign/phpqa",
-            "version": "v1.27.2",
+            "version": "v1.28.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/EdgedesignCZ/phpqa.git",
-                "reference": "ad97e48c8dfe406f3fab5f6a6fb0604035f7a3ea"
+                "reference": "37021e7a2803720588d2673ea4b29acc7879a7bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/EdgedesignCZ/phpqa/zipball/ad97e48c8dfe406f3fab5f6a6fb0604035f7a3ea",
-                "reference": "ad97e48c8dfe406f3fab5f6a6fb0604035f7a3ea",
+                "url": "https://api.github.com/repos/EdgedesignCZ/phpqa/zipball/37021e7a2803720588d2673ea4b29acc7879a7bf",
+                "reference": "37021e7a2803720588d2673ea4b29acc7879a7bf",
                 "shasum": ""
             },
             "require": {
@@ -4418,7 +4418,7 @@
                 "issues": "https://github.com/EdgedesignCZ/phpqa/issues",
                 "source": "https://github.com/EdgedesignCZ/phpqa"
             },
-            "time": "2025-11-22T07:41:40+00:00"
+            "time": "2026-11-20T08:13:23+00:00"
         },
         {
             "name": "evenement/evenement",
@@ -11421,5 +11421,5 @@
         "php": "8.3.16",
         "ext-xsl": "1"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
