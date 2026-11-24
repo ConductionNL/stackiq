@@ -8,7 +8,7 @@
  * what it says when the trail cannot be read, and that the page and its menu
  * entry are declared.
  *
- * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed
+ * @spec openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed
  */
 import * as fs from 'fs'
 import * as path from 'path'

@@ -7,7 +7,7 @@
 
 Review what AI assistants did on catalogue records through stackiq's tools.
 
-Specification: [`openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md).
+Specification: [`openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md).
 
 ## Where
 
