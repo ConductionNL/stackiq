@@ -42,7 +42,7 @@
   - GIVEN one suggestion WHEN the user clicks Dismiss and reloads THEN it stays gone
 - [x] Implement
   - `ConnectionSuggestionsPanel` registered in `src/customComponents.js` and placed after the data on `GebruikDetail` (`src/manifest.d/usages.json`); English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`. Unit spec `tests/vitest/connectionSuggestionsPanel.spec.js` (listing, empty state, refusals, accept, dismiss, accept all).
-- [ ] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
   - Owed: a browser run against a live instance.
 
 ### Task 5: Documentation

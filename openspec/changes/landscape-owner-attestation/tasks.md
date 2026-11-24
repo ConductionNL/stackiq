@@ -39,7 +39,7 @@
   - GIVEN an owner with two pending requests WHEN they open My confirmation requests THEN both show with Confirm
   - GIVEN a round with answers WHEN the information manager opens it THEN it shows confirmed, corrected, pending and overdue counts
 - [x] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/owner-attestation.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/owner-attestation.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 - Note: pages `MyAttestations` (filter `assigneeUserId: @me`, status pending, row actions Confirm and Open entry), `AttestationRounds` (header action Start round) and `AttestationRoundDetail` (the four counts as stat tiles, the requests per status with their owner) in `src/manifest.d/owner-attestation.json`, both menu entries under Organisations. The handlers are in `src/services/attestation.js`, registered in `src/customComponents.js`; the dialog `src/dialogs/StartAttestationRoundDialog.vue` opens through `Dialogs.vue`. vitest `tests/vitest/ownerAttestation.spec.js` covers the handlers, the round body and the merged pages; the Playwright run needs a live instance and is left.
 
 ### Task 5: Documentation

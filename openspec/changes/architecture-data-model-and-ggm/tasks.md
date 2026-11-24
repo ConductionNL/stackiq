@@ -22,7 +22,7 @@
   - GIVEN the effective menu WHEN it renders THEN Data model sits under the Architecture group
   - GIVEN an entity page WHEN it renders THEN "Applications that hold this data" lists usages filtered on `dataEntities`
 - [x] Implement
-- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`)
+- [x] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Relations drawn around an entity
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
@@ -32,7 +32,7 @@
   - GIVEN a relation with cardinalities WHEN it is drawn THEN the edge label holds its name and both cardinalities
   - GIVEN the graph WHEN it renders THEN every colour prop is a CSS variable and a text table lists the same relations
 - [x] Implement
-- [ ] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario)
+- [x] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Attributes with keys
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
@@ -41,7 +41,7 @@
   - GIVEN a drawn entity WHEN its page renders THEN key attributes come first, marked key in text, and can be edited
   - GIVEN an imported entity WHEN its page renders THEN no edit control shows and the notice about the GGM file does
 - [x] Implement
-- [ ] Test (vitest `dataEntityAttributes.spec.js`, Playwright new entity scenario)
+- [x] Test (vitest `dataEntityAttributes.spec.js`, Playwright new entity scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Data entities on the usage page
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
@@ -49,7 +49,7 @@
 - **acceptance_criteria**:
   - GIVEN a usage page WHEN it is edited THEN the data entities picker offers business objects only, and the saved list shows on the page
 - [x] Implement
-- [ ] Test (Playwright usage link scenario)
+- [x] Test (Playwright usage link scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 6: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page

@@ -43,7 +43,7 @@
   - GIVEN the `catalogContract` schema WHEN the library resolves the field widget for `responsibleUser` THEN it is `user`
   - GIVEN an application owner on ContractDetail WHEN they pick a user and save THEN the detail shows that user
 - [x] Implement
-- [ ] Test (vitest tests/vitest/contractResponsibleUser.spec.js and the Playwright spec above)
+- [x] Test (vitest tests/vitest/contractResponsibleUser.spec.js and the Playwright spec above) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Add the responsible user to the contract-expiry recipients
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-005-the-contract-expiry-warning-must-include-the-responsible-user-among-its-recipients

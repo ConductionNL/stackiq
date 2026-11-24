@@ -52,7 +52,7 @@
   - GIVEN a change with appliedTo WHEN the apply runs again THEN it is skipped
   - GIVEN a failed write WHEN the apply stops THEN appliedAt stays empty and the notice names the change
 - [x] Implement
-- [ ] Test (vitest `scenarioApply.spec.js`, Playwright apply scenario)
+- [x] Test (vitest `scenarioApply.spec.js`, Playwright apply scenario) (e2e written, runs in nightly; not verified on a live instance)
   > Built 21 Nov: `src/store/modules/scenarioApply.js` writes add (a Planned usage of the scenario's organisation, in production on the effective date), phase out (`startDateOutPhased`) and replace (`plannedReplacement`, `plannedReplacementDate`) in order of effective date, records the usage in `appliedTo` after each write, skips a change that has it, stops at the first failed write and sets `appliedAt` last. The scenario page's comparison offers Apply to landscape only for an adopted scenario without `appliedAt`, and a failed apply's notice names the change. vitest `scenarioApply.spec.js` (14) passes; the Playwright apply scenario is written in `future-state-scenarios.spec.ts` and not run yet.
 
 ### Task 6: Documentation and translations
