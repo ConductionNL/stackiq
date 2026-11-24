@@ -40,7 +40,7 @@
   - GIVEN a picked organisation WHEN the page loads THEN it shows the counts, the table and the four quick filters
   - GIVEN no reference components WHEN the page loads THEN it says the GEMMA model must be imported
 - [x] Implement
-- [ ] Test (Playwright `reference-component-coverage.spec.ts` overlap filter and empty model scenarios)
+- [x] Test (Playwright `reference-component-coverage.spec.ts` overlap filter and empty model scenarios) (overlap filter written; the empty-model scenario is `@e2e exclude` in the spec, covered by `ReferenceComponentCoverageServiceTest`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Coverage map on a GEMMA view
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
@@ -49,7 +49,7 @@
   - GIVEN a picked view WHEN it renders THEN it is read-only and every reference component node carries its state as a CSS variable colour and as text
   - GIVEN a node whose element is not a reference component WHEN it renders THEN it carries no state
 - [x] Implement
-- [ ] Test (vitest `coverageViewMap.spec.js`, Playwright map scenario)
+- [x] Test (vitest `coverageViewMap.spec.js`, Playwright map scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 6: Overlap in the portfolio report
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
@@ -59,7 +59,7 @@
   - GIVEN the CSV WHEN it is built THEN it has the `overlapsWith` column
   - GIVEN the page WHEN the report has overlap THEN an Overlap section lists each component with its applications
 - [x] Implement
-- [ ] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario)
+- [x] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 7: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
