@@ -69,48 +69,36 @@ final class LegacyCatalogueCandidates {
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function forRows(array $rows): array {
-		$organisations = [];
-		foreach (self::distinct(rows: $rows, key: 'supplierName') as $name) {
-			$organisations = array_merge($organisations, $this->find(schemaKey: 'organization', field: 'name', value: $name));
-		}
-
-		foreach (self::distinct(rows: $rows, key: 'supplierKvk') as $kvk) {
-			$organisations = array_merge($organisations, $this->find(schemaKey: 'organization', field: 'registrationNumber', value: $kvk));
-		}
-
-		$organisations = self::uniqueById(objects: $organisations);
-		$modules = $this->findFor(schemaKey: 'module', field: 'provider', owners: $organisations);
-		$versions = $this->findFor(schemaKey: 'moduleVersion', field: 'module', owners: $modules);
+		$filters = array_merge(
+			self::filters(field: 'name', values: self::distinct(rows: $rows, key: 'supplierName')),
+			self::filters(field: 'registrationNumber', values: self::distinct(rows: $rows, key: 'supplierKvk'))
+		);
+		$organisations = $this->find(schemaKey: 'organization', filters: $filters);
+		$modules = $this->find(schemaKey: 'module', filters: self::filters(field: 'provider', values: array_column($organisations, 'id')));
+		$versions = $this->find(schemaKey: 'moduleVersion', filters: self::filters(field: 'module', values: array_column($modules, 'id')));
 
 		return ['organisations' => $organisations, 'modules' => $modules, 'versions' => $versions];
 	}//end forRows()
 
 	/**
-	 * The objects of a schema whose field points at one of the owners.
+	 * One exact-field filter per value.
 	 *
-	 * @param string $schemaKey The schema key.
-	 * @param string $field The reference field.
-	 * @param array<int, array<string, mixed>> $owners The objects referred to, each with an `id`.
+	 * @param string $field The field.
+	 * @param array<int, mixed> $values The values.
 	 *
-	 * @return array<int, array<string, mixed>>
+	 * @return array<int, array{0: string, 1: string}> Field and value pairs.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
-	private function findFor(string $schemaKey, string $field, array $owners): array {
-		$found = [];
-		foreach ($owners as $owner) {
-			$found = array_merge($found, $this->find(schemaKey: $schemaKey, field: $field, value: (string)$owner['id']));
-		}
-
-		return self::uniqueById(objects: $found);
-	}//end findFor()
+	private static function filters(string $field, array $values): array {
+		return array_map(static fn (mixed $value): array => [$field, (string)$value], $values);
+	}//end filters()
 
 	/**
-	 * The objects of a schema whose field holds exactly the value.
+	 * The objects of a schema that match any of the exact-field filters, each once.
 	 *
 	 * @param string $schemaKey The schema key.
-	 * @param string $field The field.
-	 * @param string $value The exact value.
+	 * @param array<int, array{0: string, 1: string}> $filters Field and value pairs; one search each.
 	 *
 	 * @return array<int, array<string, mixed>> Each object's data with its uuid as `id`.
 	 *
@@ -118,31 +106,33 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
-	private function find(string $schemaKey, string $field, string $value): array {
-		$results = $this->objectService->searchObjects(
-			query: SearchBounds::bounded(
-				query: [
-					'@self' => ['register' => $this->register, 'schema' => ($this->schemas[$schemaKey] ?? 0)],
-					$field => $value,
-					'_limit' => self::LIMIT,
-				]
-			),
-			_rbac: false,
-			_multitenancy: false
-		);
-		if (is_array($results) === false) {
-			return [];
-		}
-
+	private function find(string $schemaKey, array $filters): array {
 		$found = [];
-		foreach ($results as $entity) {
-			$object = self::data(entity: $entity);
-			if ($object !== null && self::reference(value: $object[$field] ?? null) === $value) {
-				$found[] = $object;
+		foreach ($filters as [$field, $value]) {
+			$results = $this->objectService->searchObjects(
+				query: SearchBounds::bounded(
+					query: [
+						'@self' => ['register' => $this->register, 'schema' => ($this->schemas[$schemaKey] ?? 0)],
+						$field => $value,
+						'_limit' => self::LIMIT,
+					]
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
+			if (is_array($results) === false) {
+				continue;
+			}
+
+			foreach ($results as $entity) {
+				$object = self::data(entity: $entity);
+				if ($object !== null && self::reference(value: $object[$field] ?? null) === $value) {
+					$found[$object['id']] ??= $object;
+				}
 			}
 		}
 
-		return $found;
+		return array_values($found);
 	}//end find()
 
 	/**
@@ -223,22 +213,4 @@ final class LegacyCatalogueCandidates {
 
 		return array_map('strval', array_keys($values));
 	}//end distinct()
-
-	/**
-	 * The objects without repeats, the first of each id kept.
-	 *
-	 * @param array<int, array<string, mixed>> $objects The objects, each with an `id`.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
-	 */
-	private static function uniqueById(array $objects): array {
-		$unique = [];
-		foreach ($objects as $object) {
-			$unique[(string)$object['id']] ??= $object;
-		}
-
-		return array_values($unique);
-	}//end uniqueById()
 }//end class

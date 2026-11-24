@@ -244,7 +244,13 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 				),
 				self::row(
 					row: 3,
-					cells: ['ID' => 'swc-2', 'Leverancier' => 'Voorbeeld Software B.V.', 'Applicatie' => 'Zaaksysteem Voorbeeld', 'Versie' => '5.0', 'Status' => 'Gepland']
+					cells: [
+						'ID' => 'swc-2',
+						'Leverancier' => 'Voorbeeld Software B.V.',
+						'Applicatie' => 'Zaaksysteem Voorbeeld',
+						'Versie' => '5.0',
+						'Status' => 'Gepland',
+					]
 				),
 				self::row(row: 4, cells: ['ID' => 'swc-3', 'Leverancier' => 'Ander Leverancier B.V.', 'Applicatie' => 'Burgerzaken', 'Versie' => '-']),
 				self::row(row: 5, cells: ['ID' => 'swc-4', 'Leverancier' => '', 'Applicatie' => 'Zonder leverancier']),
@@ -275,7 +281,10 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 			message: 'a name two organisations share matches neither; "-" is an empty version'
 		);
 		$this->assertSame(expected: ['status' => 'In production'], actual: $preview['rows'][0]['usage']);
-		$this->assertSame(expected: ['Required source field "Leverancier" is missing or empty'], actual: $preview['rows'][3]['errors']);
+		$this->assertSame(
+			expected: ['Required source field "Leverancier" is missing or empty'],
+			actual: $preview['rows'][3]['errors']
+		);
 		$this->assertSame(
 			expected: [
 				'rows' => 4,

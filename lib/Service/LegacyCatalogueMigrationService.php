@@ -26,11 +26,10 @@ namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
-use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
-use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueMatcher;
 use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueOpenRegister;
+use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueRowMapper;
 use OCP\IUserSession;
 
 /**
@@ -141,12 +140,8 @@ class LegacyCatalogueMigrationService {
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function previewRows(array $rows): array {
-		$profile = $this->openRegister->profile();
-		$engine = $this->openRegister->engine();
-		$mapped = [];
-		foreach ($rows as $row) {
-			$mapped[] = $this->mapRow(profile: $profile, engine: $engine, row: $row);
-		}
+		$mapper = new LegacyCatalogueRowMapper(profile: $this->openRegister->profile(), engine: $this->openRegister->engine());
+		$mapped = array_map(static fn (array $row): array => $mapper->map(row: $row), $rows);
 
 		$matchable = array_values(array_filter($mapped, static fn (array $row): bool => $row['skipped'] === false));
 		$candidates = $this->openRegister->candidates()->forRows(rows: array_column($matchable, 'match'));
@@ -163,56 +158,6 @@ class LegacyCatalogueMigrationService {
 
 		return ['rows' => $preview, 'summary' => self::summary(rows: $preview)];
 	}//end previewRows()
-
-	/**
-	 * One row mapped through the four packs: the records, the values to match on and the mapping errors.
-	 *
-	 * @param CmdbImportProfile $profile The profile.
-	 * @param object $engine The mapping engine.
-	 * @param array<string, mixed> $row The row as the reader returns it.
-	 *
-	 * @return array<string, mixed> The `sheet`, `row`, `legacyId`, the `records` per target, the `match` values,
-	 *                              the mapping `errors` and whether the row is `skipped`.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) The normaliser is stateless.
-	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
-	 */
-	private function mapRow(CmdbImportProfile $profile, object $engine, array $row): array {
-		$cells = (new CmdbRowNormaliser())->normalise(
-			cells: ($row['cells'] ?? []),
-			dateColumns: $profile->dateColumns(),
-			idColumns: $profile->idColumns(),
-			emptyValues: $profile->emptyValues()
-		);
-
-		$records = [];
-		$errors = [];
-		$skipped = false;
-		foreach ($profile->targets() as $target) {
-			$result = $engine->mapRow($profile->pack(target: $target), $cells, (int)($row['row'] ?? 0));
-			$records[$target] = ($result['data'] ?? []);
-			foreach (($result['errors'] ?? []) as $error) {
-				$errors[] = (string)($error['message'] ?? '');
-				$skipped = $skipped || str_starts_with((string)($error['message'] ?? ''), 'Required source field');
-			}
-		}
-
-		return [
-			'sheet' => (string)($row['sheet'] ?? ''),
-			'row' => (int)($row['row'] ?? 0),
-			'legacyId' => trim((string)($cells[$profile->keyColumn()] ?? '')),
-			'records' => $records,
-			'match' => [
-				'supplierKvk' => (string)($records['manufacturer']['registrationNumber'] ?? ''),
-				'supplierName' => (string)($records['manufacturer']['name'] ?? ''),
-				'product' => (string)($records['module']['name'] ?? ''),
-				'version' => (string)($records['version']['version'] ?? ''),
-			],
-			'errors' => $errors,
-			'skipped' => $skipped,
-		];
-	}//end mapRow()
 
 	/**
 	 * A mapped row with the matcher's decisions, as the preview answers it.
