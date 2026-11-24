@@ -8,7 +8,7 @@
  * shared with, "nobody", or nothing when the lookup is refused, from one
  * lookup per page load (shared-usage-visible-to-participants task 4).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

@@ -10,7 +10,7 @@ import { isHeldBack } from '../../utils/peerUsage.js'
  *
  * @param {object} application A peer application.
  * @return {string} The label.
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 export function peerLabel(application) {
 	const name = String(application?.moduleName || t('stackiq', 'Unnamed application'))

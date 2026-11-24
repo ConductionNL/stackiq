@@ -5,7 +5,7 @@
  * The support state of a component and the worst state an application in use
  * runs on, one level down (operations-technology-components task 3).
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 
 import { describe, expect, it, vi } from 'vitest'

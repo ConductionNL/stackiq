@@ -13,7 +13,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use OCP\IUserSession;
  * organisation is a municipality or a collaboration. Anyone else, and a
  * caller without an active organisation, is refused.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 class ClassificationSummaryAccess {
 
@@ -48,7 +48,7 @@ class ClassificationSummaryAccess {
 	 * @param IUserSession                $userSession    The caller.
 	 * @param IGroupManager               $groupManager   The caller's groups.
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function __construct(
 		private readonly UsageClassificationService $classification,
@@ -63,7 +63,7 @@ class ClassificationSummaryAccess {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function callerId(): ?string {
 		return $this->userSession->getUser()?->getUID();
@@ -76,7 +76,7 @@ class ClassificationSummaryAccess {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function mayReadSummary(string $userId): bool {
 		if ($this->groupManager->isAdmin($userId) === true || $this->groupManager->isInGroup($userId, 'ambtenaar') === true) {

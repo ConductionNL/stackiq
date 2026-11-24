@@ -11,7 +11,7 @@
  * the endpoint's own message (REQ-ODP-010).
  *
  * @module services/publicationActions
- * @spec openspec/changes/publish-and-lock-from-the-list/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/tasks.md#task-1
  */
 
 import axios from '@nextcloud/axios'
@@ -36,7 +36,7 @@ let target = { objectType: '' }
  *
  * @param {{objectType: string}} next The list's object type.
  * @return {void}
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function setPublicationTarget(next) {
 	target = { objectType: String((next && next.objectType) || '') }
@@ -46,7 +46,7 @@ export function setPublicationTarget(next) {
  * The object type the mass publish / withdraw dialogs act on.
  *
  * @return {{objectType: string}} The target.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function publicationTarget() {
 	return { ...target }
@@ -57,7 +57,7 @@ export function publicationTarget() {
  *
  * @param {string} objectType The catalogue object type (schema slug).
  * @return {boolean}
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
  */
 export function isPublishableType(objectType) {
 	return PUBLISHABLE_TYPES.includes(objectType)
@@ -68,7 +68,7 @@ export function isPublishableType(objectType) {
  *
  * @param {object} entry A catalogue object.
  * @return {string} The uuid, or ''.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function entryId(entry) {
 	if (!entry || typeof entry !== 'object') {
@@ -96,7 +96,7 @@ function endpointUrl(objectType, uuid, action) {
  *
  * @param {object} error The request error.
  * @return {string} The message to show.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function refusalMessage(error) {
 	const data = error && error.response && error.response.data
@@ -115,7 +115,7 @@ export function refusalMessage(error) {
  * @param {?string} [options.when] The publication moment; now when empty.
  * @param {object} [options.client] An axios-like client (tests).
  * @return {Promise<object>} The endpoint's result (`publicationDate`).
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
  */
 export async function publishEntry(objectType, uuid, options = {}) {
 	const client = options.client || axios
@@ -135,7 +135,7 @@ export async function publishEntry(objectType, uuid, options = {}) {
  * @param {object} [options] Options.
  * @param {object} [options.client] An axios-like client (tests).
  * @return {Promise<object>} The endpoint's result.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
  */
 export async function withdrawEntry(objectType, uuid, options = {}) {
 	const client = options.client || axios
@@ -154,7 +154,7 @@ export async function withdrawEntry(objectType, uuid, options = {}) {
  * @param {object} [options] Options passed to publishEntry / withdrawEntry.
  * @return {Promise<{successful: Array<object>, failed: Array<object>}>} The
  *   entries that succeeded, and the refused ones each with a `message`.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export async function runPublication(kind, objectType, entries, options = {}) {
 	const successful = []
@@ -184,7 +184,7 @@ export async function runPublication(kind, objectType, entries, options = {}) {
  * @param {object} entry A catalogue object (`publicationDate`, `depublicationDate`).
  * @param {Date} [now] The moment to judge at.
  * @return {'published'|'scheduled'|'unpublished'} The state.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
  */
 export function publicationState(entry, now = new Date()) {
 	const published = Date.parse((entry && entry.publicationDate) || '')
@@ -205,7 +205,7 @@ export function publicationState(entry, now = new Date()) {
  * @param {Array<string>} ids The selected ids.
  * @param {Array<object>} objects The objects the list holds.
  * @return {Array<object>} The selected objects.
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
  */
 export function selectedEntries(ids, objects) {
 	const byId = new Map((objects || []).map((o) => [entryId(o), o]))

@@ -349,7 +349,7 @@ class EolSyncServiceTest extends TestCase {
 	/**
 	 * A stamped version also stamps the two components that are it, through a bounded lookup.
 	 *
-	 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
+	 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
 	 * @return void
 	 */
 	public function testAStampedVersionStampsItsComponents(): void {

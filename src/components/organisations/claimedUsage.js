@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 
 import axios from '@nextcloud/axios'
@@ -18,7 +18,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {string} organisationId The organisation whose page is open.
  * @return {Promise<Array<object>|null>}
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 export async function fetchClaims(organisationId) {
 	try {
@@ -39,7 +39,7 @@ export async function fetchClaims(organisationId) {
  * @param {'accept'|'decline'} action The answer.
  * @return {Promise<void>}
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 export async function answerClaim(uuid, action) {
 	if (action !== 'accept' && action !== 'decline') {
@@ -54,7 +54,7 @@ export async function answerClaim(uuid, action) {
  * @param {string} iso The ISO date-time.
  * @return {string}
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 export function claimDate(iso) {
 	return typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}/.test(iso) ? iso.slice(0, 10) : ''

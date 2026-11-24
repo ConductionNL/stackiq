@@ -8,7 +8,7 @@
  * definition and the GEMMA Online link (only the name and the link without a
  * definition), and the reference component facet gives each value one.
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
  */
 
 import { mount } from '@vue/test-utils'

@@ -18,9 +18,9 @@
  organisations use per component with their counts, as a table and in the
  side panel; the endpoint never names an organisation.
 
- @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 
- @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+ @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
  @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 -->
 <template>
@@ -420,7 +420,7 @@ export default {
 		 * The components on the plate, in plate order.
 		 *
 		 * @return {Array<object>} Coverage rows.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		plateComponents() {
 			return this.groups.flatMap((group) => group.components)
@@ -430,7 +430,7 @@ export default {
 		 * What comparable organisations use for the selected component.
 		 *
 		 * @return {Array<object>} Peer applications.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		selectedPeers() {
 			return this.selected
@@ -442,7 +442,7 @@ export default {
 		 * The imported GEMMA views to pick from, each with its release.
 		 *
 		 * @return {Array<{id: string, label: string}>} Options.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		viewChoices() {
 			return viewOptions(this.viewStore?.views)
@@ -452,7 +452,7 @@ export default {
 		 * The fetched view the plate draws, once it is the chosen one.
 		 *
 		 * @return {object|null} The view.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		shownView() {
 			const active = this.viewStore?.activeView
@@ -500,7 +500,7 @@ export default {
 	 * Load the views to pick from and open the view the URL names.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 	 */
 	async created() {
 		this.viewStore.setIncludeGebruik(true)
@@ -533,7 +533,7 @@ export default {
 		 *
 		 * @param {boolean} on Whether the layer is on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		async togglePeers(on) {
 			if (on && !this.peers) {
@@ -545,7 +545,7 @@ export default {
 		 * Load what comparable organisations use, for the selected organisation.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		async loadPeers() {
 			this.peers = null
@@ -574,7 +574,7 @@ export default {
 		 * The view id in the URL, or ''.
 		 *
 		 * @return {string} The id.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		routeView() {
 			const fromRoute = this.$route?.query?.view
@@ -589,7 +589,7 @@ export default {
 		 *
 		 * @param {{id: string}|null} option The picked view.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		async pickView(option) {
 			this.selected = null
@@ -604,7 +604,7 @@ export default {
 		 *
 		 * @param {string} id The view id, '' to drop it.
 		 * @return {void}
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		writeRouteView(id) {
 			if (this.$router && this.$route) {

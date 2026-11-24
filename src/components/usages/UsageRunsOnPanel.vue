@@ -78,7 +78,7 @@ import { loadUsageExposure } from '../../utils/technologyLifecycle.js'
  * them and the components they run on, one level down. Custom because a
  * built-in object list cannot show a state derived per row (design D5).
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export default {
 	name: 'UsageRunsOnPanel',
@@ -112,7 +112,7 @@ export default {
 		 * Reload when the page moves to another application in use.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		objectId() {
 			this.load()
@@ -130,7 +130,7 @@ export default {
 		 * Load the usage and the components it runs on.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		async load() {
 			this.loading = true
@@ -158,7 +158,7 @@ export default {
 		 *
 		 * @param {{through: string|null}} row A row.
 		 * @return {string}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		throughName(row) {
 			const parent = this.components.find((other) => other.id === row.through && other.through === null)
@@ -170,7 +170,7 @@ export default {
 		 *
 		 * @param {string} state The state.
 		 * @return {string}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		stateLabel(state) {
 			return {
@@ -185,7 +185,7 @@ export default {
 		 *
 		 * @param {string} state The worst state.
 		 * @return {string}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		worstLabel(state) {
 			return {
@@ -200,7 +200,7 @@ export default {
 		 *
 		 * @param {string} state The state.
 		 * @return {string}
-		 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+		 * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
 		 */
 		stateClass(state) {
 			return 'usage-runs-on__state usage-runs-on__state--' + (state || 'unknown')

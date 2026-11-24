@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-001-an-organisation-shall-record-technology-components-with-a-class-a-status-and-an-owner
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-001-an-organisation-shall-record-technology-components-with-a-class-a-status-and-an-owner
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

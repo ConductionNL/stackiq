@@ -7,7 +7,7 @@
  "More in GEMMA Online". A term without documentation shows only its name
  and the link; without a link, only what it has.
 
- @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+ @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 -->
 <template>
 	<NcPopover class="gemma-definition" popupRole="dialog">
@@ -53,7 +53,7 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
  */
 export default {
 	name: 'GemmaDefinitionPopover',

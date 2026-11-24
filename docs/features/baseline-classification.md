@@ -13,7 +13,7 @@ last changed. The classification belongs to the organisation's own record of
 the application (*Applications in use*), because the same product can rightly
 be classified differently by two municipalities that put different data in it.
 
-Specification: [`openspec/changes/security-baseline-classification/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/security-baseline-classification).
+Specification: [`openspec/changes/archive/2026-11-24-security-baseline-classification/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-11-24-security-baseline-classification).
 
 ## Classifying an application
 

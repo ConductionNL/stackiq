@@ -149,7 +149,7 @@ export default {
 		 * record by, or '' when it is not publishable.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		publicationType() {
 			const slug = this.schema && typeof this.schema.slug === 'string' ? this.schema.slug : ''
@@ -162,18 +162,18 @@ export default {
 		 * The record's dates, with this page's own publish or withdraw applied.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		dates() {
 			return { ...(this.object || {}), ...(this.override || {}) }
 		},
 
-		/** @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011 */
+		/** @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011 */
 		state() {
 			return publicationState(this.dates)
 		},
 
-		/** @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011 */
+		/** @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011 */
 		badgeLabel() {
 			if (this.state === 'published') {
 				return t('stackiq', 'Published')
@@ -190,7 +190,7 @@ export default {
 		 * The endpoint's ownership guard still decides each call.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		mayPublish() {
 			const source = this.object && this.object._source
@@ -207,7 +207,7 @@ export default {
 		 *
 		 * @param {?string} when An ISO-8601 moment, or null for now.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		async publish(when) {
 			await this.run(async () => {
@@ -224,7 +224,7 @@ export default {
 		 * Withdraw the record.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		async withdraw() {
 			await this.run(async () => {
@@ -242,7 +242,7 @@ export default {
 		 *
 		 * @param {string} when An ISO-8601 moment.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		async onDateSubmit(when) {
 			this.dateOpen = false
@@ -255,7 +255,7 @@ export default {
 		 *
 		 * @param {Function} call The call.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		async run(call) {
 			this.busy = true

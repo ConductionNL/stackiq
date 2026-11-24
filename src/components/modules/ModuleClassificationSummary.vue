@@ -65,7 +65,7 @@ import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
  * of organisations per level. It names no organisation, and it hides itself
  * for a reader the server refuses (403), such as a supplier.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 export default {
 	name: 'ModuleClassificationSummary',
@@ -93,7 +93,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<string>}
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		levelNames() {
 			return ['BBN1', 'BBN2', 'BBN3']
@@ -101,7 +101,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} One row per aspect and overall.
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		rows() {
 			const labels = {
@@ -118,14 +118,14 @@ export default {
 		/**
 		 * Reload for another application.
 		 *
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		objectId() {
 			this.load()
 		},
 	},
 
-	/** @spec openspec/changes/security-baseline-classification/tasks.md#task-4 */
+	/** @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4 */
 	mounted() {
 		this.load()
 	},
@@ -134,7 +134,7 @@ export default {
 		n,
 		t,
 
-		/** @spec openspec/changes/security-baseline-classification/tasks.md#task-4 */
+		/** @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4 */
 		async load() {
 			this.loading = true
 			this.error = false

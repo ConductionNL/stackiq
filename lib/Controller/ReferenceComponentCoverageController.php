@@ -90,7 +90,7 @@ class ReferenceComponentCoverageController extends Controller {
 	 *
 	 * @return JSONResponse The peer counts, or the refusal.
 	 *
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 	 */
 	#[NoAdminRequired]
 	public function peers(): JSONResponse {

@@ -7,7 +7,7 @@
  * the answer notice, which names the decline with its date and shows nothing
  * for an accepted, unanswered or unreadable usage.
  *
- * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+ * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

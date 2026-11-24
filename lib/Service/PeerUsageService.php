@@ -38,7 +38,7 @@ use Throwable;
  * answer never carries another organisation's id or name, and a count below
  * {@see self::MIN_COUNT} is answered as null with `fewerThan`.
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 class PeerUsageService implements PeerUsageServiceInterface {
 
@@ -79,7 +79,7 @@ class PeerUsageService implements PeerUsageServiceInterface {
 	 *
 	 * @return array{min: int, max: int|null}|null
 	 *
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 	 */
 	public static function band(mixed $inhabitants): ?array {
 		if (is_int($inhabitants) === false && (is_string($inhabitants) === false || ctype_digit($inhabitants) === false)) {
@@ -106,7 +106,7 @@ class PeerUsageService implements PeerUsageServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or the voorzieningen configuration is missing.
 	 *
-	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 	 */
 	public function build(string $organisationUuid): array {
 		$source = $this->source();

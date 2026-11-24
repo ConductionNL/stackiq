@@ -16,7 +16,7 @@ use ReflectionMethod;
 /**
  * REQ-DLG-010: a participant of a usage reads it, and only reads it, in the merged register.
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 final class UsageParticipantReadRuleTest extends TestCase {
 	/**

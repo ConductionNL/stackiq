@@ -7,7 +7,7 @@
  applications comparable organisations use with their counts. A count the
  endpoint holds back reads "fewer than 3"; no organisation is ever named.
 
- @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 -->
 <template>
 	<section class="peer-usage" data-testid="gemma-plate-peers">
@@ -70,7 +70,7 @@ import { peerLabel } from './peerLabel.js'
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+ * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
 export default {
 	name: 'PeerUsageTable',
@@ -98,7 +98,7 @@ export default {
 		 * The table's column headings.
 		 *
 		 * @return {Array<string>} The headings.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		columns() {
 			return [
@@ -112,7 +112,7 @@ export default {
 		 * The peer applications by reference component.
 		 *
 		 * @return {Map<string, Array<object>>} The index.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		index() {
 			return peerIndex(this.peers)
@@ -122,7 +122,7 @@ export default {
 		 * How many comparable organisations the counts cover.
 		 *
 		 * @return {number} The organisations.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		organisations() {
 			return Number(this.peers?.comparable?.organisations || 0)
@@ -132,7 +132,7 @@ export default {
 		 * The heading, naming the organisation type and inhabitants band compared with.
 		 *
 		 * @return {string} The heading.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		heading() {
 			const type = String(this.peers?.comparable?.type || '')
@@ -156,7 +156,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {Array<object>} The applications.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		peersOf(component) {
 			return peerApplicationsOf(this.index, component)
@@ -167,7 +167,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The names.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		ownNames(component) {
 			const names = (component.applications || [])
@@ -181,7 +181,7 @@ export default {
 		 *
 		 * @param {{min: number, max: number|null}|null} band The band.
 		 * @return {string} The band, '' without one.
-		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+		 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 		 */
 		bandLabel(band) {
 			if (!band) {

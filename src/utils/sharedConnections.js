@@ -7,7 +7,7 @@
  * the signed-in organisation owns or takes part in, the other organisations
  * of those usages (shared-usage-visible-to-participants REQ-DLG-011).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 
 import axios from '@nextcloud/axios'
@@ -20,7 +20,7 @@ let pending = null
  * refused or fails (the column then shows nothing rather than "nobody").
  *
  * @return {Promise<Record<string, {sharedWith: string[], usages: string[]}>|null>} The map.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 export function loadSharedConnections() {
 	if (pending === null) {
@@ -43,7 +43,7 @@ export function loadSharedConnections() {
  * @param {Record<string, {sharedWith: string[]}>|null} connections The map, or null when unknown.
  * @param {string} id The connection uuid.
  * @return {string[]|null} The organisation uuids, [] for nobody, null when unknown.
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 export function sharedWithOf(connections, id) {
 	if (connections === null || typeof connections !== 'object') {
@@ -57,7 +57,7 @@ export function sharedWithOf(connections, id) {
  * Forget the loaded map (tests, and after the active organisation changes).
  *
  * @return {void}
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
  */
 export function resetSharedConnections() {
 	pending = null

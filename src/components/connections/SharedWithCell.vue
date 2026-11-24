@@ -9,7 +9,7 @@ the organisations the connection is shared with through the usages that hold
 it ("Alblasserdam, Papendrecht"), or "nobody". Empty while the lookup is
 unknown (loading, or refused for a user without a gebruik role).
 
-@spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+@spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 -->
 
 <template>
@@ -44,7 +44,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The connection uuid.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 		 */
 		connectionId() {
 			return relationId(this.row)
@@ -59,7 +59,7 @@ export default {
 			 *
 			 * @param {string} id The connection uuid.
 			 * @return {Promise<void>}
-			 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+			 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 			 */
 			async handler(id) {
 				this.organisations = null
@@ -87,7 +87,7 @@ export default {
 		 *
 		 * @param {string[]} ids The organisation uuids.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 		 */
 		async loadNames(ids) {
 			try {
@@ -117,7 +117,7 @@ export default {
 		/**
 		 * @param {string} id An organisation uuid.
 		 * @return {string} Its name, else the uuid.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 		 */
 		nameOf(id) {
 			return this.names[id] || id

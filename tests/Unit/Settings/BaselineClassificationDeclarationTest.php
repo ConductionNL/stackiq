@@ -12,7 +12,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-001-an-organisation-shall-classify-each-application-it-uses-on-availability-integrity-and-confidentiality
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-001-an-organisation-shall-classify-each-application-it-uses-on-availability-integrity-and-confidentiality
  */
 
 declare(strict_types=1);

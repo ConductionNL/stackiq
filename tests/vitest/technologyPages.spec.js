@@ -8,7 +8,7 @@
  * ways and the Runs on panel on the usage page (operations-technology-components
  * tasks 2 and 3).
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-002-the-technology-pages-shall-list-components-and-show-their-relations-both-ways
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-002-the-technology-pages-shall-list-components-and-show-their-relations-both-ways
  */
 
 import addFormats from 'ajv-formats'

@@ -43,7 +43,7 @@ import { NcButton, NcDialog } from '@nextcloud/vue'
 /**
  * Asks for the moment a catalogue entry is published and emits it as an ISO-8601 string.
  *
- * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+ * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
  */
 export default {
 	name: 'PublishDateModal',
@@ -68,7 +68,7 @@ export default {
 		 * The chosen local moment as an ISO-8601 string, or '' when none or invalid.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		isoWhen() {
 			const ms = Date.parse(this.when)
@@ -83,7 +83,7 @@ export default {
 		 * Close when the dialog asks to.
 		 *
 		 * @param {boolean} isOpen The dialog's open state.
-		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
+		 * @spec openspec/changes/archive/2026-11-24-publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-an-entrys-page-publishes-or-withdraws-that-entry-req-odp-011
 		 */
 		onOpen(isOpen) {
 			if (!isOpen) {

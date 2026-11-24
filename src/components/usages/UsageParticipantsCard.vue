@@ -69,7 +69,7 @@ import { participantsOf, relationId, relationName, sharedSummary } from '../../u
  * participant reads it; when the record says the reader may not update it, the
  * card says so (the page itself withdraws edit through `permissions`).
  *
- * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+ * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
  */
 export default {
 	name: 'UsageParticipantsCard',
@@ -101,7 +101,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<{id: string, name: string, since: string}>} The participants.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		participants() {
 			return participantsOf(this.usage)
@@ -109,7 +109,7 @@ export default {
 
 		/**
 		 * @return {number} How many organisations share the usage.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		count() {
 			return sharedSummary(this.usage)?.count ?? 0
@@ -117,7 +117,7 @@ export default {
 
 		/**
 		 * @return {string} The owner's name, else its uuid.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		ownerLabel() {
 			const owner = relationId(this.usage?.consumer)
@@ -126,7 +126,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the record says the reader may not update it.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		readOnly() {
 			return this.usage?.['@self']?.can?.update === false
@@ -138,7 +138,7 @@ export default {
 		 * Reload when the page moves to another application in use.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		objectId() {
 			this.load()
@@ -157,7 +157,7 @@ export default {
 		 * Load the usage, then the names of the owner and participants it holds only as uuids.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		async load() {
 			this.loading = true
@@ -180,7 +180,7 @@ export default {
 		 * Fetch the organisation names the record does not carry; one that fails keeps its uuid.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		async loadNames() {
 			const wanted = this.participants.filter((p) => p.name === '').map((p) => p.id)
@@ -209,7 +209,7 @@ export default {
 		/**
 		 * @param {{id: string, name: string}} participant The participant.
 		 * @return {string} Its name, else its uuid.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		nameOf(participant) {
 			return participant.name || this.names[participant.id] || participant.id
@@ -218,7 +218,7 @@ export default {
 		/**
 		 * @param {string} value An ISO date.
 		 * @return {string} The date in the reader's locale, or the value when it does not parse.
-		 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+		 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 		 */
 		formatDate(value) {
 			const date = new Date(value)

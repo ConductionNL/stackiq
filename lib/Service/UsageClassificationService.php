@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use RuntimeException;
  * level, and withholds the levels below {@see self::MIN_ORGANISATIONS}. It
  * never returns an organisation name or id.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
  */
 class UsageClassificationService {
 
@@ -84,7 +84,7 @@ class UsageClassificationService {
 	 *
 	 * @param RegisterConfigReaderInterface $config The registers, schemas and OpenRegister's object service.
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	public function __construct(
 		private readonly RegisterConfigReaderInterface $config,
@@ -98,7 +98,7 @@ class UsageClassificationService {
 	 *
 	 * @return array{levels: array<string, string|null>, scored: int, components: int}|null Null when the usage is not found.
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	public function suggestion(string $usageId): ?array {
 		$usage = $this->find(type: 'usage', id: $usageId);
@@ -139,7 +139,7 @@ class UsageClassificationService {
 	 *
 	 * @return array{organisations: int, levels: array<string, array<string, int>>|null}
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function summary(string $moduleId): array {
 		$perOrganisation = [];
@@ -184,7 +184,7 @@ class UsageClassificationService {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	public function organisationTypeOf(string $organisationId): ?string {
 		$type = ($this->find(type: 'organization', id: $organisationId) ?? [])['type'] ?? null;
@@ -202,7 +202,7 @@ class UsageClassificationService {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	private function classifiedUsagesOf(string $moduleId): array {
 		$found = $this->objects()->searchObjects(
@@ -240,7 +240,7 @@ class UsageClassificationService {
 	 *
 	 * @return array<string, int>
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	private static function levelsOf(array $usage): array {
 		$ranks = [];
@@ -271,7 +271,7 @@ class UsageClassificationService {
 	 *
 	 * @return array<string, int>
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	private static function scoresOf(array $element): array {
 		$scores = [];
@@ -293,7 +293,7 @@ class UsageClassificationService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	private function find(string $type, string $id): ?array {
 		$objects = $this->objects();
@@ -324,7 +324,7 @@ class UsageClassificationService {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
 	 */
 	private static function ids(mixed $value): array {
 		if (is_array($value) === false) {
@@ -352,7 +352,7 @@ class UsageClassificationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	private static function asArray(mixed $object): array {
 		if ($object instanceof ObjectEntityInterface) {
@@ -379,7 +379,7 @@ class UsageClassificationService {
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
+	 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
 	 */
 	private function objects(): ObjectServiceInterface {
 		$objects = $this->config->getObjectService();

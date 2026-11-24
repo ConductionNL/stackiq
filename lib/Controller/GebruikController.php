@@ -136,7 +136,7 @@ class GebruikController extends Controller {
 	 *
 	 * @return string|null The organisation's uuid.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 	 */
 	private function sharedReaderOrganisation(array $options): ?string {
 		$user = $this->userSession->getUser();
@@ -191,7 +191,7 @@ class GebruikController extends Controller {
 	 * @return JSONResponse `{connections: {<uuid>: {sharedWith, usages}}}`, 401 without a session,
 	 *                      403 without a gebruik role or an organisation.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public function getSharedConnections(): JSONResponse {
 		$user = $this->userSession->getUser();

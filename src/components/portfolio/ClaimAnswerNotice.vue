@@ -6,7 +6,7 @@
   - claims of its product, a notice says the supplier does not recognise it,
   - with the date. Nothing shows for an accepted or unanswered usage.
   -
-  - @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+  - @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
   -->
 <template>
 	<NcNoteCard v-if="declinedOn !== null" type="warning" data-testid="claim-declined-notice">
@@ -39,7 +39,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+	 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 	 */
 	async mounted() {
 		if (!this.objectId) {
@@ -61,7 +61,7 @@ export default {
 		 *
 		 * @return {Promise<object>} The usage's fields.
 		 *
-		 * @spec openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
+		 * @spec openspec/changes/archive/2026-11-24-supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010
 		 */
 		async loadUsage() {
 			if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {

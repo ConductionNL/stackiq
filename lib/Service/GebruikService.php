@@ -235,7 +235,7 @@ class GebruikService implements GebruikServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or its configuration is missing.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-a-participant-reads-the-usages-shared-with-it-and-their-connections-req-dlg-010
 	 */
 	public function getSharedGebruiken(array $options, string $orgUuid): array {
 		if ($orgUuid === '') {
@@ -261,7 +261,7 @@ class GebruikService implements GebruikServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or its configuration is missing.
 	 *
-	 * @spec openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
+	 * @spec openspec/changes/archive/2026-11-24-shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011
 	 */
 	public function getSharedConnections(string $orgUuid): array {
 		if ($orgUuid === '') {

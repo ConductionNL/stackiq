@@ -12,7 +12,7 @@
  * runs on and the components those run on, one level down: a database on a
  * virtual machine on a host past its support is exposed through the host.
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 
 /**
@@ -62,7 +62,7 @@ function isoDay(date) {
  * @param {{endOfSupport?: string}|null|undefined} component The component.
  * @param {string|Date} [today] The day to judge on (defaults to now).
  * @return {'supported'|'ending'|'ended'|'unknown'}
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export function supportState(component, today = new Date()) {
 	const end = dayOf(component?.endOfSupport)
@@ -94,7 +94,7 @@ function stateBetween(end, now) {
  * @param {string} right Another.
  * @return {string}
  *
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export function worse(left, right) {
 	return STATES.indexOf(right) > STATES.indexOf(left) ? right : left
@@ -181,7 +181,7 @@ function rowOf(resolved, context) {
  * @param {Object<string, object>} componentsById Every known component by id, to resolve references.
  * @param {string|Date} [today] The day to judge on (defaults to now).
  * @return {{state: string, components: Array<{id: string|null, name: string, state: string, through: string|null}>}}
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export function exposure(runsOn, componentsById = {}, today = new Date()) {
 	return exposureOf(runsOn, { componentsById, today })
@@ -233,7 +233,7 @@ function dataOf(value) {
  * @param {function(string, string): Promise<object|null>} fetchObject Loads one object by schema slug and id.
  * @param {string|Date} [today] The day to judge on (defaults to now).
  * @return {Promise<{state: string, components: Array<{id: string|null, name: string, state: string, through: string|null, endOfSupport: string|null}>}>}
- * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ * @spec openspec/changes/archive/2026-11-24-operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 export async function loadUsageExposure(usageId, fetchObject, today = new Date()) {
 	return loadExposure(usageId, { fetchObject, today })

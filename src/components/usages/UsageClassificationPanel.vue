@@ -85,7 +85,7 @@ export function highestLevel(values) {
  * reason per aspect, the overall BBN level the server derives, Suggest from
  * GEMMA, which fills the levels without saving, and Save.
  *
- * @spec openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
+ * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
  */
 export default {
 	name: 'UsageClassificationPanel',
@@ -116,7 +116,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<string>}
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		levels() {
 			return LEVELS
@@ -124,7 +124,7 @@ export default {
 
 		/**
 		 * @return {Array<object>}
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		aspects() {
 			return [
@@ -136,7 +136,7 @@ export default {
 
 		/**
 		 * @return {string} The overall level as the server will derive it.
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		overall() {
 			return highestLevel([this.form.availabilityLevel, this.form.integrityLevel, this.form.confidentialityLevel])
@@ -144,7 +144,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the form differs from what is stored.
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		dirty() {
 			return FIELDS.some((field) => (this.form[field] || '') !== (this.stored[field] || ''))
@@ -155,14 +155,14 @@ export default {
 		/**
 		 * Reload for another usage.
 		 *
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		objectId() {
 			this.load()
 		},
 	},
 
-	/** @spec openspec/changes/security-baseline-classification/tasks.md#task-4 */
+	/** @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4 */
 	mounted() {
 		this.load()
 	},
@@ -171,7 +171,7 @@ export default {
 		n,
 		t,
 
-		/** @spec openspec/changes/security-baseline-classification/tasks.md#task-4 */
+		/** @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4 */
 		async load() {
 			this.loading = true
 			this.error = ''
@@ -191,7 +191,7 @@ export default {
 		/**
 		 * Fill the levels from GEMMA; nothing is saved until Save.
 		 *
-		 * @spec openspec/changes/security-baseline-classification/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4
 		 */
 		async suggest() {
 			this.busy = true
@@ -211,7 +211,7 @@ export default {
 			}
 		},
 
-		/** @spec openspec/changes/security-baseline-classification/tasks.md#task-4 */
+		/** @spec openspec/changes/archive/2026-11-24-security-baseline-classification/tasks.md#task-4 */
 		async save() {
 			this.busy = true
 			try {
