@@ -1,0 +1,427 @@
+<?php
+
+/**
+ * Legacy catalogue migration service
+ *
+ * Brings over what an organisation registered in the previous Softwarecatalogus: reads its export with the
+ * `vng-swc` import profile and previews, per row, whether the supplier, product and version match what stackiq
+ * holds or are to be created. The preview writes nothing.
+ *
+ * @category  Service
+ * @package   OCA\Stackiq\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Service;
+
+use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
+use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
+use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
+use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueCandidates;
+use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueMatcher;
+use OCP\App\IAppManager;
+use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * The preview of an export from the previous Softwarecatalogus.
+ *
+ * Only a member of an active organisation who may create usages previews; the check runs before the file is read.
+ *
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ */
+class LegacyCatalogueMigrationService {
+
+	/**
+	 * The import profile of the previous catalogue's export.
+	 */
+	public const PROFILE_FILE = 'vng-swc-profile.json';
+
+	/**
+	 * OpenRegister's permission handler (not a public contract).
+	 */
+	public const PERMISSIONS = 'OCA\OpenRegister\Service\Object\PermissionHandlerInterface';
+
+	/**
+	 * OpenRegister's schema mapper.
+	 */
+	public const SCHEMA_MAPPER = 'OCA\OpenRegister\Db\SchemaMapper';
+
+	/**
+	 * OpenRegister's mapping engine (ADR-031).
+	 */
+	public const ENGINE_CLASS = 'OCA\OpenRegister\Service\MigrationPack\MappingEngine';
+
+	/**
+	 * The decision for a row that names no version.
+	 */
+	public const NONE = 'none';
+
+	/**
+	 * The import profile, built on first use.
+	 *
+	 * @var CmdbImportProfile|null
+	 */
+	private ?CmdbImportProfile $profile;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface          $container       Resolves OpenRegister's permission handler, schema mapper and engine.
+	 * @param IAppManager                 $appManager      Tells whether OpenRegister is installed.
+	 * @param SettingsService             $settingsService The register, its schemas and OpenRegister's object service.
+	 * @param IUserSession                $userSession     The caller.
+	 * @param OpenRegisterLookupInterface $lookup          The caller's active organisation.
+	 * @param LoggerInterface             $logger          Logs a failed permission check.
+	 * @param CmdbImportProfile|null      $profile         The import profile; null builds the shipped one.
+	 * @param CmdbWorkbookReader|null     $reader          The workbook reader; null builds one.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppManager $appManager,
+		private readonly SettingsService $settingsService,
+		private readonly IUserSession $userSession,
+		private readonly OpenRegisterLookupInterface $lookup,
+		private readonly LoggerInterface $logger,
+		?CmdbImportProfile $profile = null,
+		private ?CmdbWorkbookReader $reader = null,
+	) {
+		$this->profile = $profile;
+	}//end __construct()
+
+	/**
+	 * Refuse unless the caller is a member of an active organisation who may create usages. Fails closed.
+	 *
+	 * @return string The uuid of the caller's active organisation.
+	 *
+	 * @throws CmdbImportException FORBIDDEN (403).
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	public function assertMayImport(): string {
+		$organisation = null;
+		$allowed = false;
+		if ($this->userSession->getUser() !== null) {
+			$organisation = $this->lookup->activeOrganisationUuid();
+			$allowed = ($organisation !== null && $organisation !== '' && $this->mayCreateUsages() === true);
+		}
+
+		if ($allowed === false) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::FORBIDDEN,
+				message: 'Only a member of an active organisation who may create usages may bring over an export'
+			);
+		}
+
+		return (string)$organisation;
+	}//end assertMayImport()
+
+	/**
+	 * The largest export the profile accepts, in bytes.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	public function maxFileBytes(): int {
+		return $this->profile()->maxFileBytes();
+	}//end maxFileBytes()
+
+	/**
+	 * Preview an export: per row the match or create decision for supplier, product and version. Writes nothing.
+	 *
+	 * @param string $path The uploaded file.
+	 * @param string $fileName The name the client gave it.
+	 *
+	 * @return array{rows: array<int, array<string, mixed>>, summary: array<string, mixed>, warnings: array<int, mixed>}
+	 *
+	 * @throws CmdbImportException FORBIDDEN before the file is read; NOT_XLSX, MISSING_COLUMN and the other read errors.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	public function preview(string $path, string $fileName): array {
+		$this->assertMayImport();
+
+		$profile = $this->profile();
+		$profile->load();
+		$reader = $this->reader();
+		$reader->assertXlsx(path: $path, fileName: $fileName);
+		$read = $reader->read(path: $path, profile: $profile);
+
+		$preview = $this->previewRows(rows: ($read['rows'] ?? []));
+		$preview['warnings'] = array_values(($read['warnings'] ?? []));
+		return $preview;
+	}//end preview()
+
+	/**
+	 * The preview of rows as the workbook reader returns them.
+	 *
+	 * @param array<int, array<string, mixed>> $rows Rows with `sheet`, `row` and `cells`.
+	 *
+	 * @return array{rows: array<int, array<string, mixed>>, summary: array<string, mixed>}
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED or MAPPING_UNAVAILABLE.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	public function previewRows(array $rows): array {
+		$profile = $this->profile();
+		$engine = $this->engine();
+		$mapped = [];
+		foreach ($rows as $row) {
+			$mapped[] = $this->mapRow(profile: $profile, engine: $engine, row: $row);
+		}
+
+		$matchable = array_values(array_filter($mapped, static fn (array $row): bool => $row['skipped'] === false));
+		$candidates = $this->candidates()->forRows(rows: array_column($matchable, 'match'));
+		$matcher = new LegacyCatalogueMatcher(
+			organisations: $candidates['organisations'],
+			modules: $candidates['modules'],
+			versions: $candidates['versions']
+		);
+
+		$preview = [];
+		foreach ($mapped as $row) {
+			$preview[] = self::decided(row: $row, matcher: $matcher);
+		}
+
+		return ['rows' => $preview, 'summary' => self::summary(rows: $preview)];
+	}//end previewRows()
+
+	/**
+	 * One row mapped through the four packs: the records, the values to match on and the mapping errors.
+	 *
+	 * @param CmdbImportProfile $profile The profile.
+	 * @param object $engine The mapping engine.
+	 * @param array<string, mixed> $row The row as the reader returns it.
+	 *
+	 * @return array{sheet: string, row: int, legacyId: string, records: array<string, array<string, mixed>>, match: array<string, string>, errors: array<int, string>, skipped: bool}
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) The normaliser is stateless.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function mapRow(CmdbImportProfile $profile, object $engine, array $row): array {
+		$cells = (new CmdbRowNormaliser())->normalise(
+			cells: ($row['cells'] ?? []),
+			dateColumns: $profile->dateColumns(),
+			idColumns: $profile->idColumns(),
+			emptyValues: $profile->emptyValues()
+		);
+
+		$records = [];
+		$errors = [];
+		$skipped = false;
+		foreach ($profile->targets() as $target) {
+			$result = $engine->mapRow($profile->pack(target: $target), $cells, (int)($row['row'] ?? 0));
+			$records[$target] = ($result['data'] ?? []);
+			foreach (($result['errors'] ?? []) as $error) {
+				$errors[] = (string)($error['message'] ?? '');
+				$skipped = $skipped || str_starts_with((string)($error['message'] ?? ''), 'Required source field');
+			}
+		}
+
+		return [
+			'sheet' => (string)($row['sheet'] ?? ''),
+			'row' => (int)($row['row'] ?? 0),
+			'legacyId' => trim((string)($cells[$profile->keyColumn()] ?? '')),
+			'records' => $records,
+			'match' => [
+				'supplierKvk' => (string)($records['manufacturer']['registrationNumber'] ?? ''),
+				'supplierName' => (string)($records['manufacturer']['name'] ?? ''),
+				'product' => (string)($records['module']['name'] ?? ''),
+				'version' => (string)($records['version']['version'] ?? ''),
+			],
+			'errors' => $errors,
+			'skipped' => $skipped,
+		];
+	}//end mapRow()
+
+	/**
+	 * A mapped row with the matcher's decisions, as the preview answers it.
+	 *
+	 * @param array<string, mixed> $row The mapped row.
+	 * @param LegacyCatalogueMatcher $matcher The matcher.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private static function decided(array $row, LegacyCatalogueMatcher $matcher): array {
+		$match = $row['match'];
+		$decisions = [
+			'supplier' => ['decision' => self::NONE, 'id' => null],
+			'product' => ['decision' => self::NONE, 'id' => null],
+			'version' => ['decision' => self::NONE, 'id' => null],
+		];
+		if ($row['skipped'] === false) {
+			$decisions = $matcher->decide(row: $match);
+		}
+
+		if ($match['version'] === '') {
+			$decisions['version'] = ['decision' => self::NONE, 'id' => null];
+		}
+
+		return [
+			'sheet' => $row['sheet'],
+			'row' => $row['row'],
+			'legacyId' => $row['legacyId'],
+			'supplier' => array_merge(['name' => $match['supplierName'], 'kvk' => $match['supplierKvk']], $decisions['supplier']),
+			'product' => array_merge(['name' => $match['product']], $decisions['product']),
+			'version' => array_merge(['number' => $match['version']], $decisions['version']),
+			'usage' => $row['records']['usage'],
+			'errors' => $row['errors'],
+			'skipped' => $row['skipped'],
+		];
+	}//end decided()
+
+	/**
+	 * The counts of a preview: rows, skipped rows, and per object the matched and created ones.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The previewed rows.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private static function summary(array $rows): array {
+		$summary = ['rows' => count($rows), 'skipped' => 0];
+		foreach (['supplier', 'product', 'version'] as $object) {
+			$summary[$object] = [LegacyCatalogueMatcher::MATCHED => 0, LegacyCatalogueMatcher::CREATE => 0];
+		}
+
+		foreach ($rows as $row) {
+			if ($row['skipped'] === true) {
+				$summary['skipped']++;
+				continue;
+			}
+
+			foreach (['supplier', 'product', 'version'] as $object) {
+				$decision = $row[$object]['decision'];
+				if (isset($summary[$object][$decision]) === true) {
+					$summary[$object][$decision]++;
+				}
+			}
+		}
+
+		return $summary;
+	}//end summary()
+
+	/**
+	 * Whether the caller may create objects in the usage schema, by OpenRegister's permission handler.
+	 *
+	 * @return bool False when OpenRegister, the schema or the check is not available.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function mayCreateUsages(): bool {
+		$schemaId = (int)($this->settingsService->getSchemaIdForObjectType(objectType: 'usage') ?? 0);
+		if ($schemaId <= 0 || $this->appManager->isInstalled('openregister') === false) {
+			return false;
+		}
+
+		try {
+			$schema = $this->container->get(self::SCHEMA_MAPPER)->find($schemaId);
+			return $this->container->get(self::PERMISSIONS)->hasPermission(schema: $schema, action: 'create') === true;
+		} catch (Throwable $e) {
+			$this->logger->warning('LegacyCatalogueMigrationService: the permission check failed', ['exception' => $e->getMessage()]);
+			return false;
+		}
+	}//end mayCreateUsages()
+
+	/**
+	 * The candidate finder on the configured register and schemas.
+	 *
+	 * @return LegacyCatalogueCandidates
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function candidates(): LegacyCatalogueCandidates {
+		$objectService = $this->settingsService->getObjectService();
+		$register = (int)($this->settingsService->getVoorzieningenRegisterId() ?? 0);
+		$schemas = [];
+		foreach (['organization', 'module', 'moduleVersion'] as $type) {
+			$schemas[$type] = (int)($this->settingsService->getSchemaIdForObjectType(objectType: $type) ?? 0);
+		}
+
+		if ($objectService === null || $register <= 0 || in_array(0, $schemas, true) === true) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::NOT_CONFIGURED,
+				message: 'OpenRegister or the stackiq register and schemas are not configured'
+			);
+		}
+
+		return new LegacyCatalogueCandidates(objectService: $objectService, register: $register, schemas: $schemas);
+	}//end candidates()
+
+	/**
+	 * OpenRegister's mapping engine.
+	 *
+	 * @return object The engine, with `mapRow(array, array, int): array`.
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function engine(): object {
+		$engine = null;
+		if ($this->appManager->isInstalled('openregister') === true && class_exists(static::ENGINE_CLASS) === true) {
+			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: static::ENGINE_CLASS);
+		}
+
+		if (is_object($engine) === false || method_exists($engine, 'mapRow') === false) {
+			throw new CmdbImportException(errorCode: CmdbImportException::MAPPING_UNAVAILABLE, message: 'OpenRegister MappingEngine is not available');
+		}
+
+		return $engine;
+	}//end engine()
+
+	/**
+	 * The import profile of the previous catalogue's export.
+	 *
+	 * @return CmdbImportProfile
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function profile(): CmdbImportProfile {
+		if ($this->profile === null) {
+			$this->profile = new CmdbImportProfile(container: $this->container, profileFile: self::PROFILE_FILE);
+		}
+
+		return $this->profile;
+	}//end profile()
+
+	/**
+	 * The workbook reader.
+	 *
+	 * @return CmdbWorkbookReader
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 */
+	private function reader(): CmdbWorkbookReader {
+		if ($this->reader === null) {
+			$this->reader = new CmdbWorkbookReader();
+		}
+
+		return $this->reader;
+	}//end reader()
+}//end class

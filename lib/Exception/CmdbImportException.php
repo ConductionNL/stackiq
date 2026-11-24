@@ -51,6 +51,7 @@ class CmdbImportException extends RuntimeException {
 	public const IMPORT_IN_PROGRESS = 'IMPORT_IN_PROGRESS';
 	public const MUNICIPALITY_AMBIGUOUS = 'MUNICIPALITY_AMBIGUOUS';
 	public const ARCHIVE_UNAVAILABLE = 'ARCHIVE_UNAVAILABLE';
+	public const FORBIDDEN = 'FORBIDDEN';
 
 	/**
 	 * HTTP status per error code.
@@ -72,6 +73,7 @@ class CmdbImportException extends RuntimeException {
 		self::IMPORT_IN_PROGRESS => 409,
 		self::MUNICIPALITY_AMBIGUOUS => 422,
 		self::ARCHIVE_UNAVAILABLE => 503,
+		self::FORBIDDEN => 403,
 	];
 
 	/**
