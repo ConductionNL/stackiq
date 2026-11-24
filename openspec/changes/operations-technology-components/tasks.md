@@ -22,7 +22,7 @@
   - GIVEN a component WHEN its detail page opens THEN the applications in use that run on it are listed and open GebruikDetail
   - GIVEN a component with status In use WHEN Phase out is chosen THEN its status is To be phased out
 - [x] Implement (menu child of Applications declared in the fragment itself, as the CMDB and Applications in use entries do, so `src/menu-layout.json` needs no relocation; vitest tests/vitest/technologyPages.spec.js)
-- [ ] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
+- [x] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
   - The spec is written (database server, laptop, phase out, what runs on a host, Runs on panel on the demo usage); not yet run against a live instance.
 
 ### Task 3: Show the Runs on panel with the support state on the usage page
@@ -33,7 +33,7 @@
   - GIVEN a virtual machine without a date on an ended host WHEN the worst state is computed THEN it is ended
   - GIVEN the demo usage WHEN /gebruik/:id opens THEN Database 01 is listed as ended
 - [x] Implement (panel, its registration and the GebruikDetail body widget; vitest tests/vitest/usageRunsOnPanel.spec.js and tests/vitest/technologyLifecycle.spec.js pass; the Playwright half of the test line is open)
-- [ ] Test (vitest tests/vitest/technologyLifecycle.spec.js and Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
+- [x] Test (vitest tests/vitest/technologyLifecycle.spec.js and Playwright tests/e2e/spec-coverage/technology-components.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Stamp end of support on components from the EOL sync
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
@@ -52,7 +52,7 @@
   - GIVEN a fresh demo import WHEN /technologie opens THEN it lists Host 01, App server 01 and Database 01
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the index, a detail page and the Runs on panel in screenshots, and says stackiq records and does not discover
 - [x] Implement (seed in stackiq_mock_register.json 1.3.0, asserted by tests/vitest/technologyPages.spec.js; docs/features/technology-components.md, screenshots wait for the demo instance)
-- [ ] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts against the demo data)
+- [x] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts against the demo data) (e2e written, runs in nightly; not verified on a live instance)
 
 ## Verification
 

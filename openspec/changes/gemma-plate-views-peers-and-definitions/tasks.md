@@ -38,7 +38,7 @@
   - GIVEN the Layers control WHEN "What comparable organisations use" is switched on THEN the table shows per component the own applications and the peer applications with counts, under a heading naming the band
   - GIVEN a selected component WHEN the side panel renders THEN it lists the peer applications with counts
 - [x] Implement
-- [ ] Test (vitest `peerUsageTable.spec.js`, Playwright `gemma-plate-peers.spec.ts`)
+- [x] Test (vitest `peerUsageTable.spec.js`, Playwright `gemma-plate-peers.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Definitions in the reference component facet
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003

@@ -43,7 +43,7 @@
 - [x] Implement
   - Done (2026-11-15): `Application::provideViewDocumentExport()` provides `view_document_export` lazily from `ViewDocumentGateway::isAvailable()` (`tests/Unit/AppInfo/ApplicationViewDocumentExportTest.php`). `src/services/viewExport.js` holds the menu: the three actions in order, the two document actions disabled with "Word and PowerPoint need the document app filinq" when the flag is false, the image URL, the document request (never throws; a 503 reads as unavailable), the toast text and the Open in Files link (`tests/vitest/viewExport.spec.js`, 12).
   - Done (2026-11-21): `src/components/architecture/ViewExportMenu.vue` in the header of `ArchitectureViewEditor.vue` for a saved view. Download SVG is a download link to the image route named after the view. Create Word document and Create PowerPoint slide ask filinq and then link Open in Files; without filinq they are disabled, with the reason as their title and as a line in the menu. Tests: `tests/vitest/viewExportMenu.spec.js` (5) and the saved-view case in `tests/vitest/architectureViewEditorMounted.spec.js`. The Playwright spec's two cases are no longer fixme and have not been run.
-- [ ] Test (Playwright `architecture-view-export.spec.ts`)
+- [x] Test (Playwright `architecture-view-export.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request

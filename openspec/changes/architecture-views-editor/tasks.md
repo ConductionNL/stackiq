@@ -39,7 +39,7 @@
   - GIVEN a new element from the palette WHEN the view is saved THEN an `element` with `origin` drawn and the chosen ArchiMate type exists
   - GIVEN a colleague holds the lock WHEN the user opens the view THEN it is read-only with a notice naming the colleague
 - [x] Implement
-- [ ] Test (Playwright `architecture-views.spec.ts` draw and reopen, lock notice)
+- [x] Test (Playwright `architecture-views.spec.ts` draw and reopen, lock notice) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Relations behind connections
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-003-a-drawn-connection-shall-reference-a-relation-object

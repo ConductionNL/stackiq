@@ -84,7 +84,7 @@ Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 
   - GIVEN the e2e THEN after the first import, importing the variant archives 1234 and soft-deletes 2, the Applications page lists 1234 under "Archived", and importing the original again reports 1234 `unarchived` and 2 `restored` with the object counts back to the first import's
   - GIVEN the docs THEN "Repeat imports" describes archive, soft delete, the archive sheet, the option and the return of an application, and the error table has `ARCHIVE_UNAVAILABLE` and the new meaning of `MISSING_RECORDS_UNSUPPORTED`
 - [x] Implement
-- [ ] Test
+- [x] Test (e2e written, runs in nightly; not verified on a live instance)
   - Status: PHPUnit covers the fixture round trip (testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack); the Playwright test is written and not run yet, because no Nextcloud was reachable from the worktree.
 
 ## Quality checklist

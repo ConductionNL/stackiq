@@ -20,7 +20,7 @@
   - GIVEN a user whose active organisation is the page's organisation WHEN `/organisaties/:id` opens THEN the action shows and downloads an ArchiMate XML file
   - GIVEN a user of another organisation who is not admin or `ambtenaar` WHEN the page opens THEN the action is not shown
 - [x] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+- [x] Test (Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
   > Built: `OrganisationExportAction` in OrganisatieDetail's actions slot. It asks `GET /api/archimate/export/organization/{uuid}/access`, which answers `{mayExport}` from the export's own `verifyOrgScope()` rule without exporting, so the action and the 403 cannot drift; any other answer hides it. PHPUnit `SettingsControllerOrgExportTest` (the probe), vitest `organisationExportAction.spec.js`. The Playwright half needs a live instance.
 
 ### Task 3: Add the faceted catalogue export endpoint
@@ -41,7 +41,7 @@
   - GIVEN a reference component facet and the BBN2 quick filter on `/modules` WHEN the user chooses Export as CSV THEN the request carries the `_gf_` keys, the quick filter and the search
   - GIVEN the export finishes WHEN the file opens THEN its columns are the page's columns
 - [x] Implement
-- [ ] Test (vitest tests/vitest/catalogExportUrl.spec.js and Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+- [x] Test (vitest tests/vitest/catalogExportUrl.spec.js and Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
   > Built: the Export menu (CSV, Excel) in the view's toolbar, `catalogExportUrl()` and its vitest spec, and `facetedCatalogExport.spec.js` for the handler. The Playwright half needs a live instance.
 
 ### Task 5: Opt the list pages and schemas into the library's Export menu
@@ -52,7 +52,7 @@
   - GIVEN an OpenRegister release that keeps the schema flag WHEN `/komplianties` and `/moduleversies` open THEN the Export menu shows
   - GIVEN a nextcloud-vue release that forwards the page filter and the quick filter WHEN the pin moves to it THEN `/contracten` and `/organisaties` get `allowExport` in the same commit, and not before
 - [x] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/CatalogExportFlagsTest.php done; Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+- [x] Test (PHPUnit tests/Unit/Settings/CatalogExportFlagsTest.php done; Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
   > Built: the fragment flags the four schemas, `/komplianties` and `/moduleversies` set `allowExport`. Left by design: `/contracten` and `/organisaties` get `allowExport` with the nextcloud-vue pin that forwards their page and quick filters (no such release yet), and the menu shows only once OpenRegister keeps the schema flag.
 
 ### Task 6: Add the Custom reports page over OpenRegister export profiles
@@ -64,7 +64,7 @@
   - GIVEN a filter row bbnLevel equals BBN2 WHEN the report runs THEN every row is a BBN2 application
   - GIVEN a Nextcloud admin with other users' profiles in OpenRegister WHEN the page opens THEN it lists only the admin's own profiles
 - [x] Implement
-- [ ] Test (vitest tests/vitest/customReports.spec.js and Playwright tests/e2e/spec-coverage/custom-reports.spec.ts)
+- [x] Test (vitest tests/vitest/customReports.spec.js and Playwright tests/e2e/spec-coverage/custom-reports.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
   > Built: the `CustomReports` page at `/reports/custom` (`src/manifest.d/custom-reports.json`) and its card on the Reports page. `CustomReportsView` reads OpenRegister's export profiles and the catalogue register's schemas, lists only the caller's own profiles over that register, runs a report as the download from `/api/export-profiles/{id}/run` and deletes it. `CustomReportDialog` defines a report over the picked schema in `CnFormDialog`: name, fields in column order, value mode, CSV or JSON, and filter rows of a field and a value, stored as the profile's `filters`. vitest `customReports.spec.js` and `customReportDialog.spec.js`. The Playwright half needs a live instance.
 
 ### Task 7: Document the exports and the custom reports

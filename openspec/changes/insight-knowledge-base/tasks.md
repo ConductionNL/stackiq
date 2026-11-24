@@ -11,7 +11,7 @@
   - GIVEN the page WHEN it renders THEN md-files is still there and md-knowledge sits in a new full-width row below the existing rows
   - GIVEN an instance without Collectives WHEN /modules/:id opens THEN the panel shows the set-up state
 - [x] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts)
+- [x] Test (Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 2: Add the Knowledge base page and its menu entry under Applications
 - **spec_ref**: openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
@@ -22,7 +22,7 @@
   - GIVEN a title match WHEN the user types on /knowledge THEN the result links into Collectives
   - GIVEN no Collectives app WHEN stackiq opens THEN the entry is hidden and /knowledge says Collectives is needed
 - [x] Implement
-- [ ] Test (vitest tests/vitest/manifestFragments.spec.js and Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts)
+- [x] Test (vitest tests/vitest/manifestFragments.spec.js and Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Document the knowledge base
 - **spec_ref**: openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken

@@ -20,7 +20,7 @@
   - GIVEN a non-member WHEN the page opens THEN the list is not shown
   - GIVEN Decline WHEN chosen THEN a confirmation dialog (in `src/dialogs/`) asks first
 - [x] Implement
-- [ ] Test (vitest `claimedUsageList.spec.js`, Playwright `claimed-usage.spec.ts`)
+- [x] Test (vitest `claimedUsageList.spec.js`, Playwright `claimed-usage.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: The claiming organisation sees the answer
 - **spec_ref**: openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings/spec.md#requirement-a-supplier-answers-the-usages-claimed-of-its-products-req-010

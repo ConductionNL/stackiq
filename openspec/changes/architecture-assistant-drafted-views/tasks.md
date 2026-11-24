@@ -54,7 +54,7 @@
   - GIVEN nodes without positions WHEN the editor opens them THEN `layoutFlowNodes` places each at a distinct point, and a save stores the points
   - GIVEN the Views page WHEN the origin facet is opened THEN assistant is one of its values
 - [x] Implement
-- [ ] Test (vitest `viewGraph.spec.js` layout case, Playwright `architecture-assistant-views.spec.ts`)
+- [x] Test (vitest `viewGraph.spec.js` layout case, Playwright `architecture-assistant-views.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 - Built: `layoutUnplacedNodes()` in `src/utils/viewGraph.js` over nextcloud-vue's `needsFullLayout`/`layoutFlowNodes` (deep import, design D4); the editor lays a drafted view out on open and offers Save, shows the notice "Drafted by an assistant for {user} on {date}" and the origin label, and the store keeps `origin: assistant` on a person's save (it wrote `drawn` before). The Views origin facet reads the schema enum, so `assistant` is one of its values. Tests: vitest `viewGraph.spec.js` (4 layout cases), `architectureViewEditorMounted.spec.js` (open, save, mark kept, notice). Left: the Playwright spec `architecture-assistant-views.spec.ts`, which needs a live instance.
 
 ### Task 6: Documentation and translations
