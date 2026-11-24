@@ -8,6 +8,6 @@
     { "source": "Leverancier", "target": "name", "required": true, "transform": { "type": "trim" } },
     { "source": "KvK-nummer leverancier", "target": "registrationNumber", "transform": { "type": "trim" } }
   ],
-  "defaults": { "type": "Supplier" },
+  "defaults": { "type": "Supplier", "status": "Active", "registeredBy": "Supplier" },
   "idStrategy": { "type": "generate" }
 }

@@ -8,9 +8,9 @@
 - **acceptance_criteria**:
   - GIVEN the profile WHEN loaded THEN it names the export's sheet and columns, the key column (previous catalogue id), the required columns and the limits, and one pack per target
   - GIVEN the fixture WHEN read THEN rows normalise to supplier, module, version and usage records; a file without the required columns is refused with their names
-- [ ] Implement
-- [ ] Test (PHPUnit `VngSwcProfileTest`)
-  - Open 23 Nov: the profile has to name the export's sheet and column headers, and those are not in this repository. Needed: a real export of the previous Softwarecatalogus (or its column list) to write the profile and the fixture from.
+- [x] Implement
+- [x] Test (PHPUnit `VngSwcProfileTest`)
+  - Built 24 Nov: the column layout was decided (PR "Decision"): sheet `Applicaties`, one row per usage, columns `ID`, `Leverancier`, `KvK-nummer leverancier`, `Applicatie`, `Omschrijving`, `Versie`, `Status`, `Opmerking`; a real export with other headers is a change to `vng-swc-profile.json` and its packs only. `CmdbImportProfile` now reads `targets` and `editableTargets`, and `CmdbImportPackRules` `requiredMappings`, from the profile (the TOPdesk profile keeps its defaults). The packs are `vng-swc-supplier.json`, `vng-swc-module.json`, `vng-swc-version.json` and `vng-swc-usage.json`; the fixtures are `tests/fixtures/cmdb/vng-swc-export.xlsx` and `vng-swc-export-without-supplier.xlsx`, built by `tests/fixtures/cmdb/build-fixtures.py`.
 
 ### Task 2: Matching and the preview (dry run)
 - **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-preview-shows-the-mapping-before-anything-is-written-req-lcm-002
