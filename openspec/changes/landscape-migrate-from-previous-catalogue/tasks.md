@@ -30,8 +30,9 @@
   - GIVEN the usage, module and organization schemas WHEN read THEN each has an optional `legacyId`
   - GIVEN `POST /api/legacy-import/apply` with the preview token and the rows left out WHEN called THEN usages are created or updated for the active organisation keyed on `legacyId`, unmatched products and suppliers are created with status concept, and the response counts created, updated and skipped with reasons
   - GIVEN the same export twice WHEN applied THEN the second run creates no duplicates
-- [ ] Implement
-- [ ] Test (PHPUnit `LegacyCatalogueMigrationApplyTest`)
+- [x] Implement
+- [x] Test (PHPUnit `LegacyCatalogueMigrationApplyTest`)
+  - Built 24 Nov: `POST /api/legacy-import/apply` (multipart `file` and `leftOut`, a JSON array of the previous catalogue ids the user left out). Decision: no preview token; the client sends the same file again, because the preview writes nothing and decides the same way, and the server keeps no copy of an export. `LegacyCatalogueMigrationService::apply()` previews the rows again and `LegacyCatalogueWriter` writes each with the caller's own rights (RBAC and multitenancy on): an unmatched supplier becomes a Draft supplier organisation registered by the municipality, and unmatched products and versions become a module and version without a publication date, each created once per run. The usage of the active organisation is found on `legacyId` and updated, or created with it. Rows are skipped with a reason: `mapping`, `no-id`, `left-out`, `repeated-id` or `<step>-not-saved`. Tests: `tests/Unit/Service/LegacyCatalogueMigrationApplyTest.php` (first run, second run without duplicates, refused save, no right), controller cases in `LegacyCatalogueImportControllerTest`. Not built: linking reference components and connections (REQ-LCM-003), because the profile does not read those columns yet; that needs the real export's format.
   - Built 23 Nov: optional `legacyId` (admin-only update) on usage 1.6.5, module 0.3.16 and organization 0.5.7 in `lib/Settings/register.d/legacy-catalogue-migration.json`, tested by `tests/Unit/Settings/LegacyIdFragmentTest.php`. Left: the apply endpoint and its test.
 
 ### Task 4: The dialog (board SkApplicaties)

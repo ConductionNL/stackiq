@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * The right is checked before the upload is read; the upload is checked before the service reads it.
+ * The right is checked before the upload is read; the upload and the fields are checked before the service reads them.
  */
 class LegacyCatalogueImportControllerTest extends TestCase {
 	/**
@@ -149,4 +149,66 @@ class LegacyCatalogueImportControllerTest extends TestCase {
 		$this->assertSame(expected: 500, actual: $broken->getStatus());
 		$this->assertSame(expected: 'PREVIEW_FAILED', actual: $broken->getData()['error']);
 	}//end testTheUploadIsPreviewed()
+	/**
+	 * Apply passes the left-out ids on; a `leftOut` that is no JSON array of strings is 400 before anything is read.
+	 *
+	 * @return void
+	 */
+	public function testApplyPassesTheLeftOutIds(): void {
+		$this->service->expects($this->once())
+			->method('apply')
+			->with('/tmp/up', 'export.xlsx', ['swc-4'])
+			->willReturn(['created' => 1, 'updated' => 0, 'skipped' => 1, 'skippedRows' => []]);
+
+		$ok = $this->applying(leftOut: '["swc-4"]')->apply();
+		$this->assertSame(expected: 200, actual: $ok->getStatus());
+		$this->assertSame(expected: 1, actual: $ok->getData()['created']);
+
+		foreach (['not json', '{"a": 1}', '[1]'] as $leftOut) {
+			$refused = $this->applying(leftOut: $leftOut)->apply();
+			$this->assertSame(expected: ['error' => 'INVALID_LEFT_OUT', 'details' => []], actual: $refused->getData(), message: $leftOut);
+		}
+	}//end testApplyPassesTheLeftOutIds()
+
+	/**
+	 * Apply refuses a caller without the right with 403 before reading any field.
+	 *
+	 * @return void
+	 */
+	public function testApplyRefusesACallerWithoutTheRight(): void {
+		$this->service->method('assertMayImport')->willThrowException(
+			new CmdbImportException(errorCode: CmdbImportException::FORBIDDEN, message: 'no')
+		);
+		$this->service->expects($this->never())->method('apply');
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->expects($this->never())->method('getParam');
+		$request->expects($this->never())->method('getUploadedFile');
+
+		$controller = new LegacyCatalogueImportController(
+			request: $request,
+			service: $this->service,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+
+		$this->assertSame(expected: 403, actual: $controller->apply()->getStatus());
+	}//end testApplyRefusesACallerWithoutTheRight()
+
+	/**
+	 * The controller with an upload and a `leftOut` field.
+	 *
+	 * @param string $leftOut The field.
+	 *
+	 * @return LegacyCatalogueImportController
+	 */
+	private function applying(string $leftOut): LegacyCatalogueImportController {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnCallback(static fn (string $key): string => [$key => '', 'leftOut' => $leftOut][$key]);
+		$request->method('getUploadedFile')->willReturn(['tmp_name' => '/tmp/up', 'name' => 'export.xlsx', 'size' => 10, 'error' => UPLOAD_ERR_OK]);
+
+		return new LegacyCatalogueImportController(
+			request: $request,
+			service: $this->service,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+	}//end applying()
 }//end class

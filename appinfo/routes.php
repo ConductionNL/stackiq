@@ -135,6 +135,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // organisation who may create usages (checked in the service before the file is read), CSRF-protected.
         // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
         ['name' => 'legacyCatalogueImport#preview', 'url' => '/api/legacy-import/preview', 'verb' => 'POST'],
+        // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+        ['name' => 'legacyCatalogueImport#apply', 'url' => '/api/legacy-import/apply', 'verb' => 'POST'],
 
         // User Groups management routes
         ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],

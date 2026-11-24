@@ -21,30 +21,21 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 require_once __DIR__ . '/../Support/CmdbTestSupport.php';
+require_once __DIR__ . '/../Support/BuildsLegacyCatalogueService.php';
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
-use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
-use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueOpenRegister;
 use OCA\Stackiq\Service\LegacyCatalogueMigrationService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\BuildsLegacyCatalogueService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
-use OCP\App\IAppManager;
-use OCP\IUser;
-use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Who may preview, and what the preview decides per row.
  */
 class LegacyCatalogueMigrationServiceTest extends TestCase {
-	/**
-	 * Schema ids by object type.
-	 */
-	private const SCHEMAS = ['organization' => 11, 'module' => 12, 'moduleVersion' => 13, 'usage' => 14];
+	use BuildsLegacyCatalogueService;
 
 	/**
 	 * The objects stackiq holds, by schema id.
@@ -59,109 +50,21 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 		13 => [['id' => 'ver-1', 'version' => '4.2', 'module' => 'mod-1']],
 	];
 
+
 	/**
-	 * The service with the given caller, organisation and right.
+	 * The service on the in-memory catalogue of self::OBJECTS, unless `configured` is false.
 	 *
-	 * @param bool $user Whether a user is logged in.
-	 * @param string|null $organisation The active organisation.
-	 * @param bool $mayCreate What the permission handler answers.
-	 * @param bool $configured Whether OpenRegister's object service is there.
-	 * @param CmdbWorkbookReader|null $reader The reader.
+	 * @param array<string, mixed> $options As legacyService(), plus `configured` (default true).
 	 *
 	 * @return LegacyCatalogueMigrationService
 	 */
-	private function service(
-		bool $user = true,
-		?string $organisation = 'org-9',
-		bool $mayCreate = true,
-		bool $configured = true,
-		?CmdbWorkbookReader $reader = null
-	): LegacyCatalogueMigrationService {
-		CmdbTestSupport::loadMigrationPack();
-		$session = $this->createMock(originalClassName: IUserSession::class);
-		$caller = null;
-		if ($user === true) {
-			$caller = $this->createMock(originalClassName: IUser::class);
+	private function service(array $options = []): LegacyCatalogueMigrationService {
+		if (($options['configured'] ?? true) === true) {
+			$options['objectService'] = $this->objectService();
 		}
 
-		$session->method('getUser')->willReturn($caller);
-		$lookup = $this->createMock(originalClassName: OpenRegisterLookupInterface::class);
-		$lookup->method('activeOrganisationUuid')->willReturn($organisation);
-		$apps = $this->createMock(originalClassName: IAppManager::class);
-		$apps->method('isInstalled')->willReturn(true);
-
-		$objectService = null;
-		if ($configured === true) {
-			$objectService = $this->objectService();
-		}
-
-		$settings = $this->createMock(originalClassName: SettingsService::class);
-		$settings->method('getSchemaIdForObjectType')->willReturnCallback(static fn (string $objectType): ?int => (self::SCHEMAS[$objectType] ?? null));
-		$settings->method('getVoorzieningenRegisterId')->willReturn(7);
-		$settings->method('getObjectService')->willReturn($objectService);
-
-		$openRegister = new LegacyCatalogueOpenRegister(
-			container: $this->container(mayCreate: $mayCreate),
-			appManager: $apps,
-			settingsService: $settings,
-			logger: $this->createMock(originalClassName: LoggerInterface::class)
-		);
-
-		return new LegacyCatalogueMigrationService(openRegister: $openRegister, userSession: $session, lookup: $lookup, reader: $reader);
+		return $this->legacyService(options: $options);
 	}//end service()
-
-	/**
-	 * A container with the schema mapper, the permission handler and the translations.
-	 *
-	 * @param bool $mayCreate What the permission handler answers.
-	 *
-	 * @return ContainerInterface
-	 */
-	private function container(bool $mayCreate): ContainerInterface {
-		$base = CmdbTestSupport::emptyContainer(test: $this);
-		$mapper = new class {
-			/**
-			 * The schema.
-			 *
-			 * @param int $id The id.
-			 *
-			 * @return object
-			 */
-			public function find(int $id): object {
-				return (object)['id' => $id];
-			}//end find()
-		};
-		$permissions = new class($mayCreate) {
-			/**
-			 * Constructor.
-			 *
-			 * @param bool $answer The answer.
-			 */
-			public function __construct(private readonly bool $answer) {
-			}//end __construct()
-
-			/**
-			 * The answer, for the usage schema and create only.
-			 *
-			 * @param object $schema The schema.
-			 * @param string $action The action.
-			 *
-			 * @return bool
-			 */
-			public function hasPermission(object $schema, string $action): bool {
-				return $this->answer && $schema->id === 14 && $action === 'create';
-			}//end hasPermission()
-		};
-		$services = [
-			LegacyCatalogueOpenRegister::SCHEMA_MAPPER => $mapper,
-			LegacyCatalogueOpenRegister::PERMISSIONS => $permissions,
-		];
-
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('has')->willReturnCallback(static fn (string $id): bool => isset($services[$id]) || $base->has($id));
-		$container->method('get')->willReturnCallback(static fn (string $id): mixed => ($services[$id] ?? $base->get($id)));
-		return $container;
-	}//end container()
 
 	/**
 	 * An object service that answers a search with every object of the schema, and nothing to an RBAC-scoped read.
@@ -212,7 +115,7 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 			$reader->expects($this->never())->method('assertXlsx');
 			$reader->expects($this->never())->method('read');
 			try {
-				$this->service(...$arguments, reader: $reader)->preview(path: '/does/not/exist.xlsx', fileName: 'export.xlsx');
+				$this->service(options: array_merge($arguments, ['reader' => $reader]))->preview(path: '/does/not/exist.xlsx', fileName: 'export.xlsx');
 				$this->fail(message: $case . ' must be refused');
 			} catch (CmdbImportException $exception) {
 				$this->assertSame(expected: CmdbImportException::FORBIDDEN, actual: $exception->getErrorCode(), message: $case);
@@ -304,7 +207,8 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 	 */
 	public function testWithoutOpenRegisterThePreviewIsNotConfigured(): void {
 		try {
-			$this->service(configured: false)->previewRows(rows: [self::row(row: 2, cells: ['ID' => 'swc-1', 'Leverancier' => 'X', 'Applicatie' => 'Y'])]);
+			$rows = [self::row(row: 2, cells: ['ID' => 'swc-1', 'Leverancier' => 'X', 'Applicatie' => 'Y'])];
+			$this->service(options: ['configured' => false])->previewRows(rows: $rows);
 			$this->fail(message: 'must be refused');
 		} catch (CmdbImportException $exception) {
 			$this->assertSame(expected: CmdbImportException::NOT_CONFIGURED, actual: $exception->getErrorCode());
