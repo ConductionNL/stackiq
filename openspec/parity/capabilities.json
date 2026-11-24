@@ -8097,7 +8097,7 @@
 					"openspec/specs/view-enrichment-api :: Enrichment API MUST return standard viewNode format",
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/view-enrichment-api :: The views API lists the imported GEMMA views and returns each as imported (REQ-CLR-021)"
 				],
-				"plan": "openspec/changes/view-products-enrichment"
+				"plan": "openspec/changes/archive/2026-11-24-view-products-enrichment"
 			},
 			"reachedOn": "API only: GET /api/views and /api/views/{viewId} (authenticated), plus OpenRegister /api/objects on the AMEF register for elements",
 			"provider": "stackiq",

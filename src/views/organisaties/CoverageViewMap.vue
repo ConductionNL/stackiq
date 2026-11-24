@@ -11,7 +11,7 @@
  and each node also lists the products (diensten) linked to its element.
 
  @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
- @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
+ @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
 -->
 <template>
 	<section class="coverage-view-map" data-testid="coverage-view-map">
@@ -283,7 +283,7 @@ export default {
 		 *
 		 * @param {Array<object>} products The node's products.
 		 * @return {string} The text.
-		 * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
+		 * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
 		 */
 		productsText(products) {
 			const names = products.map((product) => product?.name || product?.title || '').filter(Boolean)

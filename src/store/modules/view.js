@@ -9,7 +9,7 @@
  * toggle state and fetches enriched views from the backend API.
  *
  * @spec openspec/changes/deelnames-gebruik/tasks.md#task-5
- * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
+ * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md
  */
 
 import axios from '@nextcloud/axios'

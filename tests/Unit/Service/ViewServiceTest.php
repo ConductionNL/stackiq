@@ -507,7 +507,7 @@ class ViewServiceTest extends TestCase {
 
 	// ----------------------------------------------------------------
 	// getProductsData / getNodeProducts tests
-	// (openspec/changes/view-products-enrichment)
+	// (openspec/changes/archive/2026-11-24-view-products-enrichment)
 	// ----------------------------------------------------------------
 
 	/**
