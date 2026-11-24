@@ -152,7 +152,7 @@ class AanbodController extends Controller {
 	 * @PublicPage
 	 *
 	 * @spec openspec/specs/aanbod-listings/spec.md
-	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+	 * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAanbod(): JSONResponse {

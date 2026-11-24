@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+ * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * is resolved, and `@self` is reduced to the entry's id, so no
  * organisation-scoped field leaves.
  *
- * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+ * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
  */
 class PublishedAanbod implements PublishedAanbodInterface {
 	use ParsesStoredDates;
@@ -86,7 +86,7 @@ class PublishedAanbod implements PublishedAanbodInterface {
 	 *
 	 * @return array{results: array, total: int, page: int, pages: int, limit: int, offset: int}
 	 *
-	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+	 * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
 	public function page(array $options = []): array {
 		$config = $this->settingsService->getVoorzieningenConfig();
@@ -121,7 +121,7 @@ class PublishedAanbod implements PublishedAanbodInterface {
 	 *
 	 * @return bool True when the publication date has come and no depublication date has.
 	 *
-	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+	 * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
 	public function isPublished(array $entry, DateTimeImmutable $now): bool {
 		$published = $this->storedDate(value: $entry['publicationDate'] ?? null);
@@ -142,7 +142,7 @@ class PublishedAanbod implements PublishedAanbodInterface {
 	 *
 	 * @return array<string,mixed> The projected entry.
 	 *
-	 * @spec openspec/changes/anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
+	 * @spec openspec/changes/archive/2026-11-24-anonymous-aanbod-listing-is-published-only/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-serves-anonymous-callers-published-entries-only-req-009
 	 */
 	public function project(array $entry, string $type): array {
 		$id = $entry['id'] ?? ($entry['@self']['id'] ?? null);
