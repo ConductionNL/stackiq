@@ -10,9 +10,18 @@
  * RUN_ID, and removes exactly those rows afterwards. The states are covered
  * by tests/Unit/Service/ReferenceComponentCoverageDerivationTest.php.
  *
+ * The map scenario answers the two view requests with a view holding both
+ * reference components (the shared instance's imported views hold none of
+ * this run's elements); the coverage on its nodes is the real coverage of the
+ * seeded rows. The portfolio scenario reads the real report.
+ *
+ * Written from the change's scenarios; not yet run against a live instance.
+ *
  * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
  */
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, Page, Route } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
 
 import { expect, test } from '@playwright/test'
@@ -34,6 +43,22 @@ const ids: Record<string, string> = {}
 const organisation = `${RUN_ID} municipality`
 const doubled = `${RUN_ID} case registration`
 const missing = `${RUN_ID} knowledge base`
+const VIEW_ID = `${RUN_ID}-coverage-view`
+const viewName = `${RUN_ID} coverage view`
+
+/**
+ * Open a page of the app and pick this run's organisation in its picker.
+ *
+ * @param page The page.
+ * @param route The app route.
+ * @return Resolves once the organisation is picked.
+ */
+async function openFor(page: Page, route: string): Promise<void> {
+	await gotoAppRoute(page, route)
+	await dismissSupportDialog(page)
+	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
+	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
+}
 
 /**
  * Create a row and remember it for cleanup.
@@ -101,10 +126,7 @@ test.afterAll(async () => {
 test('the GEMMA plate shows the overlap with both applications and the gap', async ({
 	page,
 }) => {
-	await gotoAppRoute(page, '/gemma-plaat')
-	await dismissSupportDialog(page)
-	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
-	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
+	await openFor(page, '/gemma-plaat')
 
 	const plate = page.getByTestId('gemma-plate-groups')
 	const tile = plate.getByRole('button', { name: new RegExp(doubled) })
@@ -122,4 +144,72 @@ test('the GEMMA plate shows the overlap with both applications and the gap', asy
 	await expect(
 		plate.getByRole('button', { name: new RegExp(doubled) }),
 	).toBeVisible()
+})
+
+// @e2e reference-component-coverage::an-information-manager-sees-their-applications-on-a-gemma-view
+test('a GEMMA view draws the overlap with both application names and the gap', async ({
+	page,
+}) => {
+	const node = (viewNodeId: string, identifier: string, name: string, x: number) => ({
+		viewNodeId,
+		elementRef: `id-${identifier}`,
+		modelNodeId: `id-${identifier}`,
+		name,
+		x,
+		y: 0,
+		width: 200,
+		height: 100,
+	})
+	await page.route('**/apps/stackiq/api/views', (route: Route) => route.fulfill({
+		json: { success: true, views: [{ id: VIEW_ID, name: viewName }] },
+	}))
+	await page.route(`**/apps/stackiq/api/views/${VIEW_ID}*`, (route: Route) => route.fulfill({
+		json: {
+			success: true,
+			view: {
+				id: VIEW_ID,
+				name: viewName,
+				viewNodes: [
+					node('n-doubled', `${RUN_ID}-doubled`, doubled, 0),
+					node('n-missing', `${RUN_ID}-missing`, missing, 260),
+				],
+				viewRelationships: [],
+			},
+		},
+	}))
+
+	await openFor(page, '/gemma-plaat')
+	const map = page.getByTestId('coverage-view-map')
+	await expect(map).toBeVisible({ timeout: 30000 })
+	await map.getByRole('combobox', { name: 'GEMMA view' }).click()
+	await page.getByRole('option', { name: viewName }).click()
+
+	const overlap = map.locator('.coverage-view-map__node').filter({ hasText: doubled })
+	await expect(overlap).toHaveAttribute('data-state', 'overlap', { timeout: 30000 })
+	await expect(overlap).toContainText('Overlap')
+	await expect(overlap).toContainText(`${RUN_ID} application A`)
+	await expect(overlap).toContainText(`${RUN_ID} application B`)
+
+	const gap = map.locator('.coverage-view-map__node').filter({ hasText: missing })
+	await expect(gap).toHaveAttribute('data-state', 'gap')
+	await expect(gap).toContainText('Gap')
+})
+
+// @e2e reference-component-coverage::the-portfolio-report-shows-overlap-next-to-ageing
+test('the portfolio report lists the overlapping component and marks both rows', async ({
+	page,
+}) => {
+	await openFor(page, '/portfolio-report')
+
+	const section = page.getByTestId('pr-overlap')
+	await expect(section).toBeVisible({ timeout: 30000 })
+	const group = section.getByTestId('pr-overlap-row').filter({ hasText: doubled })
+	await expect(group).toContainText(`${RUN_ID} application A`)
+	await expect(group).toContainText(`${RUN_ID} application B`)
+	await expect(section.getByTestId('pr-overlap-row').filter({ hasText: missing })).toHaveCount(0)
+
+	for (const application of [`${RUN_ID} application A`, `${RUN_ID} application B`]) {
+		const row = page.getByTestId('pr-row').filter({ hasText: application })
+		await expect(row.getByTestId('pr-row-overlap')).toBeVisible()
+	}
 })
