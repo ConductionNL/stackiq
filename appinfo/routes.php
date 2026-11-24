@@ -131,6 +131,11 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
         ['name' => 'settings#getCmdbImportMapping', 'url' => '/api/settings/cmdb-import/mapping', 'verb' => 'GET'],
 
+        // Bring over an export from the previous Softwarecatalogus: the preview writes nothing. Any member of an active
+        // organisation who may create usages (checked in the service before the file is read), CSRF-protected.
+        // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+        ['name' => 'legacyCatalogueImport#preview', 'url' => '/api/legacy-import/preview', 'verb' => 'POST'],
+
         // User Groups management routes
         ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
         ['name' => 'settings#setGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
