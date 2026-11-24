@@ -8,7 +8,7 @@
  * module builds that request and shapes each audit row for the page. Stackiq
  * keeps no copy of the trail.
  *
- * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed
+ * @spec openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed
  */
 
 /** The OpenRegister audit list, relative to the instance root. */

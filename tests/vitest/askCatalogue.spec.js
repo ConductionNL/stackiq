@@ -7,7 +7,7 @@
  * answer, and that the page and its menu entry are declared, the entry shown
  * only when hermiq is installed.
  *
- * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-002-the-ask-panel-is-only-offered-when-hermiq-is-installed
+ * @spec openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-002-the-ask-panel-is-only-offered-when-hermiq-is-installed
  */
 import * as fs from 'fs'
 import * as path from 'path'

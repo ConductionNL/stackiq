@@ -6,7 +6,7 @@
  * shaped for the Ask page. The server searches OpenRegister as the caller and
  * hands only the entries it found to hermiq; this module only asks and reads.
  *
- * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used
+ * @spec openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used
  */
 
 /** The longest question the server accepts. */

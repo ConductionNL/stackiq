@@ -11,7 +11,7 @@
  * as "Assistant: {toolId}".
  *
  * @spec openspec/specs/platform-properties/spec.md
- * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-004-the-history-tab-marks-assistant-actions
+ * @spec openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-004-the-history-tab-marks-assistant-actions
  */
 import * as fs from 'fs'
 import * as path from 'path'
