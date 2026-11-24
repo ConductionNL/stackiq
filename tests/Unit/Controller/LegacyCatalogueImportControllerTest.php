@@ -194,6 +194,22 @@ class LegacyCatalogueImportControllerTest extends TestCase {
 	}//end testApplyRefusesACallerWithoutTheRight()
 
 	/**
+	 * Access answers whether the caller may import, and never reads the request.
+	 *
+	 * @return void
+	 */
+	public function testAccessAnswersWhetherTheCallerMayImport(): void {
+		$this->service->method('assertMayImport')->willReturnOnConsecutiveCalls(
+			'org-9',
+			$this->throwException(exception: new CmdbImportException(errorCode: CmdbImportException::FORBIDDEN, message: 'no'))
+		);
+		$controller = $this->controller(file: null, readsUpload: false);
+
+		$this->assertSame(expected: ['mayImport' => true], actual: $controller->access()->getData());
+		$this->assertSame(expected: ['mayImport' => false], actual: $controller->access()->getData());
+	}//end testAccessAnswersWhetherTheCallerMayImport()
+
+	/**
 	 * The controller with an upload and a `leftOut` field.
 	 *
 	 * @param string $leftOut The field.

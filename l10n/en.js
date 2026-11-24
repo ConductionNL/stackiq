@@ -2452,7 +2452,20 @@ OC.L10N.register(
         "Not registered with the directory yet.": "Not registered with the directory yet.",
         "Federation is on and this catalog is registered": "Federation is on and this catalog is registered",
         "Federation is off": "Federation is off",
-        "Could not switch federation": "Could not switch federation"
+        "Could not switch federation": "Could not switch federation",
+        "A required value is empty": "A required value is empty",
+        "Bring over": "Bring over",
+        "Bring over from the previous Softwarecatalogus": "Bring over from the previous Softwarecatalogus",
+        "Choose the export of your organisation from the previous Softwarecatalogus (.xlsx). Nothing is saved before you confirm.": "Choose the export of your organisation from the previous Softwarecatalogus (.xlsx). Nothing is saved before you confirm.",
+        "create": "create",
+        "created {count}": "created {count}",
+        "Left out in the preview": "Left out in the preview",
+        "matched": "matched",
+        "Only a member of an organisation who may register applications can bring over an export.": "Only a member of an organisation who may register applications can bring over an export.",
+        "skipped {count}": "skipped {count}",
+        "The ID repeats an earlier row": "The ID repeats an earlier row",
+        "This is not an export of the previous Softwarecatalogus: {missing} is missing.": "This is not an export of the previous Softwarecatalogus: {missing} is missing.",
+        "updated {count}": "updated {count}"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -99,6 +99,17 @@ GEMMA Online, from the `documentation` and `gemmaUrl` the facet buckets carry
 				</template>
 				{{ t('stackiq', 'Find duplicates') }}
 			</NcButton>
+			<NcActions
+				v-if="legacyImport && mayLegacyImport"
+				:aria-label="t('stackiq', 'Actions')"
+				data-testid="catalog-actions">
+				<NcActionButton data-testid="legacy-import-open" @click="showLegacyImport = true">
+					<template #icon>
+						<DatabaseImportOutline :size="20" />
+					</template>
+					{{ legacyImportTitle }}
+				</NcActionButton>
+			</NcActions>
 			<NcActions :aria-label="t('stackiq', 'Export')" :menuName="t('stackiq', 'Export')">
 				<template #icon>
 					<Download :size="20" />
@@ -222,6 +233,11 @@ GEMMA Online, from the `documentation` and `gemmaUrl` the facet buckets carry
 			</div>
 		</div>
 
+		<LegacyCatalogueImportModal
+			v-if="legacyImport"
+			:show="showLegacyImport"
+			@imported="refetch"
+			@close="showLegacyImport = false" />
 		<SaveFacetViewModal
 			:show="showSaveViewModal"
 			:saving="savingView"
@@ -239,6 +255,7 @@ import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud
 import { defineAsyncComponent } from 'vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
+import DatabaseImportOutline from 'vue-material-design-icons/DatabaseImportOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FileDelimitedOutline from 'vue-material-design-icons/FileDelimitedOutline.vue'
 import FileExcelOutline from 'vue-material-design-icons/FileExcelOutline.vue'
@@ -248,6 +265,7 @@ import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import GemmaDefinitionPopover from '../components/gemma/GemmaDefinitionPopover.vue'
+import LegacyCatalogueImportModal from '../modals/import/LegacyCatalogueImportModal.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import {
 	selectedEntries,
@@ -258,6 +276,7 @@ import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { catalogExportUrl } from '../utils/catalogExportUrl.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
+import { legacyImportTitle, legacyImportUrls } from '../utils/legacyImport.js'
 import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -311,8 +330,10 @@ export default {
 		GemmaDefinitionPopover,
 		// Loaded when a page asks for it: the wizard reads the object store.
 		EntryWizardAction: defineAsyncComponent(() => import('../components/entryWizard/EntryWizardAction.vue')),
+		LegacyCatalogueImportModal,
 		SaveFacetViewModal,
 		ContentSaveOutline,
+		DatabaseImportOutline,
 		Download,
 		FileDelimitedOutline,
 		FileExcelOutline,
@@ -368,6 +389,18 @@ export default {
 		description: {
 			type: String,
 			default: '',
+		},
+
+		/**
+		 * Whether the page offers "Bring over from the previous Softwarecatalogus"
+		 * in its actions menu (manifest `config.legacyImport`, the Applications
+		 * page). The entry shows only when `/api/legacy-import/access` allows it.
+		 *
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 */
+		legacyImport: {
+			type: Boolean,
+			default: false,
 		},
 
 		/** Table column definitions, forwarded to `CnIndexPage` (manifest `config.columns`). */
@@ -475,6 +508,9 @@ export default {
 			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 			listRemount: 0,
 			mayFindDuplicates: false,
+			mayLegacyImport: false,
+			showLegacyImport: false,
+			legacyImportTitle: legacyImportTitle(),
 			duplicateCandidatesHref: duplicateCandidatesUrl(generateUrl),
 		}
 	},
@@ -623,6 +659,7 @@ export default {
 		this.refetch()
 		this.facetStore.fetchSavedViews(this.schema)
 		this.loadMayFindDuplicates()
+		this.loadMayLegacyImport()
 	},
 
 	beforeUnmount() {
@@ -660,6 +697,29 @@ export default {
 					}
 				},
 			)
+		},
+
+		/**
+		 * Whether the user may bring over an export from the previous
+		 * Softwarecatalogus; asked only on a page that offers it. A failed
+		 * lookup hides the entry; the endpoints check the right themselves.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 */
+		async loadMayLegacyImport() {
+			if (!this.legacyImport) {
+				return
+			}
+			try {
+				const response = await fetch(legacyImportUrls().access, {
+					headers: { requesttoken: globalThis.OC?.requestToken ?? '' },
+				})
+				const data = response.ok ? await response.json() : null
+				this.mayLegacyImport = data?.mayImport === true
+			} catch {
+				this.mayLegacyImport = false
+			}
 		},
 
 		/**

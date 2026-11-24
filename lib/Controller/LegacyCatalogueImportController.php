@@ -62,6 +62,29 @@ class LegacyCatalogueImportController extends Controller {
 	}//end __construct()
 
 	/**
+	 * Whether the caller may bring over an export, so the page shows the entry only to who may use it.
+	 *
+	 * @return JSONResponse `{mayImport: bool}` (200).
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @auth member-of-active-organisation answers false for a caller without an active organisation or without the
+	 *       right to create usages; reads nothing else.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+	 */
+	public function access(): JSONResponse {
+		$mayImport = true;
+		try {
+			$this->service->assertMayImport();
+		} catch (Throwable $e) {
+			$mayImport = false;
+		}
+
+		return new JSONResponse(data: ['mayImport' => $mayImport], statusCode: Http::STATUS_OK);
+	}//end access()
+
+	/**
 	 * Preview an export: per row the match or create decision for supplier, product and version. Writes nothing.
 	 *
 	 * Multipart field: `file` (xlsx). The right to create usages in the active organisation is checked before the
