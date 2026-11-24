@@ -223,7 +223,7 @@ function routerBase() {
  * manifest instead (buildiq openbuild-inline-edit-persistence 5.1).
  *
  * @return {Promise<void>}
- * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(

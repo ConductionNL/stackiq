@@ -13,7 +13,7 @@
  * cleared override falls back to the bundled manifest. Without Buildiq the
  * in-memory branch mounts the bundled manifest with no request at all.
  *
- * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
 import { useAppManifest } from '@conduction/nextcloud-vue'
@@ -31,7 +31,7 @@ export const APP_ID = 'stackiq'
  *
  * @param {function(): object} [readCapabilities] Returns the capabilities document.
  * @return {string|null} The override URL, or null.
- * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 export function buildiqOverrideEndpoint(readCapabilities = getCapabilities) {
 	let capabilities
@@ -47,13 +47,15 @@ export function buildiqOverrideEndpoint(readCapabilities = getCapabilities) {
 }
 
 /**
+ * (buildiq change openbuild-inline-edit-persistence, task 5.1.)
+ *
  * Load the manifest: the bundled one with Buildiq's stored delta merged over
  * it when Buildiq is enabled, else the bundled one as it is.
  *
  * @param {object} resolvedManifest The bundled manifest, sentinels resolved.
  * @param {function(): object} [readCapabilities] Returns the capabilities document.
  * @return {{manifest: import('vue').Ref<object>}} The `useAppManifest` result.
- * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 export function loadManifest(resolvedManifest, readCapabilities = getCapabilities) {
 	const endpoint = buildiqOverrideEndpoint(readCapabilities)

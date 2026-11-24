@@ -6,7 +6,7 @@
  * manifest only when Buildiq says it is enabled, and otherwise mounts the
  * bundled manifest with no request.
  *
- * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
