@@ -2514,7 +2514,20 @@ OC.L10N.register(
         "Not registered with the directory yet.": "Nog niet aangemeld bij de directory.",
         "Federation is on and this catalog is registered": "Federatie staat aan en deze catalogus is aangemeld",
         "Federation is off": "Federatie staat uit",
-        "Could not switch federation": "Federatie kon niet worden omgezet"
+        "Could not switch federation": "Federatie kon niet worden omgezet",
+        "A required value is empty": "Een verplichte waarde is leeg",
+        "Bring over": "Overnemen",
+        "Bring over from the previous Softwarecatalogus": "Overnemen uit de vorige Softwarecatalogus",
+        "Choose the export of your organisation from the previous Softwarecatalogus (.xlsx). Nothing is saved before you confirm.": "Kies de export van uw organisatie uit de vorige Softwarecatalogus (.xlsx). Er wordt niets opgeslagen voordat u bevestigt.",
+        "create": "aanmaken",
+        "created {count}": "aangemaakt {count}",
+        "Left out in the preview": "Weggelaten in het voorbeeld",
+        "matched": "gekoppeld",
+        "Only a member of an organisation who may register applications can bring over an export.": "Alleen een lid van een organisatie die applicaties mag registreren kan een export overnemen.",
+        "skipped {count}": "overgeslagen {count}",
+        "The ID repeats an earlier row": "Het ID herhaalt een eerdere rij",
+        "This is not an export of the previous Softwarecatalogus: {missing} is missing.": "Dit is geen export van de vorige Softwarecatalogus: {missing} ontbreekt.",
+        "updated {count}": "bijgewerkt {count}"
     },
     "nplurals=2; plural=(n != 1);"
 )

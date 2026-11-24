@@ -134,6 +134,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Bring over an export from the previous Softwarecatalogus: the preview writes nothing. Any member of an active
         // organisation who may create usages (checked in the service before the file is read), CSRF-protected.
         // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+        // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+        ['name' => 'legacyCatalogueImport#access', 'url' => '/api/legacy-import/access', 'verb' => 'GET'],
         ['name' => 'legacyCatalogueImport#preview', 'url' => '/api/legacy-import/preview', 'verb' => 'POST'],
         // @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
         ['name' => 'legacyCatalogueImport#apply', 'url' => '/api/legacy-import/apply', 'verb' => 'POST'],

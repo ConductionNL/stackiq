@@ -725,6 +725,7 @@
 				"schema": "module",
 				"detailRoute": "ModuleDetail",
 				"addWizard": "module",
+				"legacyImport": true,
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [

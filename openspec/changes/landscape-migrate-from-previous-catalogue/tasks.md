@@ -41,8 +41,9 @@
 - **acceptance_criteria**:
   - GIVEN the Applications actions menu WHEN opened by a user who may create usages THEN it lists "Bring over from the previous Softwarecatalogus"
   - GIVEN the modal WHEN used THEN it has three steps: file, preview (rows with match or create, a checkbox per row) and result (created, updated, skipped with reasons)
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `legacyCatalogueImportModal.spec.js`, Playwright `legacy-catalogue-import.spec.ts`)
+  - Built 24 Nov: `src/modals/import/LegacyCatalogueImportModal.vue` (file, preview with a checkbox per row it may bring over, result with the counts and each skipped row's reason; nothing is written before Import) with `src/utils/legacyImport.js`. The Applications page (manifest `config.legacyImport`) shows the entry in an Actions menu only when `GET /api/legacy-import/access` answers `mayImport`. en and nl strings. vitest `tests/vitest/legacyCatalogueImportModal.spec.js` passes; the Playwright spec is no longer fixme (fixture path corrected, it seeds a matching supplier and application) and is written, runs in the nightly; it has not been run against a live instance, so this Test line stays open.
   - Written 21 Nov: `tests/e2e/spec-coverage/legacy-catalogue-import.spec.ts` from the four scenarios, every case marked fixme until the profile, the endpoints, the dialog and the fixture exist; not run.
 
 ### Task 5: Documentation
