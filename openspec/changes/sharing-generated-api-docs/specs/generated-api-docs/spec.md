@@ -11,16 +11,16 @@ The catalogue API is documented by generated OpenAPI documents that a developer 
 
 ## ADDED Requirements
 
-### Requirement: REQ-GAD-001 Stackiq's own endpoints are described by a generated OpenAPI document
+### Requirement: REQ-GAD-001 Stackiq's own endpoints are described by an OpenAPI document kept in step with the routes
 
-Stackiq SHALL generate `openapi.json` from its controllers with `nextcloud/openapi-extractor`, covering every public and user-facing endpoint and leaving admin settings endpoints out, and `composer check:strict` SHALL fail when the committed file differs from a fresh generation.
+Stackiq SHALL describe every versioned `/api/v1/` endpoint it routes in `openapi.json`, an OpenAPI 3 document served by `OpenApiController`, with standard-protocol paths under their own unversioned base and OpenRegister-hosted operations marked `x-provided-by`. Its unit suite, which `composer check:strict` runs, SHALL fail when a routed endpoint has no documented path or a documented path has no route.
 
 #### Scenario: A new endpoint cannot ship undocumented
-@e2e exclude Build-time check; composer openapi:check runs inside check:strict.
+@e2e exclude Build-time check; tests/Unit/Middleware/Support/OpenApiDocumentTest.php runs in the unit suite.
 
-- **GIVEN** a developer adds a user-facing endpoint and does not regenerate the document
-- **WHEN** `composer check:strict` runs
-- **THEN** it fails and names the missing path
+- **GIVEN** a developer adds a `/api/v1/` route to `appinfo/routes.php` and does not document it in `openapi.json`
+- **WHEN** the unit suite runs
+- **THEN** it fails and names the undocumented route
 
 ### Requirement: REQ-GAD-002 A developer reads both documents on one page in stackiq
 
