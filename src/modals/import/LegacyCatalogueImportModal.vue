@@ -51,10 +51,10 @@ Nothing is written before the user presses Import.
 				<table>
 					<thead>
 						<tr>
-							<th>{{ t('stackiq', 'Bring over') }}</th>
-							<th>{{ t('stackiq', 'Supplier') }}</th>
-							<th>{{ t('stackiq', 'Application') }}</th>
-							<th>{{ t('stackiq', 'Version') }}</th>
+							<th scope="col">{{ t('stackiq', 'Bring over') }}</th>
+							<th scope="col">{{ t('stackiq', 'Supplier') }}</th>
+							<th scope="col">{{ t('stackiq', 'Application') }}</th>
+							<th scope="col">{{ t('stackiq', 'Version') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -158,6 +158,12 @@ export default {
 	computed: {
 		title: () => legacyImportTitle(),
 
+		/**
+		 * The counts the result step shows.
+		 *
+		 * @return {Array<{key: string, text: string}>}
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 */
 		counts() {
 			return this.result ? resultCounts(this.result) : []
 		},
@@ -172,6 +178,7 @@ export default {
 		 * Keep the chosen file.
 		 *
 		 * @param {Event} event The change event of the file input.
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		pick(event) {
 			this.file = event.target.files?.[0] ?? null
@@ -182,6 +189,7 @@ export default {
 		 * Ask the server for the preview; every row it may bring over starts checked.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async preview() {
 			await this.request(async () => {
@@ -196,6 +204,7 @@ export default {
 		 * Bring the checked rows over and show the result.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async apply() {
 			await this.request(async () => {
@@ -212,6 +221,7 @@ export default {
 		 *
 		 * @param {() => Promise<void>} send The request.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async request(send) {
 			this.busy = true
@@ -225,7 +235,11 @@ export default {
 			}
 		},
 
-		/** Reset and close. */
+		/**
+		 * Reset and close.
+		 *
+		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 */
 		close() {
 			Object.assign(this.$data, this.$options.data.call(this))
 			this.$emit('close')

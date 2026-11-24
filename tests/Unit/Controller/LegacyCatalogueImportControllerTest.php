@@ -201,7 +201,7 @@ class LegacyCatalogueImportControllerTest extends TestCase {
 	public function testAccessAnswersWhetherTheCallerMayImport(): void {
 		$this->service->method('assertMayImport')->willReturnOnConsecutiveCalls(
 			'org-9',
-			$this->throwException(new CmdbImportException(errorCode: CmdbImportException::FORBIDDEN, message: 'no'))
+			$this->throwException(exception: new CmdbImportException(errorCode: CmdbImportException::FORBIDDEN, message: 'no'))
 		);
 		$controller = $this->controller(file: null, readsUpload: false);
 

@@ -19,13 +19,18 @@ import { generateUrl } from '@nextcloud/router'
 /** Placeholders are rendered as text by Vue, so translate() must not escape them. */
 const AS_TEXT = { escape: false }
 
-/** The label of the actions-menu entry and the title of the dialog. */
+/**
+ * The label of the actions-menu entry and the title of the dialog.
+ *
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+ */
 export const legacyImportTitle = () => t('stackiq', 'Bring over from the previous Softwarecatalogus')
 
 /**
  * The URLs of the three endpoints.
  *
  * @return {{access: string, preview: string, apply: string}}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function legacyImportUrls() {
 	return {
@@ -41,6 +46,7 @@ export function legacyImportUrls() {
  * @param {File} file The export.
  * @param {Array<string>|null} leftOut The previous catalogue ids left out; null for the preview.
  * @return {FormData}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function legacyImportForm(file, leftOut = null) {
 	const form = new FormData()
@@ -56,6 +62,7 @@ export function legacyImportForm(file, leftOut = null) {
  *
  * @param {Array<object>} rows The preview rows.
  * @return {Array<string>} Their previous catalogue ids.
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function selectableIds(rows) {
 	return (rows ?? []).filter((row) => !row.skipped && row.legacyId !== '').map((row) => row.legacyId)
@@ -67,6 +74,7 @@ export function selectableIds(rows) {
  * @param {Array<object>} rows The preview rows.
  * @param {Array<string>} selected The ids still checked.
  * @return {Array<string>}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function leftOutIds(rows, selected) {
 	const keep = new Set(selected)
@@ -78,6 +86,7 @@ export function leftOutIds(rows, selected) {
  *
  * @param {string} decision The decision.
  * @return {string}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function decisionLabel(decision) {
 	const labels = {
@@ -92,6 +101,7 @@ export function decisionLabel(decision) {
  *
  * @param {string} reason The reason code of the apply result.
  * @return {string}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function skipReasonLabel(reason) {
 	const labels = {
@@ -108,6 +118,7 @@ export function skipReasonLabel(reason) {
  *
  * @param {{created: number, updated: number, skipped: number}} result The result.
  * @return {Array<{key: string, text: string}>}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function resultCounts(result) {
 	return [
@@ -122,6 +133,7 @@ export function resultCounts(result) {
  *
  * @param {object} error The axios error.
  * @return {string}
+ * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 export function legacyImportError(error) {
 	const data = error?.response?.data ?? {}
