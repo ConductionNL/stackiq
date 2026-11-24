@@ -40,9 +40,10 @@
 - **acceptance_criteria**:
   - GIVEN the library audit widget takes a label per action WHEN configured THEN `mcp.*` entries read "Assistant: {toolId}"
   - GIVEN it does not WHEN checked THEN an issue is filed on nextcloud-vue and the tab is left as it is
-- [ ] Implement
-- [ ] Test (vitest on the manifest config, or the library's own test once the label map exists)
+- [x] Implement
+- [x] Test (vitest on the manifest config, or the library's own test once the label map exists)
   > Checked: the `audit` widget's `CnAuditTrailCard` gained `actionLabels` in later `@conduction/nextcloud-vue` releases (stackiq is locked to 2.74.0, which has none), but it matches an action exactly (`labels[action]`) and fills only `{actor}`, `{state}`, `{changed.*}` and `{object.*}`: there is no `mcp.*` wildcard and no `{toolId}` token, so "Assistant: {toolId}" cannot be configured. Needed in nextcloud-vue `actionLabelFor`/`fillAuditLabel`: a prefix key (`mcp.*`) and a `{toolId}` token. The History tab is left as it is; the Assistant actions page carries these rows.
+  > Built 24 Nov: nextcloud-vue #2305 (an `actionLabels` key ending in `.*` covers every action under the prefix; `{toolId}` names the tool), #2306 (the sidebar `audit` widget, `CnAuditTrailTab`, takes `actionLabels`) and #2308 (the label goes through the app's l10n). Every detail page's `audit` widget (23, base manifest and fragments) carries `actionLabels: { "mcp.*": "Assistant: {toolId}" }`, with the Dutch "Assistent: {toolId}" in `l10n/nl.json`. Test: `tests/vitest/manifestHistoryTabs.spec.js` (every detail page words assistant actions).
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used

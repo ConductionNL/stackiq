@@ -7,7 +7,11 @@
  * History tab drawn by the `audit` widget, so every catalogue entry shows who
  * changed what (platform-properties, REQ-PLAT-006).
  *
+ * Its rows word an assistant's actions (OpenRegister's `mcp.*` audit entries)
+ * as "Assistant: {toolId}".
+ *
  * @spec openspec/specs/platform-properties/spec.md
+ * @spec openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-004-the-history-tab-marks-assistant-actions
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -52,5 +56,11 @@ describe('History tabs on detail pages', () => {
 	it.each(detailPages.map((page) => [page.id, page]))('%s has a tab drawn by the audit widget', (id, page) => {
 		const audit = tabsOf(page).filter((tab) => (tab.widgets || []).some((widget) => widget.type === 'audit'))
 		expect(audit, `${id} has no History tab`).toHaveLength(1)
+	})
+
+	it.each(detailPages.map((page) => [page.id, page]))('%s words assistant actions in its History tab', (id, page) => {
+		const widgets = tabsOf(page).flatMap((tab) => tab.widgets || []).filter((widget) => widget.type === 'audit')
+		expect(widgets, `${id} has no audit widget`).toHaveLength(1)
+		expect(widgets[0].props && widgets[0].props.actionLabels).toEqual({ 'mcp.*': 'Assistant: {toolId}' })
 	})
 })

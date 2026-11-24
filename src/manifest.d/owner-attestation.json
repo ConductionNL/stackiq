@@ -99,7 +99,7 @@
 					{ "id": "8", "widgetId": "ar-corrected-list", "gridX": 0, "gridY": 12, "gridWidth": 6, "gridHeight": 5 },
 					{ "id": "9", "widgetId": "ar-confirmed-list", "gridX": 6, "gridY": 12, "gridWidth": 6, "gridHeight": 5 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] } ] },
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ] } ] },
 				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		}
