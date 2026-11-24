@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\LegacyCatalogue;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
@@ -117,10 +118,46 @@ class LegacyCatalogueOpenRegister {
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function candidates(): LegacyCatalogueCandidates {
+		$coordinates = $this->coordinates();
+		return new LegacyCatalogueCandidates(
+			objectService: $coordinates['objectService'],
+			register: $coordinates['register'],
+			schemas: $coordinates['schemas']
+		);
+	}//end candidates()
+
+	/**
+	 * The writer on the configured register and schemas.
+	 *
+	 * @return LegacyCatalogueWriter
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	public function writer(): LegacyCatalogueWriter {
+		$coordinates = $this->coordinates();
+		return new LegacyCatalogueWriter(
+			objectService: $coordinates['objectService'],
+			coordinates: array_merge(['register' => $coordinates['register']], $coordinates['schemas'])
+		);
+	}//end writer()
+
+	/**
+	 * OpenRegister's object service, the register and the schemas the migration reads and writes.
+	 *
+	 * @return array{objectService: ObjectServiceInterface, register: int, schemas: array<string, int>}
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	private function coordinates(): array {
 		$objectService = $this->settingsService->getObjectService();
 		$register = (int)($this->settingsService->getVoorzieningenRegisterId() ?? 0);
 		$schemas = [];
-		foreach (['organization', 'module', 'moduleVersion'] as $type) {
+		foreach (['organization', 'module', 'moduleVersion', 'usage'] as $type) {
 			$schemas[$type] = (int)($this->settingsService->getSchemaIdForObjectType(objectType: $type) ?? 0);
 		}
 
@@ -131,8 +168,8 @@ class LegacyCatalogueOpenRegister {
 			);
 		}
 
-		return new LegacyCatalogueCandidates(objectService: $objectService, register: $register, schemas: $schemas);
-	}//end candidates()
+		return ['objectService' => $objectService, 'register' => $register, 'schemas' => $schemas];
+	}//end coordinates()
 
 	/**
 	 * OpenRegister's mapping engine.

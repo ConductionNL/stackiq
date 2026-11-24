@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Preview of an export from the previous Softwarecatalogus, CSRF-protected.
+ * Preview and apply of an export from the previous Softwarecatalogus, CSRF-protected.
  *
  * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
@@ -93,6 +93,70 @@ class LegacyCatalogueImportController extends Controller {
 
 		return new JSONResponse(data: $preview, statusCode: Http::STATUS_OK);
 	}//end preview()
+
+	/**
+	 * Bring over an export: create or update the organisation's usages and count created, updated and skipped rows.
+	 *
+	 * Multipart fields: `file` (the xlsx the preview read) and `leftOut` (a JSON array of the previous catalogue ids
+	 * the user left out, optional). The right to create usages in the active organisation is checked before the file
+	 * is read.
+	 *
+	 * @return JSONResponse The result (200), or `{error, details}` with the contract code.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @auth member-of-active-organisation the service refuses (403) a caller without an active organisation or without the right to create usages, and writes with the caller's own rights.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	public function apply(): JSONResponse {
+		try {
+			$this->service->assertMayImport();
+			$leftOut = $this->leftOut();
+			if ($leftOut instanceof JSONResponse) {
+				return $leftOut;
+			}
+
+			$upload = $this->upload();
+			if ($upload instanceof JSONResponse) {
+				return $upload;
+			}
+
+			$result = $this->service->apply(path: $upload['tmp_name'], fileName: $upload['name'], leftOut: $leftOut);
+		} catch (CmdbImportException $e) {
+			return self::error(code: $e->getErrorCode(), status: $e->getHttpStatus(), details: $e->getDetails());
+		} catch (Throwable $e) {
+			$this->logger->error('LegacyCatalogueImportController: apply failed', ['exception' => get_class($e), 'line' => $e->getLine()]);
+			return self::error(code: 'APPLY_FAILED', status: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+	}//end apply()
+
+	/**
+	 * The ids the user left out, from the `leftOut` field: a JSON array of strings, empty when the field is absent.
+	 *
+	 * @return array<int, string>|JSONResponse The ids, or 400 INVALID_LEFT_OUT.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	private function leftOut(): array|JSONResponse {
+		$raw = $this->request->getParam('leftOut', '');
+		if ($raw === '' || $raw === null) {
+			return [];
+		}
+
+		$ids = $raw;
+		if (is_string($raw) === true) {
+			$ids = json_decode($raw, true);
+		}
+
+		if (is_array($ids) === false || array_filter($ids, static fn (mixed $id): bool => is_string($id) === false) !== []) {
+			return self::error(code: 'INVALID_LEFT_OUT', status: Http::STATUS_BAD_REQUEST);
+		}
+
+		return array_values($ids);
+	}//end leftOut()
 
 	/**
 	 * The stored upload, or the error for a missing, failed or too large one.

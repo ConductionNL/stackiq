@@ -1662,6 +1662,144 @@
                 ]
             }
         },
+        "/legacy-import/apply": {
+            "post": {
+                "operationId": "legacy-import-apply",
+                "summary": "Bring over an export from the previous Softwarecatalogus",
+                "description": "Creates or updates the active organisation's usages from the export the preview read, keyed on the previous catalogue's id (`legacyId`), so a second run updates instead of duplicating. Unmatched suppliers are created as Draft supplier organisations, unmatched products and versions without a publication date. Writes with the caller's own rights. Any member of an active organisation who may create usages; the right is checked before the file is read. CSRF-protected (requesttoken header or OCS-APIRequest: true).",
+                "tags": [
+                    "legacy-import"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The export, .xlsx, at most 10 MB"
+                                    },
+                                    "leftOut": {
+                                        "type": "string",
+                                        "description": "A JSON array of the previous catalogue ids the user left out in the preview"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`created`, `updated` and `skipped` counts and `skippedRows` (per row `row`, `legacyId`, `reason`: mapping, no-id, left-out, repeated-id, supplier-not-saved, product-not-saved, version-not-saved or usage-not-saved, and the mapping `errors`)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "created",
+                                        "updated",
+                                        "skipped",
+                                        "skippedRows"
+                                    ],
+                                    "properties": {
+                                        "created": {
+                                            "type": "integer"
+                                        },
+                                        "updated": {
+                                            "type": "integer"
+                                        },
+                                        "skipped": {
+                                            "type": "integer"
+                                        },
+                                        "skippedRows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "FILE_REQUIRED, NOT_XLSX or INVALID_LEFT_OUT",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "FORBIDDEN: no active organisation, or no right to create usages",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "FILE_TOO_LARGE (details.maxBytes) or WORKBOOK_TOO_LARGE",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "NO_SOURCE_SHEET, MISSING_COLUMN (details.sheet, details.column) or TOO_MANY_ROWS",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "APPLY_FAILED (unexpected; the exception class is in the log)",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "NOT_CONFIGURED, MAPPING_UNAVAILABLE or READER_UNAVAILABLE",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/legacy-import/preview": {
             "post": {
                 "operationId": "legacy-import-preview",

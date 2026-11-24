@@ -116,17 +116,100 @@ class LegacyCatalogueMigrationService {
 	 */
 	public function preview(string $path, string $fileName): array {
 		$this->assertMayImport();
-
-		$profile = $this->openRegister->profile();
-		$profile->load();
-		$reader = $this->reader();
-		$reader->assertXlsx(path: $path, fileName: $fileName);
-		$read = $reader->read(path: $path, profile: $profile);
+		$read = $this->read(path: $path, fileName: $fileName);
 
 		$preview = $this->previewRows(rows: ($read['rows'] ?? []));
 		$preview['warnings'] = array_values(($read['warnings'] ?? []));
 		return $preview;
 	}//end preview()
+
+	/**
+	 * Bring over an export: create or update the organisation's usages, creating unmatched suppliers, products and
+	 * versions as concepts, and count what was created, updated and skipped.
+	 *
+	 * The export is sent again with the rows the user left out in the preview; the preview writes nothing, so the
+	 * same file decides the same way. A second run of the same export updates instead of duplicating.
+	 *
+	 * @param string $path The uploaded file.
+	 * @param string $fileName The name the client gave it.
+	 * @param array<int, string> $leftOut The previous catalogue ids the user left out.
+	 *
+	 * @return array{created: int, updated: int, skipped: int, skippedRows: array<int, array<string, mixed>>}
+	 *
+	 * @throws CmdbImportException FORBIDDEN before the file is read; the read errors as preview().
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	public function apply(string $path, string $fileName, array $leftOut): array {
+		$consumer = $this->assertMayImport();
+		$rows = $this->previewRows(rows: ($this->read(path: $path, fileName: $fileName)['rows'] ?? []))['rows'];
+		$writer = $this->openRegister->writer();
+
+		$result = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'skippedRows' => []];
+		$seen = [];
+		foreach ($rows as $row) {
+			$reason = self::skipReason(row: $row, leftOut: $leftOut, seen: $seen);
+			$seen[$row['legacyId']] = true;
+			$outcome = ['outcome' => 'skipped', 'reason' => $reason];
+			if ($reason === null) {
+				$outcome = $writer->write(row: $row, consumer: $consumer);
+			}
+
+			$result[$outcome['outcome']]++;
+			if ($outcome['outcome'] === 'skipped') {
+				$result['skippedRows'][] = ['row' => $row['row'], 'legacyId' => $row['legacyId'], 'reason' => $outcome['reason'], 'errors' => $row['errors']];
+			}
+		}
+
+		return $result;
+	}//end apply()
+
+	/**
+	 * Why a row is not written, or null when it is.
+	 *
+	 * @param array<string, mixed> $row The previewed row.
+	 * @param array<int, string> $leftOut The ids the user left out.
+	 * @param array<string, bool> $seen The ids of the rows before it.
+	 *
+	 * @return string|null `mapping` (a required value is empty), `no-id`, `left-out` or `repeated-id`.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	private static function skipReason(array $row, array $leftOut, array $seen): ?string {
+		$reasons = [
+			'mapping' => $row['skipped'] === true,
+			'no-id' => $row['legacyId'] === '',
+			'left-out' => in_array($row['legacyId'], $leftOut, true),
+			'repeated-id' => isset($seen[$row['legacyId']]),
+		];
+		foreach ($reasons as $reason => $applies) {
+			if ($applies === true) {
+				return $reason;
+			}
+		}
+
+		return null;
+	}//end skipReason()
+
+	/**
+	 * Read the export with the profile.
+	 *
+	 * @param string $path The uploaded file.
+	 * @param string $fileName The name the client gave it.
+	 *
+	 * @return array<string, mixed> The reader's `rows` and `warnings`.
+	 *
+	 * @throws CmdbImportException NOT_XLSX, MISSING_COLUMN and the other read errors.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 */
+	private function read(string $path, string $fileName): array {
+		$profile = $this->openRegister->profile();
+		$profile->load();
+		$reader = $this->reader();
+		$reader->assertXlsx(path: $path, fileName: $fileName);
+		return $reader->read(path: $path, profile: $profile);
+	}//end read()
 
 	/**
 	 * The preview of rows as the workbook reader returns them.
