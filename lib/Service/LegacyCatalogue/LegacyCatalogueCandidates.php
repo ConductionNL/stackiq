@@ -64,7 +64,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @param array<int, array<string, mixed>> $rows Rows with `supplierKvk` and `supplierName`.
 	 *
-	 * @return array{organisations: array<int, array<string, mixed>>, modules: array<int, array<string, mixed>>, versions: array<int, array<string, mixed>>}
+	 * @return array<string, array<int, array<string, mixed>>> The `organisations`, `modules` and `versions`.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
@@ -158,8 +158,14 @@ final class LegacyCatalogueCandidates {
 		$data = $entity;
 		$uuid = null;
 		if (is_object($entity) === true) {
-			$data = method_exists($entity, 'getObject') === true ? $entity->getObject() : null;
-			$uuid = method_exists($entity, 'getUuid') === true ? $entity->getUuid() : null;
+			$data = null;
+			if (method_exists($entity, 'getObject') === true) {
+				$data = $entity->getObject();
+			}
+
+			if (method_exists($entity, 'getUuid') === true) {
+				$uuid = $entity->getUuid();
+			}
 		}
 
 		if (is_array($data) === false) {

@@ -61,9 +61,14 @@ class LegacyCatalogueImportControllerTest extends TestCase {
 	 */
 	private function controller(?array $file, bool $readsUpload = true): LegacyCatalogueImportController {
 		$request = $this->createMock(originalClassName: IRequest::class);
-		$request->expects($readsUpload === true ? $this->atMost(1) : $this->never())
+		$expectation = $this->never();
+		if ($readsUpload === true) {
+			$expectation = $this->atMost(allowedInvocations: 1);
+		}
+
+		$request->expects($expectation)
 			->method('getUploadedFile')
-			->willReturnCallback(static fn (string $key): ?array => $key === 'file' ? $file : null);
+			->willReturnCallback(static fn (string $key): ?array => [$key => null, 'file' => $file][$key]);
 
 		return new LegacyCatalogueImportController(
 			request: $request,

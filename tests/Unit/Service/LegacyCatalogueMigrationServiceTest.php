@@ -25,8 +25,8 @@ require_once __DIR__ . '/../Support/CmdbTestSupport.php';
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
-use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Service\LegacyCatalogue\LegacyCatalogueOpenRegister;
 use OCA\Stackiq\Service\LegacyCatalogueMigrationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
@@ -79,29 +79,35 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 	): LegacyCatalogueMigrationService {
 		CmdbTestSupport::loadMigrationPack();
 		$session = $this->createMock(originalClassName: IUserSession::class);
-		$session->method('getUser')->willReturn($user === true ? $this->createMock(originalClassName: IUser::class) : null);
+		$caller = null;
+		if ($user === true) {
+			$caller = $this->createMock(originalClassName: IUser::class);
+		}
+
+		$session->method('getUser')->willReturn($caller);
 		$lookup = $this->createMock(originalClassName: OpenRegisterLookupInterface::class);
 		$lookup->method('activeOrganisationUuid')->willReturn($organisation);
 		$apps = $this->createMock(originalClassName: IAppManager::class);
 		$apps->method('isInstalled')->willReturn(true);
 
+		$objectService = null;
+		if ($configured === true) {
+			$objectService = $this->objectService();
+		}
+
 		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->method('getSchemaIdForObjectType')->willReturnCallback(static fn (string $objectType): ?int => (self::SCHEMAS[$objectType] ?? null));
 		$settings->method('getVoorzieningenRegisterId')->willReturn(7);
-		$settings->method('getObjectService')->willReturn($configured === true ? $this->objectService() : null);
+		$settings->method('getObjectService')->willReturn($objectService);
 
-		$container = $this->container(mayCreate: $mayCreate);
-
-		return new LegacyCatalogueMigrationService(
-			container: $container,
+		$openRegister = new LegacyCatalogueOpenRegister(
+			container: $this->container(mayCreate: $mayCreate),
 			appManager: $apps,
 			settingsService: $settings,
-			userSession: $session,
-			lookup: $lookup,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
-			profile: new CmdbImportProfile(container: $container, profileFile: LegacyCatalogueMigrationService::PROFILE_FILE),
-			reader: $reader
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
+
+		return new LegacyCatalogueMigrationService(openRegister: $openRegister, userSession: $session, lookup: $lookup, reader: $reader);
 	}//end service()
 
 	/**
@@ -147,8 +153,8 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 			}//end hasPermission()
 		};
 		$services = [
-			LegacyCatalogueMigrationService::SCHEMA_MAPPER => $mapper,
-			LegacyCatalogueMigrationService::PERMISSIONS => $permissions,
+			LegacyCatalogueOpenRegister::SCHEMA_MAPPER => $mapper,
+			LegacyCatalogueOpenRegister::PERMISSIONS => $permissions,
 		];
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
@@ -225,8 +231,21 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 	public function testThePreviewDecidesMatchOrCreatePerRow(): void {
 		$preview = $this->service()->previewRows(
 			rows: [
-				self::row(row: 2, cells: ['ID' => 'swc-1', 'Leverancier' => 'Voorbeeld Software B.V.', 'KvK-nummer leverancier' => '12345678', 'Applicatie' => 'Zaaksysteem Voorbeeld', 'Versie' => '4.2', 'Status' => 'In gebruik']),
-				self::row(row: 3, cells: ['ID' => 'swc-2', 'Leverancier' => 'Voorbeeld Software B.V.', 'Applicatie' => 'Zaaksysteem Voorbeeld', 'Versie' => '5.0', 'Status' => 'Gepland']),
+				self::row(
+					row: 2,
+					cells: [
+						'ID' => 'swc-1',
+						'Leverancier' => 'Voorbeeld Software B.V.',
+						'KvK-nummer leverancier' => '12345678',
+						'Applicatie' => 'Zaaksysteem Voorbeeld',
+						'Versie' => '4.2',
+						'Status' => 'In gebruik',
+					]
+				),
+				self::row(
+					row: 3,
+					cells: ['ID' => 'swc-2', 'Leverancier' => 'Voorbeeld Software B.V.', 'Applicatie' => 'Zaaksysteem Voorbeeld', 'Versie' => '5.0', 'Status' => 'Gepland']
+				),
 				self::row(row: 4, cells: ['ID' => 'swc-3', 'Leverancier' => 'Ander Leverancier B.V.', 'Applicatie' => 'Burgerzaken', 'Versie' => '-']),
 				self::row(row: 5, cells: ['ID' => 'swc-4', 'Leverancier' => '', 'Applicatie' => 'Zonder leverancier']),
 			]
