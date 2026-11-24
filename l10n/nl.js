@@ -2527,7 +2527,10 @@ OC.L10N.register(
         "skipped {count}": "overgeslagen {count}",
         "The ID repeats an earlier row": "Het ID herhaalt een eerdere rij",
         "This is not an export of the previous Softwarecatalogus: {missing} is missing.": "Dit is geen export van de vorige Softwarecatalogus: {missing} ontbreekt.",
-        "updated {count}": "bijgewerkt {count}"
+        "updated {count}": "bijgewerkt {count}",
+        "Change the filters to show connections in the diagram.": "Pas de filters aan om koppelingen in het diagram te tonen.",
+        "No connections to draw": "Geen koppelingen om te tekenen",
+        "Diagram": "Diagram"
     },
     "nplurals=2; plural=(n != 1);"
 )

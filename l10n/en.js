@@ -2465,7 +2465,10 @@ OC.L10N.register(
         "skipped {count}": "skipped {count}",
         "The ID repeats an earlier row": "The ID repeats an earlier row",
         "This is not an export of the previous Softwarecatalogus: {missing} is missing.": "This is not an export of the previous Softwarecatalogus: {missing} is missing.",
-        "updated {count}": "updated {count}"
+        "updated {count}": "updated {count}",
+        "Change the filters to show connections in the diagram.": "Change the filters to show connections in the diagram.",
+        "No connections to draw": "No connections to draw",
+        "Diagram": "Diagram"
     },
     "nplurals=2; plural=(n != 1);"
 )

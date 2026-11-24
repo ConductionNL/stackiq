@@ -135,3 +135,37 @@ export function layoutConnections(connections) {
 
 	return { nodes: placed, edges }
 }
+
+/**
+ * The diagram in the shape the graph canvas takes: nodes with `position` and
+ * `data.label`, edges with the transport type as label.
+ *
+ * @param {Array<object>} connections The rows the list shows.
+ * @param {{[id: string]: string}} names Names for ends the rows carry as a bare id.
+ * @return {{nodes: Array<object>, edges: Array<object>}} The canvas nodes and edges.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function diagramFlow(connections, names = {}) {
+	// An end the row carries as a bare id gets its name first, so the columns
+	// sort by name and the same rows and names always land in the same places.
+	const named = (value) => (typeof value === 'string' && names[value.trim()] ? { id: value.trim(), name: names[value.trim()] } : value)
+	const rows = (Array.isArray(connections) ? connections : [])
+		.map((connection) => ({ ...connection, moduleA: named(connection?.moduleA), moduleB: named(connection?.moduleB) }))
+	const { nodes, edges } = layoutConnections(rows)
+	return {
+		nodes: nodes.map((node) => ({
+			id: node.id,
+			type: 'default',
+			position: node.position,
+			data: { label: node.label, provision: node.provision },
+		})),
+		edges: edges.map((edge) => ({
+			id: edge.id,
+			source: edge.source,
+			target: edge.target,
+			label: edge.label,
+			markerEnd: 'arrowclosed',
+			...(edge.bidirectional ? { markerStart: 'arrowclosed' } : {}),
+		})),
+	}
+}

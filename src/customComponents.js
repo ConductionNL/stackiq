@@ -25,6 +25,7 @@ import { generateUrl } from '@nextcloud/router'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ConnectionMapWidget from './components/connections/ConnectionMapWidget.vue'
+import ConnectionsDiagram from './components/connections/ConnectionsDiagram.vue'
 import ConnectionSuggestionsPanel from './components/connections/ConnectionSuggestionsPanel.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
@@ -191,6 +192,8 @@ export default {
 	// downloads (connections-diagram-and-graph-export D1, D3): a one-hop graph
 	// over two queries, which no object-list widget draws.
 	ConnectionMapWidget,
+	// The Diagram view of the connections list (CnIndexPage `customViews`, connections-diagram-and-graph-export task 2).
+	ConnectionsDiagram,
 
 	ContractApprovalPanel,
 
