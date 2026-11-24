@@ -13,7 +13,7 @@
  * The methods run with the merged schema as `this`, so the test reads the
  * library's real narrowing over the app's real tables.
  *
- * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-003-the-form-offers-only-the-allowed-options
+ * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-003-the-form-offers-only-the-allowed-options
  */
 import * as fs from 'fs'
 import * as path from 'path'

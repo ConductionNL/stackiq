@@ -12,7 +12,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
  * Maps a row to its supplier, module, version and usage records and the values the matcher reads; a row whose
  * required mapping fails is skipped.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 final class LegacyCatalogueRowMapper {
 
@@ -39,7 +39,7 @@ final class LegacyCatalogueRowMapper {
 	 * @param CmdbImportProfile $profile The loaded `vng-swc` profile.
 	 * @param object            $engine  OpenRegister's mapping engine, with `mapRow`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly CmdbImportProfile $profile,
@@ -57,7 +57,7 @@ final class LegacyCatalogueRowMapper {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) The normaliser is stateless.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function map(array $row): array {
 		$cells = (new CmdbRowNormaliser())->normalise(

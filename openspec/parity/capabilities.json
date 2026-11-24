@@ -3574,8 +3574,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "contracts-expiry-and-owner",
 				"requirement": [
-					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-001 The contract status MUST include Expiring, set by the daily contract job inside the notice window",
-					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-002 The daily job SHALL expire an expiring contract after its end date and SHALL return it to active when its end date moves past the window"
+					"openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-001 The contract status MUST include Expiring, set by the daily contract job inside the notice window",
+					"openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-002 The daily job SHALL expire an expiring contract after its end date and SHALL return it to active when its end date moves past the window"
 				]
 			},
 			"reachedOn": "Contracts /contracten status column and quick filters",
@@ -3583,7 +3583,7 @@
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
 			"featureConfidence": "high",
-			"note": "A daily job moves Active contracts past their end date to Expired on its own. There is no 'expiring' state in the enum, so the middle step of the row does not exist. Specified in openspec/changes/contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
+			"note": "A daily job moves Active contracts past their end date to Expired on its own. There is no 'expiring' state in the enum, so the middle step of the row does not exist. Specified in openspec/changes/archive/2026-11-24-contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/Service/ContractStatusService.php:77 shouldExpire and :114 expirePastContracts set Active -> Expired when endDate < now; lib/BackgroundJob/ContractStatusJob.php:57 daily, registered in appinfo/info.xml:99",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Status: Configurable drop-down showing the contract's lifecycle status, e.g. draft, active ... Reminder date\" (read 2026-09-26); https://docs.topdesk.com/en/terminating-a-contract.html: \"The contract will terminate once the end date passes\" (read 2026-09-26). Reached on: Modules > Contract Management and SLM.",
@@ -3745,7 +3745,7 @@
 				"change": "2026-09-29-contracts-licence-seats",
 				"requirement": [
 					"openspec/specs/licence-seats :: REQ-LSC-001 A contract SHALL record its licence metric and the number of licences bought and in use",
-					"openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options"
+					"openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options"
 				]
 			},
 			"reachedOn": "Contracts /contracten/:id Licences panel and License posture /license-posture Seats section",
@@ -6775,8 +6775,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-dependent-field-options",
 				"requirement": [
-					"openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options",
-					"openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-001 A value outside its dependent list is refused on save"
+					"openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options",
+					"openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-001 A value outside its dependent list is refused on save"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -6792,7 +6792,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; questionnaire field options depending on another field are not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: native forms show or hide questions on conditions (src/Glpi/Form/Condition/Engine.php:138, src/Glpi/Form/Condition/VisibilityStrategy.php:39), but options of one field do not filter by another on item forms; the open requests github.com/glpi-project/roadmap/discussions/414 (cascading filters) and /240 (custom field conditions) ask for it. Reached on: Administration > Forms, question conditions."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26. Corrected 2026-09-27 (OpenSpec pass): partial, not no. Relation pickers depend on another field (the version picker follows the application, the contact person follows the supplier); enum options do not. Missing half specified in landscape-dependent-field-options. Specified in openspec/changes/landscape-dependent-field-options (OpenSpec pass 2026-09-27).",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Corrected 2026-09-27 (OpenSpec pass): partial, not no. Relation pickers depend on another field (the version picker follows the application, the contact person follows the supplier); enum options do not. Missing half specified in landscape-dependent-field-options. Specified in openspec/changes/archive/2026-11-24-landscape-dependent-field-options (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -7078,8 +7078,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "contracts-expiry-and-owner",
 				"requirement": [
-					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-004 A contract SHALL name one responsible Nextcloud user, picked from the users of the instance",
-					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-005 The contract expiry warning MUST include the responsible user among its recipients"
+					"openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-004 A contract SHALL name one responsible Nextcloud user, picked from the users of the instance",
+					"openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-005 The contract expiry warning MUST include the responsible user among its recipients"
 				]
 			},
 			"reachedOn": "ContractDetail /contracten/:id contract details",
@@ -7095,7 +7095,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; a contract owner who receives expiry warnings is not documented (read 2026-09-26)",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Operator The TOPdesk operator responsible for managing the contract ... Reminder date Date on which an operator should be reminded about the contract, e.g. ahead of expiry\" (read 2026-09-26); https://docs.topdesk.com/en/events-that-trigger-actions.html: \"notify a manager that a contract will expire in a month\" (read 2026-09-26). Reached on: Contract card > Management > Operator."
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-24-contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
@@ -7784,10 +7784,10 @@
 				"evidence": "lib/Repair/* still only rename stackiq's own data (MigrateRegisterSlug.php, RenameDutchCatalogValues.php); appinfo/routes.php:110 POST /api/cmdb-import (lib/Service/CmdbExportImportService.php) imports a TOPdesk CMDB xlsx; :307 POST /api/itsm/import with lib/Service/ItsmFileImportService.php imports applications from a CSV/XLSX through the service desk flow; neither reads the previous VNG Softwarecatalogus's registrations; no change or spec names this row",
 				"owner": "ConductionNL/stackiq",
 				"readOn": "2026-10-30",
-				"change": "openspec/changes/landscape-migrate-from-previous-catalogue",
+				"change": "openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue",
 				"requirement": [
-					"openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration :: An organisation imports its export from the previous catalogue (REQ-LCM-001)",
-					"openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration :: The result says what was created, updated and skipped (REQ-LCM-003)"
+					"openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration :: An organisation imports its export from the previous catalogue (REQ-LCM-001)",
+					"openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration :: The result says what was created, updated and skipped (REQ-LCM-003)"
 				]
 			},
 			"reachedOn": "nothing reaches it",

@@ -10,7 +10,7 @@ previous Softwarecatalogus for years. Moving to stackiq does not mean typing
 that again: bring over your organisation's export, check how stackiq reads
 each row, and confirm. Nothing is saved before you confirm.
 
-Specification: [`openspec/changes/landscape-migrate-from-previous-catalogue`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md).
+Specification: [`openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md).
 
 ## Who may bring over an export
 

@@ -233,7 +233,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function loadPacks(callable $storedPack): void {
 		$run = new CmdbPackLoadRun(
@@ -311,7 +311,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the stored pack is invalid.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function takeStoredPack(CmdbPackLoadRun $run, string $target): void {
 		if ($run->readStored === null || in_array($target, self::editableTargetsOf(profile: $run->profile), true) === false) {
@@ -395,7 +395,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing or a file is unreadable or invalid.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function shippedEditablePacks(): array {
 		$validator = $this->resolveValidator();
@@ -801,7 +801,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function dateColumns(): array {
 		$columns = $this->stringList(key: 'dateColumns');
@@ -1039,7 +1039,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function referencedColumns(): array {
 		$columns = $this->profileColumns();
@@ -1113,7 +1113,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function mappingOverview(): array {
 		$this->profile();
@@ -1177,7 +1177,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function packOverview(string $target): array {
 		$pack = $this->pack(target: $target);
@@ -1302,7 +1302,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when load() failed.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function targets(): array {
 		return self::targetsOf(profile: $this->profile());
@@ -1315,7 +1315,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private static function targetsOf(array $profile): array {
 		$targets = ($profile['targets'] ?? null);
@@ -1337,7 +1337,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private static function editableTargetsOf(array $profile): array {
 		$editable = ($profile['editableTargets'] ?? self::EDITABLE_TARGETS);

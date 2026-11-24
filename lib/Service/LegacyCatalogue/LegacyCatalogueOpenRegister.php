@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
  * OpenRegister, as the migration from the previous catalogue reads it. Every lookup first checks that OpenRegister is
  * installed and fails closed.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 class LegacyCatalogueOpenRegister {
 
@@ -76,7 +76,7 @@ class LegacyCatalogueOpenRegister {
 	 * @param SettingsService    $settingsService The register, its schemas and OpenRegister's object service.
 	 * @param LoggerInterface    $logger          Logs a failed permission check.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -91,7 +91,7 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @return bool False when OpenRegister, the schema or the check is not available.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function mayCreateUsages(): bool {
 		$schemaId = (int)($this->settingsService->getSchemaIdForObjectType(objectType: 'usage') ?? 0);
@@ -115,7 +115,7 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @throws CmdbImportException NOT_CONFIGURED.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function candidates(): LegacyCatalogueCandidates {
 		$coordinates = $this->coordinates();
@@ -133,7 +133,7 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @throws CmdbImportException NOT_CONFIGURED.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public function writer(): LegacyCatalogueWriter {
 		$coordinates = $this->coordinates();
@@ -150,8 +150,8 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @throws CmdbImportException NOT_CONFIGURED.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function coordinates(): array {
 		$objectService = $this->settingsService->getObjectService();
@@ -178,7 +178,7 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function engine(): object {
 		$engine = null;
@@ -198,7 +198,7 @@ class LegacyCatalogueOpenRegister {
 	 *
 	 * @return CmdbImportProfile
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function profile(): CmdbImportProfile {
 		if ($this->profile === null) {

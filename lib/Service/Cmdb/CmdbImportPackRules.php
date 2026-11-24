@@ -173,7 +173,7 @@ class CmdbImportPackRules {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function violations(string $target, array $pack, array $profile): array {
 		$never = $profile['neverWritten'][$target] ?? [];
@@ -211,7 +211,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function requiredFields(string $target, array $profile): array {
 		$own = ($profile['requiredMappings'][$target] ?? null);
@@ -233,7 +233,7 @@ class CmdbImportPackRules {
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function requiredViolations(string $target, array $pack, string $keyColumn, array $profile): array {
 		$violations = [];

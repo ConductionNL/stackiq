@@ -129,7 +129,7 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	 *
 	 * @return bool True when the contract enters its notice window.
 	 *
-	 * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
+	 * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
 	 */
 	public function shouldStartExpiring(array $contractData, DateTimeImmutable $now, int $windowDays): bool {
 		if (($contractData['status'] ?? null) !== self::STATUS_ACTIVE) {
@@ -157,7 +157,7 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	 *
 	 * @return bool True when the contract leaves its notice window.
 	 *
-	 * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
+	 * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
 	 */
 	public function shouldReturnToActive(array $contractData, DateTimeImmutable $now, int $windowDays): bool {
 		if (($contractData['status'] ?? null) !== self::STATUS_EXPIRING) {
@@ -177,7 +177,7 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	 *
 	 * @return int The window in days.
 	 *
-	 * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
+	 * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
 	 */
 	public function windowDays(): int {
 		if ($this->appConfig === null) {
@@ -207,7 +207,7 @@ class ContractStatusService implements ContractStatusServiceInterface {
 	 *
 	 * @return array{expiring: int, expired: int, active: int} How many contracts moved to each status.
 	 *
-	 * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
+	 * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
 	 */
 	public function updateContractStatuses(?DateTimeImmutable $now = null): array {
 		$now = ($now ?? new DateTimeImmutable());

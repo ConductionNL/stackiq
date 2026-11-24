@@ -7,7 +7,7 @@
 
 A contract tells you when it is about to run out, and who answers for it.
 
-Specification: [`openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md).
+Specification: [`openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md).
 
 ## Statuses
 

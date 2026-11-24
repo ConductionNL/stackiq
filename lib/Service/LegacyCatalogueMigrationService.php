@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use OCP\IUserSession;
  *
  * Only a member of an active organisation who may create usages previews; the check runs before the file is read.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 class LegacyCatalogueMigrationService {
 
@@ -54,7 +54,7 @@ class LegacyCatalogueMigrationService {
 	 * @param OpenRegisterLookupInterface $lookup       The caller's active organisation.
 	 * @param CmdbWorkbookReader|null     $reader       The workbook reader; null builds one.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly LegacyCatalogueOpenRegister $openRegister,
@@ -71,7 +71,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @throws CmdbImportException FORBIDDEN (403).
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function assertMayImport(): string {
 		$organisation = null;
@@ -96,7 +96,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function maxFileBytes(): int {
 		return $this->openRegister->profile()->maxFileBytes();
@@ -112,7 +112,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @throws CmdbImportException FORBIDDEN before the file is read; NOT_XLSX, MISSING_COLUMN and the other read errors.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function preview(string $path, string $fileName): array {
 		$this->assertMayImport();
@@ -138,7 +138,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @throws CmdbImportException FORBIDDEN before the file is read; the read errors as preview().
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public function apply(string $path, string $fileName, array $leftOut): array {
 		$consumer = $this->assertMayImport();
@@ -173,7 +173,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @return string|null `mapping` (a required value is empty), `no-id`, `left-out` or `repeated-id`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private static function skipReason(array $row, array $leftOut, array $seen): ?string {
 		$reasons = [
@@ -201,7 +201,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @throws CmdbImportException NOT_XLSX, MISSING_COLUMN and the other read errors.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function read(string $path, string $fileName): array {
 		$profile = $this->openRegister->profile();
@@ -220,7 +220,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @throws CmdbImportException NOT_CONFIGURED or MAPPING_UNAVAILABLE.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function previewRows(array $rows): array {
 		$mapper = new LegacyCatalogueRowMapper(profile: $this->openRegister->profile(), engine: $this->openRegister->engine());
@@ -250,7 +250,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function decided(array $row, LegacyCatalogueMatcher $matcher): array {
 		$match = $row['match'];
@@ -287,7 +287,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function summary(array $rows): array {
 		$summary = ['rows' => count($rows), 'skipped' => 0];
@@ -317,7 +317,7 @@ class LegacyCatalogueMigrationService {
 	 *
 	 * @return CmdbWorkbookReader
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private function reader(): CmdbWorkbookReader {
 		if ($this->reader === null) {

@@ -14,7 +14,7 @@
  * and covered by ContractStatusServiceTest and ContractLifecycleDeclarationTest;
  * the free-text refusal by tests/vitest/contractResponsibleUser.spec.js.
  *
- * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md
+ * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md
  */
 import type { Page } from '@playwright/test'
 

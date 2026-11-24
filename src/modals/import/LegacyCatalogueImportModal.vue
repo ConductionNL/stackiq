@@ -11,7 +11,7 @@ and version are matched or created, with a checkbox to leave a row out) and
 the result (created, updated and skipped, with the reason per skipped row).
 Nothing is written before the user presses Import.
 
-@spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+@spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 -->
 
 <template>
@@ -162,7 +162,7 @@ export default {
 		 * The counts the result step shows.
 		 *
 		 * @return {Array<{key: string, text: string}>}
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		counts() {
 			return this.result ? resultCounts(this.result) : []
@@ -178,7 +178,7 @@ export default {
 		 * Keep the chosen file.
 		 *
 		 * @param {Event} event The change event of the file input.
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		pick(event) {
 			this.file = event.target.files?.[0] ?? null
@@ -189,7 +189,7 @@ export default {
 		 * Ask the server for the preview; every row it may bring over starts checked.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async preview() {
 			await this.request(async () => {
@@ -204,7 +204,7 @@ export default {
 		 * Bring the checked rows over and show the result.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async apply() {
 			await this.request(async () => {
@@ -221,7 +221,7 @@ export default {
 		 *
 		 * @param {() => Promise<void>} send The request.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async request(send) {
 			this.busy = true
@@ -238,7 +238,7 @@ export default {
 		/**
 		 * Reset and close.
 		 *
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		close() {
 			Object.assign(this.$data, this.$options.data.call(this))
