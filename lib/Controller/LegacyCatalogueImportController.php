@@ -105,7 +105,8 @@ class LegacyCatalogueImportController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @auth member-of-active-organisation the service refuses (403) a caller without an active organisation or without the right to create usages, and writes with the caller's own rights.
+	 * @auth member-of-active-organisation the service refuses (403) a caller without an active organisation or without
+	 *       the right to create usages, and writes with the caller's own rights.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */

@@ -103,11 +103,19 @@ class LegacyCatalogueMigrationApplyTest extends TestCase {
 		$usages = array_column($this->store[14], null, 'legacyId');
 		$this->assertSame(expected: ['swc-1', 'swc-2', 'swc-3'], actual: array_keys($usages));
 		$this->assertSame(
-			expected: ['status' => 'In production', 'consumer' => 'org-9', 'provider' => 'org-1', 'module' => 'mod-1', 'moduleVersion' => 'ver-1', 'legacyId' => 'swc-1'],
+			expected: [
+				'status' => 'In production',
+				'consumer' => 'org-9',
+				'provider' => 'org-1',
+				'module' => 'mod-1',
+				'moduleVersion' => 'ver-1',
+				'legacyId' => 'swc-1',
+			],
 			actual: $usages['swc-1']
 		);
 		$this->assertArrayNotHasKey(key: 'moduleVersion', array: $usages['swc-3'], message: 'a row without a version links none');
-		$this->assertSame(expected: [true], actual: array_values(array_unique(array_column($this->saves, 'rbac'))), message: 'every write uses the caller\'s rights');
+		$rbac = array_values(array_unique(array_column($this->saves, 'rbac')));
+		$this->assertSame(expected: [true], actual: $rbac, message: 'every write uses the caller\'s rights');
 	}//end testTheFirstRunCreatesAndCounts()
 
 	/**
@@ -148,7 +156,13 @@ class LegacyCatalogueMigrationApplyTest extends TestCase {
 
 		$this->assertSame(expected: 1, actual: $result['created']);
 		$this->assertSame(
-			expected: [['swc-2', 'supplier-not-saved'], ['swc-3', 'supplier-not-saved'], ['swc-4', 'supplier-not-saved'], ['swc-5', 'mapping'], ['swc-1', 'repeated-id']],
+			expected: [
+				['swc-2', 'supplier-not-saved'],
+				['swc-3', 'supplier-not-saved'],
+				['swc-4', 'supplier-not-saved'],
+				['swc-5', 'mapping'],
+				['swc-1', 'repeated-id'],
+			],
 			actual: array_map(static fn (array $row): array => [$row['legacyId'], $row['reason']], $result['skippedRows'])
 		);
 	}//end testARefusedSaveSkipsTheRow()
@@ -199,7 +213,14 @@ class LegacyCatalogueMigrationApplyTest extends TestCase {
 	 */
 	private static function export(string $newVersion): array {
 		$cells = [
-			['ID' => 'swc-1', 'Leverancier' => 'Voorbeeld Software B.V.', 'KvK-nummer leverancier' => '12345678', 'Applicatie' => 'Zaaksysteem Voorbeeld', 'Versie' => '4.2', 'Status' => 'In gebruik'],
+			[
+				'ID' => 'swc-1',
+				'Leverancier' => 'Voorbeeld Software B.V.',
+				'KvK-nummer leverancier' => '12345678',
+				'Applicatie' => 'Zaaksysteem Voorbeeld',
+				'Versie' => '4.2',
+				'Status' => 'In gebruik',
+			],
 			['ID' => 'swc-2', 'Leverancier' => 'Nieuw Leverancier B.V.', 'Applicatie' => 'Nieuw Pakket', 'Versie' => $newVersion],
 			['ID' => 'swc-3', 'Leverancier' => 'Nieuw Leverancier B.V.', 'Applicatie' => 'Tweede Pakket'],
 			['ID' => 'swc-4', 'Leverancier' => 'Nieuw Leverancier B.V.', 'Applicatie' => 'Niet nodig'],

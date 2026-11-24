@@ -53,7 +53,11 @@ trait BuildsLegacyCatalogueService {
 	 */
 	protected function legacyService(array $options = []): LegacyCatalogueMigrationService {
 		$user = ($options['user'] ?? true);
-		$organisation = array_key_exists('organisation', $options) === true ? $options['organisation'] : 'org-9';
+		$organisation = 'org-9';
+		if (array_key_exists('organisation', $options) === true) {
+			$organisation = $options['organisation'];
+		}
+
 		$mayCreate = ($options['mayCreate'] ?? true);
 		$reader = ($options['reader'] ?? null);
 		CmdbTestSupport::loadMigrationPack();
@@ -72,7 +76,9 @@ trait BuildsLegacyCatalogueService {
 		$objectService = ($options['objectService'] ?? null);
 
 		$settings = $this->createMock(originalClassName: SettingsService::class);
-		$settings->method('getSchemaIdForObjectType')->willReturnCallback(static fn (string $objectType): ?int => (self::LEGACY_SCHEMAS[$objectType] ?? null));
+		$settings->method('getSchemaIdForObjectType')->willReturnCallback(
+			static fn (string $objectType): ?int => (self::LEGACY_SCHEMAS[$objectType] ?? null)
+		);
 		$settings->method('getVoorzieningenRegisterId')->willReturn(7);
 		$settings->method('getObjectService')->willReturn($objectService);
 

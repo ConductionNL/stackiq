@@ -27,6 +27,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\SearchBounds;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -174,7 +175,8 @@ final class LegacyCatalogueWriter {
 			return ['outcome' => 'updated'];
 		}
 
-		$this->save(schemaKey: 'usage', data: array_merge(array_filter($usage, static fn (mixed $value): bool => $value !== null), ['legacyId' => $legacyId]));
+		$fields = array_filter($usage, static fn (mixed $value): bool => $value !== null);
+		$this->save(schemaKey: 'usage', data: array_merge($fields, ['legacyId' => $legacyId]));
 		return ['outcome' => 'created'];
 	}//end usage()
 
@@ -186,7 +188,8 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string|null
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares;
+	 * LegacyCatalogueCandidates::reference() is the pure reference reader the migration shares.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
@@ -202,7 +205,7 @@ final class LegacyCatalogueWriter {
 		);
 		foreach ((array)$results as $entity) {
 			$data = $entity->getObject();
-			if (($data['legacyId'] ?? null) === $legacyId && self::reference(value: $data['consumer'] ?? null) === $consumer) {
+			if (($data['legacyId'] ?? null) === $legacyId && LegacyCatalogueCandidates::reference(value: $data['consumer'] ?? null) === $consumer) {
 				return $entity->getUuid();
 			}
 		}
@@ -235,7 +238,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string The uuid.
 	 *
-	 * @throws \RuntimeException When OpenRegister answers no uuid.
+	 * @throws RuntimeException When OpenRegister answers no uuid.
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
@@ -249,30 +252,9 @@ final class LegacyCatalogueWriter {
 		);
 		$saved = $entity->getUuid();
 		if ($saved === null || $saved === '') {
-			throw new \RuntimeException('OpenRegister saved an object without a uuid');
+			throw new RuntimeException('OpenRegister saved an object without a uuid');
 		}
 
 		return $saved;
 	}//end save()
-
-	/**
-	 * A reference as a string; a nested object by its `id`.
-	 *
-	 * @param mixed $value The value.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
-	 */
-	private static function reference(mixed $value): string {
-		if (is_array($value) === true) {
-			$value = ($value['id'] ?? $value['uuid'] ?? null);
-		}
-
-		if (is_scalar($value) === false) {
-			return '';
-		}
-
-		return (string)$value;
-	}//end reference()
 }//end class

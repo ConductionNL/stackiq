@@ -207,7 +207,8 @@ class LegacyCatalogueMigrationServiceTest extends TestCase {
 	 */
 	public function testWithoutOpenRegisterThePreviewIsNotConfigured(): void {
 		try {
-			$this->service(options: ['configured' => false])->previewRows(rows: [self::row(row: 2, cells: ['ID' => 'swc-1', 'Leverancier' => 'X', 'Applicatie' => 'Y'])]);
+			$rows = [self::row(row: 2, cells: ['ID' => 'swc-1', 'Leverancier' => 'X', 'Applicatie' => 'Y'])];
+			$this->service(options: ['configured' => false])->previewRows(rows: $rows);
 			$this->fail(message: 'must be refused');
 		} catch (CmdbImportException $exception) {
 			$this->assertSame(expected: CmdbImportException::NOT_CONFIGURED, actual: $exception->getErrorCode());

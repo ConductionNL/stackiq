@@ -179,8 +179,9 @@ final class LegacyCatalogueCandidates {
 	 * @return string
 	 *
 	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
-	private static function reference(mixed $value): string {
+	public static function reference(mixed $value): string {
 		if (is_array($value) === true) {
 			$value = ($value['id'] ?? $value['uuid'] ?? null);
 		}
