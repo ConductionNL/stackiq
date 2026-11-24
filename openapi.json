@@ -182,6 +182,10 @@
         {
             "name": "landscape-comparison",
             "description": "Compares one organisation's landscape today with the plan, or a scenario, on a date"
+        },
+        {
+            "name": "legacy-import",
+            "description": "Bring over an organisation's registrations from the previous Softwarecatalogus"
         }
     ],
     "paths": {
@@ -1656,6 +1660,137 @@
                         "description": "The operationId of the import; any other value answers 404 OPERATION_NOT_FOUND"
                     }
                 ]
+            }
+        },
+        "/legacy-import/preview": {
+            "post": {
+                "operationId": "legacy-import-preview",
+                "summary": "Preview an export from the previous Softwarecatalogus",
+                "description": "Reads the organisation's export from the previous Softwarecatalogus (.xlsx, sheet Applicaties, one row per usage) and returns per row whether its supplier (KvK number, then exact name), product (the supplier's module, exact name) and version (number) match an object stackiq holds or are to be created. Writes nothing. Any member of an active organisation who may create usages; the right is checked before the file is read. CSRF-protected (requesttoken header or OCS-APIRequest: true).",
+                "tags": [
+                    "legacy-import"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The export, .xlsx, at most 10 MB"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The preview: `rows` (per row `sheet`, `row`, `legacyId`, `supplier`, `product` and `version` each with `decision` matched, create or none and the matched `id`, the mapped `usage`, the mapping `errors` and `skipped`), `summary` (counts) and the reader's `warnings`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "rows",
+                                        "summary"
+                                    ],
+                                    "properties": {
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "summary": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "FILE_REQUIRED or NOT_XLSX",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "FORBIDDEN: no active organisation, or no right to create usages",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "FILE_TOO_LARGE (details.maxBytes) or WORKBOOK_TOO_LARGE",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "NO_SOURCE_SHEET, MISSING_COLUMN (details.sheet, details.column) or TOO_MANY_ROWS",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "PREVIEW_FAILED (unexpected; the exception class is in the log)",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "NOT_CONFIGURED, MAPPING_UNAVAILABLE or READER_UNAVAILABLE",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/contact-names": {
