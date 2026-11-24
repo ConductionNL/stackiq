@@ -1,0 +1,12 @@
+{
+  "id": "stackiq-vng-swc-module",
+  "name": "Previous Softwarecatalogus export to stackiq module",
+  "description": "The Applicatie column becomes the application: matched on its exact name among the supplier's modules, and created when it does not match.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Applicatie", "target": "name", "required": true, "transform": { "type": "trim" } },
+    { "source": "Omschrijving", "target": "shortDescription", "transform": { "type": "trim" } }
+  ],
+  "idStrategy": { "type": "generate" }
+}

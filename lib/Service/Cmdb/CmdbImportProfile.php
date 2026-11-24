@@ -68,7 +68,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	public const VALIDATOR_CLASS = 'OCA\OpenRegister\Service\MigrationPack\PackDefinitionValidator';
 
 	/**
-	 * The targets every profile must name a pack for.
+	 * The targets a profile names a pack for when it lists no `targets` of its own (the TOPdesk CMDB export).
 	 *
 	 * @var array<int, string>
 	 */
@@ -233,14 +233,19 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function loadPacks(callable $storedPack): void {
 		$run = new CmdbPackLoadRun(
 			validator: $this->resolveValidator(),
 			profile: $this->decodeFile(fileName: $this->profileFile)
 		);
-		$run->readStored = $this->storeReader(storedPack: $storedPack);
-		foreach (self::TARGETS as $target) {
+		$run->readStored = null;
+		if (self::editableTargetsOf(profile: $run->profile) !== []) {
+			$run->readStored = $this->storeReader(storedPack: $storedPack);
+		}
+
+		foreach (self::targetsOf(profile: $run->profile) as $target) {
 			$this->loadTarget(run: $run, target: $target);
 		}
 
@@ -306,9 +311,10 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the stored pack is invalid.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function takeStoredPack(CmdbPackLoadRun $run, string $target): void {
-		if ($run->readStored === null || in_array($target, self::EDITABLE_TARGETS, true) === false) {
+		if ($run->readStored === null || in_array($target, self::editableTargetsOf(profile: $run->profile), true) === false) {
 			return;
 		}
 
@@ -389,13 +395,14 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing or a file is unreadable or invalid.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-2
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function shippedEditablePacks(): array {
 		$validator = $this->resolveValidator();
 		$profile = $this->decodeFile(fileName: $this->profileFile);
 
 		$packs = [];
-		foreach (self::EDITABLE_TARGETS as $target) {
+		foreach (self::editableTargetsOf(profile: $profile) as $target) {
 			$packs[$target] = $this->readShippedPack(profile: $profile, target: $target, validator: $validator);
 		}
 
@@ -794,10 +801,11 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function dateColumns(): array {
 		$columns = $this->stringList(key: 'dateColumns');
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			if ($target === 'municipality') {
 				continue;
 			}
@@ -1031,10 +1039,11 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function referencedColumns(): array {
 		$columns = $this->profileColumns();
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			$columns = array_merge($columns, $this->packColumns(target: $target));
 		}
 
@@ -1104,12 +1113,13 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 *
 	 * @spec openspec/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-3
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function mappingOverview(): array {
 		$this->profile();
 
 		$packs = [];
-		foreach (self::TARGETS as $target) {
+		foreach ($this->targets() as $target) {
 			$packs[] = $this->packOverview(target: $target);
 		}
 
@@ -1166,6 +1176,8 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 	 * @param string $target The target.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function packOverview(string $target): array {
 		$pack = $this->pack(target: $target);
@@ -1174,7 +1186,7 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 			$this->packIdentity(target: $target, pack: $pack),
 			$this->writeRuleOverview(target: $target, pack: $pack),
 			$this->sources[$target],
-			['editable' => in_array($target, self::EDITABLE_TARGETS, true)]
+			['editable' => in_array($target, self::editableTargetsOf(profile: $this->profile()), true)]
 		);
 	}//end packOverview()
 
@@ -1282,6 +1294,59 @@ class CmdbImportProfile implements CmdbImportProfileInterface {
 
 		return array_values(array_diff($this->createOnlyFields(target: $target), $unmappedDefaults));
 	}//end guardedCreateOnlyFields()
+
+	/**
+	 * The targets this profile names a pack for: its own `targets` list, else self::TARGETS.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when load() failed.
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	public function targets(): array {
+		return self::targetsOf(profile: $this->profile());
+	}//end targets()
+
+	/**
+	 * The targets a decoded profile names a pack for: its own `targets` list, else self::TARGETS.
+	 *
+	 * @param array<string, mixed> $profile The decoded profile.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	private static function targetsOf(array $profile): array {
+		$targets = ($profile['targets'] ?? null);
+		if (is_array($targets) === false || $targets === []) {
+			return self::TARGETS;
+		}
+
+		return array_values(array_unique(array_map('strval', $targets)));
+	}//end targetsOf()
+
+	/**
+	 * The targets whose pack an administrator edits in OpenRegister.
+	 *
+	 * The profile's own `editableTargets` list wins (an empty list keeps every
+	 * pack a shipped file and leaves OpenRegister's pack store alone), else
+	 * self::EDITABLE_TARGETS; only targets the profile names count.
+	 *
+	 * @param array<string, mixed> $profile The decoded profile.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	private static function editableTargetsOf(array $profile): array {
+		$editable = ($profile['editableTargets'] ?? self::EDITABLE_TARGETS);
+		if (is_array($editable) === false) {
+			$editable = self::EDITABLE_TARGETS;
+		}
+
+		return array_values(array_intersect(array_map('strval', $editable), self::targetsOf(profile: $profile)));
+	}//end editableTargetsOf()
 
 	/**
 	 * The loaded profile; loaded read only when nothing loaded it yet.

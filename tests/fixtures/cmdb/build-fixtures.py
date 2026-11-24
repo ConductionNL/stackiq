@@ -446,6 +446,50 @@ def no_source_sheet():
     ]
 
 
+def inline_workbook(sheet_name, rows):
+    """A minimal workbook with one sheet of inline-string cells; None leaves a cell out."""
+    main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+    rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+    sheet_rows = []
+    for number, values in enumerate(rows, start=1):
+        cells = ''.join(
+            '<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>' % (index_to_col(index), number, xml_escape(value))
+            for index, value in enumerate(values, start=1) if value is not None
+        )
+        sheet_rows.append('<row r="%d">%s</row>' % (number, cells))
+    parts = dict(no_source_sheet())
+    parts['xl/workbook.xml'] = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<workbook xmlns="%s" xmlns:r="%s"><sheets><sheet name="%s" sheetId="1" r:id="rId1"/></sheets></workbook>'
+        % (main, rel, xml_escape(sheet_name))).encode('utf-8')
+    parts['xl/worksheets/sheet1.xml'] = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<worksheet xmlns="%s"><sheetData>%s</sheetData></worksheet>' % (main, ''.join(sheet_rows))).encode('utf-8')
+    return list(parts.items())
+
+
+LEGACY_HEADER = ['ID', 'Leverancier', 'KvK-nummer leverancier', 'Applicatie', 'Omschrijving', 'Versie', 'Status',
+                 'Referentiecomponenten', 'Koppelingen', 'Opmerking']
+
+
+def legacy_catalogue_export():
+    """An organisation's export from the previous Softwarecatalogus (landscape-migrate-from-previous-catalogue):
+    two usages, the second with an unknown KvK number ("-"), no version and the status "Uitfaseren"."""
+    return inline_workbook('Applicaties', [
+        LEGACY_HEADER,
+        ['swc-usage-0001', 'Voorbeeld Software B.V.', '12345678', 'Zaaksysteem Voorbeeld', 'Zaakgericht werken', '4.2',
+         'In gebruik', 'Zaakregistratiecomponent', 'Documentbeheer', 'Contract loopt tot 2027'],
+        ['swc-usage-0002', 'Ander Leverancier B.V.', '-', 'Burgerzaken Voorbeeld', None, None,
+         'Uitfaseren', 'Basisregistratie Personen', None, None],
+    ])
+
+
+def legacy_catalogue_without_supplier():
+    """The same export without the required "Leverancier" column."""
+    return inline_workbook('Applicaties', [['ID', 'Applicatie', 'Versie'], ['swc-usage-0003', 'Zonder leverancier', '1.0']])
+
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--source', help='anonymised export to sanitise into topdesk-export-anonymised.xlsx')
@@ -462,6 +506,8 @@ def main():
         'topdesk-formula-and-connection.xlsx': formula_and_connection(base),
         'topdesk-no-source-sheet.xlsx': no_source_sheet(),
         'topdesk-archived-applications.xlsx': archived_applications(base),
+        'vng-swc-export.xlsx': legacy_catalogue_export(),
+        'vng-swc-export-without-supplier.xlsx': legacy_catalogue_without_supplier(),
     }
     for name, parts in variants.items():
         write_package(os.path.join(HERE, name), parts)

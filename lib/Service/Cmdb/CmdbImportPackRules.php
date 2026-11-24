@@ -53,6 +53,7 @@ class CmdbImportPackRules {
 		'municipality' => ['name'],
 		'usage' => [],
 		'businessOwner' => ['name'],
+		'version' => ['version'],
 	];
 
 	/**
@@ -65,6 +66,7 @@ class CmdbImportPackRules {
 		'manufacturer' => 'organization',
 		'municipality' => 'organization',
 		'usage' => 'usage',
+		'version' => 'moduleVersion',
 	];
 
 	/**
@@ -171,6 +173,7 @@ class CmdbImportPackRules {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	public function violations(string $target, array $pack, array $profile): array {
 		$never = $profile['neverWritten'][$target] ?? [];
@@ -189,7 +192,7 @@ class CmdbImportPackRules {
 		return array_values(
 			array_unique(
 				array_merge(
-					$this->requiredViolations(target: $target, pack: $pack, keyColumn: (string)($profile['keyColumn'] ?? 'APPID')),
+					$this->requiredViolations(target: $target, pack: $pack, keyColumn: (string)($profile['keyColumn'] ?? 'APPID'), profile: $profile),
 					$this->mappingViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused),
 					$this->defaultViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused)
 				)
@@ -198,19 +201,43 @@ class CmdbImportPackRules {
 	}//end violations()
 
 	/**
+	 * The fields a pack must map as required: the profile's own `requiredMappings` for the target, else the shipped rule.
+	 *
+	 * A profile whose key column is no module number (the previous catalogue's
+	 * export keys a usage) names its own required fields per target.
+	 *
+	 * @param string $target The target.
+	 * @param array<string, mixed> $profile The decoded import profile.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 */
+	private function requiredFields(string $target, array $profile): array {
+		$own = ($profile['requiredMappings'][$target] ?? null);
+		if (is_array($own) === true) {
+			return array_values(array_map('strval', $own));
+		}
+
+		return (self::REQUIRED_TARGETS[$target] ?? []);
+	}//end requiredFields()
+
+	/**
 	 * The required mappings a pack lacks.
 	 *
 	 * @param string $target The target.
 	 * @param array<string, mixed> $pack The pack.
 	 * @param string $keyColumn The match key column.
+	 * @param array<string, mixed> $profile The decoded import profile.
 	 *
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
-	private function requiredViolations(string $target, array $pack, string $keyColumn): array {
+	private function requiredViolations(string $target, array $pack, string $keyColumn, array $profile): array {
 		$violations = [];
-		foreach ((self::REQUIRED_TARGETS[$target] ?? []) as $field) {
+		foreach ($this->requiredFields(target: $target, profile: $profile) as $field) {
 			if ($this->hasRequiredMapping(pack: $pack, field: $field, keyColumn: $keyColumn) === true) {
 				continue;
 			}
