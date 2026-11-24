@@ -11,7 +11,7 @@ import register from '../../lib/Settings/softwarecatalogus_register.json'
  * `referenceType: nextcloud-user` string, which the library renders as a
  * searchable user picker, so stackiq needs no component of its own.
  *
- * @spec openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-004-a-contract-shall-name-one-responsible-nextcloud-user-picked-from-the-users-of-the-instance
+ * @spec openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-004-a-contract-shall-name-one-responsible-nextcloud-user-picked-from-the-users-of-the-instance
  */
 import { fieldsFromSchema } from '../../node_modules/@conduction/nextcloud-vue/src/utils/schema.js'
 

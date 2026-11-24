@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
  * A supplier, product or version the preview decided to create is created once per run, as a concept: a supplier
  * organisation in status Draft registered by the municipality, a module and a version without a publication date.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
  */
 final class LegacyCatalogueWriter {
 
@@ -54,7 +54,7 @@ final class LegacyCatalogueWriter {
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param array<string, int>     $coordinates   `register` and the schema ids `organization`, `module`, `moduleVersion` and `usage`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objectService,
@@ -70,7 +70,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return array{outcome: string, reason?: string} `created` or `updated`, or `skipped` with the step that failed.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public function write(array $row, string $consumer): array {
 		$step = 'supplier';
@@ -98,7 +98,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function supplier(array $row): string {
 		$supplier = $row['supplier'];
@@ -122,7 +122,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function product(array $row, string $supplier): string {
 		if ($row['product']['id'] !== null) {
@@ -141,7 +141,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function version(array $row, string $product): ?string {
 		$version = $row['version'];
@@ -165,7 +165,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return array{outcome: string}
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function usage(string $legacyId, array $usage): array {
 		$existing = $this->existingUsage(legacyId: $legacyId, consumer: (string)$usage['consumer']);
@@ -191,7 +191,7 @@ final class LegacyCatalogueWriter {
 	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares;
 	 * LegacyCatalogueCandidates::reference() is the pure reference reader the migration shares.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function existingUsage(string $legacyId, string $consumer): ?string {
 		$results = $this->objectService->searchObjects(
@@ -222,7 +222,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function createOnce(string $schemaKey, string $key, array $data): string {
 		$this->created[$schemaKey][$key] ??= $this->save(schemaKey: $schemaKey, data: $data);
@@ -240,7 +240,7 @@ final class LegacyCatalogueWriter {
 	 *
 	 * @throws RuntimeException When OpenRegister answers no uuid.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function save(string $schemaKey, array $data, ?string $uuid = null): string {
 		$entity = $this->objectService->saveObject(

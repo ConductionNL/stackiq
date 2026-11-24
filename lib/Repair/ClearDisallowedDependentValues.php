@@ -20,7 +20,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
+ * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Repair step: clear values outside their dependent value table.
  *
- * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
+ * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
  */
 class ClearDisallowedDependentValues implements IRepairStep {
 
@@ -99,7 +99,7 @@ class ClearDisallowedDependentValues implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
+	 * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
 	 */
 	public function getName(): string {
 		return 'Clear stored values that a dependent value table does not allow';
@@ -112,7 +112,7 @@ class ClearDisallowedDependentValues implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
+	 * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
 	 */
 	public function run(IOutput $output): void {
 		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, false) === true) {
@@ -159,7 +159,7 @@ class ClearDisallowedDependentValues implements IRepairStep {
 	 *
 	 * @return list<array{type: string, field: string, controlledBy: string, allowed: array<string, list<mixed>>}>
 	 *
-	 * @spec openspec/changes/landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
+	 * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
 	 */
 	public static function tables(array $fragment): array {
 		$tables = [];
@@ -197,7 +197,7 @@ class ClearDisallowedDependentValues implements IRepairStep {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
+	 * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/tasks.md#task-2-clear-disallowed-values-in-existing-rows
 	 */
 	public static function refuses(array $data, array $table): bool {
 		$value = ($data[$table['field']] ?? null);

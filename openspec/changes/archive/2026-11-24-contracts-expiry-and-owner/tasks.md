@@ -3,7 +3,7 @@
 ## Implementation tasks
 
 ### Task 1: Add Expiring, responsibleUser and the English lifecycle to the contract schema
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
 - **files**: `lib/Settings/softwarecatalogus_register.json`, `lib/Settings/register.d/contracts-expiry-and-owner.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN `catalogContract.status` is read THEN its enum is Active, Expiring, Expired, In negotiation
@@ -14,7 +14,7 @@
 - [x] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
 
 ### Task 2: Move contracts into and out of Expiring in the daily job
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
 - **files**: `lib/Service/ContractStatusService.php`, `lib/BackgroundJob/ContractStatusJob.php`, `tests/Unit/Service/ContractStatusServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN an Active contract ending in 30 days and a 90 day window WHEN the pass runs THEN it is saved as Expiring
@@ -26,7 +26,7 @@
 - [x] Test (PHPUnit tests/Unit/Service/ContractStatusServiceTest.php)
 
 ### Task 3: Split the Contracts quick filter and show the responsible user
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-003-the-contracts-page-must-let-a-user-filter-on-expiring-and-on-expired-contracts-separately
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-003-the-contracts-page-must-let-a-user-filter-on-expiring-and-on-expired-contracts-separately
 - **files**: `src/manifest.json`, `l10n/en.json`, `l10n/nl.json`, `tests/vitest/manifestFilterEnumParity.spec.js`, `tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the Contracten page WHEN it renders THEN it offers All, Active, Expiring, Expired and In negotiation quick filters
@@ -37,7 +37,7 @@
 - [x] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts, vitest tests/vitest/manifestFilterEnumParity.spec.js, and node tests/validate-manifest.js) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Pick the responsible user in the contract form
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-004-a-contract-shall-name-one-responsible-nextcloud-user-picked-from-the-users-of-the-instance
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-004-a-contract-shall-name-one-responsible-nextcloud-user-picked-from-the-users-of-the-instance
 - **files**: `tests/vitest/contractResponsibleUser.spec.js`, `tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the `catalogContract` schema WHEN the library resolves the field widget for `responsibleUser` THEN it is `user`
@@ -46,7 +46,7 @@
 - [x] Test (vitest tests/vitest/contractResponsibleUser.spec.js and the Playwright spec above) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Add the responsible user to the contract-expiry recipients
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-005-the-contract-expiry-warning-must-include-the-responsible-user-among-its-recipients
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-005-the-contract-expiry-warning-must-include-the-responsible-user-among-its-recipients
 - **files**: `lib/Settings/register.d/contracts-expiry-and-owner.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
 - **acceptance_criteria**:
   - GIVEN the merged `contract-expiry` rule WHEN its recipients are read THEN they include `{"kind": "field", "field": "responsibleUser"}`, the admins group and the manage rights recipient
@@ -54,7 +54,7 @@
 - [x] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
 
 ### Task 6: Seed an expiring contract and document the feature
-- **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
+- **spec_ref**: openspec/changes/archive/2026-11-24-contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
 - **files**: `lib/Settings/stackiq_mock_register.json`, `docs/features/contract-expiry-and-owner.md`
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN the Contracts page opens THEN at least one contract reads Expiring and names a responsible user

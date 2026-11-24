@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use OCA\Stackiq\Service\SearchBounds;
  * catalogue, and only ids, names and version numbers leave this class. A filter OpenRegister cannot apply never
  * turns into a match: every result is checked against its filter again.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 final class LegacyCatalogueCandidates {
 
@@ -50,7 +50,7 @@ final class LegacyCatalogueCandidates {
 	 * @param int                $register      The stackiq register id.
 	 * @param array<string, int> $schemas       Schema ids by key: `organization`, `module` and `moduleVersion`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly object $objectService,
@@ -66,7 +66,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>> The `organisations`, `modules` and `versions`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function forRows(array $rows): array {
 		$filters = array_merge(
@@ -88,7 +88,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @return array<int, array{0: string, 1: string}> Field and value pairs.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function filters(string $field, array $values): array {
 		return array_map(static fn (mixed $value): array => [$field, (string)$value], $values);
@@ -104,7 +104,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) SearchBounds::bounded() is the pure query guard every search in lib/ shares.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private function find(string $schemaKey, array $filters): array {
 		$found = [];
@@ -142,7 +142,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function data(mixed $entity): ?array {
 		$data = $entity;
@@ -178,8 +178,8 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public static function reference(mixed $value): string {
 		if (is_array($value) === true) {
@@ -201,7 +201,7 @@ final class LegacyCatalogueCandidates {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function distinct(array $rows, string $key): array {
 		$values = [];

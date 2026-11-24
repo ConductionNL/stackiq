@@ -8,7 +8,7 @@
  * with every row it may bring over checked, the rows unchecked are sent as
  * `leftOut`, and the result shows the counts and the skipped rows.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
  */
 
 import axios from '@nextcloud/axios'

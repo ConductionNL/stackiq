@@ -3,7 +3,7 @@
 ## Implementation tasks
 
 ### Task 1: Import profile for the previous catalogue's export
-- **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-an-organisation-imports-its-export-from-the-previous-catalogue-req-lcm-001
+- **spec_ref**: openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-an-organisation-imports-its-export-from-the-previous-catalogue-req-lcm-001
 - **files**: `lib/Settings/cmdb-import/vng-swc-profile.json`, `lib/Settings/cmdb-import/vng-swc-supplier.json`, `lib/Settings/cmdb-import/vng-swc-module.json`, `lib/Settings/cmdb-import/vng-swc-version.json`, `lib/Settings/cmdb-import/vng-swc-usage.json`, `lib/Service/Cmdb/CmdbImportProfile.php`, `tests/Unit/Service/Cmdb/VngSwcProfileTest.php`, `tests/fixtures/vng-swc-export.xlsx`
 - **acceptance_criteria**:
   - GIVEN the profile WHEN loaded THEN it names the export's sheet and columns, the key column (previous catalogue id), the required columns and the limits, and one pack per target
@@ -13,7 +13,7 @@
   - Built 24 Nov: the column layout was decided (PR "Decision"): sheet `Applicaties`, one row per usage, columns `ID`, `Leverancier`, `KvK-nummer leverancier`, `Applicatie`, `Omschrijving`, `Versie`, `Status`, `Opmerking`; a real export with other headers is a change to `vng-swc-profile.json` and its packs only. `CmdbImportProfile` now reads `targets` and `editableTargets`, and `CmdbImportPackRules` `requiredMappings`, from the profile (the TOPdesk profile keeps its defaults). The packs are `vng-swc-supplier.json`, `vng-swc-module.json`, `vng-swc-version.json` and `vng-swc-usage.json`; the fixtures are `tests/fixtures/cmdb/vng-swc-export.xlsx` and `vng-swc-export-without-supplier.xlsx`, built by `tests/fixtures/cmdb/build-fixtures.py`.
 
 ### Task 2: Matching and the preview (dry run)
-- **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-preview-shows-the-mapping-before-anything-is-written-req-lcm-002
+- **spec_ref**: openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-preview-shows-the-mapping-before-anything-is-written-req-lcm-002
 - **files**: `lib/Service/LegacyCatalogueMigrationService.php`, `lib/Controller/CmdbImportController.php`, `appinfo/routes.php`, `tests/Unit/Service/LegacyCatalogueMigrationServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN `POST /api/legacy-import/preview` with a file WHEN called by a member of the active organisation who may create usages THEN it returns per row the match or create decision for supplier (KvK, then exact name), module (supplier and name) and version (number), and writes nothing
@@ -24,7 +24,7 @@
   - Built 23 Nov: `lib/Service/LegacyCatalogue/LegacyCatalogueMatcher.php` decides match or create per row for supplier (KvK number on the organisation's `registrationNumber`, then exact name; a name two organisations share matches neither), product (a module of the matched supplier, exact name) and version (number); below a created object everything is created. Test: `tests/Unit/Service/LegacyCatalogue/LegacyCatalogueMatcherTest.php`. Left: the preview endpoint, its permission check and the service that reads the file, which need the profile of Task 1.
 
 ### Task 3: Apply and the result
-- **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-result-says-what-was-created-updated-and-skipped-req-lcm-003
+- **spec_ref**: openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-the-result-says-what-was-created-updated-and-skipped-req-lcm-003
 - **files**: `lib/Service/LegacyCatalogueMigrationService.php`, `lib/Settings/softwarecatalogus_register.json`, `tests/Unit/Service/LegacyCatalogueMigrationApplyTest.php`
 - **acceptance_criteria**:
   - GIVEN the usage, module and organization schemas WHEN read THEN each has an optional `legacyId`
@@ -36,7 +36,7 @@
   - Built 23 Nov: optional `legacyId` (admin-only update) on usage 1.6.5, module 0.3.16 and organization 0.5.7 in `lib/Settings/register.d/legacy-catalogue-migration.json`, tested by `tests/Unit/Settings/LegacyIdFragmentTest.php`. Left: the apply endpoint and its test.
 
 ### Task 4: The dialog (board SkApplicaties)
-- **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-an-organisation-imports-its-export-from-the-previous-catalogue-req-lcm-001
+- **spec_ref**: openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md#requirement-an-organisation-imports-its-export-from-the-previous-catalogue-req-lcm-001
 - **files**: `src/modals/import/LegacyCatalogueImportModal.vue`, `src/views/FacetedCatalogIndexView.vue`, `tests/vitest/legacyCatalogueImportModal.spec.js`, `tests/e2e/spec-coverage/legacy-catalogue-import.spec.ts`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the Applications actions menu WHEN opened by a user who may create usages THEN it lists "Bring over from the previous Softwarecatalogus"
@@ -47,7 +47,7 @@
   - Written 21 Nov: `tests/e2e/spec-coverage/legacy-catalogue-import.spec.ts` from the four scenarios, every case marked fixme until the profile, the endpoints, the dialog and the fixture exist; not run.
 
 ### Task 5: Documentation
-- **spec_ref**: openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md
+- **spec_ref**: openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md
 - **files**: `docs/features/legacy-catalogue-migration.md`
 - **acceptance_criteria**:
   - GIVEN the doc WHEN read THEN it says how to get the export from the previous catalogue, how matching works and how to run it again

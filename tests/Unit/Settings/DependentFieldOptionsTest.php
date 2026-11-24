@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-001-a-value-outside-its-dependent-list-is-refused-on-save
+ * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-001-a-value-outside-its-dependent-list-is-refused-on-save
  */
 
 declare(strict_types=1);

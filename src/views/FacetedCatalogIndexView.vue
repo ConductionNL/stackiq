@@ -396,7 +396,7 @@ export default {
 		 * in its actions menu (manifest `config.legacyImport`, the Applications
 		 * page). The entry shows only when `/api/legacy-import/access` allows it.
 		 *
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		legacyImport: {
 			type: Boolean,
@@ -705,7 +705,7 @@ export default {
 		 * lookup hides the entry; the endpoints check the right themselves.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 		 */
 		async loadMayLegacyImport() {
 			if (!this.legacyImport) {

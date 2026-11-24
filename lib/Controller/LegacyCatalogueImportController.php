@@ -12,7 +12,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Preview and apply of an export from the previous Softwarecatalogus, CSRF-protected.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 class LegacyCatalogueImportController extends Controller {
 
@@ -51,7 +51,7 @@ class LegacyCatalogueImportController extends Controller {
 	 * @param LegacyCatalogueMigrationService $service The migration service.
 	 * @param LoggerInterface                 $logger  Logs a failed preview without cell values.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
@@ -71,7 +71,7 @@ class LegacyCatalogueImportController extends Controller {
 	 * @auth member-of-active-organisation answers false for a caller without an active organisation or without the
 	 *       right to create usages; reads nothing else.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-4
 	 */
 	public function access(): JSONResponse {
 		$mayImport = true;
@@ -96,7 +96,7 @@ class LegacyCatalogueImportController extends Controller {
 	 *
 	 * @auth member-of-active-organisation the service refuses (403) a caller without an active organisation or without the right to create usages.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function preview(): JSONResponse {
 		try {
@@ -131,7 +131,7 @@ class LegacyCatalogueImportController extends Controller {
 	 * @auth member-of-active-organisation the service refuses (403) a caller without an active organisation or without
 	 *       the right to create usages, and writes with the caller's own rights.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	public function apply(): JSONResponse {
 		try {
@@ -162,7 +162,7 @@ class LegacyCatalogueImportController extends Controller {
 	 *
 	 * @return array<int, string>|JSONResponse The ids, or 400 INVALID_LEFT_OUT.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-3
 	 */
 	private function leftOut(): array|JSONResponse {
 		$raw = $this->request->getParam('leftOut', '');
@@ -187,7 +187,7 @@ class LegacyCatalogueImportController extends Controller {
 	 *
 	 * @return array{tmp_name: string, name: string}|JSONResponse
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private function upload(): array|JSONResponse {
 		$file = $this->request->getUploadedFile(self::FILE_FIELD);
@@ -217,7 +217,7 @@ class LegacyCatalogueImportController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function error(string $code, int $status, array $details = []): JSONResponse {
 		return new JSONResponse(data: ['error' => $code, 'details' => $details], statusCode: $status);

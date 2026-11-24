@@ -12,7 +12,7 @@
  *
  * Written from the change's scenario; not yet run against a live instance.
  *
- * @spec openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-003-the-form-offers-only-the-allowed-options
+ * @spec openspec/changes/archive/2026-11-24-landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-003-the-form-offers-only-the-allowed-options
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

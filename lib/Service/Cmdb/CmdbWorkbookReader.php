@@ -920,7 +920,7 @@ class CmdbWorkbookReader {
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-1
 	 */
 	private function packSources(CmdbImportProfile $profile): array {
 		$constants = $profile->constantColumns();

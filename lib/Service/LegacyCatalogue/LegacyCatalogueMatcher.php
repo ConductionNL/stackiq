@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ namespace OCA\Stackiq\Service\LegacyCatalogue;
  * version of the matched module on its version number. Nothing is matched by a fuzzy guess: whatever
  * does not match exactly is created, and everything below a created object is created too.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
  */
 final class LegacyCatalogueMatcher {
 
@@ -81,7 +81,7 @@ final class LegacyCatalogueMatcher {
 	 * @param array<int, array<string, mixed>> $modules       Modules with `id`, `name` and `provider`.
 	 * @param array<int, array<string, mixed>> $versions      Module versions with `id`, `module` and `version`.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function __construct(array $organisations, array $modules, array $versions) {
 		foreach ($organisations as $organisation) {
@@ -118,7 +118,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return array<string, array{decision: string, id: string|null}> The `supplier`, `product` and `version` decisions.
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	public function decide(array $row): array {
 		$supplierId = $this->matchSupplier(kvk: self::kvk(value: $row['supplierKvk'] ?? null), name: self::text(value: $row['supplierName'] ?? null));
@@ -147,7 +147,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private function indexOrganisation(array $organisation): void {
 		$organisationId = self::reference(value: $organisation['id'] ?? null);
@@ -182,7 +182,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private function matchSupplier(string $kvk, string $name): ?string {
 		if ($kvk !== '' && isset($this->suppliersByKvk[$kvk]) === true) {
@@ -203,7 +203,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return array{decision: string, id: string|null}
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function decision(?string $id): array {
 		if ($id === null) {
@@ -220,7 +220,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function reference(mixed $value): string {
 		if (is_array($value) === true) {
@@ -237,7 +237,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function kvk(mixed $value): string {
 		$digits = str_replace([' ', '.'], '', self::text(value: $value));
@@ -255,7 +255,7 @@ final class LegacyCatalogueMatcher {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/landscape-migrate-from-previous-catalogue/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/tasks.md#task-2
 	 */
 	private static function text(mixed $value): string {
 		if (is_string($value) === true) {

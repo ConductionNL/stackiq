@@ -20,7 +20,7 @@
  * Written from the change's scenarios; runs in the nightly, not yet run
  * against a live instance from the sandbox it was written in.
  *
- * @spec openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md
+ * @spec openspec/changes/archive/2026-11-24-landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration/spec.md
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
