@@ -18,10 +18,11 @@
 - **acceptance_criteria**:
   - GIVEN the connections list filtered on type api WHEN the user switches to Diagram THEN only the api connections are drawn
   - GIVEN the same rows WHEN the diagram renders twice THEN every node keeps its position
-- [ ] Implement
-- [ ] Test (vitest `tests/vitest/connectionLayout.spec.js` for a stable layered layout)
+- [x] Implement
+- [x] Test (vitest `tests/vitest/connectionLayout.spec.js` for a stable layered layout)
+- Done 24 Nov: built the dependency as nextcloud-vue #2319 (`CnIndexPage` `customViews`, a page's own view of the whole filtered list, released in 2.212.0). `src/components/connections/ConnectionsDiagram.vue` draws the rows the list shows on `CnGraphCanvas` through `diagramFlow()` (the layered layout, names read in one request for ends the rows carry as a bare uuid), and a line opens its connection; the Koppelingen page lists it under `config.customViews` as Diagram. Tests: `tests/vitest/connectionLayout.spec.js` (diagramFlow) and `tests/vitest/connectionsDiagram.spec.js`.
 - Progress: `src/utils/connectionLayout.js` (senders left, receivers right, the rest in the middle, each column by name; edges from the sender, labelled with the transport type) and `tests/vitest/connectionLayout.spec.js`, including the same positions whatever the row order. Left: `ConnectionsDiagram.vue` on `CnGraphCanvas` and the Diagram toggle in `src/manifest.d/connections.json`.
-- Blocked: `CnIndexPage` in `@conduction/nextcloud-vue` takes a custom component per row (`listComponent`) or per card (`cardComponent`), not one for the whole filtered list, and its `viewModes` are fixed (`table`, `cards`, `list`, `map`, `board`, `dateAxis`). A Diagram toggle over the fetched rows needs a library view mode or slot for that; the layout utility is ready for it.
+- Was blocked (resolved 24 Nov by `customViews`): `CnIndexPage` in `@conduction/nextcloud-vue` took a custom component per row (`listComponent`) or per card (`cardComponent`), not one for the whole filtered list, and its `viewModes` are fixed (`table`, `cards`, `list`, `map`, `board`, `dateAxis`). A Diagram toggle over the fetched rows needs a library view mode or slot for that; the layout utility is ready for it.
 
 ### Task 3: Downloads from the map
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links

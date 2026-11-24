@@ -40,6 +40,9 @@
 					{ "key": "sharedWith", "label": "Shared with", "widget": "sharedWith" }
 				],
 				"filterMenu": true,
+				"customViews": [
+					{ "id": "diagram", "label": "Diagram", "icon": "SitemapOutline", "component": "ConnectionsDiagram" }
+				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "In use", "filter": { "status": "in use" }, "icon": "CheckCircle" },

@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { COLUMN_GAP, connectionEnds, layoutConnections, ROW_GAP } from '../../src/utils/connectionLayout.js'
+import { COLUMN_GAP, connectionEnds, diagramFlow, layoutConnections, ROW_GAP } from '../../src/utils/connectionLayout.js'
 
 const zaak = { id: 'z', name: 'Zaaksysteem' }
 const dms = { id: 'd', name: 'DMS' }
@@ -69,5 +69,30 @@ describe('layoutConnections', () => {
 			b: { id: 'b-1', name: 'b-1', provision: false },
 		})
 		expect(connectionEnds({ moduleA: { uuid: '' } })).toEqual({ a: null, b: null })
+	})
+})
+
+describe('diagramFlow', () => {
+	const rows = [
+		{ id: 'c-1', type: 'api', dataExchangeDirection: 'AtoB', moduleA: 'm-zaak', moduleB: 'm-dms' },
+		{ id: 'c-2', type: 'file', dataExchangeDirection: 'bi-directional', moduleA: 'm-dms', moduleB: 'm-archief' },
+	]
+	const names = { 'm-zaak': 'Zaaksysteem', 'm-dms': 'DMS', 'm-archief': 'Archief' }
+
+	it('draws only the rows it gets, with the names and the transport type', () => {
+		const flow = diagramFlow([rows[0]], names)
+		expect(flow.edges.map((edge) => [edge.id, edge.source, edge.target, edge.label])).toEqual([['c-1', 'm-zaak', 'm-dms', 'api']])
+		expect(flow.nodes.map((node) => node.data.label).sort()).toEqual(['DMS', 'Zaaksysteem'])
+	})
+
+	it('keeps every node in its place whatever the row order', () => {
+		const once = diagramFlow(rows, names).nodes.map((node) => [node.id, node.position])
+		const twice = diagramFlow([...rows].reverse(), names).nodes.map((node) => [node.id, node.position])
+		expect(new Map(twice)).toEqual(new Map(once))
+	})
+
+	it('marks both ends of a bi-directional line', () => {
+		const edge = diagramFlow(rows, names).edges.find((candidate) => candidate.id === 'c-2')
+		expect([edge.markerStart, edge.markerEnd]).toEqual(['arrowclosed', 'arrowclosed'])
 	})
 })
