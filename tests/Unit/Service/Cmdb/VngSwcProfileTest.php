@@ -95,28 +95,28 @@ class VngSwcProfileTest extends TestCase {
 	public function testTheProfileNamesTheExportAndOnePackPerTarget(): void {
 		$profile = $this->profile();
 
-		$this->assertSame(['manufacturer', 'module', 'version', 'usage'], $profile->targets());
-		$this->assertSame(['Applicaties'], $profile->sheetNames());
-		$this->assertSame('ID', $profile->keyColumn());
-		$this->assertSame('Applicatie', $profile->nameColumn());
-		$this->assertSame(['ID', 'Leverancier', 'Applicatie'], $profile->requiredColumns());
-		$this->assertSame(['ID'], $profile->idColumns());
-		$this->assertSame(10485760, $profile->maxFileBytes());
-		$this->assertSame(10000, $profile->maxRowsPerSheet());
-		$this->assertNull($profile->archiveSheetName());
-		$this->assertSame(['keep'], $profile->missingRecordsModes());
+		$this->assertSame(expected: ['manufacturer', 'module', 'version', 'usage'], actual: $profile->targets());
+		$this->assertSame(expected: ['Applicaties'], actual: $profile->sheetNames());
+		$this->assertSame(expected: 'ID', actual: $profile->keyColumn());
+		$this->assertSame(expected: 'Applicatie', actual: $profile->nameColumn());
+		$this->assertSame(expected: ['ID', 'Leverancier', 'Applicatie'], actual: $profile->requiredColumns());
+		$this->assertSame(expected: ['ID'], actual: $profile->idColumns());
+		$this->assertSame(expected: 10485760, actual: $profile->maxFileBytes());
+		$this->assertSame(expected: 10000, actual: $profile->maxRowsPerSheet());
+		$this->assertNull(actual: $profile->archiveSheetName());
+		$this->assertSame(expected: ['keep'], actual: $profile->missingRecordsModes());
 
 		$validator = CmdbTestSupport::newPackClass(class: 'PackDefinitionValidator');
 		foreach ($profile->targets() as $target) {
 			$pack = $profile->pack(target: $target);
-			$this->assertSame([], $validator->validate($pack), $target);
-			$this->assertSame('excel', $pack['sourceFormat'], $target);
-			$this->assertStringStartsWith('stackiq-vng-swc-', $pack['id'], $target);
+			$this->assertSame(expected: [], actual: $validator->validate($pack), message: $target);
+			$this->assertSame(expected: 'excel', actual: $pack['sourceFormat'], message: $target);
+			$this->assertStringStartsWith(prefix: 'stackiq-vng-swc-', string: $pack['id'], message: $target);
 		}
 
 		$this->assertSame(
-			['ID', 'Applicatie', 'Leverancier', 'KvK-nummer leverancier', 'Omschrijving', 'Versie', 'Status', 'Opmerking'],
-			$profile->referencedColumns()
+			expected: ['ID', 'Applicatie', 'Leverancier', 'KvK-nummer leverancier', 'Omschrijving', 'Versie', 'Status', 'Opmerking'],
+			actual: $profile->referencedColumns()
 		);
 	}//end testTheProfileNamesTheExportAndOnePackPerTarget()
 
@@ -130,8 +130,8 @@ class VngSwcProfileTest extends TestCase {
 		$profile = new CmdbImportProfile(container: CmdbTestSupport::emptyContainer(test: $this));
 		$profile->load();
 
-		$this->assertSame(CmdbImportProfile::TARGETS, $profile->targets());
-		$this->assertSame(CmdbImportProfile::EDITABLE_TARGETS, array_keys($profile->shippedEditablePacks()));
+		$this->assertSame(expected: CmdbImportProfile::TARGETS, actual: $profile->targets());
+		$this->assertSame(expected: CmdbImportProfile::EDITABLE_TARGETS, actual: array_keys($profile->shippedEditablePacks()));
 	}//end testTheTopdeskProfileKeepsItsFiveTargets()
 
 	/**
@@ -140,16 +140,16 @@ class VngSwcProfileTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheLegacyPacksNeverTouchThePackStore(): void {
-		$store = $this->createMock(CmdbImportPackStore::class);
+		$store = $this->createMock(originalClassName: CmdbImportPackStore::class);
 		$store->expects($this->never())->method('isAvailable');
 		$store->expects($this->never())->method('resolve');
 
 		$profile = $this->profile(store: $store);
 
-		$this->assertTrue($profile->usesShippedFallback());
-		$this->assertSame([], $profile->shippedEditablePacks());
+		$this->assertTrue(condition: $profile->usesShippedFallback());
+		$this->assertSame(expected: [], actual: $profile->shippedEditablePacks());
 		foreach ($profile->mappingOverview()['packs'] as $pack) {
-			$this->assertFalse($pack['editable']);
+			$this->assertFalse(condition: $pack['editable']);
 		}
 	}//end testTheLegacyPacksNeverTouchThePackStore()
 
@@ -166,10 +166,10 @@ class VngSwcProfileTest extends TestCase {
 
 		try {
 			$this->profile(directory: $directory);
-			$this->fail('a module pack whose name is not required must be refused');
+			$this->fail(message: 'a module pack whose name is not required must be refused');
 		} catch (CmdbImportException $exception) {
-			$this->assertSame(CmdbImportException::MAPPING_UNAVAILABLE, $exception->getErrorCode());
-			$this->assertStringContainsString('"name" must be mapped as required', $exception->getMessage());
+			$this->assertSame(expected: CmdbImportException::MAPPING_UNAVAILABLE, actual: $exception->getErrorCode());
+			$this->assertStringContainsString(needle: '"name" must be mapped as required', haystack: $exception->getMessage());
 		} finally {
 			$this->remove(directory: $directory);
 		}
@@ -183,30 +183,36 @@ class VngSwcProfileTest extends TestCase {
 	public function testTheFixtureNormalisesToSupplierModuleVersionAndUsage(): void {
 		$profile = $this->profile();
 		$rows = $this->read(name: 'vng-swc-export.xlsx', profile: $profile)['rows'];
-		$this->assertCount(2, $rows);
-		$this->assertArrayNotHasKey('Koppelingen', $rows[0]['cells'], 'a column no pack names is never read');
+		$this->assertCount(expectedCount: 2, haystack: $rows);
+		$this->assertArrayNotHasKey(key: 'Koppelingen', array: $rows[0]['cells'], message: 'a column no pack names is never read');
 
 		$records = array_map(fn (array $row): array => $this->records(profile: $profile, row: $row), $rows);
 
 		$this->assertSame(
-			[
-				'manufacturer' => ['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier', 'name' => 'Voorbeeld Software B.V.', 'registrationNumber' => '12345678'],
+			expected: [
+				'manufacturer' => [
+					'type' => 'Supplier',
+					'status' => 'Active',
+					'registeredBy' => 'Supplier',
+					'name' => 'Voorbeeld Software B.V.',
+					'registrationNumber' => '12345678',
+				],
 				'module' => ['name' => 'Zaaksysteem Voorbeeld', 'shortDescription' => 'Zaakgericht werken'],
 				'version' => ['version' => '4.2'],
 				'usage' => ['status' => 'In production', 'interneAnnotation' => 'Contract loopt tot 2027'],
 			],
-			$records[0]
+			actual: $records[0]
 		);
 		$this->assertSame(
-			[
+			expected: [
 				'manufacturer' => ['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier', 'name' => 'Ander Leverancier B.V.'],
 				'module' => ['name' => 'Burgerzaken Voorbeeld'],
 				'version' => [],
 				'usage' => ['status' => 'To be phased out'],
 			],
-			$records[1]
+			actual: $records[1]
 		);
-		$this->assertSame('swc-usage-0002', $rows[1]['cells']['ID']);
+		$this->assertSame(expected: 'swc-usage-0002', actual: $rows[1]['cells']['ID']);
 	}//end testTheFixtureNormalisesToSupplierModuleVersionAndUsage()
 
 	/**
@@ -218,10 +224,10 @@ class VngSwcProfileTest extends TestCase {
 		$profile = $this->profile();
 		try {
 			$this->read(name: 'vng-swc-export-without-supplier.xlsx', profile: $profile);
-			$this->fail('a file without "Leverancier" must be refused');
+			$this->fail(message: 'a file without "Leverancier" must be refused');
 		} catch (CmdbImportException $exception) {
-			$this->assertSame(CmdbImportException::MISSING_COLUMN, $exception->getErrorCode());
-			$this->assertSame(['sheet' => 'Applicaties', 'column' => 'Leverancier'], $exception->getDetails());
+			$this->assertSame(expected: CmdbImportException::MISSING_COLUMN, actual: $exception->getErrorCode());
+			$this->assertSame(expected: ['sheet' => 'Applicaties', 'column' => 'Leverancier'], actual: $exception->getDetails());
 		}
 	}//end testAFileWithoutARequiredColumnIsRefusedWithItsName()
 
@@ -235,7 +241,7 @@ class VngSwcProfileTest extends TestCase {
 	 */
 	private function read(string $name, CmdbImportProfile $profile): array {
 		if (CmdbTestSupport::loadPhpSpreadsheet() === false) {
-			$this->markTestSkipped('PhpSpreadsheet not found: set OPENREGISTER_DIR to an OpenRegister app with its vendor/ installed.');
+			$this->markTestSkipped(message: 'PhpSpreadsheet not found: set OPENREGISTER_DIR to an OpenRegister app with vendor/.');
 		}
 
 		$path = CmdbTestSupport::fixtures() . '/' . $name;
@@ -264,7 +270,7 @@ class VngSwcProfileTest extends TestCase {
 		$records = [];
 		foreach ($profile->targets() as $target) {
 			$mapped = $engine->mapRow($profile->pack(target: $target), $cells, (int)$row['row']);
-			$this->assertSame([], $mapped['errors'], $target);
+			$this->assertSame(expected: [], actual: $mapped['errors'], message: $target);
 			$records[$target] = $mapped['data'];
 		}
 
