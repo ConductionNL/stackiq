@@ -18,7 +18,6 @@ import {
 	registerIcons,
 	registerTranslations,
 	resolveManifestSentinels,
-	useAppManifest,
 } from '@conduction/nextcloud-vue'
 import {
 	loadTranslations,
@@ -37,6 +36,7 @@ import CmdbOverview from './views/cmdb/CmdbOverview.vue'
 import customComponents from './customComponents.js'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
+import { loadManifest } from './manifestOverride.js'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
@@ -218,9 +218,12 @@ function routerBase() {
  * `voorzieningen_register` there with the numeric register id. We pass the
  * resolved manifest into the in-memory `useAppManifest({ manifest })`
  * branch, which mounts it synchronously and issues NO backend fetch — so
- * nothing can clobber the resolved sentinels afterwards.
+ * nothing can clobber the resolved sentinels afterwards. When Buildiq is
+ * enabled, `loadManifest` merges its stored override delta over the resolved
+ * manifest instead (buildiq openbuild-inline-edit-persistence 5.1).
  *
  * @return {Promise<void>}
+ * @spec openspec/changes/openbuild-inline-edit-persistence/tasks.md#5-runtime-contract-proof-one-app
  */
 async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(
@@ -240,10 +243,11 @@ async function bootstrap() {
 		routes: routesFromManifest(resolvedManifest),
 	})
 
-	// In-memory branch: mount the already-resolved manifest synchronously,
-	// no backend fetch (see bootstrap() docblock for why the fetch path is
-	// unusable for this app).
-	const { manifest: manifestRef } = useAppManifest({ manifest: resolvedManifest })
+	// Without Buildiq: the in-memory branch mounts the already-resolved
+	// manifest synchronously, no backend fetch (see bootstrap() docblock for
+	// why this app's own /api/manifest is unusable). With Buildiq enabled: the
+	// stored Buildiq override delta merges over it (manifestOverride.js).
+	const { manifest: manifestRef } = loadManifest(resolvedManifest)
 
 	const app = createApp({
 		render() {
