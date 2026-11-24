@@ -6,7 +6,10 @@ Read at development `9a5ece6a`, OpenRegister development `4fee776`.
 
 Two APIs serve the catalogue. The objects themselves (applications, services, usages, connections, contracts) are OpenRegister objects in the `stackiq` register, served by OpenRegister's objects API and described by OpenRegister's generated OpenAPI document (`GET /apps/openregister/api/registers/{id}/oas`, `openregister appinfo/routes.php:1670`, public and rate limited at `lib/Controller/OasController.php:82-92`). Stackiq adds its own endpoints on top (`appinfo/routes.php`, 132 routes), among them public ones for offers (`AanbodController`), offered usage (`AangebodenGebruikController`, including `GET /api/koppelingen-gebruik/{uuid}` at :269) and views (`ViewController`). Those are described only by hand (`ViewController.php:373`, `AangebodenGebruikController.php:866`, `docs/API_REFERENCE.md`), and `openapi.json` holds no paths.
 
-## D1. Generate stackiq's own spec with the Nextcloud extractor
+## D1. Generate stackiq's own spec with the Nextcloud extractor (dropped 24 Nov)
+
+Dropped 24 Nov 2026, see the decision under task 1: `openapi.json` became a curated OpenAPI document of the `/api/v1/` paths, kept in step with `appinfo/routes.php` by `tests/Unit/Middleware/Support/OpenApiDocumentTest.php`. The text below is the original plan, kept for the record.
+
 
 Add `nextcloud/openapi-extractor` as a dev dependency (in `vendor-bin/openapi-extractor/composer.json`, the Nextcloud convention, so it does not touch the runtime lock) and point `composer.json:43` at `vendor-bin/openapi-extractor/vendor/bin/generate-spec`. Annotate the external controllers so the extractor can read them: `#[OpenAPI(scope: OpenAPI::SCOPE_DEFAULT)]` on public and user-facing controllers, `#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]` on admin settings controllers, and psalm return shapes (`@return JSONResponse<200, array{...}, array{}>`) with `@psalm-type` definitions in a new `lib/ResponseDefinitions.php`, the file the extractor reads for shared schemas.
 
