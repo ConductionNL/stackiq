@@ -766,7 +766,7 @@ class ViewService implements ViewServiceInterface {
 	 *
 	 * @return array Products data indexed by elementRef.
 	 *
-	 * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md
 	 */
 	private function getProductsData(): array {
 		$this->logger->debug('Getting products data for enrichment');
@@ -1840,7 +1840,7 @@ class ViewService implements ViewServiceInterface {
 	 *
 	 * @return array Products related to the node.
 	 *
-	 * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md
 	 */
 	private function getNodeProducts(string $modelNodeId, array $productsData): array {
 		$this->logger->debug(

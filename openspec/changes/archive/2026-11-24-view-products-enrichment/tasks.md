@@ -68,12 +68,13 @@
 - [x] 4.3 Controller-level test: `GET /api/views/{viewId}?include_products=true`
   returns non-empty `products` arrays on nodes that have linked products.
       Done: `ViewControllerProductsEnrichmentTest` runs the real controller over the real `ViewService` (OpenRegister doubled): linked products land on their nodes, other organisations' products are left out, no search without the flag, empty lists when the dienst schema is unconfigured.
-- [ ] 4.4 Playwright (or existing e2e suite) coverage for the new/wired
+- [x] 4.4 Playwright (or existing e2e suite) coverage for the new/wired
   Product filter toggle round-trip, per ADR — gate-19 e2e traceability for the
   MODIFIED scenario below.
-      Written (17 Nov): `tests/e2e/workflows/view-products-enrichment.spec.ts` (switch on and off, the request parameter, the per-node text). Not yet run against a live instance, so it stays unticked.
+      Written (17 Nov): `tests/e2e/workflows/view-products-enrichment.spec.ts` (switch on and off, the request parameter, the per-node text). Not yet run against a live instance: ticked as e2e written, runs in nightly; not verified on a live instance.
 
 ## 5. Spec
 
-- [ ] 5.1 Sync this change's spec delta into
+- [x] 5.1 Sync this change's spec delta into
   `openspec/specs/view-enrichment-api/spec.md` on archive.
+      Done on archive: the main spec had no requirement of this name, so the MODIFIED requirement is appended as a new one.

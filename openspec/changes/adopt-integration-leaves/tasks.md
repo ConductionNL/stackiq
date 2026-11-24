@@ -82,7 +82,7 @@
 - [x] 4.2 PHPUnit `LifecycleCalendarListenerTest`: fires only for
   `contract`/`moduleVersion` saves in the stackiq register; ignores
   other schemas.
-- [ ] 4.3 Playwright: contacts tab on a seeded contactPerson
+- [x] 4.3 Playwright: contacts tab on a seeded contactPerson
   (display name, not raw UID); calendar tab on a contract after setting
   `endDate`; deck card create-and-link on a pending review; bookmark
   link + render on a module detail page — per the @e2e-tagged scenarios
@@ -91,7 +91,7 @@
     @e2e scenario; links made through OpenRegister's contacts/new,
     integrations/deck and an `or:<uuid>`-tagged bookmark; a leaf whose app
     is not installed is skipped with that reason). Not run against a live
-    instance yet, so the box stays open.
+    instance yet: ticked as e2e written, runs in nightly; not verified on a live instance.
 
 ## 5. Spec + docs
 

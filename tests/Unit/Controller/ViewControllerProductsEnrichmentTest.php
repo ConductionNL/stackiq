@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
 /**
  * GET /api/views/{viewId}?include_products=true, controller to service.
  *
- * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
+ * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md
  */
 #[CoversClass(ViewController::class)]
 #[UsesClass(ViewService::class)]

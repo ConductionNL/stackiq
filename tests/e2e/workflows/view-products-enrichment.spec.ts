@@ -15,7 +15,7 @@
  * products left out) is covered by
  * tests/Unit/Controller/ViewControllerProductsEnrichmentTest.php.
  *
- * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
+ * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
  */
 import type { APIRequestContext, Route } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
