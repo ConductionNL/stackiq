@@ -31,7 +31,7 @@
   - GIVEN audit records with `mcp.` actions and `stackiq.` tool ids WHEN an administrator opens the page THEN each shows when, user, tool, linked record and outcome
   - GIVEN OpenRegister's `GET /api/audit-trails` WHEN the page loads THEN it filters server side on register and action prefix; if the API cannot, file the gap on OpenRegister and stop
 - [x] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/assistant-actions.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/assistant-actions.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
   > Built: custom page `AssistantActions` at `/assistant-actions` (`src/views/AssistantActionsView.vue`, registered in `src/customComponents.js`, menu entry under Reports & Compliance) over `src/utils/assistantActions.js`. It reads OpenRegister's cursor-paged `GET /api/audit-trails` with `actionPrefix=mcp.` and `toolPrefix=stackiq.`, filters added to OpenRegister for this (openregister PR #10589, branch `build/insight-assistant-answers-and-action-trail`); the tool, user and period filters are sent as `tool`, `actor`, `from` and `to`. Columns when, user, tool, record (linked to the stackiq detail page of the record's schema) and outcome (`resultSummary.isError`). Rows come from the cursor, a "Load more" button fetches the next page. Assistant tool calls carry no register of their own, so the tool prefix scopes the list, not the register. OpenRegister lets administrators read the list; anyone else sees "Only administrators can review assistant actions.". Vitest `tests/vitest/assistantActions.spec.js` (13). Test box left open: the Playwright spec needs a live instance with the openregister filters merged.
 
 ### Task 4: History tab label

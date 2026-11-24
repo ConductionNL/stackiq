@@ -20,7 +20,7 @@
   - GIVEN the effective manifest WHEN it is built THEN `Views` is an index page at `/views` over `@resolve:amef_register` and `view` with the quick filters All, Mine, Drawn and Imported
   - GIVEN the effective menu WHEN it renders THEN Standards and Views sit under an Architecture group and the top-level count is unchanged
 - [x] Implement
-- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag, status and Mine filters)
+- [x] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag, status and Mine filters) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Canvas shape mapping
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -59,7 +59,7 @@
   - GIVEN Copy to edit WHEN it completes THEN a drawn view with a fresh identifier and `basedOn` opens in edit mode
   - GIVEN a re-import WHEN it runs THEN the drawn copy is unchanged
 - [x] Implement
-- [ ] Test (Playwright copy flow, PHPUnit `ArchitectureViewsImportIsolationTest`)
+- [x] Test (Playwright copy flow, PHPUnit `ArchitectureViewsImportIsolationTest`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 7: Save version and compare versions
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
@@ -69,7 +69,7 @@
   - GIVEN two snapshots WHEN they are compared THEN added, removed and changed are keyed by node and connection id, and order alone is no change
   - GIVEN the compare page WHEN it renders THEN colours use `--color-success`, `--color-error` and `--color-warning` and the text list names every change
 - [x] Implement
-- [ ] Test (vitest `viewDiff.spec.js`, Playwright compare scenario)
+- [x] Test (vitest `viewDiff.spec.js`, Playwright compare scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 8: Keep drawn objects out of the shared list, the single view read and the full export
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them

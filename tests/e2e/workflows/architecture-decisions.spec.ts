@@ -170,8 +170,7 @@ test.afterAll(async () => {
 })
 
 // @e2e architecture-decision-register::an-information-manager-records-a-decision
-// The Add form has no editor for an alternative with its reason: `alternatives` is an array of objects without `x-widget: sub-objects`, so CnFormDialog renders it as a tag box.
-test.fixme('a recorded decision is listed as draft and its page shows the rejected alternative', async ({ page }) => {
+test('a recorded decision is listed as draft and its page shows the rejected alternative', async ({ page }) => {
 	const title = `${RUN_ID} new integrations only through APIs`
 	await gotoAppRoute(page, '/architectuurbesluiten')
 	await dismissSupportDialog(page)
@@ -185,14 +184,21 @@ test.fixme('a recorded decision is listed as draft and its page shows the reject
 	await dialog.getByLabel('Impact').click()
 	await page.getByRole('option', { name: 'Medium', exact: true }).click()
 	await dialog.getByLabel('Reviewer').fill(reviewer)
-	await dialog.getByLabel('Alternatives').fill('File transfer')
-	await dialog.getByLabel('Reason rejected').fill('Transfers cannot be traced.')
+	// `alternatives` is an array of objects, which CnFormDialog edits as a
+	// sub-objects table: Add row opens a nested dialog over the item schema.
+	await dialog.getByTestId('cn-sub-objects-add').click()
+	const row = page.getByRole('dialog').filter({ has: page.getByLabel('Reason rejected') }).last()
+	await expect(row).toBeVisible({ timeout: 15000 })
+	await row.getByLabel('Option').fill('File transfer')
+	await row.getByLabel('Reason rejected').fill('Transfers cannot be traced.')
+	await row.getByRole('button', { name: /Save|Create|Add/ }).last().click()
+	await expect(dialog.getByRole('row').filter({ hasText: 'File transfer' })).toBeVisible({ timeout: 30000 })
 	await dialog.getByRole('button', { name: /Save|Create/ }).last().click()
 	await expect(dialog).toBeHidden({ timeout: 30000 })
 
-	const row = page.getByRole('row').filter({ hasText: title })
-	await expect(row).toContainText(/draft/i, { timeout: 30000 })
-	await row.click()
+	const listed = page.getByRole('row').filter({ hasText: title })
+	await expect(listed).toContainText(/draft/i, { timeout: 30000 })
+	await listed.click()
 	await expect(page).toHaveURL(/\/architectuurbesluiten\//)
 	await expect(page.getByText('File transfer').first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText('Transfers cannot be traced.').first()).toBeVisible()

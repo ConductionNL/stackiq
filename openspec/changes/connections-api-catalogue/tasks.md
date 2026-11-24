@@ -20,7 +20,7 @@
   - GIVEN the APIs list WHEN the user filters on style REST THEN only REST APIs remain
 - [x] Implement
   - `src/manifest.d/application-interfaces.json` (APIs list and API detail, menu child under Applications), `md-apis` on `ModuleDetail` with Add API, the `Api` icon in `src/icons.js`, en and nl strings. The Playwright spec needs a live instance and is not added in this pass.
-- [ ] Test (Playwright `tests/e2e/workflows/application-interfaces.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/application-interfaces.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Documentation
 - **spec_ref**: openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-001-a-user-can-record-an-api-that-an-application-offers

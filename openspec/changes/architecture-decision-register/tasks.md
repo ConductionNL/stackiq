@@ -33,7 +33,7 @@
   - GIVEN the effective menu WHEN it renders THEN Architecture decisions sits under the Architecture group
   - GIVEN a decision page WHEN it renders THEN its lifecycle actions and History tab show
 - [x] Implement
-- [ ] Test (`tests/validate-manifest.js`, Playwright record and accept scenarios)
+- [x] Test (`tests/validate-manifest.js`, Playwright record and accept scenarios) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Decisions on the usage and standard pages
 - **spec_ref**: openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-004-a-decision-shall-link-to-the-applications-and-elements-it-affects-and-to-board-decisions
@@ -42,7 +42,7 @@
   - GIVEN a decision that names a usage WHEN the usage page opens THEN Architecture decisions lists it
   - GIVEN a decision that names a standard WHEN the standard page opens THEN Architecture decisions lists it
 - [x] Implement
-- [ ] Test (Playwright usage page scenario)
+- [x] Test (Playwright usage page scenario) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle

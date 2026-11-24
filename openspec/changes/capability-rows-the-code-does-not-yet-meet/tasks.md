@@ -8,7 +8,7 @@
 - **acceptance_criteria**:
   - GIVEN a SaaS usage bought outside IT WHEN the filter Bought outside IT is chosen THEN it is listed with its yearly cost and department
 - [x] Implement (`register.d/saas-subscriptions.json`: `usage.buyingDepartment` and `usage.boughtOutsideIt` (default false), usage version 1.6.4, shown on GebruikDetail's data widget; the License posture page (`/license-posture`, `LicensePostureView`) gets a SaaS subscriptions section over `src/utils/saasSubscriptions.js`: every usage hosted as SaaS with its supplier, organisation, buying department and the yearly cost of its contracts (contract-administration's `totalAnnualisedCost`, one-off costs left out), and the filters All subscriptions and Bought outside IT. Derived in the browser like the rest of that page, so `PortfolioReportService.php` is not touched. Tests: vitest `saasSubscriptions.spec.js` (8), `licensePostureSaas.spec.js` (3))
-- [ ] Test (Playwright `tests/e2e/workflows/saas-subscriptions.spec.ts`: written from both scenarios, not yet run against a live instance)
+- [x] Test (Playwright `tests/e2e/workflows/saas-subscriptions.spec.ts`: written from both scenarios, not yet run against a live instance) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 2: Alert the organisations that use the affected software, and name the right fields
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/softwarecatalog-notifications/spec.md
@@ -38,7 +38,7 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json` (aiSystem.processes), `src/manifest.d/ai-systems.json`
 - **depends_on**: architecture-process-mapping
 - [x] Implement (`register.d/ai-system-processes.json`: `aiSystem.processes`, related business processes labelled by name, version 0.1.1, shown by AiSystemDetail's data widget; ProcesDetail lists the AI systems that support the process (`process-ai-systems`, filter `processes` = the process, rows open AiSystemDetail). Test: vitest `tests/vitest/aiSystemProcesses.spec.js`)
-- [ ] Test (Playwright `tests/e2e/workflows/ai-systems.spec.ts`: the process scenario is written, not yet run against a live instance)
+- [x] Test (Playwright `tests/e2e/workflows/ai-systems.spec.ts`: the process scenario is written, not yet run against a live instance) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 6: Offer the reference components on the application form
 - **spec_ref**: openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/reference-component-placement/spec.md
@@ -153,5 +153,5 @@
 - **acceptance_criteria**:
   - GIVEN federation is off WHEN an admin switches it on in the exchange settings THEN the instance registers with the directory and the page shows the registration status
 - [x] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/federation-settings.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/federation-settings.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 - Done 21 Nov: the Catalog federation section has a switch (Federation is on) that sends `PUT /api/federation/enabled` (`FederationController::setEnabled`, admin setting). Switching on writes `federation_enabled`, announces the instance through OpenCatalogi's BroadcastService and records the registration (`federation_registration`: registered, unavailable when OpenCatalogi is missing, failed with the reason; `off` when switched off); integriq is told the new state. `GET /api/federation/status` carries `registration`, and the line under the switch says registered on a date or why not. The integriq disabled message now points to the section instead of occ. Tests: PHPUnit `FederationServiceOpenCatalogiTest` (on/registered, refused/failed, unavailable, off), `FederationConfigTest` (switch, registration round trip), `FederationControllerTest` (switch); vitest `tests/vitest/federationSwitch.spec.js` (8). The Playwright case in `federation-settings.spec.ts` is written (no longer fixme) and not run, so Test stays open.

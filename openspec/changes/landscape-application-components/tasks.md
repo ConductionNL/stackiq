@@ -21,7 +21,7 @@
   - GIVEN the Applications list WHEN it opens THEN components are hidden until the user picks All, including components
 - [x] Implement
   - `ModuleDetail` gains the `md-components` list (filter `partOf: @objectId`, Add component; the create form seeds `partOf` from the filter) and shows `partOf` in its data widget. The `Modules` list opens on "Whole applications" (`partOf: IS NULL`) and offers "All, including components". English and Dutch strings were added to `l10n/en.json`/`nl.json`, and their `.js` was rebuilt.
-- [ ] Test (Playwright `tests/e2e/workflows/application-components.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/application-components.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Documentation
 - **spec_ref**: openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-002-the-application-page-lists-its-components

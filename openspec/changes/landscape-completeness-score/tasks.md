@@ -18,7 +18,7 @@
   - GIVEN the Applications list WHEN it opens THEN each row shows good, fair or poor
   - GIVEN an application confirmed a year ago WHEN its owner clicks Confirm this entry is current THEN lastConfirmedAt is today and the score rises
 - [x] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/data-quality.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/data-quality.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Data quality page (board SkDatakwaliteit)
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is

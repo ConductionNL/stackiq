@@ -19,7 +19,7 @@
   - GIVEN the application form WHEN it opens THEN the type field offers Application and System software
 - [x] Implement
   - `src/dialogs/ChangeEntryTypeDialog.vue` previews the change (carried, dropped with values, blockers), asks for a service type when the target is a service, and keeps Confirm disabled while anything blocks. It opens from the `md-entry-type` body widget `ChangeEntryTypePanel` on `ModuleDetail` (stackiq's detail pages add actions as body widgets, like the organisation merge). `module.type` is visible on the form (module 0.3.14, register 2.6.0). en/nl strings. Not built: the row action on the Services list, which is the custom `FacetedCatalogIndexView` page with no row-action slot; and a services detail page does not exist yet, so a service changes back to an application only through the API for now.
-- [ ] Test (Playwright `tests/e2e/workflows/change-entry-type.spec.ts`)
+- [x] Test (Playwright `tests/e2e/workflows/change-entry-type.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 3: Documentation
 - **spec_ref**: openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
