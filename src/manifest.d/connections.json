@@ -41,7 +41,7 @@
 				],
 				"filterMenu": true,
 				"customViews": [
-					{ "id": "diagram", "label": "Diagram", "icon": "Graph", "component": "ConnectionsDiagram" }
+					{ "id": "diagram", "label": "Diagram", "icon": "SitemapOutline", "component": "ConnectionsDiagram" }
 				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },

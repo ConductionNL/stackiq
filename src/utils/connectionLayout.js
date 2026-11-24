@@ -169,3 +169,40 @@ export function diagramFlow(connections, names = {}) {
 		})),
 	}
 }
+
+/**
+ * The ids of applications the rows name only by a bare id that has no name yet.
+ *
+ * @param {Array<object>} connections The rows the list shows.
+ * @param {{[id: string]: string}} names The names read so far.
+ * @return {Array<string>} The ids, each once.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function unnamedModuleIds(connections, names) {
+	const ids = new Set()
+	for (const connection of Array.isArray(connections) ? connections : []) {
+		const { a, b } = connectionEnds(connection)
+		;[a, b]
+			.filter((end) => end && !end.provision && end.name === end.id && !names[end.id])
+			.forEach((end) => ids.add(end.id))
+	}
+	return [...ids]
+}
+
+/**
+ * Names by id from the applications OpenRegister answered.
+ *
+ * @param {Array<object>|null} modules The applications.
+ * @return {{[id: string]: string}} The names.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function moduleNames(modules) {
+	const names = {}
+	for (const module of Array.isArray(modules) ? modules : []) {
+		const id = String(module?.id ?? module?.uuid ?? '')
+		if (id !== '' && typeof module?.name === 'string' && module.name !== '') {
+			names[id] = module.name
+		}
+	}
+	return names
+}

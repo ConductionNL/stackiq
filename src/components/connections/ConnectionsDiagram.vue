@@ -18,14 +18,14 @@ rows always land in the same places. A line opens its connection.
 	<div class="connections-diagram" data-testid="connections-diagram">
 		<NcLoadingIcon v-if="loading && rows.length === 0" :size="32" />
 		<NcEmptyContent
-			v-else-if="flowNodes.length === 0"
+			v-else-if="flow.nodes.length === 0"
 			:name="t('stackiq', 'No connections to draw')"
 			:description="t('stackiq', 'Change the filters to show connections in the diagram.')" />
 		<CnGraphCanvas
 			v-else
 			class="connections-diagram__canvas"
-			:nodes="flowNodes"
-			:edges="flowEdges"
+			:nodes="flow.nodes"
+			:edges="flow.edges"
 			:fitView="true"
 			:fitViewMaxZoom="1"
 			@edgeSelect="onEdgeSelect">
@@ -45,7 +45,7 @@ import { CnGraphCanvas } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
-import { connectionEnds, diagramFlow } from '../../utils/connectionLayout.js'
+import { diagramFlow, moduleNames, unnamedModuleIds } from '../../utils/connectionLayout.js'
 import { ensureObjectType } from '../../utils/objectTypes.js'
 
 export default {
@@ -96,14 +96,6 @@ export default {
 		flow() {
 			return diagramFlow(this.rows, this.names)
 		},
-
-		flowNodes() {
-			return this.flow.nodes
-		},
-
-		flowEdges() {
-			return this.flow.edges
-		},
 	},
 
 	watch: {
@@ -123,33 +115,19 @@ export default {
 		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
 		 */
 		async loadNames() {
-			const missing = new Set()
-			for (const row of this.rows) {
-				const { a, b } = connectionEnds(row)
-				for (const end of [a, b]) {
-					if (end && !end.provision && end.name === end.id && !this.names[end.id]) {
-						missing.add(end.id)
-					}
-				}
-			}
-			if (missing.size === 0) {
+			const missing = unnamedModuleIds(this.rows, this.names)
+			if (missing.length === 0) {
 				return
 			}
 			try {
 				ensureObjectType('module')
-				const modules = await objectStore.fetchCollectionForOptions('module', { _ids: [...missing], _limit: missing.size })
-				const names = { ...this.names }
-				for (const module of modules || []) {
-					const id = String(module?.id ?? module?.uuid ?? '')
-					if (id && module.name) {
-						names[id] = String(module.name)
-					}
-				}
-				this.names = names
+				const modules = await objectStore.fetchCollectionForOptions('module', { _ids: missing, _limit: missing.length })
+				this.names = { ...this.names, ...moduleNames(modules) }
 			} catch {
 				// The diagram still draws, with the ids as names.
 			}
 		},
+
 
 		/**
 		 * Open the connection a line stands for.
