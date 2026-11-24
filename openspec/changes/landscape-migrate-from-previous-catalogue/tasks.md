@@ -51,4 +51,5 @@
 - **files**: `docs/features/legacy-catalogue-migration.md`
 - **acceptance_criteria**:
   - GIVEN the doc WHEN read THEN it says how to get the export from the previous catalogue, how matching works and how to run it again
-- [ ] Implement
+- [x] Implement
+  - Built 24 Nov: `docs/features/legacy-catalogue-migration.md`, linked from the features index.

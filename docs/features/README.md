@@ -33,6 +33,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [ArchiMate round-trip check](archimate-import-export.md) | Check what a model file loses through the import and export, before or after importing it |
 | [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
+| [Bring over from the previous Softwarecatalogus](legacy-catalogue-migration.md) | Bring over what an organisation registered in the previous Softwarecatalogus, with a preview before anything is saved |
 | [Data quality](./data-quality.md) | A data quality score on every application and usage, a confirm-current action and a Data quality page per organisation |
 | [API documentation](api-documentation.md) | Read OpenRegister's document of the catalogue objects and stackiq's own endpoints in the app, and download either as JSON |
 | [Health and metrics](observability.md) | A public health check for uptime probes and Prometheus metrics for administrators, configured in the manifest |
