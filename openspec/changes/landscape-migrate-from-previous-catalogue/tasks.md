@@ -18,8 +18,9 @@
 - **acceptance_criteria**:
   - GIVEN `POST /api/legacy-import/preview` with a file WHEN called by a member of the active organisation who may create usages THEN it returns per row the match or create decision for supplier (KvK, then exact name), module (supplier and name) and version (number), and writes nothing
   - GIVEN a caller without that right WHEN calling THEN 403 before the file is read
-- [ ] Implement
-- [ ] Test (PHPUnit `LegacyCatalogueMigrationServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `LegacyCatalogueMigrationServiceTest`)
+  - Built 24 Nov: `POST /api/legacy-import/preview` (`lib/Controller/LegacyCatalogueImportController.php`, multipart `file`; a controller of its own because the CMDB import controller is admin-only) calls `LegacyCatalogueMigrationService::preview()`, which refuses with 403 (`FORBIDDEN`) before the file is read unless the caller has an active organisation and OpenRegister's permission handler allows create on the usage schema, reads the file with the `vng-swc` profile, maps each row through its four packs and decides with `LegacyCatalogueMatcher` on candidates `LegacyCatalogueCandidates` reads with exact-field searches (the rows' supplier names and KvK numbers, those suppliers' modules, those modules' versions). A row without a version gets `none`; a row whose supplier or application is empty is skipped with the mapping error. Tests: `tests/Unit/Service/LegacyCatalogueMigrationServiceTest.php`, `tests/Unit/Controller/LegacyCatalogueImportControllerTest.php`.
   - Built 23 Nov: `lib/Service/LegacyCatalogue/LegacyCatalogueMatcher.php` decides match or create per row for supplier (KvK number on the organisation's `registrationNumber`, then exact name; a name two organisations share matches neither), product (a module of the matched supplier, exact name) and version (number); below a created object everything is created. Test: `tests/Unit/Service/LegacyCatalogue/LegacyCatalogueMatcherTest.php`. Left: the preview endpoint, its permission check and the service that reads the file, which need the profile of Task 1.
 
 ### Task 3: Apply and the result
