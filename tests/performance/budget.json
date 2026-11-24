@@ -1,0 +1,11 @@
+{
+	"app": "stackiq",
+	"pages": [
+		{ "name": "Dashboard", "path": "/index.php/apps/stackiq/" },
+		{ "name": "Organisations", "path": "/index.php/apps/stackiq/organisaties" },
+		{ "name": "Contracts", "path": "/index.php/apps/stackiq/contracten" },
+		{ "name": "Standards", "path": "/index.php/apps/stackiq/standaarden" },
+		{ "name": "Reviews", "path": "/index.php/apps/stackiq/reviews" },
+		{ "name": "Compliance", "path": "/index.php/apps/stackiq/komplianties" }
+	]
+}
