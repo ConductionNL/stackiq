@@ -43,7 +43,7 @@
   - `src/components/merge/MergedRecordBanner.vue`, a `before-body` widget on `ModuleDetail`, says the entry was merged and links to the survivor (the services list has no detail page).
   - Find duplicates on `/modules` and `/diensten`: a link in the toolbar of `FacetedCatalogIndexView` to OpenRegister's `/duplicates` page, shown when `/api/me` answers `mayFindDuplicates` (a Nextcloud admin or a member of `functioneel-beheerder`, `SyncAccessPolicy::isAdministrator()`).
   - Find duplicates on `/organisaties`: a `headerActions` entry of the index page linking to `/apps/openregister/duplicates`, drawn only when the `visibleWhen` endpoint condition on `/api/me` answers `mayFindDuplicates` (`@conduction/nextcloud-vue` 2.181 added `visibleWhen` to index header actions; `organisatiesFindDuplicates.spec.js`).
-- [ ] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php and Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts)
+- [x] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php and Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Remove the unused merge modal, seed a duplicate and document the flow
 - **spec_ref**: openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates

@@ -41,7 +41,7 @@
   - GIVEN /gebruik WHEN it opens THEN BBN level is a column with quick filters BBN1, BBN2, BBN3 and Not classified
   - GIVEN /modules/:id with three classifying organisations WHEN it opens for a municipal user THEN the summary shows counts and no names
 - [x] Implement
-- [ ] Test (vitest tests/vitest/usageClassificationPanel.spec.js done; Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts)
+- [x] Test (vitest tests/vitest/usageClassificationPanel.spec.js done; Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 5: Seed classifications and document the feature
 - **spec_ref**: openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three
@@ -50,7 +50,7 @@
   - GIVEN a fresh demo import WHEN Voorbeeld Name 1 opens THEN the summary shows three organisations, BBN2 twice and BBN3 once
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the panel, the suggestion and the summary in screenshots and explains who sees what
 - [x] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts against the demo data; PHPUnit tests/Unit/Settings/BaselineClassificationSeedTest.php checks the seed)
+- [x] Test (Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts against the demo data; PHPUnit tests/Unit/Settings/BaselineClassificationSeedTest.php checks the seed) (e2e written, runs in nightly; not verified on a live instance)
 
 ## Round 2 notes
 

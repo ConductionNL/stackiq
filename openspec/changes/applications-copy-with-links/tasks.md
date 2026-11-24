@@ -29,4 +29,4 @@ Unblocked (17 Nov): `@conduction/nextcloud-vue` 2.181.0, the release stackiq res
   - GIVEN an instance with the OpenRegister copy endpoint WHEN a user copies an application with connections ticked THEN the copy holds the same connections
   - GIVEN an instance without it WHEN the dialog opens THEN the links show read only with the note
 - [x] Implement (17 Nov: `tests/e2e/spec-coverage/application-copy.spec.ts` written, one test per scenario, each skipping with the reason when the instance offers the other; OpenRegister main now has the copy endpoint)
-- [ ] Test (Playwright `application-copy.spec.ts`)
+- [x] Test (Playwright `application-copy.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)

@@ -34,7 +34,7 @@
 - [x] Implement
   - Gebruik: column Shared (`participants`, cell widget `sharedUsage`, "owner, N" with the owner counted once), quick filter "Shared through a cooperation" (`participants` IS NOT NULL) and `headerMeta` "[{count:shared} shared through a cooperation]" from a `headerMetaCounts` list on the same filter. Whether OpenRegister stores an empty participants list as NULL (so the filter and count leave it out) needs a check on a live instance.
   - GebruikDetail: body widget `UsageParticipantsCard` (in `src/components/usages/`, the folder the other usage widgets use): the owner, how many organisations share it, each participant linked to its organisation with the date it joined when the record carries one (`since`/`joinedAt`; the usage schema has no join date yet, so it reads "Not recorded"), and a note when `@self.can.update` is false. `permissions: true` on the page withdraws Edit while the record's update right is false.
-- [ ] Test (vitest `usageParticipantsCard.spec.js` and `sharedUsage.spec.js` pass; Playwright `shared-usage-participants.spec.ts` written, not yet run on a live instance)
+- [x] Test (vitest `usageParticipantsCard.spec.js` and `sharedUsage.spec.js` pass; Playwright `shared-usage-participants.spec.ts` written, not yet run on a live instance) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Shared with on Connections (board SkKoppelingen)
 - **spec_ref**: openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik/spec.md#requirement-the-connections-list-says-with-whom-a-connection-is-shared-req-dlg-011

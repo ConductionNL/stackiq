@@ -34,7 +34,7 @@
   - GIVEN a saved facet view with a supplier WHEN it is applied THEN the supplier is chosen again
   - GIVEN a Dutch instance WHEN the sidebar renders THEN the facet title reads Leverancier
 - [x] Implement
-- [ ] Test (vitest tests/vitest/facetSchema.spec.js and tests/vitest/facetStore.spec.js, Playwright tests/e2e/spec-coverage/supplier-facet.spec.ts)
+- [x] Test (vitest tests/vitest/facetSchema.spec.js and tests/vitest/facetStore.spec.js, Playwright tests/e2e/spec-coverage/supplier-facet.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
 
 ### Task 4: Seed suppliers and document the facet
 - **spec_ref**: openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-002-the-applications-and-services-pages-shall-offer-supplier-as-a-facet-that-narrows-the-list

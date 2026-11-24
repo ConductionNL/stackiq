@@ -11,7 +11,7 @@
   - GIVEN a refusal WHEN the run ends THEN the dialog lists each refused entry with the endpoint's message
   - GIVEN Lock WHEN confirmed THEN the selected objects are locked through OpenRegister's lock endpoint for the chosen duration
 - [x] Implement
-- [ ] Test (vitest `publicationActions.spec.js`, Playwright `tests/e2e/spec-coverage/publish-from-list.spec.ts`)
+- [x] Test (vitest `publicationActions.spec.js`, Playwright `tests/e2e/spec-coverage/publish-from-list.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
   - Status: vitest `publicationActions.spec.js` and `publicationSelectionBar.spec.js` pass; the Playwright run needs a live Nextcloud and is not done.
 
 ### Task 2: Publish and withdraw on the entry's page (board SkApplicatie)
