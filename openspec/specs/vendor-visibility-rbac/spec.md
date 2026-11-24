@@ -188,19 +188,19 @@ The `gebruik`, `koppeling`, and `organisatie` schemas' OpenRegister `authorizati
 - WHEN a user in the `gebruik-beheerder` group whose active organisation is A reads the gebruik object via OpenRegister's standard object API
 - THEN the read MUST succeed
 
-### Requirement: The aanbod listing endpoint MUST require authentication explicitly, not implicitly (REQ-009)
+### Requirement: The aanbod listing endpoint serves anonymous callers published entries only (REQ-009)
 
-`AanbodController::getAanbod()` MUST explicitly reject an unauthenticated caller before invoking `AanbodService::getAanbod()`, rather than relying on the service's internal `getCurrentOrganisation()` returning `null` for anonymous sessions as the only safeguard.
+`AanbodController::getAanbod()` MUST decide explicitly what an unauthenticated caller gets, before it invokes `AanbodService::getAanbod()`, and MUST NOT rely on `getCurrentOrganisation()` returning `null` as the only safeguard. An unauthenticated caller MUST receive only published aanbod entries (`publicatiedatum` at or before now and no `depublicatiedatum` passed) in the sanitized open-data projection, as `open-data-publishing` says. Every other aanbod entry, and every organisation-scoped field, MUST need login.
 
-#### Scenario: Unauthenticated caller is explicitly rejected
-- GIVEN no authenticated user session
+#### Scenario: An anonymous caller lists the aanbod
+- GIVEN a published aanbod entry "Zaaksysteem X" and an unpublished entry "Concept Y"
+- AND no authenticated user session
 - WHEN `GET /api/aanbod` is called
-- THEN the controller MUST return the empty-result envelope, or 401, without depending on `AanbodService::getCurrentOrganisation()` resolving to null as the sole guard
-- AND a test MUST assert `AanbodService::getAanbod()` is never invoked for this request
+- THEN the response contains "Zaaksysteem X" in the sanitized open-data projection
+- AND it does not contain "Concept Y" or any organisation-scoped field
 
 #### Scenario: Authenticated caller with no active organisation gets the documented empty envelope
 - GIVEN an authenticated user with no active organisation set
 - WHEN `GET /api/aanbod` is called
 - THEN the response MUST be the empty-result envelope
 - AND no cross-organisation data MUST be returned
-
