@@ -42,7 +42,7 @@
   "dependencies": {
     "@babel/core": "^7.22.9",
     "@codemirror/lang-json": "^6.0.0",
-    "@conduction/nextcloud-vue": "^2.181.0",
+    "@conduction/nextcloud-vue": "^2.203.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -114,7 +114,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "axe-core": "^4.12.1",
-    "browserslist": "^4.28.9",
+    "browserslist": "^4.29.6",
     "caniuse-lite": "^1.0.30001810",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
