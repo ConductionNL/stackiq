@@ -124,9 +124,9 @@ class ConnectionSuggestionServiceTest extends TestCase {
 		$suggestions = $this->suggestionsFor(uuid: 'u-x');
 		$reasons = array_column($suggestions, 'reason', 'id');
 
-		$this->assertSame(['c-xn', 'c-xy'], array_column($suggestions, 'id'));
-		$this->assertSame(ConnectionSuggestionService::REASON_CARRY_OVER, $reasons['c-xn']);
-		$this->assertSame(ConnectionSuggestionService::REASON_CARRY_OVER, $reasons['c-xy']);
+		$this->assertSame(expected: ['c-xn', 'c-xy'], actual: array_column($suggestions, 'id'));
+		$this->assertSame(expected: ConnectionSuggestionService::REASON_CARRY_OVER, actual: $reasons['c-xn']);
+		$this->assertSame(expected: ConnectionSuggestionService::REASON_CARRY_OVER, actual: $reasons['c-xy']);
 	}
 
 	/**

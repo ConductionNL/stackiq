@@ -94,24 +94,24 @@ class OrganizationSyncActiveStatusTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$settings = $this->createMock(RegisterConfigReaderInterface::class);
+		$settings = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(
 			['register' => '26', 'organisatie_schema' => '46', 'contactpersoon_schema' => '45']
 		);
-		$this->db = $this->createMock(IDBConnection::class);
+		$this->db = $this->createMock(originalClassName: IDBConnection::class);
 
 		$this->service = new OrganizationSyncService(
-			$this->createMock(OrganisatieService::class),
-			$this->createMock(ContactpersoonService::class),
-			$this->createMock(SymfonyEmailService::class),
-			$this->createMock(IAppConfig::class),
-			$this->createMock(LoggerInterface::class),
-			$settings,
-			$this->db,
-			$this->createMock(ContactPersonHandler::class),
-			$this->createMock(ContainerInterface::class),
-			$this->createMock(ObjectServiceInterface::class),
-			$this->createMock(OrganisationMapper::class),
+			organisationService: $this->createMock(originalClassName: OrganisatieService::class),
+			contactPersonService: $this->createMock(originalClassName: ContactpersoonService::class),
+			emailService: $this->createMock(originalClassName: SymfonyEmailService::class),
+			config: $this->createMock(originalClassName: IAppConfig::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			settingsService: $settings,
+			db: $this->db,
+			contactpersonHandler: $this->createMock(originalClassName: ContactPersonHandler::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			objectService: $this->createMock(originalClassName: ObjectServiceInterface::class),
+			organisationMapper: $this->createMock(originalClassName: OrganisationMapper::class),
 		);
 
 	}//end setUp()
@@ -123,11 +123,11 @@ class OrganizationSyncActiveStatusTest extends TestCase {
 	 * @return IQueryBuilder&MockObject
 	 */
 	private function recordingQuery(): IQueryBuilder&MockObject {
-		$result = $this->createMock(IResult::class);
+		$result = $this->createMock(originalClassName: IResult::class);
 		$result->method('fetchOne')->willReturn(0);
 		$result->method('fetchAll')->willReturn([]);
 
-		$query = $this->createMock(IQueryBuilder::class);
+		$query = $this->createMock(originalClassName: IQueryBuilder::class);
 		foreach (['select', 'from', 'leftJoin', 'innerJoin', 'where', 'orderBy', 'setMaxResults'] as $method) {
 			$query->method($method)->willReturnSelf();
 		}
@@ -152,7 +152,7 @@ class OrganizationSyncActiveStatusTest extends TestCase {
 		$query->method('createFunction')->willReturnCallback(
 			function (string $sql): IQueryFunction {
 				$this->functions[] = $sql;
-				return $this->createMock(IQueryFunction::class);
+				return $this->createMock(originalClassName: IQueryFunction::class);
 			}
 		);
 		$query->method('executeQuery')->willReturn($result);
@@ -171,11 +171,11 @@ class OrganizationSyncActiveStatusTest extends TestCase {
 
 		$stats = $this->service->performOrganizationsSync();
 
-		$this->assertSame(0, $stats['totalRemaining']);
-		$this->assertContains([['active', 'actief'], IQueryBuilder::PARAM_STR_ARRAY], $this->parameters);
-		$this->assertContains('LOWER(o.status) IN (:p1)', $this->functions);
-		$this->assertContains('o._deleted IS NULL', $this->conditions);
-		$this->assertNotContains(['actief', IQueryBuilder::PARAM_STR], $this->parameters, 'actief alone matched no current organisation');
+		$this->assertSame(expected: 0, actual: $stats['totalRemaining']);
+		$this->assertContains(needle: [['active', 'actief'], IQueryBuilder::PARAM_STR_ARRAY], haystack: $this->parameters);
+		$this->assertContains(needle: 'LOWER(o.status) IN (:p1)', haystack: $this->functions);
+		$this->assertContains(needle: 'o._deleted IS NULL', haystack: $this->conditions);
+		$this->assertNotContains(needle: ['actief', IQueryBuilder::PARAM_STR], haystack: $this->parameters, message: 'actief alone matched no current organisation');
 
 	}//end testTheOrganisationBatchMatchesTheEnglishStatusAndSkipsDeletedRows()
 

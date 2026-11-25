@@ -4452,6 +4452,39 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	}//end getSyncStatusWithErrorHandling()
 
 	/**
+	 * Save the organisatie object after it was made to own itself.
+	 *
+	 * A system write, with validation, RBAC and multitenancy off: the cron job
+	 * runs as the anonymous user, and RBAC refused it ("User 'Anonymous' does
+	 * not have permission to 'update' objects in schema 'Organization'").
+	 *
+	 * @param object $organisationObject The organisatie object, owner already set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 */
+	private function saveOwnedOrganisationObject(object $organisationObject): void {
+		$this->objectService->saveObject(
+			object: array_merge(
+				$organisationObject->getObject(),
+				['@self' => ['organisation' => $organisationObject->getOrganisation()]]
+			),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+					register: $organisationObject->getRegister(),
+					schema: $organisationObject->getSchema()
+				),
+				uuid: $organisationObject->getUuid(),
+				policy: new SavePolicy(silent: true, validation: false)
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
+
+	}//end saveOwnedOrganisationObject()
+
+	/**
 	 * Updates the organisatie object's @self metadata to set owner to the organisation entity UUID
 	 *
 	 * @param object $organisationObject The organisatie object to update.
@@ -4520,28 +4553,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			$organisationObject->setOwner($organisationEntityUuid);
 			$organisationObject->setOrganisation($organisationEntityUuid);
 
-			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			// Published contract instead of OpenRegister's Db layer.
-			$this->objectService->saveObject(
-				object: array_merge(
-					$organisationObject->getObject(),
-					['@self' => ['organisation' => $organisationObject->getOrganisation()]]
-				),
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(
-							register: $organisationObject->getRegister(),
-							schema: $organisationObject->getSchema()
-						),
-					uuid: $organisationObject->getUuid(),
-					policy: new SavePolicy(silent: true, validation: false)
-				),
-				// A system write: the sync makes the organisation own itself, also
-				// from the cron job, where the acting user is anonymous and RBAC
-				// refused it ("User 'Anonymous' does not have permission to
-				// 'update' objects in schema 'Organization'").
-				_rbac: false,
-				_multitenancy: false
-			);
+			$this->saveOwnedOrganisationObject(organisationObject: $organisationObject);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated organisatie object owner and organisation',
