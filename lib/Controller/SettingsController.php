@@ -1430,7 +1430,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(string $operationId): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -1497,7 +1497,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return bool True when the caller may read the operation.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	private function mayReadProgress(array $progress, string $uid): bool {
 		$ownerUid = $progress['owner_uid'] ?? null;
@@ -1556,7 +1556,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	private function streamRefusal(string $operationId, IUser $user): ?JSONResponse {
 		$progress = $this->progressTracker->getProgress($operationId);

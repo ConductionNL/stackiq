@@ -2539,7 +2539,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 *
 	 * @return void
 	 * @spec   openspec/specs/organization-sync/spec.md
-	 * @spec   openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec   openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	public function recordSyncTime(?array $result = null): void {
 		$this->config->setValueString('stackiq', 'last_sync_time', date('Y-m-d H:i:s'));
@@ -2555,7 +2555,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 * @param array<string, mixed> $result The run's record.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec   openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	private function recordSyncResult(array $result): void {
 		$this->config->setValueArray('stackiq', 'last_sync_result', $result);

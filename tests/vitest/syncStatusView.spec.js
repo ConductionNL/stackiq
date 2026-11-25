@@ -7,7 +7,7 @@
  * with its phase and percentage, polling every three seconds while it runs
  * and stopping when it ends, and the refusal for other users.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

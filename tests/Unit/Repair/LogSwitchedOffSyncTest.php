@@ -30,7 +30,7 @@ use RuntimeException;
 /**
  * The upgrade says once when the scheduled sync is switched off.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
  */
 #[CoversClass(LogSwitchedOffSync::class)]
 final class LogSwitchedOffSyncTest extends TestCase {

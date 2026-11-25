@@ -10,7 +10,7 @@ the organisation sync: when it runs, how its last run went and, while a run
 is going, how far along it is. The sync keeps organisations, contact persons
 and their Nextcloud accounts in step with the catalogue.
 
-Specification: [`openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md).
+Specification: [`openspec/specs/sync-status-and-progress/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/sync-status-and-progress/spec.md).
 
 ## Who can see it
 
@@ -32,6 +32,10 @@ Specification: [`openspec/changes/operations-sync-status-and-progress/specs/sync
   (organisations, contact persons, users) and percentage. The page asks again
   every three seconds while a run is going and stops when it ends; the bar
   then gives way to the new last run.
+
+![The Synchronisation page after a sync started by hand: the schedule and the last run with what it processed and created](../images/sync-status-last-run.png)
+
+![The Synchronisation page while a sync runs: the phase, the percentage and the items done](../images/sync-status-running.png)
 
 Live progress is shared between the background job and the page through the
 distributed cache. On an instance with only a local cache the page still

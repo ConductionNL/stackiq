@@ -14,7 +14,7 @@
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use OCP\IConfig;
  * sees, on instances that run without a shared cache; a dedicated table is
  * the alternative if it ever shows up.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
  */
 class ProgressStore {
 
@@ -106,7 +106,7 @@ class ProgressStore {
 	 * @param IConfig       $config       System config, which names the distributed cache class.
 	 * @param IAppConfig    $appConfig    App config, the store when no shared cache is configured.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function __construct(
 		ICacheFactory $cacheFactory,
@@ -153,7 +153,7 @@ class ProgressStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function setProgress(string $operationId, array $progress): void {
 		if ($this->cache === null) {
@@ -176,7 +176,7 @@ class ProgressStore {
 	 *
 	 * @return array<string, mixed>|null The snapshot, or null when there is none or it expired.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(string $operationId): ?array {
 		$progress = $this->get(key: 'progress_' . $operationId);
@@ -195,7 +195,7 @@ class ProgressStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function setCurrent(string $operationType, ?string $operationId): void {
 		if ($operationId === null) {
@@ -213,7 +213,7 @@ class ProgressStore {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getCurrent(string $operationType): ?string {
 		$operationId = $this->get(key: 'current_' . $operationType);
@@ -289,7 +289,7 @@ class ProgressStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function removeExpired(): void {
 		if ($this->cache !== null) {
