@@ -140,10 +140,13 @@ describe('applyScenario', () => {
 
 		const usageWrites = objects.saves.filter((s) => s.type === 'usage').map((s) => s.data)
 		expect(usageWrites[0]).toMatchObject({ id: 'use-2', module: 'mod-b', plannedReplacement: 'mod-succ', plannedReplacementDate: '2027-01-01' })
-		expect(usageWrites[1]).toMatchObject({ consumer: 'org-1', module: 'mod-new', status: 'Planned', startDateInProduction: '2027-03-01' })
+		// An addition is created in the lifecycle's initial status (no status sent), then moved to Planned.
+		expect(usageWrites[1]).toMatchObject({ consumer: 'org-1', module: 'mod-new', startDateInProduction: '2027-03-01' })
 		expect(usageWrites[1].id).toBeUndefined()
-		expect(usageWrites[2]).toMatchObject({ id: 'use-1', status: 'In production', startDateOutPhased: '2027-06-30' })
-		expect(usageWrites[2]['@self']).toBeUndefined()
+		expect(usageWrites[1].status).toBeUndefined()
+		expect(usageWrites[2]).toMatchObject({ id: 'usage-new-1', module: 'mod-new', status: 'Planned' })
+		expect(usageWrites[3]).toMatchObject({ id: 'use-1', status: 'In production', startDateOutPhased: '2027-06-30' })
+		expect(usageWrites[3]['@self']).toBeUndefined()
 
 		const changeWrites = objects.saves.filter((s) => s.type === 'scenarioChange').map((s) => [s.data.id, s.data.appliedTo])
 		expect(changeWrites).toEqual([['chg-rep', 'use-2'], ['chg-add', 'usage-new-1'], ['chg-out', 'use-1']])

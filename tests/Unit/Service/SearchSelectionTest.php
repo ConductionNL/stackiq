@@ -235,4 +235,80 @@ class SearchWithoutSelection {
 	public function searchObjects(array $query=[]): array {
 		return [];
 	}//end searchObjects()
+	/**
+	 * A search that takes `target` gets the slugs as one contract object; an older one gets them named.
+	 *
+	 * @return void
+	 */
+	public function testSlugsAreOneTargetForASearchThatTakesOne(): void {
+		$target = SearchSelection::bySlug(service: new SlugSearchWithTarget(), method: 'searchObjectsBySlug', register: 'voorzieningen', schema: 'scenarioChange', slugsClass: SlugPair::class);
+		$this->assertSame(['target'], array_keys($target));
+		$this->assertInstanceOf(SlugPair::class, $target['target']);
+		$this->assertSame(['voorzieningen', 'scenarioChange'], [$target['target']->register, $target['target']->schema]);
+
+		$named = SearchSelection::bySlug(service: new SlugSearchNamed(), method: 'searchObjectsBySlug', register: 'voorzieningen', schema: 'view', slugsClass: SlugPair::class);
+		$this->assertSame(['registerSlug' => 'voorzieningen', 'schemaSlug' => 'view'], $named);
+	}//end testSlugsAreOneTargetForASearchThatTakesOne()
+
+	/**
+	 * Without the contract class the slugs stay named, whatever the search takes.
+	 *
+	 * @return void
+	 */
+	public function testSlugsStayNamedWithoutTheContractClass(): void {
+		$named = SearchSelection::bySlug(service: new SlugSearchWithTarget(), method: 'searchObjectsBySlug', register: 'r', schema: 's', slugsClass: 'No\\Such\\Slugs');
+		$this->assertSame(['registerSlug' => 'r', 'schemaSlug' => 's'], $named);
+	}//end testSlugsStayNamedWithoutTheContractClass()
+}//end class
+
+/**
+ * A slugs contract like OpenRegister's RegisterSchemaSlugs.
+ */
+final class SlugPair {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema   The schema slug.
+	 */
+	public function __construct(
+		public readonly string $register,
+		public readonly string $schema,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * A search by slug as OpenRegister main has it.
+ */
+final class SlugSearchWithTarget {
+	/**
+	 * The search.
+	 *
+	 * @param object $target  The slugs.
+	 * @param array  $filters The filters.
+	 *
+	 * @return array
+	 */
+	public function searchObjectsBySlug(object $target, array $filters=[]): array {
+		return [$target, $filters];
+	}//end searchObjectsBySlug()
+}//end class
+
+/**
+ * A search by slug as older OpenRegister releases have it.
+ */
+final class SlugSearchNamed {
+	/**
+	 * The search.
+	 *
+	 * @param string $registerSlug The register slug.
+	 * @param string $schemaSlug   The schema slug.
+	 * @param array  $filters      The filters.
+	 *
+	 * @return array
+	 */
+	public function searchObjectsBySlug(string $registerSlug, string $schemaSlug, array $filters=[]): array {
+		return [$registerSlug, $schemaSlug, $filters];
+	}//end searchObjectsBySlug()
 }//end class

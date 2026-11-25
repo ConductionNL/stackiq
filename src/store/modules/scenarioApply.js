@@ -214,18 +214,45 @@ export async function applyScenario({ scenario, changes, objects, now = () => ne
  */
 async function writeUsage(change, scenario, objects) {
 	const fields = changeFields(change, scenario)
-	let body = fields
-	if (change.action !== ACTIONS.ADD) {
-		const usage = await objects.get('usage', relationId(change.usage))
-		if (!usage) {
-			throw new Error('The application in use could not be read.')
-		}
-		body = { ...writable(usage), ...fields }
+	if (change.action === ACTIONS.ADD) {
+		return addUsage(fields, objects)
 	}
-	const saved = await objects.save('usage', body)
-	const id = relationId(saved)
+	const usage = await objects.get('usage', relationId(change.usage))
+	if (!usage) {
+		throw new Error('The application in use could not be read.')
+	}
+	const id = relationId(await objects.save('usage', { ...writable(usage), ...fields }))
 	if (!id) {
 		throw new Error('The application in use could not be written.')
+	}
+	return id
+}
+
+/**
+ * Create the usage an addition makes, then move it to its status.
+ *
+ * The usage lifecycle starts every new usage in its initial status and refuses
+ * another one on create, so the usage is created without a status and then
+ * saved with ADDED_STATUS, which the lifecycle reaches from the initial one.
+ *
+ * @param {object} fields  The usage fields, status included.
+ * @param {object} objects The object client.
+ * @return {Promise<string>} The new usage's id.
+ * @throws {Error} When the usage cannot be created or moved to its status.
+ * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ */
+async function addUsage(fields, objects) {
+	const { status, ...initial } = fields
+	const created = await objects.save('usage', initial)
+	const id = relationId(created)
+	if (!id) {
+		throw new Error('The application in use could not be written.')
+	}
+	if (status && created?.status !== status) {
+		const moved = await objects.save('usage', { ...writable(created), status })
+		if (!relationId(moved)) {
+			throw new Error('The application in use could not be written.')
+		}
 	}
 	return id
 }

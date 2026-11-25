@@ -210,11 +210,13 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * @param string $scenarioId The scenario id.
 	 *
 	 * @return array<int,array<string,mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function openChanges(string $scenarioId): array {
-		$found = $this->objectService()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: 'scenarioChange',
+		$objectService = $this->objectService();
+		$found         = $objectService->searchObjectsBySlug(
+			...SearchSelection::bySlug(service: $objectService, method: 'searchObjectsBySlug', register: self::REGISTER, schema: 'scenarioChange'),
 			filters: ['scenario' => $scenarioId, '_limit' => self::CHANGE_LIMIT],
 			_rbac: true,
 			_multitenancy: true

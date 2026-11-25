@@ -533,9 +533,15 @@ class ArchitectureViewDraftService {
 	 * @param array<string, mixed> $filters The filters.
 	 *
 	 * @return list<array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(string $schema, array $filters): array {
-		$found = $this->objectService()->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $schema, filters: $filters);
+		$objectService = $this->objectService();
+		$found         = $objectService->searchObjectsBySlug(
+			...SearchSelection::bySlug(service: $objectService, method: 'searchObjectsBySlug', register: self::REGISTER, schema: $schema),
+			filters: $filters
+		);
 		if (is_array($found) === false) {
 			return [];
 		}

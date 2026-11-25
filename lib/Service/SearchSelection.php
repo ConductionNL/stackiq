@@ -58,6 +58,61 @@ final class SearchSelection {
 	];
 
 	/**
+	 * The OpenRegister contract that names a register and schema by slug.
+	 */
+	public const SLUGS_CLASS = 'OCA\\OpenRegister\\Contract\\RegisterSchemaSlugs';
+
+	/**
+	 * The named arguments that name the register and schema of a search by slug.
+	 *
+	 * OpenRegister main takes them as one `target` (RegisterSchemaSlugs); older
+	 * releases take `registerSlug` and `schemaSlug`. Called with the other
+	 * spelling, the search fails with "Unknown named parameter".
+	 *
+	 * @param object $service    The object service the search is called on.
+	 * @param string $method     The search method.
+	 * @param string $register   The register slug.
+	 * @param string $schema     The schema slug.
+	 * @param string $slugsClass The slugs contract class to use when the search takes a `target`.
+	 *
+	 * @return array<string, mixed> `target`, or `registerSlug` and `schemaSlug`, to merge into the search arguments.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	public static function bySlug(object $service, string $method, string $register, string $schema, string $slugsClass=self::SLUGS_CLASS): array {
+		if (class_exists($slugsClass) === true && self::takesParameter(service: $service, method: $method, name: 'target') === true) {
+			return ['target' => new $slugsClass(register: $register, schema: $schema)];
+		}
+
+		return ['registerSlug' => $register, 'schemaSlug' => $schema];
+	}//end bySlug()
+
+	/**
+	 * Whether a method takes a parameter of this name.
+	 *
+	 * @param object $service The object service.
+	 * @param string $method  The method.
+	 * @param string $name    The parameter name.
+	 *
+	 * @return bool
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	private static function takesParameter(object $service, string $method, string $name): bool {
+		if (method_exists($service, $method) === false) {
+			return false;
+		}
+
+		foreach ((new ReflectionMethod($service, $method))->getParameters() as $parameter) {
+			if ($parameter->getName() === $name) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end takesParameter()
+
+	/**
 	 * The named arguments that select objects by id.
 	 *
 	 * @param object             $service The object service the search is called on.

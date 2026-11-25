@@ -45,7 +45,7 @@
 				class="landscape-comparison__date"
 				type="date"
 				:label="t('stackiq', 'Date')"
-				@update:modelValue="loadComparison" />
+				@update:modelValue="onDate" />
 		</div>
 
 		<div v-if="canApply" class="landscape-comparison__apply">
@@ -140,7 +140,7 @@ import {
 	landscapeNames,
 	organisationPickerOptions,
 } from '../../utils/landscapeComparison.js'
-import { ensureObjectTypeOrSlug, loadObjectTypeCollection } from '../../utils/objectTypes.js'
+import { ensureObjectTypeOrSlug, ensureSettingsLoaded, loadObjectTypeCollection } from '../../utils/objectTypes.js'
 
 /** The types the comparison reads and an apply writes. */
 const SCENARIO_TYPES = ['scenario', 'scenarioChange', 'usage']
@@ -184,6 +184,8 @@ export default {
 	data() {
 		return {
 			report: null,
+			/** Numbers the comparison requests, so only the latest answer is shown. */
+			requestSeq: 0,
 			date: '',
 			selectedOrg: null,
 			loading: false,
@@ -314,6 +316,9 @@ export default {
 	 */
 	async mounted() {
 		if (this.scenarioId) {
+			// Opened from a link, the store has no settings yet; without them
+			// the scenario types do not register and the section failed.
+			await ensureSettingsLoaded()
 			SCENARIO_TYPES.forEach(ensureObjectTypeOrSlug)
 			await this.loadScenario()
 			return
@@ -337,6 +342,18 @@ export default {
 		},
 
 		/**
+		 * The date field changed: take its value, then compare again.
+		 *
+		 * @param {string} value The date as Y-m-d, or empty.
+		 * @return {void}
+		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 */
+		onDate(value) {
+			this.date = value || ''
+			this.loadComparison()
+		},
+
+		/**
 		 * Load the comparison for the chosen organisation and date, or the scenario.
 		 *
 		 * @return {Promise<void>}
@@ -346,8 +363,16 @@ export default {
 			const organisation = this.scenarioId
 				? relationId(this.scenario?.organisation)
 				: this.selectedOrg?.uuid
-			if (!organisation) {
+			// The plan comparison needs a date (the endpoint refuses one
+			// without); until there is one the page asks for it. An answer to
+			// an older request is dropped: the request sent on load without a
+			// date could arrive after the dated one and replace its result
+			// with an error.
+			const request = ++this.requestSeq
+			if (!organisation || (!this.scenarioId && !this.date)) {
 				this.report = null
+				this.error = null
+				this.loading = false
 				return
 			}
 			this.loading = true
@@ -360,14 +385,22 @@ export default {
 						scenario: this.scenarioId || null,
 					}),
 				})
+				if (request !== this.requestSeq) {
+					return
+				}
 				this.report = response.data
 			} catch (error) {
+				if (request !== this.requestSeq) {
+					return
+				}
 				this.report = null
 				this.error = error?.response?.data?.message
 					|| error?.response?.data?.error
 					|| t('stackiq', 'The comparison could not be loaded.')
 			} finally {
-				this.loading = false
+				if (request === this.requestSeq) {
+					this.loading = false
+				}
 			}
 		},
 
