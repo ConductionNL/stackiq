@@ -30,6 +30,7 @@ import ConnectionSuggestionsPanel from './components/connections/ConnectionSugge
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ContractSupplierPanel from './components/contracts/ContractSupplierPanel.vue'
 import ChangeEntryTypePanel from './components/entries/ChangeEntryTypePanel.vue'
 import ConnectionWizardAction from './components/entryWizard/ConnectionWizardAction.vue'
 import ProvenanceNotice from './components/federation/ProvenanceNotice.vue'
@@ -207,6 +208,9 @@ export default {
 
 	// Licences in use against licences bought (contracts-licence-seats).
 	ContractSeatsPanel,
+
+	// A contract's supplier, read through the service it is for (REQ-CLR-014).
+	ContractSupplierPanel,
 
 	// The supplier's roadmap statement and the product's versions on a timeline,
 	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
