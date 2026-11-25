@@ -16,9 +16,9 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
@@ -165,6 +165,9 @@ test('a scenario that replaces a usage lists the change and compares it with sou
 	await change.getByRole('button', { name: /Save|Create/ }).click()
 
 	await expect(page.getByText('replace').first()).toBeVisible({ timeout: 15000 })
+	// The comparison is read when the page opens; it does not follow a change
+	// added on the page yet (follow-up in tasks.md), so the page is opened again.
+	await page.reload({ waitUntil: 'domcontentloaded' })
 	const row = page.getByTestId('landscape-applications').getByRole('row', { name: new RegExp(current) })
 	await expect(row).toContainText(`Replaced by ${added}`, { timeout: 30000 })
 	await expect(row).toContainText('Scenario')
@@ -176,15 +179,24 @@ test('an adopted scenario is applied to the landscape once', async ({ page }) =>
 		name: `${RUN_ID} apply scenario`,
 		organisation: ids.org,
 		targetDate: '2027-06-30',
-		status: 'proposed',
 	})
+	// A new scenario starts as draft (its lifecycle refuses another status on
+	// create); it is proposed through the lifecycle, so Adopt is offered.
+	const proposed = await apiCtx.patch(`/index.php/apps/openregister/api/objects/${cfg.register}/scenario/${scenarioId}`, { data: { status: 'proposed' } })
+	expect(proposed.ok(), await proposed.text()).toBe(true)
 	await seed('scenarioChange', { scenario: scenarioId, action: 'add', module: ids.added, effectiveDate: '2027-03-01', note: `${RUN_ID} add` })
 	await seed('scenarioChange', { scenario: scenarioId, action: 'phase out', usage: ids.kept, effectiveDate: '2027-06-30', note: `${RUN_ID} phase out` })
 
 	await gotoAppRoute(page, `/scenarios/${scenarioId}`)
 	await dismissSupportDialog(page)
-	await page.getByRole('button', { name: /Adopt/ }).click()
-	await page.getByTestId('apply-scenario').click()
+	// Lifecycle transitions are entries in the page's Actions menu.
+	await page.getByRole('button', { name: 'Actions', exact: true }).first().click()
+	await page.getByRole('menuitem', { name: /^Adopt/ }).first().click()
+	await expect(page.getByText('adopted', { exact: true }).first()).toBeVisible({ timeout: 30000 })
+	// The apply section reads the scenario when the page opens and does not
+	// follow the transition yet (follow-up in tasks.md): open the page again.
+	await page.reload({ waitUntil: 'domcontentloaded' })
+	await page.getByTestId('apply-scenario').click({ timeout: 30000 })
 	await expect(page.getByText('Applied 2 changes to the landscape.')).toBeVisible({ timeout: 30000 })
 	await expect(page.getByTestId('apply-scenario')).toHaveCount(0)
 

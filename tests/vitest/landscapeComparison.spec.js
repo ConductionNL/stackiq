@@ -6,7 +6,7 @@
  * words, the coverage changes, the two landscape columns, and the notice for a
  * failed apply.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 import { describe, expect, it } from 'vitest'
 import {

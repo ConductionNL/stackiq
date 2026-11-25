@@ -38,6 +38,7 @@
  * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  */
 
@@ -624,6 +625,71 @@ test.describe('documentation screenshots', () => {
 		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 2' }).first()).toBeVisible({ timeout: 30_000 })
 		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 3' }).first()).toBeVisible()
 		await shoot(page.locator('.faceted-catalog-index__body').first(), 'supplier-facet.png')
+	})
+
+	test('future-state scenarios: the plan comparison, a scenario and its apply', async ({ page, baseURL }) => {
+		// An organisation with two applications in use, one with a planned
+		// replacement, and an adopted scenario that adds one and replaces one.
+		// Usages and scenarios start in their lifecycle's first status and are
+		// moved on with a PATCH, as the lifecycle allows.
+		const request = await api(baseURL)
+		const stamp = Date.now()
+		const post = async (schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${register}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const patch = async (schema: string, id: string, data: Record<string, unknown>): Promise<void> => {
+			const res = await request.patch(`${OBJECTS}/${register}/${schema}/${id}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+		}
+		const orgName = `Gemeente ${SEED_PREFIX}-West ${stamp}`
+		const org = await post('organization', { name: orgName, type: 'Municipality' })
+		const cases = await post('module', { name: `${SEED_PREFIX} Zaaksysteem 2020` })
+		const next = await post('module', { name: `${SEED_PREFIX} Zaaksysteem 2027` })
+		const desk = await post('module', { name: `${SEED_PREFIX} Servicedesk` })
+		const portal = await post('module', { name: `${SEED_PREFIX} Klantportaal` })
+		const inUse = async (module: Obj, extra: Record<string, unknown> = {}): Promise<Obj> => {
+			const usage = await post('usage', { consumer: org.id, module: module.id, startDateInProduction: '2020-01-01', ...extra })
+			await patch('usage', String(usage.id), { status: 'In production' })
+			return usage
+		}
+		await inUse(cases, { plannedReplacement: next.id, plannedReplacementDate: '2027-03-01' })
+		const deskUsage = await inUse(desk)
+		const scenario = await post('scenario', { name: `${SEED_PREFIX} one front office`, organisation: org.id, targetDate: '2027-06-30', description: 'Residents reach the municipality through one portal.' })
+		await post('scenarioChange', { scenario: scenario.id, action: 'add', module: portal.id, effectiveDate: '2027-03-01' })
+		await post('scenarioChange', { scenario: scenario.id, action: 'phase out', usage: deskUsage.id, effectiveDate: '2027-06-30' })
+		await patch('scenario', String(scenario.id), { status: 'proposed' })
+		await patch('scenario', String(scenario.id), { status: 'adopted' })
+		await request.dispose()
+
+		// The plan comparison on a date.
+		await page.goto(`${APP}/landscape-comparison?organisation=${org.id}`)
+		await settle(page)
+		await page.getByLabel('Date').fill('2027-06-30')
+		const applications = page.getByTestId('landscape-applications')
+		await expect(applications).toContainText(`Replaced by ${SEED_PREFIX} Zaaksysteem 2027`, { timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'scenario-plan-comparison.png')
+
+		// The scenario page: its changes and the comparison with the scenario applied.
+		await page.goto(`${APP}/scenarios/${scenario.id}`)
+		await settle(page)
+		const apply = page.getByTestId('apply-scenario')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await apply.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(applications).toContainText(`${SEED_PREFIX} Klantportaal`, { timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'scenario-page.png')
+
+		// Apply to landscape.
+		await apply.click()
+		await expect(page.getByText('Applied 2 changes to the landscape.')).toBeVisible({ timeout: 30_000 })
+		await shoot(page.getByText('Applied 2 changes to the landscape.').locator('xpath=ancestor::*[contains(@class, "landscape-comparison")][1]'), 'scenario-applied.png')
 	})
 
 	test('architecture view export: the Export menu and the downloaded SVG', async ({ page, baseURL }) => {
