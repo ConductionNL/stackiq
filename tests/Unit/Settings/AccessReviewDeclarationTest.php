@@ -63,7 +63,11 @@ final class AccessReviewDeclarationTest extends TestCase {
 
 		$this->assertSame(expected: 'date-time', actual: $contactPerson['properties']['accessReviewedAt']['format']);
 		$this->assertSame(expected: 'string', actual: $contactPerson['properties']['accessReviewedBy']['type']);
-		$this->assertSame(expected: 'string', actual: $contactPerson['properties']['username']['type'], message: 'Role-group sync and the access review find the account by username; undeclared, OpenRegister drops it.');
+		$this->assertSame(
+			expected: 'string',
+			actual: $contactPerson['properties']['username']['type'],
+			message: 'Role-group sync and the access review find the account by username; undeclared, OpenRegister drops it.'
+		);
 		foreach (array_keys($base['components']['schemas']['contactPerson']['properties']) as $existing) {
 			$this->assertArrayHasKey(key: $existing, array: $contactPerson['properties'], message: $existing . ' must survive the merge');
 		}
