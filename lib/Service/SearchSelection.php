@@ -69,8 +69,7 @@ final class SearchSelection {
 	 * releases take `registerSlug` and `schemaSlug`. Called with the other
 	 * spelling, the search fails with "Unknown named parameter".
 	 *
-	 * @param object $service    The object service the search is called on.
-	 * @param string $method     The search method.
+	 * @param object $service    The object service whose searchObjectsBySlug() is called.
 	 * @param string $register   The register slug.
 	 * @param string $schema     The schema slug.
 	 * @param string $slugsClass The slugs contract class to use when the search takes a `target`.
@@ -79,8 +78,9 @@ final class SearchSelection {
 	 *
 	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
 	 */
-	public static function bySlug(object $service, string $method, string $register, string $schema, string $slugsClass=self::SLUGS_CLASS): array {
-		if (class_exists($slugsClass) === true && self::takesParameter(service: $service, method: $method, name: 'target') === true) {
+	public static function bySlug(object $service, string $register, string $schema, string $slugsClass=self::SLUGS_CLASS): array {
+		$takesTarget = self::takesParameter(service: $service, method: 'searchObjectsBySlug', name: 'target');
+		if (class_exists($slugsClass) === true && $takesTarget === true) {
 			return ['target' => new $slugsClass(register: $register, schema: $schema)];
 		}
 

@@ -539,7 +539,7 @@ class ArchitectureViewDraftService {
 	private function search(string $schema, array $filters): array {
 		$objectService = $this->objectService();
 		$found         = $objectService->searchObjectsBySlug(
-			...SearchSelection::bySlug(service: $objectService, method: 'searchObjectsBySlug', register: self::REGISTER, schema: $schema),
+			...SearchSelection::bySlug(service: $objectService, register: self::REGISTER, schema: $schema),
 			filters: $filters
 		);
 		if (is_array($found) === false) {

@@ -216,7 +216,7 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	private function openChanges(string $scenarioId): array {
 		$objectService = $this->objectService();
 		$found         = $objectService->searchObjectsBySlug(
-			...SearchSelection::bySlug(service: $objectService, method: 'searchObjectsBySlug', register: self::REGISTER, schema: 'scenarioChange'),
+			...SearchSelection::bySlug(service: $objectService, register: self::REGISTER, schema: 'scenarioChange'),
 			filters: ['scenario' => $scenarioId, '_limit' => self::CHANGE_LIMIT],
 			_rbac: true,
 			_multitenancy: true

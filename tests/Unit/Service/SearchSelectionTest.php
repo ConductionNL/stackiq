@@ -241,13 +241,18 @@ class SearchWithoutSelection {
 	 * @return void
 	 */
 	public function testSlugsAreOneTargetForASearchThatTakesOne(): void {
-		$target = SearchSelection::bySlug(service: new SlugSearchWithTarget(), method: 'searchObjectsBySlug', register: 'voorzieningen', schema: 'scenarioChange', slugsClass: SlugPair::class);
-		$this->assertSame(['target'], array_keys($target));
-		$this->assertInstanceOf(SlugPair::class, $target['target']);
-		$this->assertSame(['voorzieningen', 'scenarioChange'], [$target['target']->register, $target['target']->schema]);
+		$target = SearchSelection::bySlug(
+			service: new SlugSearchWithTarget(),
+			register: 'voorzieningen',
+			schema: 'scenarioChange',
+			slugsClass: SlugPair::class
+		);
+		$this->assertSame(expected: ['target'], actual: array_keys($target));
+		$this->assertInstanceOf(expected: SlugPair::class, actual: $target['target']);
+		$this->assertSame(expected: ['voorzieningen', 'scenarioChange'], actual: [$target['target']->register, $target['target']->schema]);
 
-		$named = SearchSelection::bySlug(service: new SlugSearchNamed(), method: 'searchObjectsBySlug', register: 'voorzieningen', schema: 'view', slugsClass: SlugPair::class);
-		$this->assertSame(['registerSlug' => 'voorzieningen', 'schemaSlug' => 'view'], $named);
+		$named = SearchSelection::bySlug(service: new SlugSearchNamed(), register: 'voorzieningen', schema: 'view', slugsClass: SlugPair::class);
+		$this->assertSame(expected: ['registerSlug' => 'voorzieningen', 'schemaSlug' => 'view'], actual: $named);
 	}//end testSlugsAreOneTargetForASearchThatTakesOne()
 
 	/**
@@ -256,8 +261,8 @@ class SearchWithoutSelection {
 	 * @return void
 	 */
 	public function testSlugsStayNamedWithoutTheContractClass(): void {
-		$named = SearchSelection::bySlug(service: new SlugSearchWithTarget(), method: 'searchObjectsBySlug', register: 'r', schema: 's', slugsClass: 'No\\Such\\Slugs');
-		$this->assertSame(['registerSlug' => 'r', 'schemaSlug' => 's'], $named);
+		$named = SearchSelection::bySlug(service: new SlugSearchWithTarget(), register: 'r', schema: 's', slugsClass: 'No\\Such\\Slugs');
+		$this->assertSame(expected: ['registerSlug' => 'r', 'schemaSlug' => 's'], actual: $named);
 	}//end testSlugsStayNamedWithoutTheContractClass()
 }//end class
 
