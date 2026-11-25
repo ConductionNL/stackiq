@@ -273,24 +273,9 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 			return [];
 		}
 
-		$register = $this->settingsService->getRegisterIdForObjectType('contactPerson');
-		$schema   = $this->settingsService->getSchemaIdForObjectType('contactPerson');
-		if ($register === null || $schema === null) {
-			return [];
-		}
-
 		// A failed read is thrown, not taken as "nobody to notify": the job tries
 		// again, while an empty list would be recorded as resolved for good.
-		$people = $objectService->searchObjects(
-			...array_merge(
-				[
-					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-					'_rbac' => false,
-					'_multitenancy' => false,
-				],
-				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
-			)
-		);
+		$people = $this->contactPeople(objectService: $objectService, contactIds: $contactIds);
 
 		$userIds = [];
 		foreach ((array) $people as $person) {
@@ -315,28 +300,14 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 	 * @return array<string, string> User id per contact person id.
 	 *
 	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	public function contactUserIds(ObjectServiceInterface $objectService, array $contactIds): array {
 		$contactIds = array_values(array_unique($contactIds));
-		$register   = $this->settingsService->getRegisterIdForObjectType('contactPerson');
-		$schema     = $this->settingsService->getSchemaIdForObjectType('contactPerson');
-		if ($contactIds === [] || $register === null || $schema === null) {
+		if ($contactIds === []) {
 			return [];
 		}
 
-		// OpenRegister main takes the selection as one SearchOptions argument; older releases take `ids`.
-		$people = $objectService->searchObjects(
-			...array_merge(
-				[
-					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-					'_rbac' => false,
-					'_multitenancy' => false,
-				],
-				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
-			)
-		);
+		$people = $this->contactPeople(objectService: $objectService, contactIds: $contactIds);
 
 		$userIds = [];
 		foreach ((array) $people as $person) {
@@ -349,6 +320,41 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 
 		return $userIds;
 	}//end contactUserIds()
+
+	/**
+	 * The contact person objects with these ids, read without RBAC.
+	 *
+	 * OpenRegister main takes the id selection as one SearchOptions argument and
+	 * older releases take `ids`; SearchSelection picks the one this install has.
+	 * A failed read is thrown.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param array<int, string>     $contactIds    The contact person ids.
+	 *
+	 * @return array<int, ObjectEntityInterface> The people found; none when contactPerson is not configured.
+	 *
+	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
+	 */
+	private function contactPeople(ObjectServiceInterface $objectService, array $contactIds): array {
+		$register = $this->settingsService->getRegisterIdForObjectType('contactPerson');
+		$schema   = $this->settingsService->getSchemaIdForObjectType('contactPerson');
+		if ($register === null || $schema === null) {
+			return [];
+		}
+
+		return (array) $objectService->searchObjects(
+			...array_merge(
+				[
+					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+					'_rbac' => false,
+					'_multitenancy' => false,
+				],
+				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
+			)
+		);
+	}//end contactPeople()
 
 	/**
 	 * The contact person ids named as owner on the usages of a product.

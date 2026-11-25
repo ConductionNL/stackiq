@@ -94,7 +94,11 @@ final class MaintenanceRecipientContactUserIdsTest extends TestCase {
 			function (array $query = [], bool $_rbac = true, bool $_multitenancy = true, mixed ...$selection) use (&$asked): array {
 				// OpenRegister main passes one SearchOptions; older releases pass `ids`.
 				$given   = ($selection['options'] ?? $selection[0] ?? null);
-				$ids     = (is_object($given) === true ? $given->selection->ids : ($selection['ids'] ?? $given));
+				$ids     = ($selection['ids'] ?? $given);
+				if (is_object($given) === true) {
+					$ids = $given->selection->ids;
+				}
+
 				$asked[] = [$query, $_rbac, $ids];
 				return [$this->person('c-anna', 'book-anna'), $this->person('c-bob', 'card-bob'), $this->person('c-nobody', 'gone')];
 			}
