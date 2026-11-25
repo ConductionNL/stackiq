@@ -24,7 +24,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, revealSection } from './_ui.ts'
 
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
@@ -96,9 +96,7 @@ test('the application page lists its AI feature in the AI systems section', asyn
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.x}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByText('AI systems').first()).toBeVisible({
-		timeout: 30000,
-	})
+	await revealSection(page, 'AI systems')
 	await expect(page.getByText(chat).first()).toBeVisible({ timeout: 30000 })
 	await page.getByText(chat).first().click()
 	await expect(page).toHaveURL(new RegExp(`/ai-systems/${ids.chat}`))
@@ -157,6 +155,6 @@ test('an AI agent linked to a business process is listed on the process page', a
 	await expect(page.getByText(caseProcess).first()).toBeVisible({ timeout: 30000 })
 
 	await gotoAppRoute(page, `/processen/${ids.process}`)
-	await expect(page.getByText('AI systems').first()).toBeVisible({ timeout: 30000 })
+	await revealSection(page, 'AI systems')
 	await expect(page.getByText(agent).first()).toBeVisible({ timeout: 30000 })
 })
