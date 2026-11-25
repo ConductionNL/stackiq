@@ -15,7 +15,7 @@
  *
  * Fixtures are seeded as the admin through OpenRegister and removed again.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md
  */
 import type { APIRequestContext, Browser } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

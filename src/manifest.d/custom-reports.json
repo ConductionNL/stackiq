@@ -20,7 +20,7 @@
 					{ "slug": "compliancy", "label": "Compliances" }
 				]
 			},
-			"_note": "REQ-CER-004: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema"
+			"_note": "REQ-CER-004: openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema"
 		}
 	]
 }

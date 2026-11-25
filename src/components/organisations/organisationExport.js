@@ -8,7 +8,7 @@
  * lets the action show. Pure, so the rule is tested without a browser; the
  * server answers both from the same organisation rule.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
  */
 
 const EXPORT_PATH = '/apps/stackiq/api/archimate/export/organization/{organizationUuid}'

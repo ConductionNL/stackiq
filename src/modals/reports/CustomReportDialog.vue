@@ -31,7 +31,7 @@ import { profileFromForm, profilesUrl, reportFormSchema } from '../../views/repo
  * caller's OpenRegister export profile. OpenRegister makes the caller its
  * owner and checks the export right when the report runs.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
  */
 export default {
 	name: 'CustomReportDialog',
@@ -52,7 +52,7 @@ export default {
 	computed: {
 		/**
 		 * @return {object} The form's JSON schema.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		formSchema() {
 			return reportFormSchema(this.schema, (text) => t('stackiq', text))
@@ -67,7 +67,7 @@ export default {
 		 *
 		 * @param {object} form The form's answer.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		async onCreate(form) {
 			const profile = profileFromForm(form, { registerId: this.registerId, schemaId: this.schema.id })

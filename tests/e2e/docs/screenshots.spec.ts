@@ -31,8 +31,8 @@
  * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/tasks.md
  * @spec openspec/changes/connections-derived-dependencies/tasks.md
  * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
- * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
- * @spec openspec/changes/architecture-round-trip-check/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
  */
 

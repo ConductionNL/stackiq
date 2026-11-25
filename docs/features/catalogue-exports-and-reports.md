@@ -9,7 +9,7 @@ Take the catalogue out of the app as a file: the rows a list shows, the
 applications and services a GEMMA facet selection leaves, one organisation as
 ArchiMate, and reports you define yourself.
 
-Specification: [`openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md).
 
 ## Export a list (REQ-CER-001)
 

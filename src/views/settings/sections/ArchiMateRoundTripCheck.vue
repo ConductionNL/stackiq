@@ -6,7 +6,7 @@
   Check a model file: the admin picks an exchange file and a mode, and reads
   what the round trip through stackiq loses, per category.
 
-  @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+  @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 -->
 <template>
 	<div class="round-trip-check">
@@ -148,7 +148,7 @@ export default {
 		 *
 		 * @return {Array<object>}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		rows() {
 			return roundTripRows(this.report)
@@ -159,7 +159,7 @@ export default {
 		 *
 		 * @return {Array<object>}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		lossyRows() {
 			return this.rows.filter((row) => row.lossy && row.examples.length > 0)
@@ -170,7 +170,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		summary() {
 			return roundTripSummary(this.report)
@@ -181,7 +181,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		summaryType() {
 			if (this.report?.imported === false) {
@@ -200,7 +200,7 @@ export default {
 		 * @param {Event} event The change event of the file input.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		onFileChange(event) {
 			this.file = event.target.files?.[0] ?? null
@@ -213,7 +213,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		async runCheck() {
 			if (!this.file) {
@@ -237,7 +237,7 @@ export default {
 		 * @param {object} example An example from the report.
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+		 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
 		 */
 		exampleLine(example) {
 			const kinds = {

@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use RuntimeException;
 /**
  * Builds the CSV or XLSX export of a faceted catalogue list.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 class CatalogExportService implements CatalogExportServiceInterface {
 
@@ -78,7 +78,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 * @param IL10N                 $l10n      The cut-off row in the caller's language.
 	 * @param CatalogExportGate     $gate      Whether the caller may export a schema.
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public function __construct(
 		private readonly FacetServiceInterface $facets,
@@ -98,7 +98,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When it is not `module` or `catalogService`.
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public function assertSchema(string $schema): void {
 		if (in_array($schema, self::SCHEMAS, true) === false) {
@@ -113,7 +113,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public function mayExport(string $schema): bool {
 		return $this->gate->mayExport(schema: $schema);
@@ -130,7 +130,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 * @throws InvalidArgumentException On an unknown format.
 	 * @throws RuntimeException When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public function export(string $schema, CatalogExportRequest $request): array {
 		if (in_array($request->format, self::FORMATS, true) === false) {
@@ -287,7 +287,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public static function quickFilterQuery(array $quickFilter): array {
 		$query = [];
@@ -347,7 +347,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
 	public static function cell(mixed $value): string {
 		if ($value === null) {

@@ -758,7 +758,7 @@ export default {
 		 *
 		 * @param {string} format `csv` or `xlsx`.
 		 * @return {void}
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 		 */
 		exportList(format) {
 			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
