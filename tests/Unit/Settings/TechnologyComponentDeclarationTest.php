@@ -86,7 +86,8 @@ class TechnologyComponentDeclarationTest extends TestCase {
 		$this->assertSame('related-object', $schema['properties']['runsOn']['items']['objectConfiguration']['handling']);
 		$this->assertSame('date', $schema['properties']['endOfSupport']['format']);
 		$this->assertCount(11, $schema['properties']['class']['enum']);
-		$this->assertSame('In use', $schema['properties']['status']['default']);
+		// A new component starts in its lifecycle's initial state (lifecycle-initial-defaults.json).
+		$this->assertSame('Planned', $schema['properties']['status']['default']);
 		foreach (['class', 'archimateType', 'status'] as $enumField) {
 			$this->assertSame($schema['properties'][$enumField]['enum'], array_keys($schema['properties'][$enumField]['x-enum-labels']), $enumField);
 		}
