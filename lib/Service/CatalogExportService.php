@@ -46,7 +46,8 @@ use RuntimeException;
 /**
  * Builds the CSV or XLSX export of a faceted catalogue list.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coupling 14 (threshold 13): SearchSelection, which passes the matched ids to OpenRegister as its id selection, is the fourteenth.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coupling 14 (threshold 13): the fourteenth is SearchSelection,
+ *                                                  which passes the matched ids to OpenRegister as its id selection.
  *
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
