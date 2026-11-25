@@ -53,7 +53,7 @@ import { CnGraphCanvas, CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vu
 import { translate as t } from '@nextcloud/l10n'
 import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
-import { ensureObjectTypeOrSlug } from '../../utils/objectTypes.js'
+import { ensureObjectTypeOrSlug, ensureSettingsLoaded } from '../../utils/objectTypes.js'
 import { buildStepFlow } from '../../utils/processStepFlow.js'
 import { loadProcessSteps } from '../../utils/processStepUsages.js'
 
@@ -62,7 +62,7 @@ import { loadProcessSteps } from '../../utils/processStepUsages.js'
  * canvas. A step with a high risk or a failed compliance check is marked with
  * the error colour and says so in text (REQ-BPM-004).
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 export default {
 	name: 'ProcessStepFlow',
@@ -107,11 +107,14 @@ export default {
 		 * Load the steps and build the flow.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+		 * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
 		 */
 		async load() {
 			this.loading = true
 			try {
+				// Opened from a link, the store has no settings yet; without them
+				// the types do not register and the flow stayed empty.
+				await ensureSettingsLoaded()
 				ensureObjectTypeOrSlug('processStep')
 				ensureObjectTypeOrSlug('usage')
 				const { steps, usageNames } = await loadProcessSteps(this.objectId, {

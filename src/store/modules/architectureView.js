@@ -218,7 +218,8 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
 	 */
 	async function createElement({ type, name }) {
-		return create(SCHEMAS.element, { identifier: newIdentifier(), type, name, origin: 'drawn' })
+		// The element schema requires its ArchiMate property list; a new element has none yet.
+		return create(SCHEMAS.element, { identifier: newIdentifier(), type, name, origin: 'drawn', properties: [] })
 	}
 
 	/**
@@ -236,7 +237,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 		if (found) {
 			return found.identifier ?? uuidOf(found)
 		}
-		const created = await create(SCHEMAS.relation, { identifier: newIdentifier(), type, source, target, origin: 'drawn' })
+		const created = await create(SCHEMAS.relation, { identifier: newIdentifier(), type, source, target, origin: 'drawn', properties: [] })
 		return created.identifier ?? uuidOf(created)
 	}
 

@@ -165,7 +165,7 @@ describe('drawing and saving a view (REQ-AVE-001)', () => {
 		const saved = await store.saveView(view, canvas)
 
 		expect(api.tables.element).toEqual([
-			{ identifier: 'id-new-2', type: 'ApplicationComponent', name: 'Nieuw component', origin: 'drawn', '@self': { id: 'uuid-2' } },
+			{ identifier: 'id-new-2', type: 'ApplicationComponent', name: 'Nieuw component', origin: 'drawn', properties: [], '@self': { id: 'uuid-2' } },
 		])
 		expect(saved.xml.viewNodes[0].elementRef).toBe('id-new-2')
 		expect(api.calls.map(([method, url]) => `${method} ${url.slice(BASE.length)}`)).toEqual([
@@ -190,7 +190,7 @@ describe('relations behind connections (REQ-AVE-003)', () => {
 
 		expect(id).toBe('id-new-1')
 		expect(api.tables.relation.filter((r) => r.type === 'Flow')).toEqual([
-			{ identifier: 'id-new-1', type: 'Flow', source: 'id-el-a', target: 'id-el-b', origin: 'drawn', '@self': { id: 'uuid-1' } },
+			{ identifier: 'id-new-1', type: 'Flow', source: 'id-el-a', target: 'id-el-b', origin: 'drawn', properties: [], '@self': { id: 'uuid-1' } },
 		])
 		expect(api.calls[0]).toEqual(['GET', BASE + 'relation', { type: 'Flow', source: 'id-el-a', target: 'id-el-b', _limit: 1 }])
 	})
