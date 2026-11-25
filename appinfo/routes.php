@@ -109,7 +109,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
-        // @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+        // @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
         ['name' => 'settings#checkArchiMateRoundTrip', 'url' => '/api/archimate/round-trip-check', 'verb' => 'POST'],
         ['name' => 'settings#exportOrgArchiMate', 'url' => '/api/archimate/export/organization/{organizationUuid}', 'verb' => 'GET'],
         // Whether the caller may export that organisation: the detail page's action asks before it shows (insight-exports-and-custom-reports).
@@ -240,7 +240,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
 
         // The Applications and Services lists as filtered, as CSV or XLSX (insight-exports-and-custom-reports).
-        // @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+        // @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
         ['name' => 'catalogExport#export', 'url' => '/api/catalog/{schema}/export', 'verb' => 'GET'],
 
         // ========================================================================

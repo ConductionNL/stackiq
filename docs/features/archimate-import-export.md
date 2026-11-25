@@ -7,7 +7,7 @@
 
 Stackiq reads and writes ArchiMate exchange files (the Open Group exchange format, `.xml`). GEMMA models come in this way, and the catalogue goes out the same way to architecture tools such as BiZZdesign or Archi. The import, the export and the round-trip check are in the **ArchiMate** section of the app's admin settings (**Administration settings → Stackiq**). Only Nextcloud administrators can use them.
 
-Specification: [`openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md).
 
 ## Check a model file
 

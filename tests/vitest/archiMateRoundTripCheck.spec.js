@@ -8,7 +8,7 @@
  * picked file, the mode sent, the table with a row per category, the examples
  * of the categories with losses and the summary.
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

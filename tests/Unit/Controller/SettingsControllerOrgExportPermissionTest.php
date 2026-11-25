@@ -299,7 +299,7 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 	 */
 	public function testAPlainMemberExportsTheirOwnOrganisation(): void {
 		$controller = $this->makeController(

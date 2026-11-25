@@ -1645,7 +1645,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse The report, or the refusal.
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
 	 *
 	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only, and adminRefusal() checks again.
 	 */
@@ -1898,7 +1898,7 @@ class SettingsController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 	 */
 	public function orgExportAccess(string $organizationUuid): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -1941,7 +1941,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse|null 403 when refused, null when allowed.
 	 *
-	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
 	 */
 	private function verifyOrgScope(\OCP\IUser $currentUser, string $organizationUuid): ?JSONResponse {
 		$forbidden = new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);

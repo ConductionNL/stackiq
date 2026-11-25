@@ -6,7 +6,7 @@
  * The client side of the ArchiMate round-trip check: the rows per category,
  * the summary, and the upload request.
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

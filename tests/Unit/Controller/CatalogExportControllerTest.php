@@ -14,7 +14,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use RuntimeException;
 /**
  * The faceted catalogue export endpoint.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  */
 #[CoversClass(CatalogExportController::class)]
 #[UsesClass(CatalogExportRequest::class)]

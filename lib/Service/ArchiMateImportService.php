@@ -336,7 +336,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 *
 	 * @return array Import results with detailed status
 	 * @spec   openspec/specs/archimate-import/spec.md
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function importArchiMateFileFromPathOptimized(array $options = []): array {
 		$startTime = microtime(true);
@@ -470,7 +470,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 *
 	 * @return array{modelIdentifier: string, objects: list<array<string, mixed>>, timings: array<string, float>}|null Null when cancelled.
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function convertFileToObjects(string $filePath): ?array {
 		$this->initializeCache();
@@ -523,7 +523,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 *
 	 * @return string The identifier, or a generated fallback when the file names none.
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function modelIdentifierOfFile(string $filePath): string {
 		return $this->extractModelIdentifier(xmlData: $this->parseArchiMateXml(filePath: $filePath));

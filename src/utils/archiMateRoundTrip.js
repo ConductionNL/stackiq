@@ -7,7 +7,7 @@
  * `POST /api/archimate/round-trip-check` and the rows and summary the admin
  * settings page shows from its report.
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 
 import axios from '@nextcloud/axios'
@@ -33,7 +33,7 @@ export const CATEGORIES = ['elements', 'relationships', 'views', 'viewNodes', 'p
  * @param {string} category The category key.
  * @return {string}
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 export function categoryLabel(category) {
 	const labels = {
@@ -53,7 +53,7 @@ export function categoryLabel(category) {
  * @param {object} report The report the server answered.
  * @return {Array<{key: string, label: string, source: number, result: number, missing: number, extra: number, changed: number, examples: Array<object>, lossy: boolean}>}
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 export function roundTripRows(report) {
 	const categories = report?.categories ?? {}
@@ -82,7 +82,7 @@ export function roundTripRows(report) {
  * @param {object} report The report the server answered.
  * @return {string}
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 export function roundTripSummary(report) {
 	if (report?.imported === false) {
@@ -103,7 +103,7 @@ export function roundTripSummary(report) {
  * @return {Promise<object>} The report.
  * @throws {Error} With the server's message when the check fails.
  *
- * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
+ * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report
  */
 export async function checkRoundTrip(file, mode) {
 	const formData = new FormData()
