@@ -59,7 +59,7 @@ interface CronjobSettingsInterface {
 	 *
 	 * @return bool False only when the admin switched the job off.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md#task-3
 	 */
 	public function isCronjobEnabled(string $jobId): bool;
 
