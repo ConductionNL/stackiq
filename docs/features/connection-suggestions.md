@@ -10,7 +10,7 @@ The detail page of an **application in use** (`/gebruik/:id`) has a
 knows for this application that your usage does not have yet, so you do not
 have to register each one by hand.
 
-Specification: [`openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md).
+Specification: [`openspec/specs/derived-connections/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/derived-connections/spec.md).
 
 ![Suggested connections on an application in use](../images/connection-suggestions.png)
 

@@ -20,11 +20,12 @@
 import type { APIRequestContext } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { newApiContext } from './_fixtures.ts'
 import { dismissSupportDialog } from './_ui.ts'
 
-const FIXTURE = fileURLToPath(new URL('../../data/archimate_golden.xml', import.meta.url))
+// The suite loads as CommonJS (no import.meta), as the other specs do with __dirname.
+const FIXTURE = resolve(__dirname, '../../data/archimate_golden.xml')
 
 let apiCtx: APIRequestContext
 

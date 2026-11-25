@@ -59,6 +59,9 @@ final class ReferenceComponentCoverageServiceTest extends TestCase {
 		}
 
 		self::assertSame('zuiddrecht', $queries[0]['consumer']);
+		// The modules by `_ids`: OpenRegister main matches nothing for an `id` list.
+		self::assertSame(expected: ['m1'], actual: $queries[1]['_ids']);
+		self::assertArrayNotHasKey(key: 'id', array: $queries[1]);
 		self::assertSame('referentiecomponent', $queries[2]['gemmaType']);
 		self::assertTrue($coverage['truncated']);
 		self::assertSame(['Documentbeheercomponent' => 'gap', 'Zaakregistratiecomponent' => 'covered'], array_column($coverage['components'], 'state', 'name'));

@@ -159,6 +159,8 @@ the rows with an overlap in `overlap`, and the CSV column `overlapsWith` reads
 `component: application | application`, one component after another separated
 by `; `, empty for a row without overlap.
 
+![The Overlap section of the portfolio report](../images/portfolio-report-overlap.png)
+
 A usage that names no reference component can never overlap, so fill in the
 reference components on the usages first; the Reference component coverage
 page shows how many usages name none.

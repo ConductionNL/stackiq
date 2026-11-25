@@ -102,6 +102,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -301,6 +303,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -448,6 +452,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -597,6 +603,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -753,6 +761,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -882,6 +892,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -1080,6 +1092,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -1226,6 +1240,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -1354,6 +1370,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -1500,6 +1518,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -1720,6 +1740,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -2018,6 +2040,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }
@@ -2235,6 +2259,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "o-1",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }

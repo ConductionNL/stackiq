@@ -29,12 +29,13 @@
  * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/tasks.md
- * @spec openspec/changes/connections-derived-dependencies/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md
  * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -474,6 +475,91 @@ test.describe('documentation screenshots', () => {
 		await settle(page)
 		await expect(main.getByText('Processing contact persons')).toBeVisible({ timeout: 30_000 })
 		await shoot(page.locator('#app-content, main').first(), 'sync-status-running.png')
+	})
+
+	test('GEMMA plate, coverage on a view and the overlap in the portfolio report', async ({ page, baseURL }) => {
+		// A second municipality whose usages are in production and name the
+		// reference components they are used for: two applications for
+		// document registration (overlap), one for case registration
+		// (covered), and a contact system whose module declares the customer
+		// interaction component its usage does not name (a fillable gap).
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const element = (name: string, identifier: string, grouping: string): Promise<Obj> => ensure(request, String(amef.register), String(amef.element_schema || 'element'), {
+			identifier, type: 'ApplicationComponent', properties: [], name, gemmaType: 'referentiecomponent', grouping,
+		})
+		const zrc = await element('Zaakregistratiecomponent', 'e2e-gemma-referentiecomponent-zaakregistratie', 'Mid-office')
+		const drc = await element('Documentregistratiecomponent', 'voorbeeldstad-documentregistratiecomponent', 'Back-office')
+		const kic = await element('Klantinteractiecomponent', 'voorbeeldstad-klantinteractiecomponent', 'Front-office')
+		const orgName = `Gemeente ${SEED_PREFIX}-Noord`
+		const north = await ensure(request, register, 'organization', { name: orgName, type: 'Municipality' })
+		const byName = async (name: string): Promise<Obj> => ensure(request, register, 'module', { name })
+		const documents = await byName(`${SEED_PREFIX} Documentbeheer`)
+		const contact = await byName(`${SEED_PREFIX} Klantcontactsysteem`)
+		await request.patch(`${OBJECTS}/${register}/module/${contact.id}`, { data: { referenceComponents: [kic.id] } })
+		// A usage starts in Acquisition (which does not count); the administrator moves it into production.
+		const inProduction = async (module: Obj, components: string[]): Promise<void> => {
+			const row = await ensure(request, register, 'usage', { consumer: north.id, module: module.id, status: 'Acquisition', usedForReferenceComponents: components }, ['consumer', 'module'])
+			if (row.status !== 'In production') {
+				const moved = await request.patch(`${OBJECTS}/${register}/usage/${row.id}`, { data: { status: 'In production' } })
+				expect(moved.status(), await moved.text()).toBeLessThan(300)
+			}
+		}
+		await inProduction(main, [zrc.id, drc.id])
+		await inProduction(documents, [drc.id])
+		await inProduction(contact, [])
+		await request.dispose()
+
+		const pick = async (): Promise<void> => {
+			await page.getByRole('combobox', { name: 'Organisation' }).fill(orgName)
+			await page.locator('.vs__dropdown-option', { hasText: orgName }).first().click()
+		}
+
+		// The view the map draws on: this instance imports no GEMMA views, so
+		// the view list and the view are answered here; the coverage on its
+		// nodes is the real coverage of the rows above.
+		const viewId = 'voorbeeldstad-zaakgericht-werken'
+		const viewName = 'Zaakgericht werken (example)'
+		const node = (id: string, identifier: string, name: string, x: number): Record<string, unknown> => ({
+			viewNodeId: id, elementRef: `id-${identifier}`, modelNodeId: `id-${identifier}`, name, x, y: 0, width: 220, height: 110,
+		})
+		await page.route('**/apps/stackiq/api/views', (route: Route) => route.fulfill({ json: { success: true, views: [{ id: viewId, name: viewName }] } }))
+		await page.route(`**/apps/stackiq/api/views/${viewId}*`, (route: Route) => route.fulfill({
+			json: {
+				success: true,
+				view: {
+					id: viewId,
+					name: viewName,
+					viewNodes: [
+						node('n-kic', 'voorbeeldstad-klantinteractiecomponent', 'Klantinteractiecomponent', 0),
+						node('n-zrc', 'e2e-gemma-referentiecomponent-zaakregistratie', 'Zaakregistratiecomponent', 280),
+						node('n-drc', 'voorbeeldstad-documentregistratiecomponent', 'Documentregistratiecomponent', 560),
+					],
+					viewRelationships: [],
+				},
+			},
+		}))
+
+		await page.goto(`${APP}/gemma-plaat`)
+		await settle(page)
+		await pick()
+		const plate = page.getByTestId('gemma-plate-groups')
+		await expect(plate.getByRole('button', { name: /Documentregistratiecomponent/ })).toHaveAttribute('data-state', 'overlap', { timeout: 30_000 })
+		await expect(plate.getByRole('button', { name: /Documentregistratiecomponent/ })).toContainText(`${SEED_PREFIX} Documentbeheer`)
+		await shoot(page.locator('#app-content, main').first(), 'gemma-plate-coverage.png')
+
+		const map = page.getByTestId('coverage-view-map')
+		await map.getByRole('combobox', { name: 'GEMMA view' }).click()
+		await page.locator('.vs__dropdown-option', { hasText: viewName }).first().click()
+		await expect(map.locator('.coverage-view-map__node').filter({ hasText: 'Documentregistratiecomponent' })).toHaveAttribute('data-state', 'overlap', { timeout: 30_000 })
+		await shoot(map, 'gemma-plate-coverage-map.png')
+
+		await page.goto(`${APP}/portfolio-report`)
+		await settle(page)
+		await pick()
+		const overlap = page.getByTestId('pr-overlap')
+		await expect(overlap.getByTestId('pr-overlap-row').filter({ hasText: 'Documentregistratiecomponent' })).toBeVisible({ timeout: 30_000 })
+		await shoot(overlap, 'portfolio-report-overlap.png')
 	})
 
 	test('API documentation', async ({ page }) => {

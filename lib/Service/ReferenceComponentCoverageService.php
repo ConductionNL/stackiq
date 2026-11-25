@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  *
  * The caller has already checked the user may read the organisation.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  */
 class ReferenceComponentCoverageService implements ReferenceComponentCoverageServiceInterface {
 	/**
@@ -70,7 +70,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function build(string $organisationUuid): array {
 		$source   = $this->usageSource();
@@ -220,7 +220,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function buildCsv(string $organisationUuid): string {
 		$coverage = $this->build(organisationUuid: $organisationUuid);
@@ -298,10 +298,16 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	/**
 	 * The modules with these ids, by id, in one bounded read.
 	 *
+	 * Selected with `_ids`: OpenRegister main matches no row for an `id` list,
+	 * so every application in the coverage read "No application" on the plate
+	 * and on the map while its state still said Overlap.
+	 *
 	 * @param array<int,string>                         $ids    The module ids.
 	 * @param array{register:int,usage:int,module:int} $source The voorzieningen register and its schemas.
 	 *
 	 * @return array<string,array<string,mixed>> Modules by id.
+	 *
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	 */
 	private function modulesWithIds(array $ids, array $source): array {
 		if ($ids === [] || $source['module'] === 0) {
@@ -310,7 +316,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 
 		$modules = $this->lookup(query: [
 			'@self' => ['register' => $source['register'], 'schema' => $source['module']],
-			'id' => $ids,
+			'_ids' => $ids,
 			'_limit' => count($ids),
 		]);
 
@@ -354,10 +360,10 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 * @param array<string,mixed> $query The query, with `_limit`.
 	 *
 	 * @return array<string,mixed> The paginated result.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(array $query): array {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService')
-			->searchObjectsPaginated(query: $query, _rbac: false, _multitenancy: false);
+		return SearchSelection::paginatedUnscoped(service: $this->container->get('OCA\OpenRegister\Service\ObjectService'), query: $query);
 	}//end search()
 
 	/**

@@ -32,7 +32,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, revealSection } from './_ui.ts'
 
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
@@ -144,6 +144,7 @@ test('an API added from the application page is listed there and on the APIs lis
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.x}`)
 	await dismissSupportDialog(page)
+	await revealSection(page, 'APIs')
 	const apis = catalogCard(page, 'APIs')
 	await expect(apis).toBeVisible({ timeout: 30000 })
 
@@ -179,6 +180,7 @@ test('the application page lists its REST and event APIs with style and status',
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.y}`)
 	await dismissSupportDialog(page)
+	await revealSection(page, 'APIs')
 	const apis = catalogCard(page, 'APIs')
 	await expect(apis).toBeVisible({ timeout: 30000 })
 

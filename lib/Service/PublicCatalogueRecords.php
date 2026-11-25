@@ -251,11 +251,11 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	 * @param array<string, mixed> $query The query.
 	 *
 	 * @return list<array<string, mixed>> The normalised results.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(array $query): array {
 		try {
-			$result = $this->container->get('OCA\OpenRegister\Service\ObjectService')
-				->searchObjectsPaginated(query: $query, _rbac: false, _multitenancy: false);
+			$result = SearchSelection::paginatedUnscoped(service: $this->container->get('OCA\OpenRegister\Service\ObjectService'), query: $query);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PublicCatalogueRecords: search failed', ['error' => $e->getMessage()]);
 			return [];

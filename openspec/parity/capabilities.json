@@ -2176,23 +2176,23 @@
 			"bluedolphin": "yes",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies",
+				"state": "built",
+				"evidence": "src/views/organisaties/GemmaPlate.vue and CoverageViewMap.vue draw every reference component with its applications and state, grouped as the model or a GEMMA view groups them; lib/Service/ReferenceComponentCoverageService.php. Live 25 Nov 2026: tests/e2e/workflows/reference-component-coverage.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots gemma-plate-coverage.png, gemma-plate-coverage-map.png, portfolio-report-overlap.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-reference-component-coverage",
+				"change": "2026-11-25-architecture-reference-component-coverage",
 				"requirement": [
-					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps",
-					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-003 The coverage SHALL be drawn on a GEMMA view as a map"
+					"openspec/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps",
+					"openspec/specs/reference-component-coverage :: REQ-RCC-003 The coverage SHALL be drawn on a GEMMA view as a map"
 				]
 			},
-			"reachedOn": "Modules /modules facet by reference component (a list, not a map); the map itself only in Archi after the admin org export",
+			"reachedOn": "Reports & Compliance > GEMMA plate (plate and Coverage on a GEMMA view)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "high",
-			"note": "The mapping to GEMMA reference components exists, but there is no map view in stackiq; you only see it as a facet list or in Archi after an admin export. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
+			"note": "The mapping to GEMMA reference components exists, but there is no map view in stackiq; you only see it as a facet list or in Archi after an admin export. Specified in openspec/changes/archive/2026-11-25-architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/meta-model: 'A business capability is supported by an application'; https://help.sap.com/docs/leanix/ea/application-portfolio-assessment lists a 'Business capability map' (read 2026-09-26). Reached on: Reports > Landscape Report on Business Capabilities.",
 				"bluedolphin": "https://bluedolphin.io/capability-based-planning/: 'Drag and drop multi-layer current and future state capability mapping' and 'Drill down instantly from capability scores to the processes, applications, and technologies'; https://bluedolphin.io/application-portfolio-management-application-rationalization/: 'Connect applications to capabilities' (read 2026-09-26). Reached on: Views > capability map.",
@@ -2338,22 +2338,22 @@
 			"bluedolphin": "partial",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
+				"state": "built",
+				"evidence": "GET /api/reference-component-coverage (lib/Controller/ReferenceComponentCoverageController.php, lib/Service/ReferenceComponentCoverageDerivation.php) gives each reference component gap, covered or overlap, and marks a gap fillable when a used module declares it; CSV with format=csv. Live 25 Nov 2026: tests/e2e/workflows/reference-component-coverage.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots gemma-plate-coverage.png, gemma-plate-coverage-map.png, portfolio-report-overlap.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-reference-component-coverage",
+				"change": "2026-11-25-architecture-reference-component-coverage",
 				"requirement": [
-					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-001 Stackiq SHALL give each reference component a coverage state for one organisation",
-					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
+					"openspec/specs/reference-component-coverage :: REQ-RCC-001 Stackiq SHALL give each reference component a coverage state for one organisation",
+					"openspec/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
 				]
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Reports & Compliance > GEMMA plate (filters Gaps, Fillable gaps)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"note": "No report or view lists reference components that no application in your landscape covers. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
+			"note": "No report or view lists reference components that no application in your landscape covers. Specified in openspec/changes/archive/2026-11-25-architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://bluedolphin.io/capability-based-planning/: 'Run gap analyses to define a clear roadmap' and 'Identify capability gaps'. Gaps are found on the customer's own capability map; no reference architecture such as GEMMA is documented (read 2026-09-26). Reached on: Capability maps.",
 				"stackiq": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
@@ -3284,19 +3284,19 @@
 			"bluedolphin": "yes",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "grep for overlap/redundant in lib and src finds only code comments and the Reports card description (src/manifest.json:1031 'Overlapping and ageing software'); lib/Service/PortfolioReportService.php computes TIME quadrants, EOL exposure, cloud share and cost, no grouping by reference component; the /modules facet counts modules per reference component across the whole catalogue, not your landscape",
+				"state": "built",
+				"evidence": "Overlap on the GEMMA plate and in the portfolio report (lib/Service/PortfolioReportService.php overlapsWith, src/views/organisaties/PortfolioReport.vue pr-overlap). Live 25 Nov 2026: tests/e2e/workflows/reference-component-coverage.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots gemma-plate-coverage.png, gemma-plate-coverage-map.png, portfolio-report-overlap.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-reference-component-coverage",
-				"requirement": "openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
+				"change": "2026-11-25-architecture-reference-component-coverage",
+				"requirement": "openspec/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Reports & Compliance > GEMMA plate (filter Overlap); Portfolio report > Overlap",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "portfolio-rationalisation",
-			"note": "Nothing finds applications in your landscape that fulfil the same reference component; the Reports card promises 'overlapping' software but the report does not compute it. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
+			"note": "Nothing finds applications in your landscape that fulfil the same reference component; the Reports card promises 'overlapping' software but the report does not compute it. Specified in openspec/changes/archive/2026-11-25-architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization: 'Application rationalization reduces costs, eliminates redundancies', using applications mapped to business capabilities; overlap is found per customer capability, not per reference component (read 2026-09-26). Reached on: Reports > Landscape Report by Business Capability.",
 				"stackiq": "grep for overlap/redundant in lib and src finds only code comments and the Reports card description (src/manifest.json:1031 'Overlapping and ageing software'); lib/Service/PortfolioReportService.php computes TIME quadrants, EOL exposure, cloud share and cost, no grouping by reference component; the /modules facet counts modules per reference component across the whole catalogue, not your landscape",
@@ -3323,22 +3323,22 @@
 			"bluedolphin": "partial",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "appinfo/routes.php:303 GET /api/portfolio-report -> lib/Controller/PortfolioReportController.php -> lib/Service/PortfolioReportService.php + PortfolioReportDerivation.php; UI src/views/organisaties/PortfolioReport.vue (TIME chart :112, quadrant summary :126 with EOL exposure/cloud/cost, rows :176, CSV export :50)",
+				"state": "built",
+				"evidence": "The portfolio rationalization report shows overlap next to ageing: lib/Service/PortfolioReportService.php (overlapsWith, overlap count, CSV column), src/views/organisaties/PortfolioReport.vue. Live 25 Nov 2026: tests/e2e/workflows/reference-component-coverage.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots gemma-plate-coverage.png, gemma-plate-coverage-map.png, portfolio-report-overlap.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-reference-component-coverage",
+				"change": "2026-11-25-architecture-reference-component-coverage",
 				"requirement": [
-					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-004 The portfolio rationalization report SHALL show overlapping applications",
+					"openspec/specs/reference-component-coverage :: REQ-RCC-004 The portfolio rationalization report SHALL show overlapping applications",
 					"openspec/specs/portfolio-rationalization-time :: Portfolio rationalization report aggregates per organisation"
 				]
 			},
-			"reachedOn": "PortfolioReport /portfolio-report, from Reports /reports card 'Portfolio rationalization' (footer menu Reports)",
+			"reachedOn": "Reports > Portfolio report > Overlap",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "portfolio-rationalisation",
-			"note": "The report covers ageing software (EOL exposure) with TIME quadrants, cost and a CSV export, but not overlap, even though its card says 'overlapping and ageing'. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
+			"note": "The report covers ageing software (EOL exposure) with TIME quadrants, cost and a CSV export, but not overlap, even though its card says 'overlapping and ageing'. Specified in openspec/changes/archive/2026-11-25-architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization-evaluate-data: 'Leverage automated TIME classification, application portfolio and landscape reports ... to streamline application rationalization' (read 2026-09-26). Reached on: Use case Application Rationalization > reports.",
 				"stackiq": "appinfo/routes.php:303 GET /api/portfolio-report -> lib/Controller/PortfolioReportController.php -> lib/Service/PortfolioReportService.php + PortfolioReportDerivation.php; UI src/views/organisaties/PortfolioReport.vue (TIME chart :112, quadrant summary :126 with EOL exposure/cloud/cost, rows :176, CSV export :50)",
@@ -6693,15 +6693,15 @@
 			"name": "Carry an application's connections over automatically when a new version replaces the old one.",
 			"origin": "featureRequest",
 			"originUrl": "https://www.softwarecatalogus.nl/gebruikersonderzoek%202021",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "moduleVersion (lib/Settings/softwarecatalogus_register.json) is created on the Moduleversies index form; no copy of a version with its connections and no carry-over logic in lib/Service/ModuleVersionService.php",
+				"state": "built",
+				"evidence": "lib/Service/ConnectionSuggestionService.php (shared-landscape and carry-over suggestions, successor drafts), lib/Controller/ConnectionSuggestionController.php (consumer-or-participant guard), src/components/connections/ConnectionSuggestionsPanel.vue on the usage page; tests/Unit/Service/ConnectionSuggestionServiceTest.php, tests/Unit/Controller/ConnectionSuggestionControllerTest.php, Newman folder Connection suggestions. Live 25 Nov 2026: tests/e2e/workflows/connection-suggestions.spec.ts 2/2 on NC 34 + PostgreSQL + OpenRegister main.",
 				"owner": "ConductionNL/stackiq",
-				"change": "connections-derived-dependencies",
-				"requirement": "openspec/changes/connections-derived-dependencies/specs/derived-connections :: REQ-DCN-002 A replacing usage is offered the connections of the usage it replaces"
+				"change": "2026-11-25-connections-derived-dependencies",
+				"requirement": "openspec/specs/derived-connections :: REQ-DCN-002 A replacing usage is offered the connections of the usage it replaces"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Usage detail > Suggested connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
@@ -6714,7 +6714,7 @@
 				"glpi": "source read at 11.0.9: installations can be moved to another version by the massive action src/Item_SoftwareVersion.php:179 move_version, but impact relations (install/mysql/glpi-empty.sql:1247 glpi_impactrelations) point at the item and are never copied to a replacing version or appliance; grep -n 'Impact' src/SoftwareVersion.php returns nothing.",
 				"topdesk": "unknown: versions of applications are not modelled; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -6997,15 +6997,15 @@
 			"name": "Fill in an application's dependencies automatically from what is already known about connected items, instead of drawing each link by hand.",
 			"origin": "featureRequest",
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/336",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "connections are registered one at a time or arrive through the ArchiMate import (lib/Service/ArchiMateImportService.php); nothing derives dependencies from known relations",
+				"state": "built",
+				"evidence": "lib/Service/ConnectionSuggestionService.php (shared-landscape and carry-over suggestions, successor drafts), lib/Controller/ConnectionSuggestionController.php (consumer-or-participant guard), src/components/connections/ConnectionSuggestionsPanel.vue on the usage page; tests/Unit/Service/ConnectionSuggestionServiceTest.php, tests/Unit/Controller/ConnectionSuggestionControllerTest.php, Newman folder Connection suggestions. Live 25 Nov 2026: tests/e2e/workflows/connection-suggestions.spec.ts 2/2 on NC 34 + PostgreSQL + OpenRegister main.",
 				"owner": "ConductionNL/stackiq",
-				"change": "connections-derived-dependencies",
-				"requirement": "openspec/changes/connections-derived-dependencies/specs/derived-connections :: REQ-DCN-001 Stackiq suggests the known connections of an application inside the organisation's landscape"
+				"change": "2026-11-25-connections-derived-dependencies",
+				"requirement": "openspec/specs/derived-connections :: REQ-DCN-001 Stackiq suggests the known connections of an application inside the organisation's landscape"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Usage detail > Suggested connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
@@ -7018,7 +7018,7 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967645-use-datasource-to-create-relationships: 'how to automatically create relationships between objects based on a loaded datasource', for example application component to node (read 2026-09-26). Reached on: Admin > Sources > relationship creation.",
 				"topdesk": "unknown: relations are created by hand in the Relationships widget; automatic filling is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",

@@ -21,7 +21,7 @@
  @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
 
  @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
- @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 -->
 <template>
 	<div class="gemma-plate">
@@ -311,7 +311,7 @@ import {
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export default {
 	name: 'GemmaPlate',
@@ -364,7 +364,7 @@ export default {
 		 * Organisation options for the picker.
 		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		organisationOptions() {
 			return (objectStore.getCollection('organization')?.results || []).map(
@@ -382,7 +382,7 @@ export default {
 		 * The filter choices.
 		 *
 		 * @return {Array<{id: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		filterOptions() {
 			return [
@@ -397,7 +397,7 @@ export default {
 		 * The filtered components in their GEMMA groups.
 		 *
 		 * @return {Array<{name: string, components: Array<object>}>} Groups.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		groups() {
 			if (this.shownView) {
@@ -466,7 +466,7 @@ export default {
 		 * The same coverage as CSV.
 		 *
 		 * @return {string} The download URL.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 		 */
 		csvUrl() {
 			const organisation = encodeURIComponent(this.selectedOrg?.uuid || '')
@@ -483,7 +483,7 @@ export default {
 		 *
 		 * @param {Array<object>} options The organisation options.
 		 * @return {void}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		organisationOptions: {
 			immediate: true,
@@ -518,7 +518,7 @@ export default {
 	 * Load the organisations the picker offers.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	 */
 	async mounted() {
 		await loadObjectTypeCollection('organization')
@@ -632,7 +632,7 @@ export default {
 		 * Load the coverage of the selected organisation.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		async loadCoverage() {
 			this.selected = null
@@ -671,7 +671,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The names.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		applicationNames(component) {
 			const names = component.applications
@@ -685,7 +685,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The label.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		stateLabel(component) {
 			if (component.state === 'overlap') {
@@ -704,7 +704,7 @@ export default {
 		 *
 		 * @param {string} state gap, covered or overlap.
 		 * @return {string} A CnStatusBadge variant.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		stateVariant(state) {
 			return (

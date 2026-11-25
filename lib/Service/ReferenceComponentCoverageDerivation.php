@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ namespace OCA\Stackiq\Service;
  * application. A gap is fillable when a module the organisation uses declares
  * the component in its `referenceComponents`.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  */
 class ReferenceComponentCoverageDerivation {
 	/**
@@ -57,7 +57,7 @@ class ReferenceComponentCoverageDerivation {
 	 *
 	 * @return array{summary: array<string,int>, components: array<int,array<string,mixed>>}
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function derive(array $components, array $usages, array $moduleNames, array $moduleComponents): array {
 		$covered = $this->applicationsByComponent(usages: $usages, moduleNames: $moduleNames);
@@ -217,7 +217,7 @@ class ReferenceComponentCoverageDerivation {
 	 *
 	 * @return array{identifier: string, name: string, group: string, documentation: string}
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 	 */
 	private static function componentFacts(array $component): array {
 		return [

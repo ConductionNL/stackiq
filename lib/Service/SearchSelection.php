@@ -73,6 +73,56 @@ final class SearchSelection {
 	}//end ids()
 
 	/**
+	 * The named arguments for a search whose query may hold an `id` filter.
+	 *
+	 * OpenRegister main matches nothing for an `id` (one id or a list) inside
+	 * the query: the id selection is a SearchOptions argument there, and
+	 * `ids` in older releases. This lifts the `id` out of the query into that
+	 * selection. An empty id list stays in the query, so it still finds
+	 * nothing rather than everything.
+	 *
+	 * @param object               $service The object service.
+	 * @param string               $method  The search method that will be called.
+	 * @param array<string, mixed> $query   The search query.
+	 *
+	 * @return array<string, mixed> `query` and, for an id filter, the selection argument.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	public static function fromQuery(object $service, string $method, array $query): array {
+		if (array_key_exists('id', $query) === false) {
+			return ['query' => $query];
+		}
+
+		$ids = array_values(array_filter((array)$query['id'], 'is_string'));
+		if ($ids === [] || self::selectsIds(service: $service, method: $method) === false) {
+			return ['query' => $query];
+		}
+
+		unset($query['id']);
+		return array_merge(['query' => $query], self::ids(service: $service, method: $method, ids: $ids));
+	}//end fromQuery()
+
+	/**
+	 * A paginated search without RBAC or multitenancy, its `id` filter as the selection.
+	 *
+	 * @param object               $service The object service.
+	 * @param array<string, mixed> $query   The search query.
+	 *
+	 * @return array<string, mixed> The paginated result.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	public static function paginatedUnscoped(object $service, array $query): array {
+		return $service->searchObjectsPaginated(
+			...array_merge(
+				self::fromQuery(service: $service, method: 'searchObjectsPaginated', query: $query),
+				['_rbac' => false, '_multitenancy' => false]
+			)
+		);
+	}//end paginatedUnscoped()
+
+	/**
 	 * The named arguments that select the objects using an object.
 	 *
 	 * @param object $service The object service the search is called on.
@@ -135,6 +185,30 @@ final class SearchSelection {
 
 		return null;
 	}//end installedPair()
+
+	/**
+	 * Whether the search method takes an id selection at all (`options` or `ids`).
+	 *
+	 * @param object $service The object service.
+	 * @param string $method  The search method.
+	 *
+	 * @return bool False for a search that takes neither, which keeps the `id` in its query.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	private static function selectsIds(object $service, string $method): bool {
+		if (method_exists($service, $method) === false) {
+			return false;
+		}
+
+		foreach ((new ReflectionMethod($service, $method))->getParameters() as $parameter) {
+			if (in_array($parameter->getName(), ['options', 'ids'], true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end selectsIds()
 
 	/**
 	 * Whether the search method takes an `options` parameter.

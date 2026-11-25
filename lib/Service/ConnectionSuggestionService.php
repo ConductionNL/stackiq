@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Both suggestion sources and accept/dismiss share one set of queries.
  * @SuppressWarnings(PHPMD.StaticAccess) RelationRefs is a pure reader of relation values.
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  */
 class ConnectionSuggestionService implements ConnectionSuggestionServiceInterface {
 	/**
@@ -98,7 +98,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	public function findUsage(string $usageUuid): ?array {
 		try {
@@ -128,7 +128,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return boolean
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	public function mayChange(array $usage, ?string $organisation): bool {
 		if ($organisation === null || $organisation === '') {
@@ -150,7 +150,8 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	public function suggestFor(array $usage): array {
 		$module = RelationRefs::ref(value: ($usage['module'] ?? null));
@@ -173,10 +174,13 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 			)
 		);
 
+		// Carry-over first: a connection the older usage already had is offered
+		// for that reason even when it also lies in the landscape (a national
+		// provision always does), so the more specific reason wins the dedupe.
 		$suggestions = [];
 		$candidates = array_merge(
-			$this->landscapeSuggestions(module: $module, others: $others),
-			$this->carryOverSuggestions(usage: $usage, module: $module, others: $others)
+			$this->carryOverSuggestions(usage: $usage, module: $module, others: $others),
+			$this->landscapeSuggestions(module: $module, others: $others)
 		);
 		foreach ($candidates as $suggestion) {
 			if (isset($skip[$suggestion['id']]) === false && isset($suggestions[$suggestion['id']]) === false) {
@@ -196,7 +200,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return list<string> The connection uuids added to the usage.
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	public function accept(array $usage, array $ids): array {
 		$added = [];
@@ -225,7 +229,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return list<string> The ids dismissed.
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
 	 */
 	public function dismiss(array $usage, array $ids): array {
 		$dismissed = array_map(static fn (array $suggestion): string => $suggestion['id'], $this->chosen(usage: $usage, ids: $ids));
@@ -277,7 +281,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	private function carryOverSuggestions(array $usage, string $module, array $others): array {
 		$version = RelationRefs::ref(value: ($usage['moduleVersion'] ?? null));

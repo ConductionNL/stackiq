@@ -91,7 +91,7 @@ import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
  * connections, Dismiss hides it for good; the server checks that the caller's
  * organisation owns the usage on every request.
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  */
 export default {
 	name: 'ConnectionSuggestionsPanel',
@@ -131,7 +131,7 @@ export default {
 		 * Reload the suggestions when the page moves to another usage.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		objectId() {
 			this.load()
@@ -150,7 +150,7 @@ export default {
 		 *
 		 * @param {string} action '' for the listing, else 'accept' or 'dismiss'.
 		 * @return {string} The URL.
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		url(action = '') {
 			const path = '/apps/stackiq/api/usages/{uuid}/connection-suggestions' + (action ? '/' + action : '')
@@ -161,7 +161,7 @@ export default {
 		 * Read the suggestions for this usage.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		async load() {
 			if (!this.objectId) {
@@ -189,7 +189,7 @@ export default {
 		 *
 		 * @param {string[]} ids The suggestion ids.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		async accept(ids) {
 			const done = await this.post('accept', ids, 'accepted')
@@ -204,7 +204,7 @@ export default {
 		 *
 		 * @param {string[]} ids The suggestion ids.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		async dismiss(ids) {
 			await this.post('dismiss', ids, 'dismissed')
@@ -217,7 +217,7 @@ export default {
 		 * @param {string[]} ids The suggestion ids.
 		 * @param {string} key The reply key that lists what was handled.
 		 * @return {Promise<Array|null>} What the server handled, or null on failure.
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		async post(action, ids, key) {
 			this.busy = true
@@ -242,7 +242,7 @@ export default {
 		 *
 		 * @param {object} suggestion The suggestion.
 		 * @return {string} The type and direction, or ''.
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		describe(suggestion) {
 			return [suggestion.type, suggestion.direction]
@@ -255,7 +255,7 @@ export default {
 		 *
 		 * @param {object} suggestion The suggestion.
 		 * @return {string} The translated reason.
-		 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+		 * @spec openspec/specs/derived-connections/spec.md
 		 */
 		reasonLabel(suggestion) {
 			if (suggestion.reason === 'carry-over') {

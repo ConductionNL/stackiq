@@ -144,3 +144,29 @@ export async function clickAction(
 		.first()
 		.click()
 }
+
+/**
+ * Scroll a detail page until a section titled `title` has mounted, and bring it into view.
+ *
+ * Detail-page widgets below the fold mount only when scrolled into view, so a
+ * section further down is absent from the DOM until the page is scrolled.
+ *
+ * @param page The page.
+ * @param title The section's exact title.
+ * @return Nothing.
+ */
+export async function revealSection(page: Page, title: string): Promise<void> {
+	// Inside the page's main content: the navigation can carry the same words.
+	const heading = page.locator('main').getByText(title, { exact: true }).first()
+	await page.mouse.move(800, 450)
+	await expect
+		.poll(async () => {
+			if ((await heading.count()) > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30000 })
+		.toBe(1)
+	await heading.scrollIntoViewIfNeeded()
+}
