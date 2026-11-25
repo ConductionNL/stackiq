@@ -136,7 +136,7 @@ export function buildCsvExportUrl(baseUrl, organisationUuid) {
  *
  * @param {Array<object>} rows The report rows.
  * @return {Array<{componentId: string, component: string, applications: Array<string>}>} The groups.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
  */
 export function overlapGroups(rows) {
 	const groups = new Map()

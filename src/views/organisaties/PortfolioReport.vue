@@ -445,7 +445,7 @@ export default {
 		 * The overlapping reference components, each with its applications.
 		 *
 		 * @return {Array<object>} Overlap groups, empty without overlap.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 		 */
 		overlaps() {
 			return overlapGroups(this.report?.rows)
@@ -455,7 +455,7 @@ export default {
 		 * How many applications in use overlap, as a sentence.
 		 *
 		 * @return {string} The hint.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 		 */
 		overlapHint() {
 			return n(
@@ -564,7 +564,7 @@ export default {
 		 *
 		 * @param {object} row The report row.
 		 * @return {string} e.g. "Zaaksysteem: Zaken Twee".
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 		 */
 		overlapTitle(row) {
 			return (row.overlapsWith || [])

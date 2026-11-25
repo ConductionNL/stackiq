@@ -8,7 +8,7 @@
  * states, the download link, the truncation warning and hint, the filters
  * and the detail panel of a picked component.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md
+ * @spec openspec/specs/reference-component-coverage/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

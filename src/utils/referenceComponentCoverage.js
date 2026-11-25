@@ -7,7 +7,7 @@
  * @param {Array<object>} components Coverage rows from the endpoint.
  * @param {string} filter all, gap, fillable or overlap.
  * @return {Array<object>} The kept rows.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export function filterCoverage(components, filter) {
 	if (filter === 'gap' || filter === 'overlap') {
@@ -26,7 +26,7 @@ export function filterCoverage(components, filter) {
  * @param {Array<object>} components Coverage rows.
  * @param {string} fallback The name for rows without a group.
  * @return {Array<{name: string, components: Array<object>}>} Groups.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export function groupCoverage(components, fallback) {
 	return groupsInOrder(
@@ -90,7 +90,7 @@ const bareIdentifier = (identifier) => String(identifier ?? '').trim().replace(/
  * @param {Array<object>} viewRelationships The view's connections (`viewRelationships`).
  * @param {Array<object>} components Coverage rows from the endpoint.
  * @return {{nodes: Array<object>, edges: Array<object>}} The graph.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
  */
 export function coverageMapGraph(viewNodes = [], viewRelationships = [], components = []) {
 	const byIdentifier = new Map()

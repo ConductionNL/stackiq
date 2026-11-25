@@ -48,7 +48,7 @@ interface ReferenceComponentCoverageServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function build(string $organisationUuid): array;
 
@@ -61,7 +61,7 @@ interface ReferenceComponentCoverageServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function buildCsv(string $organisationUuid): string;
 }//end interface
