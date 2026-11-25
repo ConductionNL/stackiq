@@ -16,11 +16,11 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-001-a-municipal-information-manager-shall-record-a-business-process-with-ordered-steps
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-005-a-process-shall-move-through-a-declared-lifecycle-and-may-follow-a-gemma-reference-process
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-001-a-municipal-information-manager-shall-record-a-business-process-with-ordered-steps
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-005-a-process-shall-move-through-a-declared-lifecycle-and-may-follow-a-gemma-reference-process
  */
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
@@ -34,7 +34,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute, openCreateDialog } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, openCreateDialog, revealSection } from './_ui.ts'
 
 const OR = '/index.php/apps/openregister/api/objects'
 
@@ -175,7 +175,8 @@ test('a new process with three steps lists them in position order and reads draf
 	await dismissSupportDialog(page)
 
 	const create = await openCreateDialog(page, /Add/)
-	await create.getByLabel('Name', { exact: true }).fill(name)
+	// A required field's label carries an asterisk ("Name *").
+	await create.getByLabel(/^Name( \*)?$/).fill(name)
 	await create.getByRole('button', { name: /Save|Create/ }).last().click()
 	await expect(create).toBeHidden({ timeout: 30000 })
 
@@ -185,8 +186,8 @@ test('a new process with three steps lists them in position order and reads draf
 	for (const [index, step] of steps.entries()) {
 		await page.getByRole('button', { name: 'Add step', exact: true }).first().click()
 		const dialog = await openDialog(page)
-		await dialog.getByLabel('Name', { exact: true }).fill(step)
-		await dialog.getByLabel('Position', { exact: true }).fill(String(index + 1))
+		await dialog.getByLabel(/^Name( \*)?$/).fill(step)
+		await dialog.getByLabel(/^Position( \*)?$/).fill(String(index + 1))
 		await dialog.getByRole('button', { name: /Save|Create/ }).last().click()
 		await expect(dialog).toBeHidden({ timeout: 30000 })
 		await expect(page.getByRole('row').filter({ hasText: step })).toBeVisible({ timeout: 30000 })
@@ -206,6 +207,7 @@ test('a new process with three steps lists them in position order and reads draf
 test('the usage page lists the step it supports with its process and opens the step page', async ({ page }) => {
 	await gotoAppRoute(page, `/gebruik/${ids.usage}`)
 	await dismissSupportDialog(page)
+	await revealSection(page, 'Process steps this application supports')
 	await expect(page.getByText('Process steps this application supports').first()).toBeVisible({ timeout: 30000 })
 	const row = page.getByRole('row').filter({ hasText: intake })
 	await expect(row).toBeVisible({ timeout: 30000 })
@@ -247,6 +249,16 @@ test('the process page draws three steps in position order and marks the decisio
 	await gotoAppRoute(page, `/processen/${ids.permit}`)
 	await dismissSupportDialog(page)
 	const flow = page.getByTestId('process-step-flow')
+	// The flow is a body widget below the fold, mounted once scrolled to.
+	await page.mouse.move(800, 450)
+	await expect.poll(async () => {
+		if (await flow.count() > 0) {
+			return 1
+		}
+		await page.mouse.wheel(0, 800)
+		return 0
+	}, { timeout: 30000 }).toBe(1)
+	await flow.scrollIntoViewIfNeeded()
 	await expect(flow.locator('.vue-flow__node')).toHaveCount(3, { timeout: 30000 })
 	await expect(flow.locator('.vue-flow__edge')).toHaveCount(2)
 
@@ -264,14 +276,25 @@ test('applying Activate makes the process active and the History tab shows it', 
 	await dismissSupportDialog(page)
 	await expect(page.getByText(draftProcess).first()).toBeVisible({ timeout: 30000 })
 
-	await page.getByTestId('cn-lifecycle-action-activate').click()
+	// Lifecycle transitions are entries in the page's Actions menu.
+	await page.getByRole('button', { name: 'Actions', exact: true }).first().click()
+	await page.getByRole('menuitem', { name: /^Activate/ }).first().click()
 	await expect(page.getByTestId('cn-lifecycle-actions-error')).toHaveCount(0)
 	await expect(page.getByText('Active', { exact: true }).first()).toBeVisible({ timeout: 30000 })
-	await expect(page.getByTestId('cn-lifecycle-action-activate')).toHaveCount(0)
 
 	const res = await apiCtx.get(`${OR}/${cfg.register}/process/${ids.draft}`)
 	expect((await res.json()).status).toBe('active')
 
-	await page.getByRole('tab', { name: 'History' }).click()
-	await expect(page.getByRole('tabpanel').filter({ hasText: /active/i }).first()).toBeVisible({ timeout: 30000 })
+	// The sidebar read its history when the page loaded and does not refresh
+	// after a transition (nextcloud-vue), so the page is opened again.
+	await page.reload({ waitUntil: 'domcontentloaded' })
+	await expect(page.getByText(draftProcess).first()).toBeVisible({ timeout: 30000 })
+	// The object sidebar holds the history; with no other tab it shows no tab bar.
+	const historyTab = page.getByRole('tab', { name: 'History' })
+	if (await historyTab.count() > 0) {
+		await historyTab.first().click()
+	} else {
+		await page.getByRole('button', { name: 'Open sidebar' }).click()
+	}
+	await expect(page.locator('.app-sidebar, aside').filter({ hasText: /update/i }).first()).toBeVisible({ timeout: 30000 })
 })

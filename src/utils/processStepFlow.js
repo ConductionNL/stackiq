@@ -9,7 +9,7 @@
  * `follows`; a step that follows nothing named runs on from the step(s) with
  * the next lower position. Positions come from the shared flow layout.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 
 import { layoutFlowNodes } from '@conduction/nextcloud-vue/src/composables/flowGraphLayout.js'
@@ -35,7 +35,7 @@ export function stepRefId(ref) {
  *
  * @param {object} step - a processStep.
  * @return {boolean}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
  */
 export function stepNeedsAttention(step) {
 	return step?.riskLevel === 'high' || step?.complianceCheck === 'not compliant'
@@ -46,7 +46,7 @@ export function stepNeedsAttention(step) {
  *
  * @param {Array<object>} steps - the process's steps.
  * @return {Array<object>} A new, sorted array.
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-001-a-municipal-information-manager-shall-record-a-business-process-with-ordered-steps
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-001-a-municipal-information-manager-shall-record-a-business-process-with-ordered-steps
  */
 export function orderSteps(steps) {
 	return (Array.isArray(steps) ? steps : [])
@@ -60,7 +60,7 @@ export function orderSteps(steps) {
  *
  * @param {Array<object>} ordered - the steps in process order.
  * @return {Array<{id: string, source: string, target: string}>}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 export function stepEdges(ordered) {
 	const ids = new Set(ordered.map(stepRefId))
@@ -88,7 +88,7 @@ export function stepEdges(ordered) {
  * @param {Array<object>} steps - the process's steps.
  * @param {Record<string, string>} [usageNames] - application names by usage id.
  * @return {{nodes: Array<object>, edges: Array<object>}}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 export function buildStepFlow(steps, usageNames = {}) {
 	const ordered = orderSteps(steps)

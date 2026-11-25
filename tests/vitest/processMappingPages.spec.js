@@ -6,7 +6,7 @@
  * way src/main.js merges it), their columns and filters against the real
  * process and processStep schemas, and the step list on the usage page.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md
+ * @spec openspec/specs/business-process-mapping/spec.md
  */
 
 import addFormats from 'ajv-formats'
