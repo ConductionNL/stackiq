@@ -206,7 +206,7 @@ class ViewService implements ViewServiceInterface {
 	 *
 	 * @throws \RuntimeException When OpenRegister or the view configuration is missing.
 	 *
-	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
 	 */
 	public function findStoredView(string $viewId): ?array {
 		if (trim($viewId) === '') {

@@ -6,7 +6,7 @@
 /**
  * The Export menu of an architecture view: its actions, the filinq notice, and the document request.
  *
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
