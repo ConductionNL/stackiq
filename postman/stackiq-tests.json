@@ -7391,7 +7391,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{openregister_api}}/objects/{{register_name}}/organisatie?organisatieType=Leverancier&_limit=1",
+							"raw": "{{openregister_api}}/objects/{{register_name}}/organization?organisatieType=Leverancier&_limit=1",
 							"host": [
 								"{{openregister_api}}"
 							],
@@ -7557,7 +7557,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/dienst?_limit=5",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/catalogService?_limit=5",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7622,7 +7622,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_search=Theekop",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organization?_search=Theekop",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7687,7 +7687,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_search=Theekop",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organization?_search=Theekop",
 							"host": [
 								"{{base_url}}"
 							],
@@ -13281,7 +13281,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_limit=10",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organization?_limit=10",
 							"host": [
 								"{{base_url}}"
 							],
@@ -16813,7 +16813,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{openregister_api}}/objects/{{register_name}}/contactpersoon?_limit=1&_fields=id,e-mailadres",
+							"raw": "{{openregister_api}}/objects/{{register_name}}/contactPerson?_limit=1&_fields=id,e-mailadres",
 							"host": [
 								"{{openregister_api}}"
 							],
@@ -16865,7 +16865,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{openregister_api}}/objects/{{register_name}}/contactpersoon?_limit=5&_fields=id,e-mailadres,@self",
+							"raw": "{{openregister_api}}/objects/{{register_name}}/contactPerson?_limit=5&_fields=id,e-mailadres,@self",
 							"host": [
 								"{{openregister_api}}"
 							],
@@ -18900,7 +18900,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/connection/{{test_koppeling_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -18999,7 +18999,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_no_usage_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/connection/{{test_koppeling_no_usage_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -19063,7 +19063,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/connection/{{test_koppeling_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -22038,7 +22038,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{openregister_api}}/objects/{{register_name}}/koppeling?_limit=1&_fields=id,naam,moduleA,moduleB",
+							"raw": "{{openregister_api}}/objects/{{register_name}}/connection?_limit=1&_fields=id,naam,moduleA,moduleB",
 							"host": [
 								"{{openregister_api}}"
 							],
