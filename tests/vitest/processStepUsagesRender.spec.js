@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const store = vi.hoisted(() => ({ fetchObject: vi.fn() }))
 
 vi.mock('../../src/store/store.js', () => ({ objectStore: store }))
-vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn() }))
+vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn(), ensureSettingsLoaded: vi.fn(async () => {}) }))
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text) => text,
 	translatePlural: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)),

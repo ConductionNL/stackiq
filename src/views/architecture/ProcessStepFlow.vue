@@ -53,7 +53,7 @@ import { CnGraphCanvas, CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vu
 import { translate as t } from '@nextcloud/l10n'
 import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
-import { ensureObjectTypeOrSlug } from '../../utils/objectTypes.js'
+import { ensureObjectTypeOrSlug, ensureSettingsLoaded } from '../../utils/objectTypes.js'
 import { buildStepFlow } from '../../utils/processStepFlow.js'
 import { loadProcessSteps } from '../../utils/processStepUsages.js'
 
@@ -112,6 +112,9 @@ export default {
 		async load() {
 			this.loading = true
 			try {
+				// Opened from a link, the store has no settings yet; without them
+				// the types do not register and the flow stayed empty.
+				await ensureSettingsLoaded()
 				ensureObjectTypeOrSlug('processStep')
 				ensureObjectTypeOrSlug('usage')
 				const { steps, usageNames } = await loadProcessSteps(this.objectId, {

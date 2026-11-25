@@ -21,7 +21,7 @@ const store = vi.hoisted(() => ({
 }))
 
 vi.mock('../../src/store/store.js', () => ({ objectStore: store }))
-vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn() }))
+vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn(), ensureSettingsLoaded: vi.fn(async () => {}) }))
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? '')),
 }))
