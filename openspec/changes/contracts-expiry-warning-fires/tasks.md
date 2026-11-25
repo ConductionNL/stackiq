@@ -31,7 +31,10 @@
   - GIVEN the register re-imported and one Active contract with an end date 30 days out WHEN OpenRegister's `ScheduledNotificationJob` runs (`occ background-job:execute <id> --force-execute`) THEN an admin in `software-catalog-admins` has a notification reading `Contract expiring: <number> (end date <date>)`
   - GIVEN the same contract WHEN the job runs a second time THEN no second notification appears
   - GIVEN the job's log line `fired "contract-expiry"` WHEN it is read THEN `matched` and `dispatched` are at least 1
-- [ ] Run and record
+- [x] Run and record (25 Nov 2026, sandbox Nextcloud 34 + OpenRegister main, admin in `software-catalog-admins`; contracts made Active through `approvalState: approved`, as the approved decision writes them)
+  - Contract VBS-2026-017, end date 30 days out: the job's run left admin one notification `Contract expiring: VBS-2026-017 (end date 2026-12-25)`.
+  - A second forced run (`occ background-job:execute <ScheduledNotificationJob id> --force-execute`) logged `fired "contract-expiry" on schema 48: matched=2 dispatched=0 deduped=2 of 4`, and no second notification appeared.
+  - A fresh contract VBS-2026-018 (end date 45 days out) and one run: `matched=3 dispatched=1 deduped=2 of 5` and the notification `Contract expiring: VBS-2026-018 (end date 2027-01-09)`; the next run `matched=3 dispatched=0 deduped=3 of 5`.
 
 ### Task 4: Document the warning
 - **spec_ref**: openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-001-the-contract-expiry-rule-must-match-active-and-expiring-contracts-whose-end-date-falls-within-90-days
