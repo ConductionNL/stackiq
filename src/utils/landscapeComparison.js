@@ -22,7 +22,7 @@ export const COMPARISON_PATH = '/apps/stackiq/api/landscape-comparison'
  * @param {string}      [options.date]       The Y-m-d date.
  * @param {string|null} [options.scenario]   The scenario uuid.
  * @return {object} The query parameters.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function comparisonParams({ organisation, date = '', scenario = null }) {
 	const params = { organisation }
@@ -40,7 +40,7 @@ export function comparisonParams({ organisation, date = '', scenario = null }) {
  *
  * @param {object} row A row of `applications`.
  * @return {string} Added, Removed, Replaced by … or Unchanged.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function changeLabel(row) {
 	switch (row?.change) {
@@ -60,7 +60,7 @@ export function changeLabel(row) {
  *
  * @param {object} row A row of `applications`.
  * @return {string} The sources.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
  */
 export function sourceLabel(row) {
 	const sources = Array.isArray(row?.sources) && row.sources.length > 0
@@ -82,7 +82,7 @@ export function sourceLabel(row) {
  *
  * @param {object|null} report The comparison answer.
  * @return {Array<object>} Rows with `id`, `application`, `change`, `source` and `date`.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function applicationRows(report) {
 	return (report?.applications || [])
@@ -101,7 +101,7 @@ export function applicationRows(report) {
  *
  * @param {string} state covered, gap or overlap.
  * @return {string} The word.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function coverageStateLabel(state) {
 	if (state === 'covered') {
@@ -118,7 +118,7 @@ export function coverageStateLabel(state) {
  *
  * @param {string} change gap closed, gap opened, overlap resolved or overlap created.
  * @return {string} The word.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function coverageChangeLabel(change) {
 	switch (change) {
@@ -138,7 +138,7 @@ export function coverageChangeLabel(change) {
  *
  * @param {object|null} report The comparison answer.
  * @return {Array<object>} Rows with `id`, `component`, `today`, `future` and `change`.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function coverageRows(report) {
 	return (report?.coverage || []).map((row, index) => ({
@@ -156,7 +156,7 @@ export function coverageRows(report) {
  * @param {object|null} report The comparison answer.
  * @param {string}      side   today or future.
  * @return {Array<string>} The application names.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function landscapeNames(report, side) {
 	return (report?.landscapes?.[side] || []).map((entry) => entry.moduleName || entry.module || '')
@@ -167,7 +167,7 @@ export function landscapeNames(report, side) {
  *
  * @param {{change: (object|null), message: string}} failed The failure.
  * @return {string} The notice.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function applyFailureNotice(failed) {
 	if (!failed?.change) {
@@ -186,7 +186,7 @@ export function applyFailureNotice(failed) {
  *
  * @param {Array<object>|null|undefined} records The organisation records.
  * @return {Array<{uuid: string, label: string}>} The options.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export function organisationPickerOptions(records) {
 	return (records || []).map((record) => {

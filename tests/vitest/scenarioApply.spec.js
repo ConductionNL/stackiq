@@ -5,7 +5,7 @@
  * Applying an adopted scenario writes each change to its usage once, and marks
  * the scenario applied only after the last write (design D5).
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 import { describe, expect, it } from 'vitest'
 import {

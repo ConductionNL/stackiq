@@ -362,7 +362,7 @@ export default {
 		 * Open the comparison of today with the plan for the selected organisation.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		compareWithPlan() {
 			if (!this.selectedOrg?.uuid) {

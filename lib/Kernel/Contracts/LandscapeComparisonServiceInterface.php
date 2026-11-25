@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ interface LandscapeComparisonServiceInterface {
 	 * @throws DomainException          When the scenario belongs to another organisation.
 	 * @throws Exception                When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	public function compare(string $organisationUuid, string $date='', string $scenarioId=''): array;
 }//end interface

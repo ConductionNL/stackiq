@@ -34,7 +34,7 @@ export const ADDED_STATUS = 'Planned'
  *
  * @param {string|object|null|undefined} value The relation value.
  * @return {string|null} The uuid.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function relationId(value) {
 	if (value === null || value === undefined || value === '') {
@@ -51,7 +51,7 @@ export function relationId(value) {
  *
  * @param {Array|undefined|null} values The related objects or uuids.
  * @return {string[]} Their uuids.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 function relationIds(values) {
 	return (Array.isArray(values) ? values : []).map(relationId).filter((id) => id !== null)
@@ -62,7 +62,7 @@ function relationIds(values) {
  *
  * @param {object|null|undefined} scenario The scenario.
  * @return {boolean}
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function canApply(scenario) {
 	return scenario?.status === 'adopted' && !scenario?.appliedAt
@@ -74,7 +74,7 @@ export function canApply(scenario) {
  * @param {object} change   The scenario change.
  * @param {object} scenario The scenario.
  * @return {string|null} A Y-m-d date.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function effectiveDate(change, scenario) {
 	return change?.effectiveDate || scenario?.targetDate || null
@@ -87,7 +87,7 @@ export function effectiveDate(change, scenario) {
  * @param {Array<object>} changes  The scenario's changes.
  * @param {object}        scenario The scenario.
  * @return {Array<object>} The changes, ordered.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function orderChanges(changes, scenario) {
 	return (changes || [])
@@ -101,7 +101,7 @@ export function orderChanges(changes, scenario) {
  *
  * @param {object} object The object as read.
  * @return {object} The body.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 function writable(object) {
 	const data = { ...(object || {}) }
@@ -117,7 +117,7 @@ function writable(object) {
  * @param {object} scenario The scenario.
  * @return {object} The fields.
  * @throws {Error} For an unknown action, or a change without the usage or module it needs.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function changeFields(change, scenario) {
 	const date = effectiveDate(change, scenario)
@@ -165,7 +165,7 @@ export function changeFields(change, scenario) {
  * @param {object}   options.objects  `{get(type, id), save(type, data)}`, both returning the object or null.
  * @param {() => Date} [options.now] The clock.
  * @return {Promise<{applied: string[], skipped: string[], failed: ({change: object, message: string}|null), appliedAt: (string|null)}>}
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export async function applyScenario({ scenario, changes, objects, now = () => new Date() }) {
 	const result = { applied: [], skipped: [], failed: null, appliedAt: null }
@@ -210,7 +210,7 @@ export async function applyScenario({ scenario, changes, objects, now = () => ne
  * @param {object} objects  The object client.
  * @return {Promise<string>} The written usage's id.
  * @throws {Error} When the usage cannot be read or written.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 async function writeUsage(change, scenario, objects) {
 	const fields = changeFields(change, scenario)
@@ -239,7 +239,7 @@ async function writeUsage(change, scenario, objects) {
  * @param {object} objects The object client.
  * @return {Promise<string>} The new usage's id.
  * @throws {Error} When the usage cannot be created or moved to its status.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 async function addUsage(fields, objects) {
 	const { status, ...initial } = fields
@@ -262,7 +262,7 @@ async function addUsage(fields, objects) {
  *
  * @param {object} store The object store (`fetchObject`, `saveObject`).
  * @return {{get: (type: string, id: string) => Promise<object|null>, save: (type: string, data: object) => Promise<object|null>}} The client.
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 export function storeObjects(store) {
 	return {

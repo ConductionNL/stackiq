@@ -6,7 +6,7 @@
  * task 4): Scenarios under the Architecture group, the scenario page with its
  * changes and comparison, and the comparison page the roadmap opens.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
  */
 import addFormats from 'ajv-formats'
 import Ajv2020 from 'ajv/dist/2020.js'
