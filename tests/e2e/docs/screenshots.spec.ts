@@ -34,10 +34,11 @@
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
- * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-process-mapping/tasks.md
  * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -448,51 +449,6 @@ test.describe('documentation screenshots', () => {
 		await shoot(card, 'usage-architecture-decisions.png')
 	})
 
-	test('a view drafted by an assistant', async ({ page, baseURL }) => {
-		// Drafted through the real stackiq.draftView tool on OpenRegister's MCP
-		// endpoint, as Hermiq does in the signed-in user's session.
-		const request = await api(baseURL)
-		const mcp = `${OR_API}/mcp`
-		const accept = { Accept: 'application/json, text/event-stream', 'Content-Type': 'application/json' }
-		const init = await request.post(mcp, { headers: accept, data: { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'docs', version: '1.0.0' } } } })
-		expect(init.ok()).toBeTruthy()
-		const session = init.headers()['mcp-session-id']
-		const called = await request.post(mcp, {
-			headers: { ...accept, ...(session ? { 'Mcp-Session-Id': session } : {}) },
-			data: {
-				jsonrpc: '2.0',
-				id: 2,
-				method: 'tools/call',
-				params: {
-					name: 'stackiq.draftView',
-					arguments: {
-						name: `${SEED_PREFIX}: how the case system talks to document management`,
-						description: 'Drafted from: draw how our case system talks to document management.',
-						elements: [
-							{ key: 'case', type: 'ApplicationComponent', name: `${SEED_PREFIX} Zaaksysteem` },
-							{ key: 'docs', type: 'ApplicationComponent', name: `${SEED_PREFIX} Documentbeheer` },
-							{ key: 'api', type: 'ApplicationInterface', name: 'Zaken API' },
-						],
-						relations: [
-							{ source: 'case', target: 'api', type: 'Composition' },
-							{ source: 'api', target: 'docs', type: 'Serving' },
-						],
-					},
-				},
-			},
-		})
-		const raw = (await called.text()).trim()
-		const message = JSON.parse(raw.startsWith('{') ? raw : (raw.split('\n').filter((line) => line.startsWith('data:')).pop() ?? '').slice(5))
-		const draft = JSON.parse(message.result.content.find((part: { type: string }) => part.type === 'text').text)
-		expect(draft.uuid, JSON.stringify(draft)).toBeTruthy()
-		await request.dispose()
-
-		await page.goto(`${APP}/views/${draft.uuid}`)
-		await settle(page)
-		await expect(page.getByText(/Drafted by an assistant for/).first()).toBeVisible({ timeout: 30_000 })
-		await shoot(page.locator('#app-content, main').first(), 'architecture-view-drafted.png')
-	})
-
 	test('synchronisation status: the last run and a running sync', async ({ page, baseURL }) => {
 		// A new active organisation and a sync started by hand, so the last run
 		// shows real work: the organisation processed and its entity created.
@@ -609,6 +565,53 @@ test.describe('documentation screenshots', () => {
 		await shoot(overlap, 'portfolio-report-overlap.png')
 	})
 
+	test('business processes: the process page with its flow, and the steps on the application in use', async ({ page, baseURL }) => {
+		// The process-mapping register fragment seeds Behandelen vergunningaanvraag
+		// with three steps; its intake step names an application in use.
+		const request = await api(baseURL)
+		const processes = await (await request.get(`${OBJECTS}/${register}/process?_limit=50`)).json()
+		const process = (processes.results ?? []).find((row: Obj) => row.name === 'Behandelen vergunningaanvraag') as Obj
+		expect(process, 'the seeded process').toBeTruthy()
+		const steps = await (await request.get(`${OBJECTS}/${register}/processStep?process=${process.id}&_limit=50`)).json()
+		const intake = (steps.results ?? []).find((row: Obj) => Array.isArray(row.usages) && row.usages.length > 0) as Obj
+		await request.dispose()
+
+		await page.goto(`${APP}/processen/${process.id}`)
+		await settle(page)
+		const flow = page.getByTestId('process-step-flow')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await flow.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(flow.locator('.vue-flow__node')).toHaveCount(3, { timeout: 30_000 })
+		await shoot(page.locator('section, div').filter({ has: page.getByRole('heading', { name: 'Step flow', exact: true }) }).filter({ has: flow }).last(), 'process-step-flow.png')
+		await page.evaluate(() => window.scrollTo(0, 0))
+		await page.locator('main').first().evaluate((el) => el.scrollTo?.(0, 0))
+		await shoot(page.locator('#app-content, main').first(), 'process-page.png')
+
+		if (intake) {
+			const usage = String((intake.usages as unknown[])[0] && typeof (intake.usages as unknown[])[0] === 'object' ? ((intake.usages as Obj[])[0].id) : (intake.usages as string[])[0])
+			await page.goto(`${APP}/gebruik/${usage}`)
+			await settle(page)
+			const title = page.locator('main').getByText('Process steps this application supports', { exact: true }).first()
+			await page.mouse.move(800, 450)
+			await expect.poll(async () => {
+				if (await title.count() > 0) {
+					return 1
+				}
+				await page.mouse.wheel(0, 800)
+				return 0
+			}, { timeout: 30_000 }).toBe(1)
+			const card = widget(page, 'usage-process-steps')
+			await expect(card.getByRole('row').filter({ hasText: String(intake.name) })).toBeVisible({ timeout: 30_000 })
+			await shoot(card, 'usage-process-steps.png')
+		}
+	})
+
 	test('Supplier facet on Applications', async ({ page }) => {
 		// The demo import seeds Voorbeeld Name 2 and Voorbeeld Name 3 as suppliers;
 		// the facet shows each by name with the number of applications it supplies.
@@ -621,6 +624,51 @@ test.describe('documentation screenshots', () => {
 		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 2' }).first()).toBeVisible({ timeout: 30_000 })
 		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 3' }).first()).toBeVisible()
 		await shoot(page.locator('.faceted-catalog-index__body').first(), 'supplier-facet.png')
+	})
+
+	test('a view drafted by an assistant', async ({ page, baseURL }) => {
+		// Drafted through the real stackiq.draftView tool on OpenRegister's MCP
+		// endpoint, as Hermiq does in the signed-in user's session.
+		const request = await api(baseURL)
+		const mcp = `${OR_API}/mcp`
+		const accept = { Accept: 'application/json, text/event-stream', 'Content-Type': 'application/json' }
+		const init = await request.post(mcp, { headers: accept, data: { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'docs', version: '1.0.0' } } } })
+		expect(init.ok()).toBeTruthy()
+		const session = init.headers()['mcp-session-id']
+		const called = await request.post(mcp, {
+			headers: { ...accept, ...(session ? { 'Mcp-Session-Id': session } : {}) },
+			data: {
+				jsonrpc: '2.0',
+				id: 2,
+				method: 'tools/call',
+				params: {
+					name: 'stackiq.draftView',
+					arguments: {
+						name: `${SEED_PREFIX}: how the case system talks to document management`,
+						description: 'Drafted from: draw how our case system talks to document management.',
+						elements: [
+							{ key: 'case', type: 'ApplicationComponent', name: `${SEED_PREFIX} Zaaksysteem` },
+							{ key: 'docs', type: 'ApplicationComponent', name: `${SEED_PREFIX} Documentbeheer` },
+							{ key: 'api', type: 'ApplicationInterface', name: 'Zaken API' },
+						],
+						relations: [
+							{ source: 'case', target: 'api', type: 'Composition' },
+							{ source: 'api', target: 'docs', type: 'Serving' },
+						],
+					},
+				},
+			},
+		})
+		const raw = (await called.text()).trim()
+		const message = JSON.parse(raw.startsWith('{') ? raw : (raw.split('\n').filter((line) => line.startsWith('data:')).pop() ?? '').slice(5))
+		const draft = JSON.parse(message.result.content.find((part: { type: string }) => part.type === 'text').text)
+		expect(draft.uuid, JSON.stringify(draft)).toBeTruthy()
+		await request.dispose()
+
+		await page.goto(`${APP}/views/${draft.uuid}`)
+		await settle(page)
+		await expect(page.getByText(/Drafted by an assistant for/).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'architecture-view-drafted.png')
 	})
 
 	test('API documentation', async ({ page }) => {

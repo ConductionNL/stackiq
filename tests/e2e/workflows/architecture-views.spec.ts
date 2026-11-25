@@ -138,7 +138,8 @@ test('the views list filters on drawn, imported and mine, and on tag and status'
 		['Imported', 'imported', 'tagged'],
 		['Mine', 'tagged', null],
 	] as Array<[string, string, string | null]>) {
-		await main.getByRole('button', { name: filter, exact: true }).first().click()
+		// The quick filters are tabs.
+		await main.getByRole('tab', { name: filter, exact: true }).first().click()
 		await expect(main.getByText(`${RUN_ID} ${shown} view`).first()).toBeVisible({ timeout: 30_000 })
 		if (hidden !== null) {
 			await expect(main.getByText(`${RUN_ID} ${hidden} view`)).toHaveCount(0)
@@ -228,8 +229,9 @@ test('an owner saves two versions and compares them', async ({ page }) => {
 	await page.goto(`${APP_PATH}/views/${ids.drawn}/compare`)
 	const compare = page.getByTestId('view-version-compare')
 	await expect(compare).toBeVisible({ timeout: 30_000 })
-	await pick(page, 'Earlier', new RegExp(`${RUN_ID} v1`))
-	await pick(page, 'Later', new RegExp(`${RUN_ID} v2`))
+	// The options shorten long labels in the middle, so they are picked by version number.
+	await pick(page, 'Earlier', /^Version 1:/)
+	await pick(page, 'Later', /^Version 2:/)
 	await expect(compare.getByText('Added').first()).toBeVisible()
 	await expect(compare.getByText(`${RUN_ID} archive`).first()).toBeVisible()
 })

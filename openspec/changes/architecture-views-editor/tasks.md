@@ -96,6 +96,11 @@
 - `tests/e2e/workflows/architecture-views.spec.ts` is written: the Drawn, Imported and Mine quick filters and the tag and status queries (task 2), drawing two elements with a connection, saving and reopening, and the lock notice for a colleague (task 4), Copy to edit (task 6), and two saved versions compared (task 7). It lints, type-checks and `playwright --list` collects its 5 tests, but it has not run against a live instance yet, so those Test boxes stay open until it has.
 - Task 9: `docs/features/architecture-views.md` and the English and Dutch strings are on development; its screenshots still need a Playwright capture on a live instance.
 
+## Live run (25 Nov 2026, NC 34, PostgreSQL 16, OpenRegister main)
+
+- `tests/e2e/workflows/architecture-views.spec.ts`: 4 of 5. Saving a drawn view failed on OpenRegister main, because new elements and relations were created without the `properties` list their schemas require. `architectureView.js` now sends `properties: []`. The spec follows the page: quick filters are tabs, and version options are picked by number because long labels are shortened in the middle.
+- Still red: "a view a colleague is editing opens read-only and names them". OpenRegister answered 500 instead of 423 to a lock another user holds, so the editor could not tell a conflict from a failure. That is fixed in openregister#11273 (a probe on the sandbox shows the notice with it). Inside the suite, the published view the spec seeds still opens without the notice. Not diagnosed yet; it is the next step for this task.
+
 ## Verification
 
 - `openspec validate architecture-views-editor --type change --strict`

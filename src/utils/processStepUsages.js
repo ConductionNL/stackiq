@@ -8,7 +8,7 @@
  * so the stored ids are compared with the usages that come back and the rest
  * are counted as hidden, instead of leaving a silent gap.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 
 import { stepRefId } from './processStepFlow.js'
@@ -18,7 +18,7 @@ import { stepRefId } from './processStepFlow.js'
  *
  * @param {object|null} step - a processStep.
  * @return {string[]}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 export function storedUsageIds(step) {
 	const usages = Array.isArray(step?.usages) ? step.usages : []
@@ -31,7 +31,7 @@ export function storedUsageIds(step) {
  * @param {object} usage - a usage object.
  * @param {string} id - its id, the last resort.
  * @return {string}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 export function usageName(usage, id) {
 	const name = usage?.['@self']?.name || usage?.name || usage?.title
@@ -44,7 +44,7 @@ export function usageName(usage, id) {
  * @param {string[]} ids - usage ids.
  * @param {function(string, string): Promise<object|null>} fetchObject - fetchObject(type, id), null when not visible.
  * @return {Promise<{visible: Array<{id: string, name: string}>, hidden: number}>}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 export async function loadUsages(ids, fetchObject) {
 	const fetched = await Promise.all(ids.map((id) => fetchObject('usage', id).catch(() => null)))
@@ -63,7 +63,7 @@ export async function loadUsages(ids, fetchObject) {
  * @param {string} stepId - the processStep id.
  * @param {function(string, string): Promise<object|null>} fetchObject - fetchObject(type, id).
  * @return {Promise<{visible: Array<{id: string, name: string}>, hidden: number}>}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 export async function loadStepUsages(stepId, fetchObject) {
 	const step = await fetchObject('processStep', stepId)
@@ -76,7 +76,7 @@ export async function loadStepUsages(stepId, fetchObject) {
  * @param {string} processId - the process id.
  * @param {{fetchList: function(string, object): Promise<Array<object>>, fetchObject: function(string, string): Promise<object|null>}} store - the two store lookups.
  * @return {Promise<{steps: Array<object>, usageNames: Record<string, string>}>}
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 export async function loadProcessSteps(processId, { fetchList, fetchObject }) {
 	const steps = await fetchList('processStep', { process: processId, _limit: 500 })
