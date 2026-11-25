@@ -7,7 +7,7 @@
 
 The Data model shows the data entities of the Gemeentelijk Gegevensmodel (GGM) and the entities your organisation adds itself, each with its relations to other entities. For every application in use you record which entities it holds data for, and the page of an entity lists those applications.
 
-Specification: [`openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md).
 
 ## Finding a data entity
 

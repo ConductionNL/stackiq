@@ -9,7 +9,7 @@
  * name and both cardinalities on the edge; every colour a CSS variable; the
  * same relations listed as text; a node or row opens that entity's page.
  *
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

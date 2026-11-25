@@ -6119,20 +6119,20 @@
 			"name": "Relate applications to the entities of the Gemeentelijk Gegevensmodel they hold data for.",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Settings/softwarecatalogus_register.json:5038 ggm-guid (and ggm-naam, ggm-definitie) are properties of the element schema (register.json:4130), filled by the AMEF import (lib/Repair/RenameDutchCatalogColumns.php:25-27); the module schema (register.json:6777) has no property that points to a GGM entity, and the only element page, Standaarden, is filtered to gemmaType standaard (src/manifest.json:708)",
+				"state": "built",
+				"evidence": "usage.dataEntities links an application in use to the data entities it holds data for (the usage page picker offers business objects only), and a data entity page lists the applications that hold its data (src/manifest.d/architecture-data-model.json entity-usages). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/data-model.spec.ts 4/4.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-data-model-and-ggm",
-				"requirement": "openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-003 An application in use SHALL record the data entities it holds data for"
+				"change": "2026-11-25-architecture-data-model-and-ggm",
+				"requirement": "openspec/specs/data-model-and-ggm :: REQ-DMG-003 An application in use SHALL record the data entities it holds data for"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "high",
-			"note": "Helmond's architecture repository tender (REQ3, REQ61) asks to relate the repository to the GGM. GGM metadata survives an ArchiMate import on architecture elements, but no field or page links an application to a GGM entity. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
+			"note": "Helmond's architecture repository tender (REQ3, REQ61) asks to relate the repository to the GGM. GGM metadata survives an ArchiMate import on architecture elements, but no field or page links an application to a GGM entity. Specified in openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the Gemeentelijk Gegevensmodel is not mentioned; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
@@ -6198,15 +6198,15 @@
 			"name": "Model data entities and their relations, as an entity relationship or UML diagram, next to the applications.",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "src/manifest.json has no page for the element, relation or view schema other than Standaarden (src/manifest.json:708, filtered to standards); no diagram editor under src/views or src/components (same finding as arch-modelling)",
+				"state": "built",
+				"evidence": "The Data model page (/gegevensmodel) lists GGM and own data entities; an entity page draws its relations (DataEntityRelations, with a text table) and edits the attributes, keys first, of an own entity (DataEntityAttributes); New data entity creates one (src/utils/drawnDataEntity.js). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/data-model.spec.ts 4/4; docs screenshots data-model-list.png, data-entity-relations.png, usage-data-entities.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-data-model-and-ggm",
+				"change": "2026-11-25-architecture-data-model-and-ggm",
 				"requirement": [
-					"openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-002 A data entity page SHALL draw the entity's relations to other entities",
-					"openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-004 A municipality SHALL add its own data entities with attributes, keys and cardinalities"
+					"openspec/specs/data-model-and-ggm :: REQ-DMG-002 A data entity page SHALL draw the entity's relations to other entities",
+					"openspec/specs/data-model-and-ggm :: REQ-DMG-004 A municipality SHALL add its own data entities with attributes, keys and cardinalities"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -6214,7 +6214,7 @@
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
 			"featureConfidence": "medium",
-			"note": "Helmond REQ54 asks for entity relationship or UML data models. stackiq holds imported ArchiMate elements but models nothing itself. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
+			"note": "Helmond REQ54 asks for entity relationship or UML data models. stackiq holds imported ArchiMate elements but models nothing itself. Specified in openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: no data modelling is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",

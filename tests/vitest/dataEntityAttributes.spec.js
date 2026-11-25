@@ -7,7 +7,7 @@
  * attributes first and marked "key" in text, editable on a drawn entity; an
  * imported GGM entity shows no edit control and the notice about the GGM file.
  *
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

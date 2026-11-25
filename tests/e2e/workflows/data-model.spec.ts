@@ -17,7 +17,7 @@
  * tests/vitest/dataEntityAttributes.spec.js and
  * tests/Unit/Settings/DataModelRegisterShapeTest.php.
  *
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
