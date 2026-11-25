@@ -43,8 +43,8 @@
   - GIVEN one suggestion WHEN the user clicks Dismiss and reloads THEN it stays gone
 - [x] Implement
   - `ConnectionSuggestionsPanel` registered in `src/customComponents.js` and placed after the data on `GebruikDetail` (`src/manifest.d/usages.json`); English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`. Unit spec `tests/vitest/connectionSuggestionsPanel.spec.js` (listing, empty state, refusals, accept, dismiss, accept all).
-- [x] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
-  - Owed: a browser run against a live instance.
+- [x] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`) (run 25 Nov 2026 against a live sandbox instance, NC 34 + PostgreSQL 16 + OpenRegister main: 2 passed)
+  - The run found three faults on the way, fixed in the same PR: the organisation sync matched only status `actief` (the schema stores `Active`), so no register organisation got its OpenRegister organisation; the contact and user sync queried `eMailadres`/`username` columns the contactPerson schema no longer has and aborted the cron pass; and the owner write-back after creating an organisation ran under RBAC as the anonymous cron user. The carried-over national connection was labelled shared-landscape; carry-over now wins the dedupe (REQ-DCN-002). The spec triggers the administrator's manual sync while it waits, because the sync is cron-only.
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces

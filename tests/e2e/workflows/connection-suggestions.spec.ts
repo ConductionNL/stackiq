@@ -93,6 +93,10 @@ async function resolveAmefConfig(ctx: APIRequestContext): Promise<AmefConfig> {
 /**
  * Wait until a register organisation has synced to an OpenRegister organisation.
  *
+ * The sync is cron-only (OrganizationContactSyncJob, every five minutes), so
+ * waiting alone outlasts the test; the administrator's manual sync
+ * (`POST /api/settings/sync`) runs the same organisation pass at once.
+ *
  * @param uuid The organisation's uuid.
  * @return Nothing; throws when it never appears.
  */
@@ -100,6 +104,9 @@ async function awaitOrganisation(uuid: string): Promise<void> {
 	for (let attempt = 0; attempt < 20; attempt++) {
 		const res = await apiCtx.get(`${OR_API}/organisations/${uuid}`)
 		if (res.ok()) return
+		if (attempt % 5 === 0) {
+			await apiCtx.post('/index.php/apps/stackiq/api/settings/sync', { data: { minutesBack: 5 } })
+		}
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 	}
 	throw new Error(`organisation ${uuid} did not sync to OpenRegister`)

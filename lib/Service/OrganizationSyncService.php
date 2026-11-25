@@ -32,6 +32,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\DB\QueryBuilder\IQueryFunction;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
@@ -74,6 +76,12 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.
 	 */
 	private const LINK_KEY_PREFIX = 'linked_organisation_';
+
+	/**
+	 * Lower-cased organisation statuses that count as active (English enum
+	 * value and the pre-rename Dutch one).
+	 */
+	private const ACTIVE_STATUSES = ['active', 'actief'];
 
 	/**
 	 * OrganisatieService instance
@@ -380,11 +388,8 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			->from($magicTableName, 'o')
 			->leftJoin('o', 'openregister_organisations', 'org', 'o._uuid = org.uuid')
 			->where('org.uuid IS NULL')
-			->andWhere(
-				$countQb->createFunction(
-					'LOWER(o.status) = ' . $countQb->createNamedParameter('actief')
-				)
-			)
+			->andWhere('o._deleted IS NULL')
+			->andWhere($this->activeStatusCondition(qb: $countQb))
 			->executeQuery()->fetchOne();
 
 		$stats['totalRemaining'] = $totalRemaining;
@@ -404,11 +409,8 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			->from($magicTableName, 'o')
 			->leftJoin('o', 'openregister_organisations', 'org', 'o._uuid = org.uuid')
 			->where('org.uuid IS NULL')
-			->andWhere(
-				$qb->createFunction(
-					'LOWER(o.status) = ' . $qb->createNamedParameter('actief')
-				)
-			)
+			->andWhere('o._deleted IS NULL')
+			->andWhere($this->activeStatusCondition(qb: $qb))
 			->orderBy('o._updated', 'ASC')
 			->setMaxResults($batchSize);
 
@@ -467,6 +469,56 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	}//end performOrganizationsSync()
 
 	/**
+	 * The condition "this organisation is active", for the batch queries.
+	 *
+	 * The organization schema stores the English enum value `Active`; rows
+	 * written before the rename still carry `actief`. Matching only `actief`
+	 * made the scheduled sync find no organisation at all, so no register
+	 * organisation ever got its OpenRegister organisation.
+	 *
+	 * @param IQueryBuilder $qb The query the condition goes into.
+	 *
+	 * @return IQueryFunction The condition.
+	 *
+	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 */
+	private function activeStatusCondition(IQueryBuilder $qb): IQueryFunction {
+		$statuses = $qb->createNamedParameter(self::ACTIVE_STATUSES, IQueryBuilder::PARAM_STR_ARRAY);
+		return $qb->createFunction('LOWER(o.status) IN (' . $statuses . ')');
+
+	}//end activeStatusCondition()
+
+	/**
+	 * Whether the contact schema still carries the account columns a
+	 * contact or user sync query reads (`eMailadres`, `username`).
+	 *
+	 * The contactPerson schema now keeps its person data on the Nextcloud
+	 * contact (`contactsUid`), so on a current install those columns do not
+	 * exist and the query failed with "column o.e_mailadres does not exist",
+	 * which aborted the whole scheduled sync after the organisations (and the
+	 * user sync failed the same way on `o.username`).
+	 *
+	 * @param int           $schemaId   The contact schema id.
+	 * @param array<string> $properties The schema properties the query reads.
+	 *
+	 * @return bool True when every one of them exists.
+	 *
+	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 */
+	private function contactSchemaCarriesAccountColumns(int $schemaId, array $properties): bool {
+		try {
+			$schema = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class)->find($schemaId);
+		} catch (\Throwable $exception) {
+			$this->logger->debug('ContactSync: contact schema could not be read: ' . $exception->getMessage());
+			return false;
+		}
+
+		$declared = ($schema->getProperties() ?? []);
+		return array_diff($properties, array_keys($declared)) === [];
+
+	}//end contactSchemaCarriesAccountColumns()
+
+	/**
 	 * Perform synchronization of contact persons.
 	 *
 	 * @param int $batchSize The batch size for processing.
@@ -510,6 +562,11 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 					'contactSchema' => $contactSchema,
 				]
 			);
+			return $stats;
+		}
+
+		if ($this->contactSchemaCarriesAccountColumns(schemaId: $schemaIdContact, properties: ['eMailadres', 'username']) === false) {
+			$this->logger->debug('ContactSync: contact schema has no eMailadres/username columns, nothing to link');
 			return $stats;
 		}
 
@@ -623,6 +680,11 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 					'contactSchema' => $contactSchema,
 				]
 			);
+			return [];
+		}
+
+		if ($this->contactSchemaCarriesAccountColumns(schemaId: $schemaId, properties: ['username']) === false) {
+			$this->logger->debug('UserSync: contact schema has no username column, nothing to add');
 			return [];
 		}
 
@@ -4446,7 +4508,13 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 						),
 					uuid: $organisationObject->getUuid(),
 					policy: new SavePolicy(silent: true, validation: false)
-				)
+				),
+				// A system write: the sync makes the organisation own itself, also
+				// from the cron job, where the acting user is anonymous and RBAC
+				// refused it ("User 'Anonymous' does not have permission to
+				// 'update' objects in schema 'Organization'").
+				_rbac: false,
+				_multitenancy: false
 			);
 
 			$this->logger->info(

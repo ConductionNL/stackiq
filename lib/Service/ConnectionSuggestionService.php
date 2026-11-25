@@ -151,6 +151,7 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	public function suggestFor(array $usage): array {
 		$module = RelationRefs::ref(value: ($usage['module'] ?? null));
@@ -173,10 +174,13 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 			)
 		);
 
+		// Carry-over first: a connection the older usage already had is offered
+		// for that reason even when it also lies in the landscape (a national
+		// provision always does), so the more specific reason wins the dedupe.
 		$suggestions = [];
 		$candidates = array_merge(
-			$this->landscapeSuggestions(module: $module, others: $others),
-			$this->carryOverSuggestions(usage: $usage, module: $module, others: $others)
+			$this->carryOverSuggestions(usage: $usage, module: $module, others: $others),
+			$this->landscapeSuggestions(module: $module, others: $others)
 		);
 		foreach ($candidates as $suggestion) {
 			if (isset($skip[$suggestion['id']]) === false && isset($suggestions[$suggestion['id']]) === false) {

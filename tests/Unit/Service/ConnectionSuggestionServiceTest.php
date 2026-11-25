@@ -111,6 +111,25 @@ class ConnectionSuggestionServiceTest extends TestCase {
 	}
 
 	/**
+	 * A connection the older version had that also lies in the landscape (here
+	 * the national provision) is offered as carried over, once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 */
+	public function testACarriedOverConnectionKeepsThatReasonWhenItIsAlsoInTheLandscape(): void {
+		$this->store->put('u-x1', 10, ['consumer' => 'org-a', 'module' => 'mod-x', 'moduleVersion' => 'x-1', 'koppelingen' => ['c-xn', 'c-xy']]);
+
+		$suggestions = $this->suggestionsFor(uuid: 'u-x');
+		$reasons = array_column($suggestions, 'reason', 'id');
+
+		$this->assertSame(['c-xn', 'c-xy'], array_column($suggestions, 'id'));
+		$this->assertSame(ConnectionSuggestionService::REASON_CARRY_OVER, $reasons['c-xn']);
+		$this->assertSame(ConnectionSuggestionService::REASON_CARRY_OVER, $reasons['c-xy']);
+	}
+
+	/**
 	 * A usage whose planned replacement is this application offers drafts from the successor; accepting one creates it in development and records it.
 	 *
 	 * @return void
