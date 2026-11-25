@@ -93,7 +93,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 }))
 
 const { default: DataEntityRelations } = await import('../../src/views/architecture/DataEntityRelations.vue')
-const { buildEntityGraph, edgeLabel, entityRelations, sortedAttributes, attributesToSave } = await import('../../src/utils/dataEntityGraph.js')
+const { buildEntityGraph, createDataEntityApi, edgeLabel, entityRelations, sortedAttributes, attributesToSave } = await import('../../src/utils/dataEntityGraph.js')
 
 const tt = (app, text, vars) => String(text).replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m))
 
@@ -189,6 +189,29 @@ describe('sortedAttributes and attributesToSave', () => {
 			{ name: 'bsn', dataType: 'text', isKey: true, description: 'het nummer' },
 			{ name: 'naam', dataType: 'text', isKey: false },
 		])
+	})
+})
+
+describe('saving the attributes of an own entity', () => {
+	it('sends the properties list the element schema requires, also when the read left it out', async () => {
+		const put = vi.fn(async (url, body) => ({ data: body }))
+		const api = createDataEntityApi({ http: { get: vi.fn(), put }, register: 7 })
+		const entity = { '@self': { id: 'e-1' }, id: 'e-1', identifier: 'id-1', type: 'BusinessObject', name: 'Vergunning', origin: 'drawn' }
+
+		await api.saveAttributes(entity, [{ name: 'zaaknummer', dataType: 'text', isKey: true }])
+
+		const [url, body] = put.mock.calls[0]
+		expect(url).toBe('/index.php/apps/openregister/api/objects/7/element/e-1')
+		expect(body.properties).toEqual([])
+		expect(body.attributes).toEqual([{ name: 'zaaknummer', dataType: 'text', isKey: true }])
+		expect(body).not.toHaveProperty('@self')
+	})
+
+	it('keeps properties the entity already has', async () => {
+		const put = vi.fn(async (url, body) => ({ data: body }))
+		const api = createDataEntityApi({ http: { get: vi.fn(), put }, register: 7 })
+		await api.saveAttributes({ '@self': { id: 'e-2' }, origin: 'drawn', properties: [{ key: 'k', value: 'v' }] }, [])
+		expect(put.mock.calls[0][1].properties).toEqual([{ key: 'k', value: 'v' }])
 	})
 })
 

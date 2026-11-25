@@ -308,6 +308,9 @@ export function createDataEntityApi({ http, register }) {
 
 		/**
 		 * Store the attributes of an own entity, keeping every other field.
+		 * The AMEF element schema requires `properties`, which a read does not
+		 * return while the list is empty, so an empty list is sent then
+		 * (OpenRegister main refused the save as 'properties missing').
 		 *
 		 * @param {object} entity The entity as loaded.
 		 * @param {Array<object>} attributes The attributes to store.
@@ -319,7 +322,11 @@ export function createDataEntityApi({ http, register }) {
 				throw new Error('Only an own data entity takes attributes')
 			}
 
-			const body = { ...entity, attributes: attributesToSave(attributes) }
+			const body = {
+				...entity,
+				properties: Array.isArray(entity.properties) ? entity.properties : [],
+				attributes: attributesToSave(attributes),
+			}
 			delete body['@self']
 			return (await http.put(url('element', uuidOf(entity)), body)).data
 		},
