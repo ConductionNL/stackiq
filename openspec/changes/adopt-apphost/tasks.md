@@ -51,6 +51,9 @@ The withdrawn tasks are marked `[x]` with "withdrawn" so the change can be archi
 
 ## 5. Quality gates + delivery
 
-- [ ] 5.1 `composer check:strict` green; fix any pre-existing issues encountered in touched files (don't defer)
-- [ ] 5.2 All 18 hydra gates green; gate-22 manifest validation green on the new `observability` block
-- [ ] 5.3 Deliver via Codeberg PR to `development` (racing-PR caution: external orchestration force-resets actively-built repos — never direct-push; recover any wiped commits via reflog cherry-pick)
+- [x] 5.1 `composer check:strict` green; fix any pre-existing issues encountered in touched files (don't defer)
+  > 25 Nov 2026: lint, phpcs (0 errors), phpmd and phpstan clean; PHPUnit unit suite 4467 tests, 0 failures (development 4464, 0). Psalm reports 745 errors repo-wide, all in files this change does not touch; the three in `Application.php` (two missing `#[\Override]`, the metrics generic as an undefined class) are fixed. `test:all` needs a Nextcloud server tree and is skipped outside one.
+- [x] 5.2 All 18 hydra gates green; gate-22 manifest validation green on the new `observability` block
+  > hydra diff-check: units, floor, php -l, phpcs, phpstan, phpmd and phpunit PASS with no new findings; gate-22 green. Repo-wide gates still red on development and not touched here: gate-59 (`amef_version` in ModuleSettingsHandler), gate-66 (two lookups in ArchitectureDecisionReviewGuard and ServiceFactories), gate-124 (no speed budget yet; its own PR).
+- [x] 5.3 Deliver via Codeberg PR to `development` (racing-PR caution: external orchestration force-resets actively-built repos — never direct-push; recover any wiped commits via reflog cherry-pick)
+  > Delivered as a GitHub pull request to `development` (the fleet moved off Codeberg).

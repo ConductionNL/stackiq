@@ -38,6 +38,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
+use Override;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -79,6 +80,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @spec openspec/specs/settings-service/spec.md
 	 */
+	#[Override]
 	public function register(IRegistrationContext $context): void {
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -125,6 +127,8 @@ class Application extends App implements IBootstrap {
 	 * @return void
 	 *
 	 * @spec openspec/changes/adopt-apphost/tasks.md#2-wiring-deletions-real-healthmetrics-routes
+	 *
+	 * @psalm-suppress UndefinedClass The AppHost generics live in OpenRegister, which is not on the static-analysis path.
 	 */
 	private function registerObservabilityControllers(IRegistrationContext $context): void {
 		$appId = self::APP_ID;
@@ -198,6 +202,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
+	#[Override]
 	public function boot(IBootContext $context): void {
 		// Background jobs are registered declaratively in appinfo/info.xml.
 		// Initialization is handled by the Repair step (InitializeSettings).
