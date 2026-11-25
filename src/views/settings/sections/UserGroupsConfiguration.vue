@@ -1063,13 +1063,9 @@ export default {
 	border: 1px solid var(--color-border);
 }
 
-.tab-panel {
-	display: none; /* Hidden by default */
-}
-
-.tab-panel.active {
-	display: block; /* Show when active */
-}
+/* Panels are shown and hidden by v-show on the active tab. A display: none
+   here outranked v-show (which only clears its inline style) and hid every
+   panel, so the section rendered no settings at all. */
 
 /* WCAG 2.3.3 — the tab underline transition is decorative; the active
    underline still moves, it just moves instantly. */
