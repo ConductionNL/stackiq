@@ -34,10 +34,11 @@
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
- * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-process-mapping/tasks.md
  * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -564,6 +565,67 @@ test.describe('documentation screenshots', () => {
 		await shoot(overlap, 'portfolio-report-overlap.png')
 	})
 
+	test('business processes: the process page with its flow, and the steps on the application in use', async ({ page, baseURL }) => {
+		// The process-mapping register fragment seeds Behandelen vergunningaanvraag
+		// with three steps; its intake step names an application in use.
+		const request = await api(baseURL)
+		const processes = await (await request.get(`${OBJECTS}/${register}/process?_limit=50`)).json()
+		const process = (processes.results ?? []).find((row: Obj) => row.name === 'Behandelen vergunningaanvraag') as Obj
+		expect(process, 'the seeded process').toBeTruthy()
+		const steps = await (await request.get(`${OBJECTS}/${register}/processStep?process=${process.id}&_limit=50`)).json()
+		const intake = (steps.results ?? []).find((row: Obj) => Array.isArray(row.usages) && row.usages.length > 0) as Obj
+		await request.dispose()
+
+		await page.goto(`${APP}/processen/${process.id}`)
+		await settle(page)
+		const flow = page.getByTestId('process-step-flow')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await flow.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(flow.locator('.vue-flow__node')).toHaveCount(3, { timeout: 30_000 })
+		await shoot(page.locator('section, div').filter({ has: page.getByRole('heading', { name: 'Step flow', exact: true }) }).filter({ has: flow }).last(), 'process-step-flow.png')
+		await page.evaluate(() => window.scrollTo(0, 0))
+		await page.locator('main').first().evaluate((el) => el.scrollTo?.(0, 0))
+		await shoot(page.locator('#app-content, main').first(), 'process-page.png')
+
+		if (intake) {
+			const usage = String((intake.usages as unknown[])[0] && typeof (intake.usages as unknown[])[0] === 'object' ? ((intake.usages as Obj[])[0].id) : (intake.usages as string[])[0])
+			await page.goto(`${APP}/gebruik/${usage}`)
+			await settle(page)
+			const title = page.locator('main').getByText('Process steps this application supports', { exact: true }).first()
+			await page.mouse.move(800, 450)
+			await expect.poll(async () => {
+				if (await title.count() > 0) {
+					return 1
+				}
+				await page.mouse.wheel(0, 800)
+				return 0
+			}, { timeout: 30_000 }).toBe(1)
+			const card = widget(page, 'usage-process-steps')
+			await expect(card.getByRole('row').filter({ hasText: String(intake.name) })).toBeVisible({ timeout: 30_000 })
+			await shoot(card, 'usage-process-steps.png')
+		}
+	})
+
+	test('Supplier facet on Applications', async ({ page }) => {
+		// The demo import seeds Voorbeeld Name 2 and Voorbeeld Name 3 as suppliers;
+		// the facet shows each by name with the number of applications it supplies.
+		await page.goto(`${APP}/modules`)
+		await settle(page)
+		const sidebar = page.locator('.faceted-catalog-index__aside').first()
+		const supplier = sidebar.locator('.v-select').filter({ hasText: 'Supplier' }).last()
+		await expect(supplier).toBeVisible({ timeout: 30_000 })
+		await supplier.locator('.vs__dropdown-toggle').click()
+		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 2' }).first()).toBeVisible({ timeout: 30_000 })
+		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 3' }).first()).toBeVisible()
+		await shoot(page.locator('.faceted-catalog-index__body').first(), 'supplier-facet.png')
+	})
+
 	test('future-state scenarios: the plan comparison, a scenario and its apply', async ({ page, baseURL }) => {
 		// An organisation with two applications in use, one with a planned
 		// replacement, and an adopted scenario that adds one and replaces one.
@@ -627,20 +689,6 @@ test.describe('documentation screenshots', () => {
 		await apply.click()
 		await expect(page.getByText('Applied 2 changes to the landscape.')).toBeVisible({ timeout: 30_000 })
 		await shoot(page.getByText('Applied 2 changes to the landscape.').locator('xpath=ancestor::*[contains(@class, "landscape-comparison")][1]'), 'scenario-applied.png')
-	})
-
-	test('Supplier facet on Applications', async ({ page }) => {
-		// The demo import seeds Voorbeeld Name 2 and Voorbeeld Name 3 as suppliers;
-		// the facet shows each by name with the number of applications it supplies.
-		await page.goto(`${APP}/modules`)
-		await settle(page)
-		const sidebar = page.locator('.faceted-catalog-index__aside').first()
-		const supplier = sidebar.locator('.v-select').filter({ hasText: 'Supplier' }).last()
-		await expect(supplier).toBeVisible({ timeout: 30_000 })
-		await supplier.locator('.vs__dropdown-toggle').click()
-		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 2' }).first()).toBeVisible({ timeout: 30_000 })
-		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 3' }).first()).toBeVisible()
-		await shoot(page.locator('.faceted-catalog-index__body').first(), 'supplier-facet.png')
 	})
 
 	test('API documentation', async ({ page }) => {
