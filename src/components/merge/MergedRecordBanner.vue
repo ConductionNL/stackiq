@@ -96,7 +96,7 @@ export default {
 			this.survivorId = null
 			this.survivorName = ''
 			try {
-				ensureObjectType(this.objectType)
+				await ensureObjectType(this.objectType)
 				const record = await objectStore.fetchObject(this.objectType, this.objectId)
 				this.survivorId = survivorOf(record)
 			} catch {

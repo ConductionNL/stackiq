@@ -100,7 +100,7 @@ export default {
 		 */
 		async load() {
 			try {
-				ensureObjectType('module')
+				await ensureObjectType('module')
 				const module = await objectStore.fetchObject('module', this.objectId)
 				this.currentType = moduleEntryType(module)
 			} catch {

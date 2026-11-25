@@ -140,7 +140,7 @@ export default {
 				this.contracts = await loadApplicationContracts(
 					this.objectId,
 					async (type, params) => {
-						this.ensureType(type)
+						await this.ensureType(type)
 						return objectStore.fetchCollectionForOptions(type, params)
 					},
 				)
@@ -156,11 +156,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
 		 */
-		ensureType(type) {
-			ensureObjectType(type)
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }

@@ -73,15 +73,26 @@ function registerInVoorzieningen(type) {
 }
 
 /**
- * Register a type from the settings when the store does not know it yet.
+ * Register a type from the settings when the store does not know it yet,
+ * loading the settings first when no page has loaded them.
+ *
+ * A detail page opened straight from a link has no settings yet, and the
+ * store's getSchemaConfig() throws "Settings not loaded" then: the panels that
+ * called this put up "could not be loaded" instead of their rows. A lookup that
+ * still fails counts as no configuration, as in ensureObjectTypeOrSlug().
  *
  * @param {string} type The schema slug.
- * @return {void}
+ * @return {Promise<void>} Resolves once the type is registered, or known not to be.
+ * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
  */
-export function ensureObjectType(type) {
-	if (needsObjectType(type)) {
-		registerFromSchemaConfig(type, objectStore.getSchemaConfig?.(type))
+export async function ensureObjectType(type) {
+	if (!needsObjectType(type)) {
+		return
 	}
+	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+		await objectStore.fetchSettings()
+	}
+	registerFromSchemaConfig(type, schemaConfigOrNull(type))
 }
 
 /**

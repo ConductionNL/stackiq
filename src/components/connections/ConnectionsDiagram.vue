@@ -120,7 +120,7 @@ export default {
 				return
 			}
 			try {
-				ensureObjectType('module')
+				await ensureObjectType('module')
 				const modules = await objectStore.fetchCollectionForOptions('module', { _ids: missing, _limit: missing.length })
 				this.names = { ...this.names, ...moduleNames(modules) }
 			} catch {
