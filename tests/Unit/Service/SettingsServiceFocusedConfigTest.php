@@ -334,6 +334,38 @@ final class SettingsServiceFocusedConfigTest extends TestCase {
 	}//end testVoorzieningenAndArchiMateUpdates()
 
 	/**
+	 * A Voorzieningen update keeps the stored keys it does not name, so a
+	 * caller that knows fewer schema keys never blanks the newer ones, and
+	 * a key posted empty is still cleared.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/settings-service/spec.md
+	 */
+	public function testVoorzieningenUpdateKeepsTheKeysItDoesNotName(): void {
+		$stored = ['register' => '26', 'gebruik_schema' => '47', 'attestationRound_schema' => '66', 'attestationRequest_schema' => '67', 'sector_schema' => '41'];
+		$this->catalogue->method('getVoorzieningenConfig')->willReturnCallback(
+			function () use (&$stored): array {
+				return $stored;
+			}
+		);
+		$this->catalogue->method('setVoorzieningenConfig')->willReturnCallback(
+			function (array $config) use (&$stored): void {
+				$stored = $config;
+			}
+		);
+
+		$result = $this->service()->updateVoorzieningenConfig(['register' => '26', 'gebruik_schema' => '48', 'sector_schema' => '']);
+
+		$this->assertTrue($result['success']);
+		$this->assertSame('66', $stored['attestationRound_schema']);
+		$this->assertSame('67', $stored['attestationRequest_schema']);
+		$this->assertSame('48', $stored['gebruik_schema']);
+		$this->assertSame('', $stored['sector_schema']);
+
+	}//end testVoorzieningenUpdateKeepsTheKeysItDoesNotName()
+
+	/**
 	 * A failing Voorzieningen or ArchiMate write is reported with its cause.
 	 *
 	 * @return void
