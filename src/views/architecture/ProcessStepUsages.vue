@@ -47,7 +47,7 @@ import { loadStepUsages } from '../../utils/processStepUsages.js'
  * The applications in use that support a process step, saying how many
  * linked applications the reader may not see (REQ-BPM-002).
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 export default {
 	name: 'ProcessStepUsages',
@@ -93,7 +93,7 @@ export default {
 		 * Load the step's usages.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+		 * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
 		 */
 		async load() {
 			this.loading = true

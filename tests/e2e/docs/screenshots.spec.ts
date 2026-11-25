@@ -34,6 +34,7 @@
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-process-mapping/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  */
@@ -560,6 +561,53 @@ test.describe('documentation screenshots', () => {
 		const overlap = page.getByTestId('pr-overlap')
 		await expect(overlap.getByTestId('pr-overlap-row').filter({ hasText: 'Documentregistratiecomponent' })).toBeVisible({ timeout: 30_000 })
 		await shoot(overlap, 'portfolio-report-overlap.png')
+	})
+
+	test('business processes: the process page with its flow, and the steps on the application in use', async ({ page, baseURL }) => {
+		// The process-mapping register fragment seeds Behandelen vergunningaanvraag
+		// with three steps; its intake step names an application in use.
+		const request = await api(baseURL)
+		const processes = await (await request.get(`${OBJECTS}/${register}/process?_limit=50`)).json()
+		const process = (processes.results ?? []).find((row: Obj) => row.name === 'Behandelen vergunningaanvraag') as Obj
+		expect(process, 'the seeded process').toBeTruthy()
+		const steps = await (await request.get(`${OBJECTS}/${register}/processStep?process=${process.id}&_limit=50`)).json()
+		const intake = (steps.results ?? []).find((row: Obj) => Array.isArray(row.usages) && row.usages.length > 0) as Obj
+		await request.dispose()
+
+		await page.goto(`${APP}/processen/${process.id}`)
+		await settle(page)
+		const flow = page.getByTestId('process-step-flow')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await flow.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(flow.locator('.vue-flow__node')).toHaveCount(3, { timeout: 30_000 })
+		await shoot(page.locator('section, div').filter({ has: page.getByRole('heading', { name: 'Step flow', exact: true }) }).filter({ has: flow }).last(), 'process-step-flow.png')
+		await page.evaluate(() => window.scrollTo(0, 0))
+		await page.locator('main').first().evaluate((el) => el.scrollTo?.(0, 0))
+		await shoot(page.locator('#app-content, main').first(), 'process-page.png')
+
+		if (intake) {
+			const usage = String((intake.usages as unknown[])[0] && typeof (intake.usages as unknown[])[0] === 'object' ? ((intake.usages as Obj[])[0].id) : (intake.usages as string[])[0])
+			await page.goto(`${APP}/gebruik/${usage}`)
+			await settle(page)
+			const title = page.locator('main').getByText('Process steps this application supports', { exact: true }).first()
+			await page.mouse.move(800, 450)
+			await expect.poll(async () => {
+				if (await title.count() > 0) {
+					return 1
+				}
+				await page.mouse.wheel(0, 800)
+				return 0
+			}, { timeout: 30_000 }).toBe(1)
+			const card = widget(page, 'usage-process-steps')
+			await expect(card.getByRole('row').filter({ hasText: String(intake.name) })).toBeVisible({ timeout: 30_000 })
+			await shoot(card, 'usage-process-steps.png')
+		}
 	})
 
 	test('API documentation', async ({ page }) => {

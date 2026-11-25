@@ -78,7 +78,7 @@ function registerInVoorzieningen(type) {
  * reads the register from them.
  *
  * @return {Promise<void>} Resolves once the settings are there.
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 export async function ensureSettingsLoaded() {
 	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {

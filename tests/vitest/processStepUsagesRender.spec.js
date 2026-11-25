@@ -8,7 +8,7 @@
  * their usage page, how many linked applications the reader may not see, and
  * the empty sentence only when nothing is linked at all.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

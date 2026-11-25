@@ -9,7 +9,7 @@
  * attention mark for a high risk or a failed check, and the names of the
  * applications that support each step. It reloads when the process changes.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
