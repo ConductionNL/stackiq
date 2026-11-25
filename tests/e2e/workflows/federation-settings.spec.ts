@@ -108,7 +108,11 @@ test('an admin switches federation on and the section shows the registration sta
 			await apiCtx.put(`${FEDERATION_API}/enabled`, { data: { enabled: false } })
 		}
 		await gotoFederationSettings(page)
-		const toggle = page.getByRole('checkbox', { name: 'Federation is on' }).first()
+		// NcCheckboxRadioSwitch type="switch" renders role switch (checkbox in older releases).
+		const toggle = page
+			.getByRole('switch', { name: 'Federation is on' })
+			.or(page.getByRole('checkbox', { name: 'Federation is on' }))
+			.first()
 		await expect(toggle).not.toBeChecked()
 		await expect(page.getByText('Not registered: federation is switched off.').first()).toBeVisible()
 
