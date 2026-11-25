@@ -46,7 +46,7 @@ const seeded: Array<[string, string]> = []
 const accounts: string[] = []
 const ids: Record<string, string> = {}
 
-const organisationName = `${RUN_ID} Gemeente Voorbeeld`
+const organisationName = `${RUN_ID} Leverancier Voorbeeld`
 const password = `Sq-${randomBytes(12).toString('hex')}-Pw1!`
 const keeper = `${RUN_ID}-keeper`.slice(0, 60)
 const buyer = `${RUN_ID}-buyer`.slice(0, 60)
@@ -109,24 +109,27 @@ async function openReview(page: Page): Promise<void> {
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
+	// A Supplier: its type grants Aanbod-beheerder, so both people are listed,
+	// while Gebruik-beheerder comes only from the buyer's contact person (a
+	// Municipality would grant Gebruik-beheerder itself, and withdrawing it
+	// from the contact person could never take the buyer out of the group).
 	ids.organisation = await seed('organization', {
 		name: organisationName,
-		type: 'Municipality',
+		type: 'Supplier',
 		status: 'Active',
 		contactsUid: `${RUN_ID}-municipality`,
 	})
 	await account(keeper)
 	await account(buyer, ['gebruik-beheerder'])
 	await account(regular)
+	// A row names the person by their account (display name, then uid): the
+	// contactPerson schema has no name fields of its own, and `username` is
+	// the link to the account, which only an admin writes directly.
 	ids.keeper = await seed('contactPerson', {
-		firstName: 'Anna',
-		lastName: `${RUN_ID} Keeper`,
 		username: keeper,
 		organization: ids.organisation,
 	})
 	ids.buyer = await seed('contactPerson', {
-		firstName: 'Bram',
-		lastName: `${RUN_ID} Buyer`,
 		username: buyer,
 		organization: ids.organisation,
 		roles: ['Gebruik-beheerder'],
@@ -148,7 +151,7 @@ test.afterAll(async () => {
 test('both colleagues are listed as never signed in and due', async ({ page }) => {
 	await openReview(page)
 	const table = page.getByTestId('access-review-table')
-	for (const name of [`${RUN_ID} Keeper`, `${RUN_ID} Buyer`]) {
+	for (const name of [keeper, buyer]) {
 		const row = table.getByRole('row').filter({ hasText: name })
 		await expect(row).toBeVisible()
 		await expect(row).toContainText('Never')
@@ -161,7 +164,7 @@ test('Keep access makes the row current, reviewed today by the administrator', a
 	await openReview(page)
 	await page.getByTestId(`access-review-keep-${ids.keeper}`).click()
 
-	const row = page.getByTestId('access-review-table').getByRole('row').filter({ hasText: `${RUN_ID} Keeper` })
+	const row = page.getByTestId('access-review-table').getByRole('row').filter({ hasText: keeper })
 	await expect(row).toContainText('Current', { timeout: 15000 })
 	await expect(row).toContainText(NC_ADMIN_USER)
 	await expect(row).not.toContainText('Due')
@@ -181,7 +184,7 @@ test('Remove role takes Gebruik-beheerder from the row, the contact person and t
 	await openReview(page)
 	const role = page.getByTestId('access-review-table')
 		.getByRole('row')
-		.filter({ hasText: `${RUN_ID} Buyer` })
+		.filter({ hasText: buyer })
 		.getByTestId('access-review-role-Gebruik-beheerder')
 	await expect(role).toBeVisible()
 	await role.getByRole('button', { name: /Remove/ }).click()
@@ -195,13 +198,31 @@ test('Remove role takes Gebruik-beheerder from the row, the contact person and t
 
 // @e2e role-mapping-and-access-review::a-regular-user-does-not-see-the-entry
 test('a regular user has no Access review entry in the menu', async ({ browser }) => {
-	const context = await browser.newContext({
-		storageState: { cookies: [], origins: [] },
-		httpCredentials: { username: regular, password, send: 'always' },
+	// Nextcloud pages do not take basic auth: sign in through the login form.
+	const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+	// A fresh browser: keep the first-open overlays shut, as global setup does for the admin.
+	await context.addInitScript(() => {
+		try {
+			window.localStorage.setItem('cn-support-dialog-shown:stackiq', '1')
+			window.localStorage.setItem('cn-walkthrough-seen:stackiq', '999.0.0')
+		} catch {
+			// No storage: the helpers dismiss them by hand.
+		}
 	})
 	const page = await context.newPage()
-	await page.goto('/index.php/apps/stackiq/organisaties')
-	await expect(page.locator('.stackiq-app-root')).toBeVisible({ timeout: 30000 })
+	await page.goto('/index.php/login')
+	await page.locator('#user').fill(regular)
+	await page.locator('#password').fill(password)
+	await page.locator('[type="submit"]').first().click()
+	await page.waitForURL((url) => !url.pathname.includes('/login'))
+	await gotoAppRoute(page, '/organisaties')
+	// Open the Organisations group, so a missing child means hidden, not folded away.
+	const group = page.locator('#app-navigation-vue li').filter({ has: page.getByRole('link', { name: 'Organisations', exact: true }) }).first()
+	const toggle = group.getByRole('button', { name: 'Open menu' }).first()
+	if (await toggle.count() > 0) {
+		await toggle.click()
+	}
+	await expect(page.getByRole('link', { name: 'My confirmation requests' })).toBeVisible({ timeout: 15000 })
 	await expect(page.getByRole('link', { name: 'Access review' })).toHaveCount(0)
 	await context.close()
 })
