@@ -5209,14 +5209,14 @@
 			"bluedolphin": "yes",
 			"glpi": "yes",
 			"topdesk": "partial",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS = referenceComponent, standard, applicationService, domain (GET /api/facets/{schema}, routes.php:195); src/views/FacetedCatalogIndexView.vue renders CnFacetSidebar with these plus search, on the Applications and Services pages. Supplier is only a column (src/manifest.json Modules config columns 'provider'), not a facet, although the module schema marks provider facetable. Corrections round 8 (2026-09-28), stackiq#1141: the domain facet never offers a value, because lib/Service/FacetService.php:704 reads $element['domain'] while the element schema declares domein (lib/Settings/softwarecatalogus_register.json:4642) and the GEMMA import stores the Domein property as domein (lib/Service/ArchiMateImportService.php:1017, lower-cased by convertToCamelCase :2256), at d22033a.",
+				"state": "built",
+				"evidence": "Applications /modules and Services /diensten offer Supplier (Leverancier) next to the four GEMMA facets: lib/Service/FacetService.php DIMENSIONS gains supplier (module: provider; catalogService: its own provider), labelled by organisation name; src/views/FacetedCatalogIndexView.vue renders it, _gf_supplier keeps the choice in the URL and saved views. The domain facet reads the element's domein property (FacetService::ELEMENT_DOMAIN_PROPERTY). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main after a fresh demo import: /modules Supplier facet Voorbeeld Name 2 (6) and Voorbeeld Name 3 (1); tests/e2e/spec-coverage/supplier-facet.spec.ts 2 passed, 1 fixme; docs screenshot supplier-facet.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "insight-supplier-facet",
+				"change": "2026-11-25-insight-supplier-facet",
 				"requirement": [
-					"openspec/changes/insight-supplier-facet/specs/supplier-facet :: REQ-SFC-002 The Applications and Services pages SHALL offer Supplier as a facet that narrows the list",
+					"openspec/specs/supplier-facet :: REQ-SFC-002 The Applications and Services pages SHALL offer Supplier as a facet that narrows the list",
 					"openspec/specs/gemma-faceted-search :: Facets combine with free-text search"
 				]
 			},
@@ -5225,7 +5225,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "high",
-			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/insight-supplier-facet (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): the domain facet is always empty, so of the four facets only reference component, standard and application service narrow the list, stackiq#1141; rating kept because search and the reference component facet work and supplier was already missing.",
+			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/archive/2026-11-25-insight-supplier-facet (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): the domain facet is always empty, so of the four facets only reference component, standard and application service narrow the list, stackiq#1141; rating kept because search and the reference component facet work and supplier was already missing.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Aan de linkerkant staan zogenaamde filter mogelijkheden. Deze werken ook in combinatie ... Achter de te zetten filters staat een getal\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facets Leverancier, Standaard, Referentiecomponent, Status planning, Domein, Doelgroep, Bedrijfsfunctie (read 2026-09-26). Reached on: Alle pakketten / Alle pakketversies.",
 				"glpi": "source read at 11.0.9: every list has a criteria builder, src/Glpi/Search/Input/QueryBuilder.php:72 showGenericSearch, over all search options, for example manufacturer on appliances (src/Appliance.php:229 region, glpi_manufacturers) and status (src/Appliance.php:350); there are no counted facets and no reference component to filter on. Reached on: Management > Appliances, search criteria.",

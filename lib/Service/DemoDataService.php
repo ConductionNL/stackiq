@@ -255,6 +255,10 @@ class DemoDataService implements DemoDataServiceInterface {
 		// a demo contract seeded to read Expiring still does months later.
 		$data = (new RelativeDemoDates())->resolve(data: $data, today: $this->today());
 
+		// Empty relation placeholders ({} and [{}]) would be created as blank
+		// related objects, and the row holding them would not import.
+		$data = (new EmptyDemoPlaceholders())->strip(data: $data);
+
 		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
 			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolveDurations(data: $data, now: new DateTimeImmutable())),
