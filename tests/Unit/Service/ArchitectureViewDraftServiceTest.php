@@ -12,7 +12,7 @@
  *
  * @link https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md
+ * @spec openspec/specs/architecture-assistant-views/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -281,7 +281,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
 	 */
 	public function testWithoutAnAmefMappingTheDraftUsesTheVngGemmaSlug(): void {
 		$this->amefConfig = [];

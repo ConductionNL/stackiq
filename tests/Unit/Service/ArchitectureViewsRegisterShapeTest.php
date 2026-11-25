@@ -189,7 +189,7 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
 	 */
 	public function testADraftedViewCarriesItsMarkAndTheSeedHoldsOne(): void {
 		$merged = self::merged();

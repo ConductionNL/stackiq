@@ -141,7 +141,7 @@ export function fromCanvas(nodes = [], edges = []) {
  * @param {Array<object>} viewNodes The view's `xml.viewNodes`.
  * @param {Array<object>} viewRelationships The view's `xml.viewRelationships`.
  * @return {{viewNodes: Array<object>, laidOut: boolean}} The nodes, and whether they were laid out.
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-004-a-drafted-view-shall-be-laid-out-when-it-is-first-opened
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-004-a-drafted-view-shall-be-laid-out-when-it-is-first-opened
  */
 export function layoutUnplacedNodes(viewNodes = [], viewRelationships = []) {
 	if (!needsFullLayout(viewNodes)) {

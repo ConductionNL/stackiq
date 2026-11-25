@@ -111,7 +111,7 @@ function defaultIdentifier() {
  *
  * @param {object} view The view being saved.
  * @return {string} 'assistant' or 'drawn'.
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
  */
 export function savedOrigin(view) {
 	return view?.origin === 'assistant' ? 'assistant' : 'drawn'
@@ -127,7 +127,7 @@ export function savedOrigin(view) {
  * @param {function(): Date} [options.now] The clock.
  * @param {function(): string} [options.newIdentifier] Makes a fresh ArchiMate identifier.
  * @return {object}
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
  */
 export function createArchitectureViewStore({ http, register, user = '', now = () => new Date(), newIdentifier = defaultIdentifier }) {
 	const url = (schema, id = null, suffix = '') => generateUrl(

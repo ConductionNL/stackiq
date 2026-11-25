@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * Drafts architecture views for review.
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One draft is one composite write: validation, resolution and three kinds of save belong together.
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The coupling is OpenRegister's save and find value objects and the exceptions a draft can end in.
@@ -135,7 +135,7 @@ class ArchitectureViewDraftService {
 	 *
 	 * @throws InvalidArgumentException When a type is not an ArchiMate element type.
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
 	 */
 	public function searchElements(string $query, array $types = [], int $limit = 20): array {
 		foreach ($types as $type) {
@@ -186,8 +186,8 @@ class ArchitectureViewDraftService {
 	 * @throws DraftRefusedException    When OpenRegister refuses a save under the caller's rights.
 	 * @throws RuntimeException         When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
 	 */
 	public function draftView(string $name, string $description, array $elements, array $relations): array {
 		$this->validate(name: $name, elements: $elements, relations: $relations);
@@ -567,7 +567,7 @@ class ArchitectureViewDraftService {
 	 *
 	 * @return array{register: string, schema: string}
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
 	 */
 	private function target(string $schema): array {
 		$config   = $this->registers->getAmefConfig();

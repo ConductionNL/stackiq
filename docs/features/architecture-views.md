@@ -57,6 +57,8 @@ Both tools run with your own rights: an assistant cannot draft a view you could 
 
 A drafted view opens in the editor with the notice "Drafted by an assistant for *user* on *date*" and the origin **Drafted by an assistant**. Its elements are laid out automatically the first time it opens; click **Save** to keep that layout, move elements first if you like. The view, and every element and relation the assistant created, keep the origin `assistant` after you edit them, so the **origin** filter on the Views list finds them. Review the draft before you submit it.
 
+![A view drafted by an assistant: the notice names who it was drafted for and when, and the elements are laid out on first open](../images/architecture-view-drafted.png)
+
 ## Who sees what
 
 GEMMA views, elements and relations are public. Views, elements and relations drawn in stackiq are only read by signed-in users of the organisation that drew them, and they stay out of the shared views list (`/api/views`) and of the full ArchiMate export. Drafted views are treated the same way.
