@@ -88,8 +88,9 @@
 - **acceptance_criteria**:
   - GIVEN the feature page WHEN it is read THEN it shows the editor, the tag filter and a compare, each with a screenshot
   - GIVEN a Dutch instance WHEN the Views page renders THEN every new string reads in Dutch
-- [ ] Implement
-- [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+- [x] Implement
+- [x] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+      25 Nov 2026 (NC 34.0.6, PostgreSQL 16, OpenRegister main): `docs/features/architecture-views.md` shows the editor (architecture-view-editor.png), the list filtered on a tag in the sidebar (architecture-views-list.png) and a compare of two versions (architecture-view-compare.png), captured by `tests/e2e/docs/screenshots.spec.ts` ('views: the editor, ...'). Dutch: every editor, list and compare string is in `l10n/nl.json` (nl parity complete). `architecture-views.spec.ts` live 4/5; the fifth (lock notice) waits for openregister#11273 (lock answered 500 instead of 423), so the change is not archived yet.
 
 ## Build notes (round 2, 2026-11-17)
 

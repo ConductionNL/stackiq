@@ -16,6 +16,8 @@ Open **Architecture** in the navigation menu, then **Views**. The list holds the
 - The quick filters **All**, **Mine**, **Drawn** and **Imported** narrow the list to everything, the views you own, the drawn views or the GEMMA views.
 - The sidebar filters on **tags**, **status** (draft, in review, published, retired) and **origin**.
 
+![The Views list filtered on the tag zaakgericht werken in the sidebar](../images/architecture-views-list.png)
+
 ## Drawing a view
 
 Click **New view**, give it a name and click **Create view**. The editor opens with an empty canvas.
@@ -24,6 +26,8 @@ Click **New view**, give it a name and click **Create view**. The editor opens w
 - **Add element**: choose an ArchiMate type, such as Application component, type a name and click **Add element**. The element is created when you save.
 - **Connect**: choose the **Relation type for new connections**, then drag from one element to another, or use the keyboard on a focused element. Every connection refers to a relation between the two elements: an existing relation of that type is reused, otherwise a new one is created when you save.
 - Move and resize elements on the canvas; remove one with Delete.
+
+![The editor with two application components on the canvas](../images/architecture-view-editor.png)
 
 Click **Save**. A save that fails keeps your drawing; save again to retry, without creating relations twice.
 
@@ -36,6 +40,8 @@ A view from the GEMMA import opens read-only, because the next import would over
 ## Versions
 
 In the editor, type a **Version label** and click **Save version** to keep a numbered copy of the saved view. Click **Compare versions** to compare two versions, or a version with the current view: both are drawn side by side, with added items marked in green, removed items in red and changed items in yellow, and the same changes listed as text below.
+
+![Two versions side by side: the archive added in version 2 is marked Added and listed below](../images/architecture-view-compare.png)
 
 ## Exporting a view
 

@@ -938,3 +938,87 @@ test.describe('documentation screenshots: role mapping and access review', () =>
 		await shoot(page.locator('#app-content, main').first(), 'access-review.png')
 	})
 })
+
+// Its own block: it seeds what it shows, so it does not wait on the catalogue seed above.
+test.describe('documentation screenshots: drawing views', () => {
+	test('views: the editor, the tag filter on the list and a compare of two versions', async ({ page, baseURL }) => {
+		await page.setViewportSize({ width: 1600, height: 900 })
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const post = async (schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${String(amef.register)}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const stamp = Date.now()
+		// One row on the list: earlier runs' copies of the view go first.
+		const viewSchema = String(amef.view_schema || 'view')
+		const earlier = await request.get(`${OBJECTS}/${String(amef.register)}/${viewSchema}`, { params: { _search: `${SEED_PREFIX} Meldingen openbare ruimte`, _limit: '20' } })
+		for (const old of (earlier.ok() ? ((await earlier.json()).results ?? []) : []) as Obj[]) {
+			if (old.name === `${SEED_PREFIX} Meldingen openbare ruimte`) {
+				await request.delete(`${OBJECTS}/${String(amef.register)}/${viewSchema}/${String(old.id)}`)
+			}
+		}
+		const element = (name: string, suffix: string): Promise<Obj> => post(String(amef.element_schema || 'element'), {
+			identifier: `id-${stamp}-${suffix}`, type: 'ApplicationComponent', name, origin: 'drawn', properties: [],
+		})
+		await element(`${SEED_PREFIX} Zaaksysteem`, 'zs')
+		await element(`${SEED_PREFIX} Klantportaal`, 'kp')
+		const node = (id: string, ref: string, name: string, x: number): Record<string, unknown> => ({
+			viewNodeId: id, elementRef: ref, name, type: 'ApplicationComponent', x, y: 60, width: 220, height: 90,
+		})
+		const view = await post(String(amef.view_schema || 'view'), {
+			identifier: `id-${stamp}-view`, type: 'Diagram', name: `${SEED_PREFIX} Meldingen openbare ruimte`, origin: 'drawn', properties: [],
+			documentation: 'The case system and the portal residents report issues in the public space with.',
+			tags: ['zaakgericht werken', 'dienstverlening'],
+			nodes: [node('n-kp', `id-${stamp}-kp`, `${SEED_PREFIX} Klantportaal`, 40), node('n-zs', `id-${stamp}-zs`, `${SEED_PREFIX} Zaaksysteem`, 360)],
+			connections: [],
+		})
+		await request.dispose()
+
+		// The editor, with the drawn view on the canvas.
+		await page.goto(`${APP}/views/${view.id}`)
+		await settle(page)
+		const editor = page.getByTestId('architecture-view-editor')
+		await expect(editor.locator('.vue-flow__node')).toHaveCount(2, { timeout: 30_000 })
+		await shoot(editor, 'architecture-view-editor.png')
+
+		// Two versions, the second with one more element, then the compare.
+		await editor.getByLabel('Version label').fill('Huidige situatie')
+		await editor.getByRole('button', { name: 'Save version' }).click()
+		await expect(page.getByText(/Version 1 is saved\./)).toBeVisible({ timeout: 30_000 })
+		await editor.getByLabel('New element name').fill(`${SEED_PREFIX} Zaakarchief`)
+		await editor.getByRole('button', { name: 'Add element' }).click()
+		await editor.getByRole('button', { name: 'Save', exact: true }).click()
+		await expect(page.getByText('The view is saved.')).toBeVisible({ timeout: 30_000 })
+		await editor.getByLabel('Version label').fill('Met zaakarchief')
+		await editor.getByRole('button', { name: 'Save version' }).click()
+		await expect(page.getByText(/Version 2 is saved\./)).toBeVisible({ timeout: 30_000 })
+
+		await page.goto(`${APP}/views/${view.id}/compare`)
+		await settle(page)
+		const compare = page.getByTestId('view-version-compare')
+		await expect(compare).toBeVisible({ timeout: 30_000 })
+		for (const [label, option] of [['Earlier', /^Version 1:/], ['Later', /^Version 2:/]] as Array<[string, RegExp]>) {
+			await page.getByLabel(label).first().click()
+			await page.getByRole('option', { name: option }).first().click()
+		}
+		await expect(compare.getByText('Added').first()).toBeVisible({ timeout: 30_000 })
+		await shoot(compare, 'architecture-view-compare.png')
+
+		// The list with its tags, and the sidebar that filters on them.
+		await page.goto(`${APP}/views?_search=${encodeURIComponent(`${SEED_PREFIX} Meldingen`)}`)
+		await settle(page)
+		await expect(page.getByText('zaakgericht werken').first()).toBeVisible({ timeout: 30_000 })
+		// The sidebar's Filters hold the facets, Tags among them: filter on one tag.
+		await page.getByRole('button', { name: 'Search and columns', exact: true }).first().click()
+		const sidebar = page.locator('#app-sidebar-vue, .app-sidebar').first()
+		const tags = sidebar.getByText('Tags', { exact: true }).first()
+		await tags.scrollIntoViewIfNeeded()
+		await tags.locator('xpath=following::*[contains(@class, "v-select")][1]').click()
+		await page.getByRole('option', { name: 'zaakgericht werken' }).first().click()
+		await page.keyboard.press('Escape')
+		await expect(page.getByRole('row').filter({ hasText: `${SEED_PREFIX} Meldingen openbare ruimte` })).toHaveCount(1, { timeout: 30_000 })
+		await shoot(page.locator('#content-vue, #content').first(), 'architecture-views-list.png')
+	})
+})
