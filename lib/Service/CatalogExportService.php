@@ -46,6 +46,9 @@ use RuntimeException;
 /**
  * Builds the CSV or XLSX export of a faceted catalogue list.
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coupling 14 (threshold 13): the fourteenth is SearchSelection,
+ *                                                  which passes the matched ids to OpenRegister as its id selection.
+ *
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 class CatalogExportService implements CatalogExportServiceInterface {
@@ -241,6 +244,7 @@ class CatalogExportService implements CatalogExportServiceInterface {
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function readObjects(string $schema, array $query): array {
 		$registerId = $this->catalogue->getRegisterIdForObjectType(objectType: $schema);
@@ -250,7 +254,10 @@ class CatalogExportService implements CatalogExportServiceInterface {
 		}
 
 		$query['@self'] = ['register' => $registerId, 'schema' => $schemaId];
-		$result         = $this->objectService()->searchObjectsPaginated($query);
+		$objectService  = $this->objectService();
+		$result         = $objectService->searchObjectsPaginated(
+			...SearchSelection::fromQuery(service: $objectService, method: 'searchObjectsPaginated', query: $query)
+		);
 
 		$objects = [];
 		foreach (($result['results'] ?? []) as $object) {

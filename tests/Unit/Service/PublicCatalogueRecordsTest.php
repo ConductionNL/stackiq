@@ -70,7 +70,19 @@ final class PublicCatalogueRecordsTest extends TestCase {
 		];
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
-			function (array $query) use ($modules): array {
+			function (
+				array $query,
+				bool $_rbac=true,
+				bool $_multitenancy=true,
+				bool $deleted=false,
+				?array $ids=null
+			) use ($modules): array {
+				// The id selection travels beside the query (SearchSelection::fromQuery); fold it back for the assertions.
+				if ($ids !== null) {
+					$paging = ['_limit' => true, '_page' => true];
+					$query  = array_diff_key($query, $paging) + ['id' => $ids] + array_intersect_key($query, $paging);
+				}
+
 				$this->queries[] = $query;
 				$rows = match ($query['@self']['schema']) {
 					22 => $modules,

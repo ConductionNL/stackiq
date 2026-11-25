@@ -354,10 +354,10 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 * @param array<string,mixed> $query The query, with `_limit`.
 	 *
 	 * @return array<string,mixed> The paginated result.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(array $query): array {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService')
-			->searchObjectsPaginated(query: $query, _rbac: false, _multitenancy: false);
+		return SearchSelection::paginatedUnscoped(service: $this->container->get('OCA\OpenRegister\Service\ObjectService'), query: $query);
 	}//end search()
 
 	/**

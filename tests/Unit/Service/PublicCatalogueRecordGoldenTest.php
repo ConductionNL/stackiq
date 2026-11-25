@@ -63,7 +63,19 @@ class PublicCatalogueRecordGoldenTest extends TestCase {
 	private function records(array $modules): PublicCatalogueRecords {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
-			function (array $query) use ($modules): array {
+			function (
+				array $query,
+				bool $_rbac=true,
+				bool $_multitenancy=true,
+				bool $deleted=false,
+				?array $ids=null
+			) use ($modules): array {
+				// The id selection travels beside the query (SearchSelection::fromQuery); fold it back for the assertions.
+				if ($ids !== null) {
+					$paging = ['_limit' => true, '_page' => true];
+					$query  = array_diff_key($query, $paging) + ['id' => $ids] + array_intersect_key($query, $paging);
+				}
+
 				$this->queries[] = $query;
 				$rows = match ($query['@self']['schema']) {
 					22 => $modules,
@@ -127,7 +139,8 @@ class PublicCatalogueRecordGoldenTest extends TestCase {
 		);
 		$this->assertSame(
 			[
-				['@self' => ['register' => 1, 'schema' => 22], '_limit' => 500, 'id' => ['openzaak']],
+				// The id is folded back from the selection, before the paging keys.
+				['@self' => ['register' => 1, 'schema' => 22], 'id' => ['openzaak'], '_limit' => 500],
 				['@self' => ['register' => 1, 'schema' => 21], 'id' => ['conduction'], '_limit' => 1],
 				['@self' => ['register' => 2, 'schema' => 30], 'id' => ['drc', 'missing', 'zrc'], '_limit' => 3],
 			],

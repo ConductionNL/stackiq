@@ -687,6 +687,7 @@ class FacetService implements FacetServiceInterface {
 	 * @return array<string,array> Module id => module object.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function fetchModulesByIdentifiers(ObjectServiceInterface $objectService, array $identifiers): array {
 		if (empty($identifiers) === true) {
@@ -711,7 +712,7 @@ class FacetService implements FacetServiceInterface {
 		];
 
 		try {
-			$results = $objectService->searchObjects($query);
+			$results = $objectService->searchObjects(...SearchSelection::fromQuery(service: $objectService, method: 'searchObjects', query: $query));
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				message: 'FacetService: failed to batch-resolve linked modules',
