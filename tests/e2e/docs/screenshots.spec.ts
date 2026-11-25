@@ -36,7 +36,8 @@ import * as path from 'path'
 
 const IMAGES = path.resolve(__dirname, '../../../docs/images')
 const APP = '/index.php/apps/stackiq'
-const OBJECTS = '/index.php/apps/openregister/api/objects'
+const OR_API = '/index.php/apps/openregister/api'
+const OBJECTS = `${OR_API}/objects`
 const SEED_PREFIX = 'Voorbeeldstad'
 const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
 const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
@@ -76,6 +77,47 @@ async function ensure(request: APIRequestContext, register: string, schema: stri
 
 	const created = await request.post(`${OBJECTS}/${register}/${schema}`, { data })
 	expect(created.status(), `create ${schema} ${fields.map((f) => String(data[f])).join('/')}: ${await created.text()}`).toBeLessThan(300)
+	return (await created.json()) as Obj
+}
+
+/** An API context with basic auth and no session cookie, so writes need no CSRF requesttoken. */
+async function api(baseURL: string | undefined): Promise<APIRequestContext> {
+	return playwrightRequest.newContext({
+		baseURL,
+		storageState: { cookies: [], origins: [] },
+		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS, send: 'always' },
+		extraHTTPHeaders: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+	})
+}
+
+/**
+ * The uuid of the OpenRegister organisation with this name, created when missing.
+ *
+ * Suggested connections are shown to the usage's own organisation only: the
+ * caller's active OpenRegister organisation must be the usage's consumer, so
+ * the catalogue organisation shares this uuid.
+ */
+async function orOrganisation(request: APIRequestContext, name: string): Promise<string> {
+	const list = await request.get(`${OR_API}/organisations`)
+	expect(list.ok()).toBeTruthy()
+	const found = (((await list.json()).results ?? []) as Array<{ uuid: string, name: string }>).find((o) => o.name === name)
+	if (found) {
+		return found.uuid
+	}
+	const created = await request.post(`${OR_API}/organisations`, { data: { name, description: 'Example organisation for the documentation screenshots.' } })
+	expect(created.status(), await created.text()).toBeLessThan(300)
+	const body = await created.json()
+	return String((body.organisation ?? body).uuid)
+}
+
+/** An object with a given id, created with that id when missing. */
+async function ensureById(request: APIRequestContext, register: string, schema: string, data: Record<string, unknown> & { id: string }): Promise<Obj> {
+	const found = await request.get(`${OBJECTS}/${register}/${schema}/${data.id}`)
+	if (found.ok()) {
+		return (await found.json()) as Obj
+	}
+	const created = await request.post(`${OBJECTS}/${register}/${schema}`, { data })
+	expect(created.status(), `create ${schema} ${data.id}: ${await created.text()}`).toBeLessThan(300)
 	return (await created.json()) as Obj
 }
 
@@ -126,16 +168,11 @@ test.describe('documentation screenshots', () => {
 	test.use({ viewport: { width: 1280, height: 900 } })
 
 	test.beforeAll(async ({ baseURL }) => {
-		// Basic auth without the session cookie: no CSRF requesttoken needed for writes.
-		const request = await playwrightRequest.newContext({
-			baseURL,
-			storageState: { cookies: [], origins: [] },
-			httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS, send: 'always' },
-			extraHTTPHeaders: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
-		})
+		const request = await api(baseURL)
 		register = await registerId(request)
 
-		organisation = await ensure(request, register, 'organization', { name: `Gemeente ${SEED_PREFIX}`, type: 'Municipality' })
+		const orgName = `Gemeente ${SEED_PREFIX}`
+		organisation = await ensureById(request, register, 'organization', { id: await orOrganisation(request, orgName), name: orgName, type: 'Municipality' })
 		const supplier = await ensure(request, register, 'organization', { name: `${SEED_PREFIX} Software B.V.`, type: 'Supplier' })
 		const anna = await ensure(request, register, 'contactPerson', { contactsUid: 'anna', role: 'Information manager', organization: organisation.id }, ['contactsUid'])
 		const bas = await ensure(request, register, 'contactPerson', { contactsUid: 'bas', role: 'Application manager', organization: organisation.id }, ['contactsUid'])
@@ -245,24 +282,51 @@ test.describe('documentation screenshots', () => {
 	test('data quality report', async ({ page }) => {
 		await page.goto(`${APP}/datakwaliteit`)
 		await settle(page)
+		// The report is per organisation: pick the example one.
+		await page.getByRole('combobox').first().click()
+		await page.keyboard.type(`Gemeente ${SEED_PREFIX}`)
+		await expect(page.getByRole('option').first()).toBeVisible()
+		await page.keyboard.press('Enter')
+		await expect(page.getByText('Select an organisation')).toHaveCount(0)
+		await expect(page.locator('main .loading-icon, #app-content-vue .loading-icon')).toHaveCount(0, { timeout: 30_000 })
+		await expect(page.getByText('Business owner').first()).toBeVisible()
 		await shoot(page.locator('#app-content, main').first(), 'data-quality-report.png')
 	})
 
 	test('confirmation round', async ({ page }) => {
 		await page.goto(`${APP}/confirmation-rounds`)
 		await settle(page)
-		await page.getByText(`${SEED_PREFIX} Q4`).first().click()
+		await page.getByRole('link', { name: `${SEED_PREFIX} Q4`, exact: true }).first().click()
 		await page.waitForURL(/confirmation-rounds\/.+/)
 		await settle(page)
 		await shoot(page.locator('#app-content, main').first(), 'confirmation-round.png')
 	})
 
 	test('connection suggestions', async ({ page }) => {
-		await page.goto(`${APP}/gebruik/${usage.id}`)
-		await settle(page)
-		const card = await reveal(bodyWidget(page, 'Suggested connections'))
-		await expect(card).toBeVisible()
-		await shoot(card, 'connection-suggestions.png')
+		// Only the usage's own organisation sees its suggestions. OpenRegister keeps
+		// the active organisation per session, so switch it in the browser's own.
+		const setActive = (uuid: string) => page.evaluate(async (url) => {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { requesttoken: (window as unknown as { OC: { requestToken: string } }).OC.requestToken, 'OCS-APIRequest': 'true' },
+			})
+			return response.ok
+		}, `${OR_API}/organisations/${uuid}/set-active`)
+
+		await page.goto(`${APP}/`)
+		const active = await page.evaluate(async (url) => (await (await fetch(url)).json()).activeOrganisation?.uuid ?? null, `${OR_API}/organisations/active`)
+		expect(await setActive(organisation.id)).toBeTruthy()
+		try {
+			await page.goto(`${APP}/gebruik/${usage.id}`)
+			await settle(page)
+			const card = await reveal(bodyWidget(page, 'Suggested connections'))
+			await expect(card.getByText('Klantcontact naar Zaaksysteem').first()).toBeVisible()
+			await shoot(card, 'connection-suggestions.png')
+		} finally {
+			if (active) {
+				await setActive(active)
+			}
+		}
 	})
 
 	test('API documentation', async ({ page }) => {
