@@ -8,6 +8,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { connectionsCsv, downloadText, svgDocument } from '../../utils/connectionExport.js'
+import { moduleNames, unnamedModuleIds, withEndNames } from '../../utils/connectionLayout.js'
 import { connectionLinks, connectionMap } from '../../utils/connectionMap.js'
 import { ensureObjectType } from '../../utils/objectTypes.js'
 
@@ -106,13 +107,33 @@ export default {
 					objectStore.fetchCollectionForOptions('connection', { moduleA: this.objectId, _limit: 200 }),
 					objectStore.fetchCollectionForOptions('connection', { moduleB: this.objectId, _limit: 200 }),
 				])
-				this.connections = [...(outgoing || []), ...(incoming || [])]
+				this.connections = await this.named([...(outgoing || []), ...(incoming || [])])
 			} catch {
 				this.error = true
 				this.connections = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The connections with the other applications' names filled in.
+		 *
+		 * OpenRegister answers a connection's ends as bare ids; the names come
+		 * from one read of those applications. A failed read keeps the ids.
+		 *
+		 * @param {Array<object>} connections The connections as read.
+		 * @return {Promise<Array<object>>} The connections, named where possible.
+		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 */
+		async named(connections) {
+			const missing = unnamedModuleIds(connections, {})
+			if (missing.length === 0) {
+				return connections
+			}
+			await ensureObjectType('module')
+			const modules = await objectStore.fetchCollectionForOptions('module', { _ids: missing, _limit: missing.length })
+			return withEndNames(connections, moduleNames(modules))
 		},
 
 		/**

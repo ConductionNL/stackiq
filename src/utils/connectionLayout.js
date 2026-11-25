@@ -206,3 +206,28 @@ export function moduleNames(modules) {
 	}
 	return names
 }
+
+/**
+ * The connections with each application end that OpenRegister returned as a
+ * bare id replaced by that id and its name, where the name is known.
+ *
+ * A connection read from OpenRegister names its ends by uuid only, so the
+ * application page's connection map labelled the other applications with
+ * their uuids.
+ *
+ * @param {Array<object>|null} connections The connections.
+ * @param {{[id: string]: string}} names Application names by id.
+ * @return {Array<object>} The connections, the named ends as {id, name}.
+ * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ */
+export function withEndNames(connections, names) {
+	const named = (value) => {
+		const id = typeof value === 'string' ? value.trim() : ''
+		return id !== '' && names[id] ? { id, name: names[id] } : value
+	}
+	return (Array.isArray(connections) ? connections : []).map((connection) => ({
+		...connection,
+		moduleA: named(connection?.moduleA),
+		moduleB: named(connection?.moduleB),
+	}))
+}
