@@ -15,11 +15,11 @@
  * this run's elements); the coverage on its nodes is the real coverage of the
  * seeded rows. The portfolio scenario reads the real report.
  *
- * Written from the change's scenarios; not yet run against a live instance.
+ * Run live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
  */
 import type { APIRequestContext, Page, Route } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
@@ -34,10 +34,13 @@ import {
 } from './_fixtures.ts'
 import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
 
-const GEMMA_REGISTER = 'vng-gemma'
-
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
+// The register and element schema the GEMMA model is imported into, as the
+// app's own AMEF mapping names them (the coverage reads exactly these). A
+// fixed slug such as 'vng-gemma' can name a stale register the app no longer
+// reads, and the plate then never shows this run's components.
+let gemma: { register: string, element: string }
 const seeded: Array<[string, string, string]> = []
 const ids: Record<string, string> = {}
 const organisation = `${RUN_ID} municipality`
@@ -81,7 +84,12 @@ async function seed(
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.doubled = await seed(GEMMA_REGISTER, 'element', {
+	const amef = await apiCtx.get('/index.php/apps/stackiq/api/amef/config')
+	expect(amef.ok(), `amef/config returned ${amef.status()}`).toBe(true)
+	const amefConfig = (await amef.json())?.config ?? {}
+	gemma = { register: String(amefConfig.register ?? ''), element: String(amefConfig.element_schema || 'element') }
+	expect(gemma.register, 'stackiq has no AMEF register mapping').not.toBe('')
+	ids.doubled = await seed(gemma.register, gemma.element, {
 		identifier: `${RUN_ID}-doubled`,
 		type: 'ApplicationComponent',
 		properties: [],
@@ -89,7 +97,7 @@ test.beforeAll(async () => {
 		gemmaType: 'referentiecomponent',
 		grouping: RUN_ID,
 	})
-	ids.missing = await seed(GEMMA_REGISTER, 'element', {
+	ids.missing = await seed(gemma.register, gemma.element, {
 		identifier: `${RUN_ID}-missing`,
 		type: 'ApplicationComponent',
 		properties: [],
@@ -182,7 +190,7 @@ test('a GEMMA view draws the overlap with both application names and the gap', a
 	const map = page.getByTestId('coverage-view-map')
 	await expect(map).toBeVisible({ timeout: 30000 })
 	await map.getByRole('combobox', { name: 'GEMMA view' }).click()
-	await page.getByRole('option', { name: viewName }).click()
+	await page.locator('.vs__dropdown-option', { hasText: viewName }).first().click()
 
 	const overlap = map.locator('.coverage-view-map__node').filter({ hasText: doubled })
 	await expect(overlap).toHaveAttribute('data-state', 'overlap', { timeout: 30000 })

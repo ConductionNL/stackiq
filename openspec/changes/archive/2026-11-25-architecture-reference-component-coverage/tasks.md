@@ -40,7 +40,7 @@
   - GIVEN a picked organisation WHEN the page loads THEN it shows the counts, the table and the four quick filters
   - GIVEN no reference components WHEN the page loads THEN it says the GEMMA model must be imported
 - [x] Implement
-- [x] Test (Playwright `reference-component-coverage.spec.ts` overlap filter and empty model scenarios) (overlap filter written; the empty-model scenario is `@e2e exclude` in the spec, covered by `ReferenceComponentCoverageServiceTest`) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (Playwright `reference-component-coverage.spec.ts` overlap filter and empty model scenarios) (overlap filter written; the empty-model scenario is `@e2e exclude` in the spec, covered by `ReferenceComponentCoverageServiceTest`) (run 25 Nov 2026 against a live sandbox instance, NC 34 + PostgreSQL 16 + OpenRegister main: `reference-component-coverage.spec.ts` 3 passed, after seeding into the AMEF register the app reads and fixing the module lookup, see below)
 
 ### Task 5: Coverage map on a GEMMA view
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
@@ -49,7 +49,7 @@
   - GIVEN a picked view WHEN it renders THEN it is read-only and every reference component node carries its state as a CSS variable colour and as text
   - GIVEN a node whose element is not a reference component WHEN it renders THEN it carries no state
 - [x] Implement
-- [x] Test (vitest `coverageViewMap.spec.js`, Playwright map scenario) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (vitest `coverageViewMap.spec.js`, Playwright map scenario) (run 25 Nov 2026 against a live sandbox instance, NC 34 + PostgreSQL 16 + OpenRegister main: `reference-component-coverage.spec.ts` 3 passed, after seeding into the AMEF register the app reads and fixing the module lookup, see below)
 
 ### Task 6: Overlap in the portfolio report
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
@@ -59,7 +59,7 @@
   - GIVEN the CSV WHEN it is built THEN it has the `overlapsWith` column
   - GIVEN the page WHEN the report has overlap THEN an Overlap section lists each component with its applications
 - [x] Implement
-- [x] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario) (run 25 Nov 2026 against a live sandbox instance, NC 34 + PostgreSQL 16 + OpenRegister main: `reference-component-coverage.spec.ts` 3 passed, after seeding into the AMEF register the app reads and fixing the module lookup, see below)
 
 ### Task 7: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
@@ -68,7 +68,9 @@
   - GIVEN the feature pages WHEN they are read THEN they show the coverage table, the map and the Overlap section, each in a screenshot
   - GIVEN a Dutch instance WHEN the coverage page renders THEN every new label reads in Dutch
 - [x] Implement
-- [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+- [x] Test (`tests/l10n` key parity, screenshots captured with Playwright) (25 Nov 2026, live sandbox: `npm run test:l10n` OK; `gemma-plate-coverage.png`, `gemma-plate-coverage-map.png` and `portfolio-report-overlap.png` captured with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`; the map's view is answered by the test because the sandbox imports no GEMMA views, the coverage on it is real) and placed in `docs/features/reference-component-coverage.md` and `portfolio-rationalization-time.md`; with the language set to Dutch every label on the plate and the map reads in Dutch)
+
+Live run 25 Nov 2026: the module names were read with an `id` list, which OpenRegister main matches nothing for, so every tile and map node in state Overlap or Covered said "No application"; `ReferenceComponentCoverageService::modulesWithIds()` now selects with `_ids`. The e2e seeded its components into the fixed slug `vng-gemma`, a register the app does not read when the AMEF mapping names another; it now takes the register and element schema from `/api/amef/config`, and picks the view through the vue-select option list.
 
 ## Verification
 

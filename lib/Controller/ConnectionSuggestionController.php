@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use Throwable;
  * method first checks that the caller's active organisation is the usage's
  * consumer or a participant; anyone else gets 403 and nothing changes.
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+ * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
  */
 class ConnectionSuggestionController extends Controller {
 	/**
@@ -65,7 +65,7 @@ class ConnectionSuggestionController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
 	 */
 	#[NoAdminRequired]
 	public function index(string $uuid): JSONResponse {
@@ -82,7 +82,7 @@ class ConnectionSuggestionController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	#[NoAdminRequired]
 	public function accept(string $uuid): JSONResponse {
@@ -99,7 +99,7 @@ class ConnectionSuggestionController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	#[NoAdminRequired]
 	public function dismiss(string $uuid): JSONResponse {
@@ -118,7 +118,7 @@ class ConnectionSuggestionController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	private function withOwnedUsage(string $uuid, callable $action): JSONResponse {
 		$usage = $this->suggestions->findUsage(usageUuid: $uuid);

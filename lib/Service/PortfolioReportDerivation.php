@@ -412,7 +412,7 @@ class PortfolioReportDerivation {
 	 *
 	 * @return array<int,array<string,mixed>> The rows with `referenceComponents` and `overlapsWith`.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 	 */
 	public function withOverlap(array $rows, array $usages, array $componentNames): array {
 		$componentIds = [];
@@ -467,7 +467,7 @@ class PortfolioReportDerivation {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 	 */
 	public function overlapLabel(array $row): string {
 		$parts = [];

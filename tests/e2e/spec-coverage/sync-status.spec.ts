@@ -17,7 +17,7 @@
  * - The regular user is a fresh Nextcloud account in a context with an empty
  *   storage state, so none of the admin's cookies come along.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administr
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
  */
 import type { Route } from '@playwright/test'
 
@@ -120,10 +120,11 @@ test.describe('operations-sync-status-and-progress', () => {
 			httpCredentials: { username: userId, password, send: 'always' },
 			extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
 		})
+		// A browser session through the login form: Nextcloud's web pages do not
+		// take basic auth and answer with the login page.
 		const context = await browser.newContext({
 			baseURL: BASE_URL,
 			storageState: { cookies: [], origins: [] },
-			httpCredentials: { username: userId, password, send: 'always' },
 		})
 		try {
 			// Prove the context is that user, so a 403 is the rule and not a failed login.
@@ -133,6 +134,11 @@ test.describe('operations-sync-status-and-progress', () => {
 			expect((await api.get(`/index.php${STATUS_PATH}`)).status()).toBe(403)
 
 			const page = await context.newPage()
+			await page.goto('/index.php/login')
+			await page.fill('#user', userId)
+			await page.fill('#password', password)
+			await page.click('button[type=submit]')
+			await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30000 })
 			await page.goto(`${APP_BASE}/`, { waitUntil: 'domcontentloaded' })
 			const nav = appNav(page)
 			await nav.waitFor({ state: 'visible', timeout: 30000 })

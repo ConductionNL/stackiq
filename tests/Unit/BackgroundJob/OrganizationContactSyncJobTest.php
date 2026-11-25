@@ -19,7 +19,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/operations-sync-status-and-progress/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md#task-3
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
@@ -142,7 +142,7 @@ class OrganizationContactSyncJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
 	 */
 	public function testTheJobAndTheSettingsShareOneInterval(): void {
 		$store = [];

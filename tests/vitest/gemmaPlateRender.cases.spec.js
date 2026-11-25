@@ -11,7 +11,7 @@
  * a component opens its detail (with who could fill a gap), a truncated
  * answer warns, a model-less answer says so, and a failed load shows why.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 
 import { mount } from '@vue/test-utils'

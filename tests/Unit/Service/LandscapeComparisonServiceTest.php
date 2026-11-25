@@ -73,7 +73,7 @@ final class LandscapeComparisonServiceTest extends TestCase {
 			$this->queries[] = $query;
 			return match ($query['@self']['schema']) {
 				self::USAGE => ['results' => self::usages(), 'total' => 5],
-				self::MODULE => ['results' => array_values(array_filter(self::modules(), static fn (array $m): bool => in_array($m['id'], $query['id'], true))), 'total' => 0],
+				self::MODULE => ['results' => array_values(array_filter(self::modules(), static fn (array $m): bool => in_array($m['id'], $query['_ids'], true))), 'total' => 0],
 				self::ELEMENT => ['results' => self::components(), 'total' => 3],
 			};
 		});
@@ -121,7 +121,8 @@ final class LandscapeComparisonServiceTest extends TestCase {
 		self::assertSame('zuiddrecht', $this->queries[0]['consumer']);
 		self::assertSame(self::USAGE, $this->queries[0]['@self']['schema']);
 		$moduleQuery = array_values(array_filter($this->queries, static fn (array $q): bool => $q['@self']['schema'] === self::MODULE))[0];
-		self::assertEqualsCanonicalizing(['m-old', 'm-new', 'm-keep', 'm-gone', 'm-planned'], $moduleQuery['id']);
+		// The modules by `_ids`: OpenRegister main matches nothing for an `id` list.
+		self::assertEqualsCanonicalizing(expected: ['m-old', 'm-new', 'm-keep', 'm-gone', 'm-planned'], actual: $moduleQuery['_ids']);
 		self::assertSame('referentiecomponent', end($this->queries)['gemmaType']);
 	}//end testEveryReadIsBoundedAndScopedToTheOrganisation()
 

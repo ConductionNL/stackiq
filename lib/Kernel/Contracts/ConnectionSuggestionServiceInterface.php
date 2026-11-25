@@ -44,7 +44,7 @@ interface ConnectionSuggestionServiceInterface {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	public function findUsage(string $usageUuid): ?array;
 
@@ -56,7 +56,7 @@ interface ConnectionSuggestionServiceInterface {
 	 *
 	 * @return boolean
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
 	 */
 	public function mayChange(array $usage, ?string $organisation): bool;
 
@@ -68,7 +68,7 @@ interface ConnectionSuggestionServiceInterface {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
 	 */
 	public function suggestFor(array $usage): array;
 
@@ -81,7 +81,7 @@ interface ConnectionSuggestionServiceInterface {
 	 *
 	 * @return list<string> The connection uuids added to the usage.
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	public function accept(array $usage, array $ids): array;
 
@@ -93,7 +93,7 @@ interface ConnectionSuggestionServiceInterface {
 	 *
 	 * @return list<string> The ids dismissed.
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
 	 */
 	public function dismiss(array $usage, array $ids): array;
 }//end interface

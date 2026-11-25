@@ -34,7 +34,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, revealSection } from './_ui.ts'
 
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
@@ -137,6 +137,7 @@ test('a component added from the application page names that application as Part
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.records}`)
 	await dismissSupportDialog(page)
+	await revealSection(page, 'Components')
 	const components = catalogCard(page, 'Components')
 	await expect(components).toBeVisible({ timeout: 30000 })
 
@@ -163,6 +164,7 @@ test('the application page lists both components and the list hides them until A
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.caseSuite}`)
 	await dismissSupportDialog(page)
+	await revealSection(page, 'Components')
 	const components = catalogCard(page, 'Components')
 	await expect(components).toBeVisible({ timeout: 30000 })
 	await expect(components.getByRole('row').filter({ hasText: casePortal })).toBeVisible({ timeout: 30000 })

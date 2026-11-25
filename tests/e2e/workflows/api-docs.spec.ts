@@ -21,7 +21,7 @@ test.describe('API documentation', () => {
 		await expect(
 			page
 				.locator(APP_MAIN)
-				.getByRole('heading', { name: 'API documentation' }),
+				.getByRole('heading', { name: 'API documentation' }).first(),
 		).toBeVisible()
 	})
 

@@ -30,7 +30,7 @@ use RuntimeException;
 /**
  * A sync run as an organisation_sync operation, its last-run record, and who may see it.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
  */
 #[CoversClass(SyncProgress::class)]
 #[CoversClass(SyncAccessPolicy::class)]
@@ -124,7 +124,7 @@ final class SyncProgressTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 	 */
 	public function testWhoMaySeeTheSync(): void {
 		$groups = $this->createMock(IGroupManager::class);

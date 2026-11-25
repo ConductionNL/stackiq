@@ -32,6 +32,7 @@ use OCA\Stackiq\Service\RoleGroupMap;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,12 +67,15 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig        $config       The app config holding the group lists.
-	 * @param IAppManager       $appManager   Tells whether user_management is installed.
-	 * @param IGroupManager     $groupManager Lists the Nextcloud groups.
-	 * @param LoggerInterface   $logger       The logger.
-	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
-	 * @param RoleGrantSync|null $roleGrantSync Syncs the members of a remapped group; null leaves that to the nightly job.
+	 * @param IAppConfig              $config       The app config holding the group lists.
+	 * @param IAppManager             $appManager   Tells whether user_management is installed.
+	 * @param IGroupManager           $groupManager Lists the Nextcloud groups.
+	 * @param LoggerInterface         $logger       The logger.
+	 * @param RoleGroupMap|null       $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 * @param ContainerInterface|null $container    Resolves RoleGrantSync when a remapped group is synced; null leaves that to the nightly job.
+	 *                                              Looked up on use, not injected: RoleGrantSync reads the register through SettingsService,
+	 *                                              which takes this class, so a constructor dependency is a cycle that recurses until the
+	 *                                              stack runs out on PHP 8.3 (`occ app:enable stackiq` died on it).
 	 *
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
@@ -81,7 +85,7 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
 		?RoleGroupMap $roleGroupMap = null,
-		private readonly ?RoleGrantSync $roleGrantSync = null,
+		private readonly ?ContainerInterface $container = null,
 	) {
 		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $config);
 	}//end __construct()
@@ -426,7 +430,12 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	private function syncRemappedGroups(array $before, array $after): void {
-		if ($this->roleGrantSync === null || $this->roleGroupMap->grantsSeeded() === false) {
+		if ($this->container === null || $this->roleGroupMap->grantsSeeded() === false) {
+			return;
+		}
+
+		$roleGrantSync = $this->roleGrantSync();
+		if ($roleGrantSync === null) {
 			return;
 		}
 
@@ -452,7 +461,7 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 				$synced[$user->getUID()] = true;
 				try {
-					$this->roleGrantSync->syncCatalogueUser(user: $user);
+					$roleGrantSync->syncCatalogueUser(user: $user);
 				} catch (\Throwable $e) {
 					$this->logger->warning(
 						'Role groups of a remapped group member not synced',
@@ -462,6 +471,28 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 			}
 		}//end foreach
 	}//end syncRemappedGroups()
+
+	/**
+	 * The role grant sync, resolved on use so the constructors do not form a cycle.
+	 *
+	 * @return RoleGrantSync|null The sync, or null when the container cannot build it (logged).
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	private function roleGrantSync(): ?RoleGrantSync {
+		try {
+			$sync = $this->container?->get(RoleGrantSync::class);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Role grant sync unavailable; remapped groups sync on the nightly job', ['error' => $e->getMessage()]);
+			return null;
+		}
+
+		if ($sync instanceof RoleGrantSync) {
+			return $sync;
+		}
+
+		return null;
+	}//end roleGrantSync()
 
 	/**
 	 * The roles each source group grants.

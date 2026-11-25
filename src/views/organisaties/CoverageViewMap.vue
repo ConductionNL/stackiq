@@ -10,7 +10,7 @@
  With "Show products" on, the view is fetched with `include_products=true`
  and each node also lists the products (diensten) linked to its element.
 
- @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
  @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md#requirement-product-filter-enrichment-must-return-real-product-data
 -->
 <template>
@@ -103,7 +103,7 @@ import { coverageMapGraph, viewOptions } from '../../utils/referenceComponentCov
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
  */
 export default {
 	name: 'CoverageViewMap',
@@ -141,7 +141,7 @@ export default {
 		 * The GEMMA views to pick from.
 		 *
 		 * @return {Array<{id: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		options() {
 			return viewOptions(this.views)
@@ -151,7 +151,7 @@ export default {
 		 * The picked view as canvas nodes and edges, with the coverage on its nodes.
 		 *
 		 * @return {{nodes: Array<object>, edges: Array<object>}|null} The graph, or null before a view is loaded.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		graph() {
 			if (!this.view) {
@@ -172,7 +172,7 @@ export default {
 		 * Load the GEMMA views to pick from.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		async loadViews() {
 			try {
@@ -188,7 +188,7 @@ export default {
 		 * Load the picked view.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		async loadView() {
 			this.view = null
@@ -220,7 +220,7 @@ export default {
 		 *
 		 * @param {object|null} component The node's coverage row.
 		 * @return {string} The class.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		nodeClass(component) {
 			return component ? `coverage-view-map__node--${component.state}` : ''
@@ -231,7 +231,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The label.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		stateLabel(component) {
 			if (component.state === 'overlap') {
@@ -248,7 +248,7 @@ export default {
 		 *
 		 * @param {string} state gap, covered or overlap.
 		 * @return {string} The variant.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		stateVariant(state) {
 			if (state === 'overlap') {
@@ -265,7 +265,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The text.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
+		 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 		 */
 		applicationsText(component) {
 			const names = (component.applications || []).map((app) => app.moduleName).filter(Boolean)

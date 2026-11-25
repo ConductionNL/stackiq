@@ -7,7 +7,7 @@
  * the empty state, the refusal for another organisation, and what Accept,
  * Dismiss and Accept all post and take out of the panel.
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
