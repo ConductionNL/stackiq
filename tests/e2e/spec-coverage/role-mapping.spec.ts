@@ -15,10 +15,11 @@
  * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md
  */
 import type { APIRequestContext } from '@playwright/test'
+import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
 
 import { expect, test } from '@playwright/test'
 import { randomBytes } from 'node:crypto'
-import { newApiContext, RUN_ID } from '../workflows/_fixtures.ts'
+import { createObject, deleteObject, newApiContext, resolveConfig, RUN_ID } from '../workflows/_fixtures.ts'
 
 const OCS = '/ocs/v2.php/cloud'
 const CONFIG = '/index.php/apps/stackiq/api/user-groups/config'
@@ -28,6 +29,8 @@ const password = `Sq-${randomBytes(12).toString('hex')}-Pw1!`
 
 let apiCtx: APIRequestContext
 let savedConfig: unknown = null
+let cfg: VoorzieningenConfig
+const seeded: Array<[string, string]> = []
 
 /**
  * The groups of the member.
@@ -47,15 +50,33 @@ test.beforeAll(async () => {
 	expect(madeGroup.ok(), await madeGroup.text()).toBe(true)
 	const madeUser = await apiCtx.post(`${OCS}/users?format=json`, { data: { userid: member, password, groups: [group] } })
 	expect(madeUser.ok(), await madeUser.text()).toBe(true)
+	// The sync leaves accounts without a contact person alone (they are no
+	// catalogue users), so the member gets one, in a Supplier organisation:
+	// its type grants Aanbod-beheerder, never Gebruik-beheerder, so only the
+	// mapping can put the member in gebruik-beheerder.
+	cfg = await resolveConfig(apiCtx)
+	const organisation = await createObject(apiCtx, cfg.register, 'organization', {
+		name: `${RUN_ID} Inkoop Leverancier`,
+		type: 'Supplier',
+		status: 'Active',
+		contactsUid: `${RUN_ID}-inkoop-org`,
+	})
+	seeded.push(['organization', organisation])
+	seeded.push(['contactPerson', await createObject(apiCtx, cfg.register, 'contactPerson', { username: member, organization: organisation })])
 	expect(await memberGroups()).not.toContain('gebruik-beheerder')
 })
 
 test.afterAll(async () => {
 	if (!apiCtx) return
 	// Only the role mapping is written back: the endpoint leaves keys it is not sent alone.
-	const roleMapping = (savedConfig as { roleMapping?: unknown } | null)?.roleMapping
+	// GET answers { success, config: { roleMapping, ... } }.
+	const saved = savedConfig as { config?: { roleMapping?: unknown }, roleMapping?: unknown } | null
+	const roleMapping = saved?.config?.roleMapping ?? saved?.roleMapping
 	if (roleMapping !== undefined) {
 		await apiCtx.post(CONFIG, { data: { roleMapping } }).catch(() => undefined)
+	}
+	for (const [schema, id] of seeded.reverse()) {
+		await deleteObject(apiCtx, cfg.register, schema, id).catch(() => undefined)
 	}
 	await apiCtx.delete(`${OCS}/users/${member}?format=json`).catch(() => undefined)
 	await apiCtx.delete(`${OCS}/groups/${group}?format=json`).catch(() => undefined)
