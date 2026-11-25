@@ -73,7 +73,7 @@ class SyncAccessPolicy {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 	 */
 	public function isAdministrator(?string $uid): bool {
 		if ($uid === null || $uid === '') {

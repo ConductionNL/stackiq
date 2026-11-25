@@ -29,7 +29,7 @@ namespace OCA\Stackiq\Service;
 /**
  * The register's references per target schema.
  *
- * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-2-share-one-reference-map-and-complete-the-organisation-merge
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-2-share-one-reference-map-and-complete-the-organisation-merge
  */
 final class CatalogueReferenceMap {
 
@@ -113,7 +113,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return array<int, array{schema: string, field: string, list: bool}>
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public static function referencesTo(string $schema): array {
 		return (self::REFERENCES[$schema] ?? []);
@@ -125,7 +125,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return array<string, array{field: string, arrayField: string|null, schema?: string}>
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 */
 	public static function organisationRelationTypes(): array {
 		$types = [];

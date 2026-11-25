@@ -7,7 +7,7 @@
  * OpenRegister's Duplicate candidates page, only when `/api/me` says the user
  * may find duplicates (a Nextcloud admin or a functional administrator).
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
