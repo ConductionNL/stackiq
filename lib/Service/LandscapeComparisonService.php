@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use OutOfBoundsException;
  *
  * The caller has already checked the user may read the organisation.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 class LandscapeComparisonService implements LandscapeComparisonServiceInterface {
 	/**
@@ -79,7 +79,7 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * @param RegisterConfigReaderInterface        $registers  Hands out OpenRegister's object service.
 	 * @param ITimeFactory                         $time       Today.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	public function __construct(
 		private readonly ReferenceComponentCoverageService $reads,
@@ -108,8 +108,8 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * @throws OutOfBoundsException     When the scenario does not exist or the caller may not read it.
 	 * @throws DomainException          When the scenario belongs to another organisation.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
 	 */
 	public function compare(string $organisationUuid, string $date='', string $scenarioId=''): array {
 		$today    = new DateTimeImmutable($this->time->now()->format('Y-m-d'));
@@ -210,11 +210,13 @@ class LandscapeComparisonService implements LandscapeComparisonServiceInterface 
 	 * @param string $scenarioId The scenario id.
 	 *
 	 * @return array<int,array<string,mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function openChanges(string $scenarioId): array {
-		$found = $this->objectService()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: 'scenarioChange',
+		$objectService = $this->objectService();
+		$found         = $objectService->searchObjectsBySlug(
+			...SearchSelection::bySlug(service: $objectService, register: self::REGISTER, schema: 'scenarioChange'),
 			filters: ['scenario' => $scenarioId, '_limit' => self::CHANGE_LIMIT],
 			_rbac: true,
 			_multitenancy: true

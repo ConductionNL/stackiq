@@ -353,7 +353,7 @@ export default {
 	// GET /api/landscape-comparison derives both landscapes from the usage
 	// dates and a scenario's change set; the scenario page also applies an
 	// adopted scenario through OpenRegister's objects API.
-	// @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	// @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	LandscapeComparisonView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
