@@ -29,6 +29,7 @@
  * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/tasks.md
  * @spec openspec/changes/connections-derived-dependencies/tasks.md
  * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
+ * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page} from '@playwright/test';
@@ -330,6 +331,42 @@ test.describe('documentation screenshots', () => {
 				await setActive(active)
 			}
 		}
+	})
+
+	test('faceted export menu', async ({ page }) => {
+		await page.goto(`${APP}/modules`)
+		await settle(page)
+		await page.locator('main').getByRole('button', { name: 'Export', exact: true }).first().click()
+		await expect(page.getByRole('menuitem').first()).toBeVisible()
+		await page.screenshot({ path: path.join(IMAGES, 'export-menu.png'), clip: { x: 310, y: 50, width: 960, height: 560 }, animations: 'disabled' })
+	})
+
+	test('organisation ArchiMate export action', async ({ page }) => {
+		await page.goto(`${APP}/organisaties/${organisation.id}`)
+		await settle(page)
+		await expect(page.getByText('Export as ArchiMate', { exact: true }).first()).toBeVisible()
+		await page.screenshot({ path: path.join(IMAGES, 'organisation-archimate-export.png'), clip: { x: 310, y: 50, width: 960, height: 260 }, animations: 'disabled' })
+	})
+
+	test('custom reports', async ({ page, baseURL }) => {
+		// One report over Applications, made the way the New report dialog saves it.
+		const reportName = `${SEED_PREFIX} applications`
+		const request = await api(baseURL)
+		const config = (await (await request.get(`${APP}/api/voorzieningen/config`)).json()).config
+		const profiles = await (await request.get(`${OR_API}/export-profiles`)).json()
+		const list = (Array.isArray(profiles) ? profiles : (profiles.results ?? [])) as Array<{ name: string }>
+		if (!list.some((profile) => profile.name === reportName)) {
+			const created = await request.post(`${OR_API}/export-profiles`, {
+				data: { name: reportName, registerId: Number(config.register), schemaId: Number(config.module_schema), fields: ['name', 'licentietype', 'bbnLevel'], valueMode: 'rendered', format: 'csv', filters: [] },
+			})
+			expect(created.status(), await created.text()).toBeLessThan(300)
+		}
+		await request.dispose()
+
+		await page.goto(`${APP}/reports/custom`)
+		await settle(page)
+		await expect(page.getByText(reportName).first()).toBeVisible()
+		await shoot(page.locator('#app-content, main').first(), 'custom-reports.png')
 	})
 
 	test('API documentation', async ({ page }) => {
