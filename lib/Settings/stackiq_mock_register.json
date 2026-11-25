@@ -705,7 +705,7 @@
         "hostingJurisdiction": "NL",
         "hostingLocation": "NL",
         "provider": "@ref:organization-voorbeeld-name-2-2",
-        "licentietype": "Closed source",
+        "licentietype": "Open source",
         "licence": "MIT License",
         "referenceComponents": [
           {}
@@ -809,7 +809,7 @@
         "hostingJurisdiction": "US",
         "hostingLocation": "US",
         "provider": "@ref:organization-voorbeeld-name-3-3",
-        "licentietype": "Closed source",
+        "licentietype": "Open source",
         "licence": "Apache License 2.0",
         "referenceComponents": [
           {}
@@ -861,7 +861,7 @@
         "hostingJurisdiction": "NL",
         "hostingLocation": "NL",
         "provider": "@ref:organization-voorbeeld-name-2-2",
-        "licentietype": "Closed source",
+        "licentietype": "Open source",
         "licence": "MIT License",
         "referenceComponents": [
           {}
@@ -1014,7 +1014,6 @@
         "registrationStatus": "pending",
         "publicationDate": "2026-03-01T09:00:00+00:00",
         "depublicationDate": "2026-03-01T09:00:00+00:00",
-        "samenwerkingtype": "Implementing organisation",
         "registeredBy": "Municipality"
       },
       {
@@ -1048,7 +1047,6 @@
         "registrationStatus": "active",
         "publicationDate": "2026-03-02T09:00:00+00:00",
         "depublicationDate": "2026-03-02T09:00:00+00:00",
-        "samenwerkingtype": "Social Domain collaboration",
         "registeredBy": "Application"
       },
       {
