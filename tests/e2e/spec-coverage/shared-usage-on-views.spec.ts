@@ -54,7 +54,9 @@ async function importedView(user: APIRequestContext): Promise<ImportedView | nul
 			continue
 		}
 		const nodes: Array<Record<string, any>> = (await one.json()).view?.viewNodes ?? []
-		const named = nodes.filter((node) => (node.viewNodeId ?? node.identifier) && (node.name ?? node.label))
+		// Tall enough for two application rows (header 32 + padding 6 + 2 x 28):
+		// a smaller component shows "+2 more" instead of both applications.
+		const named = nodes.filter((node) => (node.viewNodeId ?? node.identifier) && (node.name ?? node.label) && Number(node.height) >= 100 && Number(node.width) >= 120)
 		// A reference component where the type says so, else the first named element of the view.
 		const component = named.find((node) => /Component/i.test(String(node.type ?? node.elementType ?? node['xsi:type'] ?? ''))) ?? named[0]
 		if (component) {
@@ -106,7 +108,8 @@ function applicationNode(page: Page, name: string): Locator {
  * @param label The switch label.
  */
 function usageSwitch(page: Page, label: string): Locator {
-	return page.getByTestId('view-editor-usage-control').getByRole('checkbox', { name: label })
+	// NcCheckboxRadioSwitch type="switch" renders role="switch".
+	return page.getByTestId('view-editor-usage-control').getByRole('switch', { name: label })
 }
 
 test.describe('Shared usage on GEMMA views', () => {
@@ -144,6 +147,15 @@ test.describe('Shared usage on GEMMA views', () => {
 	 */
 	async function openView(browser: Browser, flags: Array<Record<string, string>>) {
 		const context = await browser.newContext({ baseURL: BASE_URL, storageState: { cookies: [], origins: [] } })
+		// A fresh browser: keep the first-open overlays shut, as global setup does for the admin.
+		await context.addInitScript(() => {
+			try {
+				window.localStorage.setItem('cn-support-dialog-shown:stackiq', '1')
+				window.localStorage.setItem('cn-walkthrough-seen:stackiq', '999.0.0')
+			} catch {
+				// No storage: the helpers dismiss them by hand.
+			}
+		})
 		const page = await context.newPage()
 		await page.goto('/index.php/login')
 		await page.locator('#user').fill(userId)
@@ -208,13 +220,14 @@ test.describe('Shared usage on GEMMA views', () => {
 		await expect(legend).toContainText('Shared with a partner')
 
 		// A screen reader hears who shares it, once keyboard focus reaches the node.
-		await expect(page.getByLabel(`Suite B, shared by ${PARTNER}`)).toBeVisible()
+		await expect(page.getByLabel(`Suite B, shared by ${PARTNER}`).first()).toBeVisible()
 		const wrapper = page.locator('.vue-flow__node').filter({ has: page.getByLabel(`Suite B, shared by ${PARTNER}`) })
 		await wrapper.focus()
 		expect(await page.evaluate(() => document.activeElement?.querySelector('[aria-label]')?.getAttribute('aria-label') ?? document.activeElement?.getAttribute('aria-label'))).toBe(`Suite B, shared by ${PARTNER}`)
 
-		// A click on an application opens its usage.
-		await shared.click()
+		// A click on an application opens its usage. Dispatched on the node: a GEMMA
+		// poster opens zoomed out, where neighbouring nodes cover the pointer.
+		await shared.dispatchEvent('click')
 		await page.waitForURL(new RegExp(`/gebruik/${SHARED.id}`))
 		await context.close()
 	})
