@@ -81,6 +81,12 @@ final class ReferenceComponentCoverageBuildGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjectsPaginated')->willReturnCallback(
 			function (...$args) use (&$trace, $case, $usages): array {
+				// The id selection travels beside the query (SearchSelection::fromQuery); fold it back so the golden reads as before.
+				if (($args[4] ?? null) !== null) {
+					$args[0] = array_diff_key($args[0], ['_limit' => true, '_page' => true]) + ['id' => $args[4]] + array_intersect_key($args[0], ['_limit' => true, '_page' => true]);
+					$args[4] = null;
+				}
+
 				$trace[] = ['searchObjectsPaginated', $args];
 				$total   = array_key_exists('usageTotal', $case) === true ? $case['usageTotal'] : count($usages);
 				return match ($args[0]['@self']['schema']) {

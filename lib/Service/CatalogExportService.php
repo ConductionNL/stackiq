@@ -250,7 +250,8 @@ class CatalogExportService implements CatalogExportServiceInterface {
 		}
 
 		$query['@self'] = ['register' => $registerId, 'schema' => $schemaId];
-		$result         = $this->objectService()->searchObjectsPaginated($query);
+		$objectService  = $this->objectService();
+		$result         = $objectService->searchObjectsPaginated(...SearchSelection::fromQuery(service: $objectService, method: 'searchObjectsPaginated', query: $query));
 
 		$objects = [];
 		foreach (($result['results'] ?? []) as $object) {

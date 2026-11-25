@@ -504,7 +504,7 @@ class GebruikSyncService implements GebruikSyncServiceInterface {
 					'_limit' => 5,
 				];
 
-				$elements = $this->objectService->searchObjects($query);
+				$elements = $this->objectService->searchObjects(...SearchSelection::fromQuery(service: $this->objectService, method: 'searchObjects', query: $query));
 				$foundElements = array_merge($foundElements, $elements);
 			} catch (Exception $e) {
 				$this->logger->warning(

@@ -316,8 +316,14 @@ class PeerUsageService implements PeerUsageServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function search(array $query): array {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService')
-			->searchObjectsPaginated(query: $query, _rbac: false, _multitenancy: false);
+		$objects = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+
+		return $objects->searchObjectsPaginated(
+			...array_merge(
+				SearchSelection::fromQuery(service: $objects, method: 'searchObjectsPaginated', query: $query),
+				['_rbac' => false, '_multitenancy' => false]
+			)
+		);
 	}//end search()
 
 	/**

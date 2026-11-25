@@ -73,6 +73,35 @@ class SearchSelectionTest extends TestCase {
 	}//end testASearchWithoutOptionsGetsItsOwnNamedArguments()
 
 	/**
+	 * An `id` in the query, a list or one id, moves into the selection; OpenRegister main matches nothing for it in the query.
+	 *
+	 * @return void
+	 */
+	public function testAnIdFilterInTheQueryBecomesTheSelection(): void {
+		$query = ['@self' => ['register' => 1, 'schema' => 2], 'id' => ['a', 'b'], '_limit' => 2];
+
+		$options = SearchSelection::fromQuery(service: new SearchWithOptions(), method: 'searchObjectsPaginated', query: $query);
+		$this->assertSame(expected: ['@self' => ['register' => 1, 'schema' => 2], '_limit' => 2], actual: $options['query']);
+		$this->assertSame(expected: ['a', 'b'], actual: $options['options']->selection->ids);
+
+		$legacy = SearchSelection::fromQuery(service: new SearchWithoutOptions(), method: 'searchObjects', query: ['id' => 'a']);
+		$this->assertSame(expected: ['query' => [], 'ids' => ['a']], actual: $legacy);
+	}//end testAnIdFilterInTheQueryBecomesTheSelection()
+
+	/**
+	 * Without an id filter, with an empty id list, or for a search that selects no ids, the query is passed as it is.
+	 *
+	 * @return void
+	 */
+	public function testOtherwiseTheQueryIsPassedAsItIs(): void {
+		$service = new SearchWithOptions();
+
+		$this->assertSame(expected: ['query' => ['name' => 'x']], actual: SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['name' => 'x']));
+		$this->assertSame(expected: ['query' => ['id' => []]], actual: SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['id' => []]));
+		$this->assertSame(expected: ['query' => ['id' => ['a']]], actual: SearchSelection::fromQuery(service: new SearchWithoutSelection(), method: 'searchObjects', query: ['id' => ['a']]));
+	}//end testOtherwiseTheQueryIsPassedAsItIs()
+
+	/**
 	 * Without the contract classes, the selection stays its own named arguments.
 	 *
 	 * @return void
@@ -184,4 +213,21 @@ class SearchWithoutOptions {
 	public function searchObjectsPaginated(array $query=[], ?array $ids=null, ?string $uses=null): array {
 		return [];
 	}//end searchObjectsPaginated()
+}//end class
+
+/**
+ * A search that takes no id selection at all.
+ */
+class SearchWithoutSelection {
+
+	/**
+	 * Search.
+	 *
+	 * @param array<string, mixed> $query The query.
+	 *
+	 * @return array<int, mixed>
+	 */
+	public function searchObjects(array $query=[]): array {
+		return [];
+	}//end searchObjects()
 }//end class

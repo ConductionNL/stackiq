@@ -85,7 +85,12 @@ class CatalogExportServiceTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjectsPaginated')->willReturnCallback(
-			function (array $query) use ($rows): array {
+			function (array $query, bool $_rbac=true, bool $_multitenancy=true, bool $deleted=false, ?array $ids=null) use ($rows): array {
+				// The id selection travels beside the query (SearchSelection::fromQuery); fold it back for the assertions.
+				if ($ids !== null) {
+					$query = array_diff_key($query, ['_limit' => true, '_page' => true]) + ['id' => $ids] + array_intersect_key($query, ['_limit' => true, '_page' => true]);
+				}
+
 				$this->queries[] = $query;
 				return ['results' => $rows];
 			}

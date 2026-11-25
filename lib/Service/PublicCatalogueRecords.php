@@ -254,8 +254,13 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	 */
 	private function search(array $query): array {
 		try {
-			$result = $this->container->get('OCA\OpenRegister\Service\ObjectService')
-				->searchObjectsPaginated(query: $query, _rbac: false, _multitenancy: false);
+			$objects = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$result  = $objects->searchObjectsPaginated(
+				...array_merge(
+					SearchSelection::fromQuery(service: $objects, method: 'searchObjectsPaginated', query: $query),
+					['_rbac' => false, '_multitenancy' => false]
+				)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('PublicCatalogueRecords: search failed', ['error' => $e->getMessage()]);
 			return [];

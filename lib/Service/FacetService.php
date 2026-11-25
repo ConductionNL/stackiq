@@ -711,7 +711,7 @@ class FacetService implements FacetServiceInterface {
 		];
 
 		try {
-			$results = $objectService->searchObjects($query);
+			$results = $objectService->searchObjects(...SearchSelection::fromQuery(service: $objectService, method: 'searchObjects', query: $query));
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				message: 'FacetService: failed to batch-resolve linked modules',
