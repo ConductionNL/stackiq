@@ -17,7 +17,9 @@
  * second run does not duplicate anything.
  *
  * Needs the voorzieningen register imported (tests/e2e/ci-seed.sh) and,
- * for the confirmation round, the users `anna` and `bas`.
+ * for the confirmation round and the decision review, the users `anna` and
+ * `bas` in the group software-catalog-users (password in DOCS_REVIEWER_PASS,
+ * default Docs-shot-2026).
  *
  * @spec openspec/changes/archive/2026-11-25-landscape-application-components/tasks.md
  * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/tasks.md
@@ -30,6 +32,8 @@
  * @spec openspec/changes/connections-derived-dependencies/tasks.md
  * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
  * @spec openspec/changes/insight-exports-and-custom-reports/tasks.md
+ * @spec openspec/changes/architecture-round-trip-check/tasks.md
+ * @spec openspec/changes/architecture-decision-register/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page} from '@playwright/test';
@@ -44,6 +48,8 @@ const OBJECTS = `${OR_API}/objects`
 const SEED_PREFIX = 'Voorbeeldstad'
 const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
 const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
+// The reviewer `anna` must exist with this password (OC_PASS=... occ user:add anna).
+const REVIEWER_PASSWORD = process.env.DOCS_REVIEWER_PASS ?? 'Docs-shot-2026'
 
 type Obj = Record<string, unknown> & { id: string }
 
@@ -128,7 +134,7 @@ async function ensureById(request: APIRequestContext, register: string, schema: 
 async function settle(page: Page): Promise<void> {
 	await page.addStyleTag({
 		content: `*, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; caret-color: transparent !important; }
-			[data-testid-modal="cn-support-dialog"], .cn-support-dialog { display: none !important; }`,
+			[data-testid-modal="cn-support-dialog"], .cn-support-dialog, .toastify { display: none !important; }`,
 	})
 	await page.waitForLoadState('domcontentloaded')
 	await expect(page.locator('.loading-icon, .cn-skeleton')).toHaveCount(0, { timeout: 20_000 }).catch(() => undefined)
@@ -367,6 +373,75 @@ test.describe('documentation screenshots', () => {
 		await settle(page)
 		await expect(page.getByText(reportName).first()).toBeVisible()
 		await shoot(page.locator('#app-content, main').first(), 'custom-reports.png')
+	})
+
+	test('model round-trip check', async ({ page }) => {
+		await page.goto('/index.php/settings/admin/stackiq')
+		await settle(page)
+		const section = page.locator('div, section')
+			.filter({ has: page.getByText('Check a model file', { exact: true }) })
+			.filter({ has: page.getByRole('button', { name: 'Check', exact: true }) })
+			.last()
+		await section.scrollIntoViewIfNeeded()
+		await section.locator('input[type="file"]').setInputFiles(path.resolve(__dirname, '../../fixtures/archimate/big1.xml'))
+		await section.getByRole('button', { name: 'Check', exact: true }).click()
+		await expect(section.getByText(/No losses found|Losses in/).first()).toBeVisible({ timeout: 60_000 })
+		await shoot(section, 'archimate-round-trip-check.png')
+	})
+
+	test('architecture decision, its review and the list on a usage', async ({ page, browser, baseURL }) => {
+		// A decision by admin, reviewed by Anna, about the case system's usage.
+		const request = await api(baseURL)
+		const active = (await (await request.get(`${OR_API}/organisations/active`)).json()).activeOrganisation?.uuid
+		await request.post(`${OR_API}/organisations/${active}/join`, { data: { userId: 'anna' } })
+		const title = `${SEED_PREFIX}: one case system for all case types`
+		let decision = await ensure(request, register, 'architectureDecision', {
+			title,
+			context: 'Three departments run their own case handling, each with its own links to the document store.',
+			decision: 'All case types move to the one case system; the department systems are phased out by the end of next year.',
+			consequences: 'One set of connections to maintain; the departments migrate their open cases.',
+			alternatives: [{ option: 'Keep the department systems', reasonRejected: 'Three times the connections and licences.' }],
+			category: 'application',
+			impact: 'high',
+			reviewer: 'anna',
+			applications: [usage.id],
+			status: 'draft',
+		})
+		if (decision.status === 'draft') {
+			const submitted = await request.patch(`${OBJECTS}/${register}/architectureDecision/${decision.id}`, { data: { status: 'in review' } })
+			expect(submitted.status(), await submitted.text()).toBeLessThan(300)
+			decision = (await submitted.json()) as Obj
+		}
+		await request.dispose()
+
+		await page.goto(`${APP}/architectuurbesluiten/${decision.id}`)
+		await settle(page)
+		await expect(page.getByText(title).first()).toBeVisible()
+		await shoot(page.locator('#app-content, main').first(), 'architecture-decision.png')
+
+		// The review step, as the reviewer.
+		const context = await browser.newContext({ baseURL, storageState: { cookies: [], origins: [] }, viewport: { width: 1280, height: 900 } })
+		const reviewer = await context.newPage()
+		await reviewer.goto('/login')
+		await reviewer.fill('#user', 'anna')
+		await reviewer.fill('#password', REVIEWER_PASSWORD)
+		await reviewer.click('button[type=submit]')
+		await reviewer.waitForURL(/apps/)
+		await reviewer.goto(`${APP}/architectuurbesluiten/${decision.id}`)
+		await settle(reviewer)
+		await expect(reviewer.getByText(title).first()).toBeVisible()
+		// Accept and Reject are the reviewer's actions in the page's Actions menu.
+		await reviewer.getByRole('button', { name: 'Actions' }).first().click()
+		await expect(reviewer.getByRole('menuitem', { name: /Accept/ }).first()).toBeVisible()
+		await reviewer.screenshot({ path: path.join(IMAGES, 'architecture-decision-review.png'), clip: { x: 310, y: 50, width: 960, height: 420 }, animations: 'disabled' })
+		await context.close()
+
+		// The list on the application in use it names.
+		await page.goto(`${APP}/gebruik/${usage.id}`)
+		await settle(page)
+		const card = await reveal(widget(page, 'gb-decisions'))
+		await expect(card.getByText(title).first()).toBeVisible()
+		await shoot(card, 'usage-architecture-decisions.png')
 	})
 
 	test('API documentation', async ({ page }) => {

@@ -61,8 +61,8 @@
 - **acceptance_criteria**:
   - GIVEN the feature page WHEN it is read THEN it explains both modes and shows a report in a screenshot
   - GIVEN a Dutch instance WHEN the check renders THEN every label and summary reads in Dutch
-- [ ] Implement
-- [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
+- [x] Implement
+- [x] Test (`tests/l10n` key parity, screenshot captured with Playwright) (25 Nov 2026: `npm run test:l10n` OK; `docs/images/archimate-round-trip-check.png` captured from a live sandbox instance by `npx playwright test --project docs`; the check and its summary read in Dutch with the language set to Dutch: "Verliezen in: Elementen, Relaties", columns "In het bestand / Na de rondgang / Ontbreekt / Extra / Gewijzigd")
 - Progress 21 Nov: `docs/features/archimate-import-export.md` explains both modes, the report columns, the comparison rules and the API, and the features index links it. The labels and the summary are in English and Dutch (`l10n/en.json`, `l10n/nl.json`, PR for task 5), and `npm run test:l10n` passes. Left: the screenshot of a report, which needs a live instance. That is why Implement stays open.
 
 Built: Tasks 1 to 4. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 5 and 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
