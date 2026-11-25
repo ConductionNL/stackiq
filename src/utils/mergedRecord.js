@@ -10,7 +10,7 @@
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/operations-record-reconciliation
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation
  */
 
 /** The `recordStatus` of a record merged into another. */
@@ -22,7 +22,7 @@ export const MERGED_STATUS = 'Merged'
  *
  * @param {?object} record The record.
  * @return {?string} The survivor's uuid.
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
  */
 export function survivorOf(record) {
 	if (!record || record.recordStatus !== MERGED_STATUS) {
@@ -40,8 +40,21 @@ export function survivorOf(record) {
  *
  * @param {Function} generateUrl `@nextcloud/router`'s generateUrl.
  * @return {string} The URL.
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
  */
 export function duplicateCandidatesUrl(generateUrl) {
 	return generateUrl('/apps/openregister/duplicates')
+}
+
+/**
+ * The list filter that leaves merged records out: `recordStatus[ne]=Merged`.
+ * The repair step BackfillRecordStatus gives every older record a status, so
+ * the comparison drops no record that has none.
+ *
+ * @param {object} filter The list filter to extend.
+ * @return {object} The filter with merged records left out.
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+ */
+export function withoutMerged(filter) {
+	return { ...(filter || {}), 'recordStatus[ne]': MERGED_STATUS }
 }

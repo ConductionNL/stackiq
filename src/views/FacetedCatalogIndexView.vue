@@ -277,7 +277,7 @@ import { catalogExportUrl } from '../utils/catalogExportUrl.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 import { legacyImportTitle, legacyImportUrls } from '../utils/legacyImport.js'
-import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
+import { duplicateCandidatesUrl, withoutMerged } from '../utils/mergedRecord.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -567,10 +567,12 @@ export default {
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 		 */
 		listFilter() {
-			return listNarrowingFilter(
+			// Merged records leave the list (REQ-RRC-004); the facet counts
+			// already leave them out (FacetService::withoutMerged).
+			return withoutMerged(listNarrowingFilter(
 				this.facetStore[this.schema].activeFilters,
 				this.facetStore.matchedObjectIdsFor(this.schema),
-			)
+			))
 		},
 
 		/**
@@ -729,7 +731,7 @@ export default {
 		 * candidates page checks access itself.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 		 */
 		async loadMayFindDuplicates() {
 			try {

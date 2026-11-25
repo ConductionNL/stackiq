@@ -18,7 +18,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Backfill the record status of applications and services.
  *
- * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
  */
 class BackfillRecordStatus implements IRepairStep {
 
@@ -99,7 +99,7 @@ class BackfillRecordStatus implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
+	 * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
 	 */
 	public function run(IOutput $output): void {
 		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, false) === true) {
@@ -230,7 +230,7 @@ class BackfillRecordStatus implements IRepairStep {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
+	 * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-1-declare-the-duplicate-and-merge-rules-and-the-record-status
 	 */
 	public static function marked(mixed $row): ?array {
 		if (($row instanceof ObjectEntityInterface) === false) {
