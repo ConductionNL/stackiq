@@ -83,7 +83,8 @@ final class ReferenceComponentCoverageBuildGoldenTest extends TestCase {
 			function (...$args) use (&$trace, $case, $usages): array {
 				// The id selection travels beside the query (SearchSelection::fromQuery); fold it back so the golden reads as before.
 				if (($args[4] ?? null) !== null) {
-					$args[0] = array_diff_key($args[0], ['_limit' => true, '_page' => true]) + ['id' => $args[4]] + array_intersect_key($args[0], ['_limit' => true, '_page' => true]);
+					$paging  = ['_limit' => true, '_page' => true];
+					$args[0] = array_diff_key($args[0], $paging) + ['id' => $args[4]] + array_intersect_key($args[0], $paging);
 					$args[4] = null;
 				}
 

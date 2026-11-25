@@ -487,6 +487,7 @@ class GebruikSyncService implements GebruikSyncServiceInterface {
 	 * @param string $schema Element schema ID
 	 *
 	 * @return array Array of found ObjectEntity objects.
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function searchAmefElementsByIds(array $ids, string $register, string $schema): array {
 		$foundElements = [];
@@ -504,7 +505,9 @@ class GebruikSyncService implements GebruikSyncServiceInterface {
 					'_limit' => 5,
 				];
 
-				$elements = $this->objectService->searchObjects(...SearchSelection::fromQuery(service: $this->objectService, method: 'searchObjects', query: $query));
+				$elements = $this->objectService->searchObjects(
+					...SearchSelection::fromQuery(service: $this->objectService, method: 'searchObjects', query: $query)
+				);
 				$foundElements = array_merge($foundElements, $elements);
 			} catch (Exception $e) {
 				$this->logger->warning(

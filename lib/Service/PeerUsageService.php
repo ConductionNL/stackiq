@@ -314,16 +314,10 @@ class PeerUsageService implements PeerUsageServiceInterface {
 	 * @param array<string, mixed> $query The query.
 	 *
 	 * @return array<string, mixed>
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(array $query): array {
-		$objects = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-		return $objects->searchObjectsPaginated(
-			...array_merge(
-				SearchSelection::fromQuery(service: $objects, method: 'searchObjectsPaginated', query: $query),
-				['_rbac' => false, '_multitenancy' => false]
-			)
-		);
+		return SearchSelection::paginatedUnscoped(service: $this->container->get('OCA\OpenRegister\Service\ObjectService'), query: $query);
 	}//end search()
 
 	/**

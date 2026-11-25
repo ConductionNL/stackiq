@@ -96,9 +96,14 @@ class SearchSelectionTest extends TestCase {
 	public function testOtherwiseTheQueryIsPassedAsItIs(): void {
 		$service = new SearchWithOptions();
 
-		$this->assertSame(expected: ['query' => ['name' => 'x']], actual: SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['name' => 'x']));
-		$this->assertSame(expected: ['query' => ['id' => []]], actual: SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['id' => []]));
-		$this->assertSame(expected: ['query' => ['id' => ['a']]], actual: SearchSelection::fromQuery(service: new SearchWithoutSelection(), method: 'searchObjects', query: ['id' => ['a']]));
+		$plain = SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['name' => 'x']);
+		$this->assertSame(expected: ['query' => ['name' => 'x']], actual: $plain);
+
+		$empty = SearchSelection::fromQuery(service: $service, method: 'searchObjects', query: ['id' => []]);
+		$this->assertSame(expected: ['query' => ['id' => []]], actual: $empty);
+
+		$noSelection = SearchSelection::fromQuery(service: new SearchWithoutSelection(), method: 'searchObjects', query: ['id' => ['a']]);
+		$this->assertSame(expected: ['query' => ['id' => ['a']]], actual: $noSelection);
 	}//end testOtherwiseTheQueryIsPassedAsItIs()
 
 	/**

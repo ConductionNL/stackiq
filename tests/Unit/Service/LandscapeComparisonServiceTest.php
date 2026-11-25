@@ -58,7 +58,13 @@ final class LandscapeComparisonServiceTest extends TestCase {
 	protected function setUp(): void {
 		$this->queries = [];
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
-		$this->objects->method('searchObjectsPaginated')->willReturnCallback(function (array $query, bool $_rbac=true, bool $_multitenancy=true, bool $deleted=false, ?array $ids=null): array {
+		$this->objects->method('searchObjectsPaginated')->willReturnCallback(function (
+			array $query,
+			bool $_rbac=true,
+			bool $_multitenancy=true,
+			bool $deleted=false,
+			?array $ids=null
+		): array {
 			// The id selection travels beside the query (SearchSelection::fromQuery); fold it back for the assertions.
 			if ($ids !== null) {
 				$query['id'] = $ids;

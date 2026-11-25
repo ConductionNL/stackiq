@@ -104,6 +104,25 @@ final class SearchSelection {
 	}//end fromQuery()
 
 	/**
+	 * A paginated search without RBAC or multitenancy, its `id` filter as the selection.
+	 *
+	 * @param object               $service The object service.
+	 * @param array<string, mixed> $query   The search query.
+	 *
+	 * @return array<string, mixed> The paginated result.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	public static function paginatedUnscoped(object $service, array $query): array {
+		return $service->searchObjectsPaginated(
+			...array_merge(
+				self::fromQuery(service: $service, method: 'searchObjectsPaginated', query: $query),
+				['_rbac' => false, '_multitenancy' => false]
+			)
+		);
+	}//end paginatedUnscoped()
+
+	/**
 	 * The named arguments that select the objects using an object.
 	 *
 	 * @param object $service The object service the search is called on.
