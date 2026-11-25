@@ -19,6 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  * A fresh ArchiMate identifier, `id-<uuid>`, the form the import's identifiers take.
  *
  * @return {string}
+ * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function newArchimateIdentifier() {
 	const random = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
