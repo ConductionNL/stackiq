@@ -8657,8 +8657,8 @@
 				"change": "contracts-expiry-warning-fires",
 				"readOn": "2026-10-07",
 				"requirement": [
-					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days",
-					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
+					"openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days",
+					"openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
 				]
 			},
 			"reachedOn": "nothing reaches it",

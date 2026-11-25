@@ -7,7 +7,7 @@
 
 Stackiq warns before a contract ends, so a renewal or a replacement can be arranged in time.
 
-Specification: [`openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md).
 
 ## Who gets the warning
 
