@@ -77,8 +77,8 @@ final class PublicCatalogueRecordsTest extends TestCase {
 					21 => [['id' => 'conduction', 'name' => 'Conduction']],
 					30 => [['id' => 'zrc', 'name' => 'Zaakregistratiecomponent']],
 				};
-				if (isset($query['id']) === true) {
-					$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array($row['id'], $query['id'], true)));
+				if (isset($query['_ids']) === true) {
+					$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array($row['id'], $query['_ids'], true)));
 				}
 
 				return ['results' => $rows, 'total' => count($rows)];

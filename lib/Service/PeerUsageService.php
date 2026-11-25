@@ -241,7 +241,9 @@ class PeerUsageService implements PeerUsageServiceInterface {
 		$byId = [];
 		$modules = $this->lookup(query: [
 			'@self' => ['register' => $source['register'], 'schema' => $source['module']],
-			'id' => $ids,
+			// `_ids`: OpenRegister main matches no row for an `id` list, so the
+			// comparable organisations' applications had no names.
+			'_ids' => $ids,
 			'_limit' => count($ids),
 		]);
 		foreach ($modules as $module) {

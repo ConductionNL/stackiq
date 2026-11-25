@@ -106,7 +106,8 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	 * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
 	 */
 	public function record(string $id): ?array {
-		$module = $this->modules(filter: ['id' => [$id]])[0] ?? null;
+		// `_ids`: OpenRegister main matches no row for an `id` list, so every record answered "not published".
+		$module = $this->modules(filter: ['_ids' => [$id]])[0] ?? null;
 		if ($module === null || $this->isPublished(module: $module, now: new DateTimeImmutable()) === false) {
 			return null;
 		}
@@ -238,7 +239,8 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 		}
 
 		$names = [];
-		foreach ($this->search(query: ['@self' => ['register' => $registerId, 'schema' => $schemaId], 'id' => $ids, '_limit' => count($ids)]) as $object) {
+		// `_ids`: OpenRegister main matches no row for an `id` list.
+		foreach ($this->search(query: ['@self' => ['register' => $registerId, 'schema' => $schemaId], '_ids' => $ids, '_limit' => count($ids)]) as $object) {
 			$names[$this->objectId(object: $object)] = (string)($object['name'] ?? '');
 		}
 

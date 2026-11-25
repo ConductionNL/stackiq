@@ -88,6 +88,8 @@ final class PeerUsageServiceTest extends TestCase {
 		self::assertStringNotContainsString('Peer ', $encoded);
 		self::assertStringNotContainsString('Big city', $encoded);
 
+		self::assertEqualsCanonicalizing(expected: ['openzaak', 'djuma'], actual: $this->queryFor(schema: 7)['_ids']);
+
 		$usageQuery = $this->queryFor(schema: 6);
 		self::assertNotContains('zuiddrecht', $usageQuery['consumer']);
 		self::assertNotContains('big', $usageQuery['consumer']);
@@ -243,10 +245,15 @@ final class PeerUsageServiceTest extends TestCase {
 			public function searchObjectsPaginated(array $query, bool $_rbac = true, bool $_multitenancy = true): array {
 				$this->test->record(query: $query + ['_rbac' => $_rbac, '_multitenancy' => $_multitenancy]);
 				$rows = [8 => $this->organisations, 6 => $this->usages, 7 => $this->modules][$query['@self']['schema']];
-				foreach (['id', 'type', 'consumer'] as $key) {
+				// As OpenRegister main: `_ids` selects by id, an `id` list matches no row.
+				if (isset($query['id']) === true && is_array($query['id']) === true) {
+					$rows = [];
+				}
+
+				foreach (['_ids' => 'id', 'type' => 'type', 'consumer' => 'consumer'] as $key => $field) {
 					if (isset($query[$key]) === true) {
 						$wanted = (array)$query[$key];
-						$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array(($row[$key] ?? null), $wanted, true)));
+						$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array(($row[$field] ?? null), $wanted, true)));
 					}
 				}
 

@@ -203,7 +203,7 @@ class CatalogExportServiceTest extends TestCase {
 		self::assertSame(['schema' => 'module', 'filters' => ['referenceComponent' => ['Zaakregistratiecomponent']], 'search' => 'zaak'], $facetsCall);
 		self::assertCount(1, $this->queries);
 		self::assertSame(
-			['bbnLevel' => 'BBN2', '@self' => ['register' => 7, 'schema' => 21], 'id' => ['m1', 'm2'], '_limit' => 2, '_page' => 1],
+			['bbnLevel' => 'BBN2', '@self' => ['register' => 7, 'schema' => 21], '_ids' => ['m1', 'm2'], '_limit' => 2, '_page' => 1],
 			$this->queries[0]
 		);
 		self::assertSame('text/csv; charset=utf-8', $file['contentType']);

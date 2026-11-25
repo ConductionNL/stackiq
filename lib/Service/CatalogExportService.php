@@ -142,7 +142,8 @@ class CatalogExportService implements CatalogExportServiceInterface {
 		// The `@self` placeholder keeps the query's key order; readObjects() fills it in.
 		$query = array_merge(
 			self::quickFilterQuery(quickFilter: $request->quickFilter),
-			['@self' => null, 'id' => $ids, '_limit' => count($ids), '_page' => 1]
+			// `_ids`: OpenRegister main matches no row for an `id` list, so the export was empty.
+			['@self' => null, '_ids' => $ids, '_limit' => count($ids), '_page' => 1]
 		);
 		$objects = [];
 		if ($ids !== []) {

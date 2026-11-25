@@ -70,8 +70,8 @@ class PublicCatalogueRecordGoldenTest extends TestCase {
 					21 => [['id' => 'conduction', 'name' => 'Conduction']],
 					30 => [['id' => 'zrc', 'name' => 'Zaakregistratiecomponent'], ['@self' => ['id' => 'drc'], 'name' => 'Documentregistratiecomponent']],
 				};
-				if (isset($query['id']) === true) {
-					$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array($row['id'] ?? $row['@self']['id'], $query['id'], true)));
+				if (isset($query['_ids']) === true) {
+					$rows = array_values(array_filter($rows, static fn (array $row): bool => in_array($row['id'] ?? $row['@self']['id'], $query['_ids'], true)));
 				}
 
 				return ['results' => $rows, 'total' => count($rows)];
@@ -127,9 +127,9 @@ class PublicCatalogueRecordGoldenTest extends TestCase {
 		);
 		$this->assertSame(
 			[
-				['@self' => ['register' => 1, 'schema' => 22], '_limit' => 500, 'id' => ['openzaak']],
-				['@self' => ['register' => 1, 'schema' => 21], 'id' => ['conduction'], '_limit' => 1],
-				['@self' => ['register' => 2, 'schema' => 30], 'id' => ['drc', 'missing', 'zrc'], '_limit' => 3],
+				['@self' => ['register' => 1, 'schema' => 22], '_limit' => 500, '_ids' => ['openzaak']],
+				['@self' => ['register' => 1, 'schema' => 21], '_ids' => ['conduction'], '_limit' => 1],
+				['@self' => ['register' => 2, 'schema' => 30], '_ids' => ['drc', 'missing', 'zrc'], '_limit' => 3],
 			],
 			array_map(static fn (array $query): array => array_diff_key($query, ['_rbac' => true, '_multitenancy' => true]), $this->queries)
 		);
