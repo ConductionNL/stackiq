@@ -2509,6 +2509,8 @@
         "updated {count}": "updated {count}",
         "Change the filters to show connections in the diagram.": "Change the filters to show connections in the diagram.",
         "No connections to draw": "No connections to draw",
-        "Diagram": "Diagram"
+        "Diagram": "Diagram",
+        "Anyone can read this pentest report, also without an account. Publish it publicly?": "Anyone can read this pentest report, also without an account. Publish it publicly?",
+        "Publish publicly": "Publish publicly"
     }
 }

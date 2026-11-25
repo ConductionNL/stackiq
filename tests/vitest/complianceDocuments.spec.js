@@ -58,6 +58,21 @@ describe('the compliance documents pages', () => {
 		expect(list.content.formIncludeFields).toContain('audience')
 	})
 
+	it('asks before a pentest report is published to everyone (design D3)', () => {
+		const list = page('ModuleDetail').config.widgets.find((w) => w.id === 'md-compliance-documents')
+		expect(list.content.confirmCreate).toHaveLength(1)
+		const [rule] = list.content.confirmCreate
+		expect(rule.when.all).toEqual([
+			{ field: 'documentType', op: 'eq', value: 'pentest report' },
+			{ field: 'audience', op: 'eq', value: 'public' },
+		])
+		expect(schema.properties.documentType.enum).toContain('pentest report')
+		expect(schema.properties.audience.enum).toContain('public')
+		const nl = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect(nl[rule.text]).toBeTruthy()
+		expect(nl[rule.confirmLabel]).toBeTruthy()
+	})
+
 	it('offers a quick filter for every document type, on fields the schema has', () => {
 		const index = page('ComplianceDocuments').config
 		expect(index.schema).toBe('complianceDocument')
