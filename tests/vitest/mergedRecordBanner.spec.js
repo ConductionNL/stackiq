@@ -7,7 +7,7 @@
  * merged and links to the survivor by name; an active one shows nothing,
  * and a survivor that cannot be read is linked by its uuid.
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
  */
 
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
@@ -65,6 +65,8 @@ describe('MergedRecordBanner', () => {
 		expect(types.ensureObjectType).toHaveBeenCalledWith('module')
 		expect(store.fetchObject.mock.calls).toEqual([['module', 'u-1'], ['module', 'u-2']])
 		expect(wrapper.find('.note-warning').text()).toContain('This entry was merged into another one.')
+		// The test hook the e2e spec reads sits on an element that reaches the DOM.
+		expect(wrapper.find('[data-testid="merged-record-banner"]').text()).toContain('This entry was merged into another one.')
 		const link = wrapper.findComponent(RouterLinkStub)
 		expect(link.props('to')).toEqual({ name: 'ModuleDetail', params: { id: 'u-2' } })
 		expect(link.text()).toBe('Merged into Zaaksysteem')
@@ -74,6 +76,7 @@ describe('MergedRecordBanner', () => {
 		const wrapper = await open('u-3')
 
 		expect(wrapper.find('.note-warning').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="merged-record-banner"]').exists()).toBe(false)
 		expect(store.fetchObject).toHaveBeenCalledTimes(1)
 	})
 

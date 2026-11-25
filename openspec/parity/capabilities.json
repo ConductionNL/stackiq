@@ -1286,17 +1286,17 @@
 			"topdesk": "no",
 			"stackiq": "partial",
 			"built": {
-				"state": "specified",
-				"evidence": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
+				"state": "built",
+				"evidence": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets Applications and services now merge through OpenRegister's Duplicate candidates page and merge wizard, and lib/EventListener/CatalogueMergeRelinker.php points every catalogue reference at the survivor (REQ-RRC-003); live 25 Nov 2026, record-reconciliation.spec.ts 3 passed, 2 fixme.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-record-reconciliation",
-				"requirement": "openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-003 After OpenRegister merges two applications or services, every catalogue reference SHALL point at the survivor"
+				"change": "2026-11-25-operations-record-reconciliation",
+				"requirement": "openspec/specs/record-reconciliation :: REQ-RRC-003 After OpenRegister merges two applications or services, every catalogue reference SHALL point at the survivor"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, Merge panel (admins only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "data-quality",
-			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
+			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/archive/2026-11-25-operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
 				"topdesk": "https://docs.topdesk.com/en/migration-status.html: \"You cannot merge the two cards into one card\" (read 2026-09-26); https://tip.topdesk.com/c/239-ai-cmdb-monitoring-: roadmap card in column \"Under consideration\", \"AI can continuously scan your configuration database for duplicate records ... and surfaces them for review\" (read 2026-09-26)",
@@ -5869,22 +5869,22 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "specified",
-				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
+				"state": "built",
+				"evidence": "Applications and services declare duplicate rules and merge behaviour for OpenRegister (lib/Settings/register.d/operations-record-reconciliation.json); Find duplicates on /modules, /diensten and /organisaties leads admins and functional administrators to OpenRegister's Duplicate candidates page; lib/EventListener/CatalogueMergeRelinker.php points every catalogue reference at the survivor after a merge; merged records leave the lists and facet counts and their page shows Merged into (MergedRecordBanner). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main after a fresh demo import: the demo pair is a candidate (name, provider, website, score 1); tests/e2e/spec-coverage/record-reconciliation.spec.ts 3 passed, 2 fixme; docs screenshots record-reconciliation-*.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-record-reconciliation",
+				"change": "2026-11-25-operations-record-reconciliation",
 				"requirement": [
-					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-001 Applications, services and organisations SHALL declare duplicate rules, and applications and services SHALL declare how they merge",
-					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-002 The catalogue pages SHALL lead an administrator to OpenRegister's duplicate candidates",
-					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-003 After OpenRegister merges two applications or services, every catalogue reference SHALL point at the survivor",
-					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-004 Merged applications and services SHALL leave the lists and point readers to the survivor"
+					"openspec/specs/record-reconciliation :: REQ-RRC-001 Applications, services and organisations SHALL declare duplicate rules, and applications and services SHALL declare how they merge",
+					"openspec/specs/record-reconciliation :: REQ-RRC-002 The catalogue pages SHALL lead an administrator to OpenRegister's duplicate candidates",
+					"openspec/specs/record-reconciliation :: REQ-RRC-003 After OpenRegister merges two applications or services, every catalogue reference SHALL point at the survivor",
+					"openspec/specs/record-reconciliation :: REQ-RRC-004 Merged applications and services SHALL leave the lists and point readers to the survivor"
 				]
 			},
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "data-quality",
-			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
+			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/archive/2026-11-25-operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"topdesk": "unknown: deduplication across sources is not described; https://tip.topdesk.com/c/239-ai-cmdb-monitoring- (duplicates) is under consideration; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",

@@ -39,6 +39,7 @@
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  */
 
@@ -690,6 +691,42 @@ test.describe('documentation screenshots', () => {
 		await apply.click()
 		await expect(page.getByText('Applied 2 changes to the landscape.')).toBeVisible({ timeout: 30_000 })
 		await shoot(page.getByText('Applied 2 changes to the landscape.').locator('xpath=ancestor::*[contains(@class, "landscape-comparison")][1]'), 'scenario-applied.png')
+	})
+
+	test('record reconciliation: Find duplicates, the candidate pair and the Merged into banner', async ({ page, baseURL }) => {
+		// Step 1: Find duplicates on Applications.
+		await page.goto(`${APP}/modules`)
+		await settle(page)
+		const find = page.getByRole('link', { name: 'Find duplicates' }).or(page.getByRole('button', { name: 'Find duplicates' })).first()
+		await expect(find).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('.faceted-catalog-index__header, .faceted-catalog-index__toolbar').last(), 'record-reconciliation-find-duplicates.png')
+
+		// Step 2: OpenRegister's Duplicate candidates page with the demo pair
+		// (Voorbeeld Name 1 and Voorbeeld name 1, same supplier and website).
+		await page.goto('/index.php/apps/openregister/duplicates')
+		await settle(page)
+		await page.getByRole('button', { name: 'Cancel' }).first().click({ timeout: 5_000 }).catch(() => undefined)
+		await page.keyboard.press('Escape')
+		const main = page.locator('#app-content, main').first()
+		await main.getByRole('combobox').first().click()
+		await page.locator('.vs__dropdown-option').filter({ hasText: /Voorzienin/ }).first().click()
+		await main.getByRole('combobox').nth(1).click()
+		await page.locator('.vs__dropdown-option').filter({ hasText: /^\s*(Applic|module)/i }).first().click()
+		// The page names a pair by its uuids; the demo pair matches on name, supplier and website.
+		await expect(main.getByText('name, provider, website').first()).toBeVisible({ timeout: 60_000 })
+		await shoot(main, 'record-reconciliation-candidates.png')
+
+		// Step 3: an old link to a merged application.
+		const request = await api(baseURL)
+		const original = await ensure(request, register, 'module', { name: `${SEED_PREFIX} Zaaksysteem (origineel)`, recordStatus: 'Active', type: 'Application' })
+		const merged = await ensure(request, register, 'module', { name: `${SEED_PREFIX} Zaaksysteem (dubbel)`, recordStatus: 'Merged', mergedInto: original.id, type: 'Application' })
+		await request.dispose()
+		await page.goto(`${APP}/modules/${merged.id}`)
+		await settle(page)
+		const banner = page.getByTestId('merged-record-banner')
+		await expect(banner).toBeVisible({ timeout: 30_000 })
+		await expect(banner.getByRole('link')).toContainText('Zaaksysteem (origineel)', { timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'record-reconciliation-merged-banner.png')
 	})
 
 	test('architecture view export: the Export menu and the downloaded SVG', async ({ page, baseURL }) => {
