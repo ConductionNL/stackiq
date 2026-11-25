@@ -10,7 +10,7 @@ the list by **Supplier** (Leverancier), next to the four GEMMA facets
 (reference component, standard, application service, domain). It is the
 first facet GEMMA Softwarecatalogus users look for.
 
-Specification: [`openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md).
+Specification: [`openspec/specs/supplier-facet/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/supplier-facet/spec.md).
 
 ## What it counts
 
@@ -33,11 +33,15 @@ Specification: [`openspec/changes/insight-supplier-facet/specs/supplier-facet/sp
 - A saved facet view keeps the chosen suppliers and chooses them again
   when it is applied.
 
+![The Supplier facet on Applications, open, with a count per supplier](../images/supplier-facet.png)
+
 ## Demo data
 
-A fresh demo import gives three applications and three services a supplier:
-on `/modules` the facet shows **Voorbeeld Name 2** with 2 and
-**Voorbeeld Name 3** with 1.
+A fresh demo import gives suppliers to seven applications and three services.
+On `/modules` the facet shows **Voorbeeld Name 2** with 6 and
+**Voorbeeld Name 3** with 1. On `/diensten` it shows **Voorbeeld Name 2**
+with 2 and **Voorbeeld Name 3** with 1. (The screenshot also shows the
+supplier that the documentation screenshot run seeds for itself.)
 
 ## How it is built
 

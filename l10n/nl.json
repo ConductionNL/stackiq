@@ -2571,6 +2571,10 @@
         "updated {count}": "bijgewerkt {count}",
         "Change the filters to show connections in the diagram.": "Pas de filters aan om koppelingen in het diagram te tonen.",
         "No connections to draw": "Geen koppelingen om te tekenen",
-        "Diagram": "Diagram"
+        "Diagram": "Diagram",
+        "Software Catalog Location URL": "URL van de locatie van de softwarecatalogus",
+        "Add a new contact person to organisation: {name}": "Een nieuwe contactpersoon toevoegen aan organisatie: {name}",
+        "Failed to add contact person: {error}": "Contactpersoon toevoegen mislukt: {error}",
+        "Invalid contact person data structure": "Ongeldige gegevensstructuur van de contactpersoon"
     }
 }
