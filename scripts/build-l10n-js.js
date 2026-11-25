@@ -36,6 +36,14 @@
 // using plural strings in such a language needs its real rule declared in the
 // JSON, which this script will then honour.
 //
+// ENGLISH BROWSER CATALOGUES CARRY NO IDENTITY ENTRIES. In l10n/en.json
+// nearly every key maps to itself (key === English source), and `t()` already
+// answers the key when a catalogue has no entry for it. Shipping those pairs to
+// the browser cost ~200 KB per page for nothing, so for `en` and `en_*` the .js
+// keeps only the entries whose text differs from the key. The .json stays
+// complete: PHP and the source-key checks read it. Other locales are written
+// in full.
+//
 // Usage:
 //   node scripts/build-l10n-js.js            (npm run l10n:build)
 //   node scripts/build-l10n-js.js --check    exit 1 if any .js is stale
@@ -102,6 +110,29 @@ function renderJs(id, translations, pluralForm) {
 }
 
 /**
+ * The entries the browser catalogue of one locale carries. For English
+ * (`en`, `en_*`) an entry whose translation equals its key is dropped: `t()`
+ * falls back to the key, so the result in the browser is the same. Plural
+ * entries (arrays) and every other locale are kept as they are.
+ *
+ * @param {string} locale - the catalogue's locale, e.g. `en` or `nl`
+ * @param {object} translations - key -> translation from <locale>.json
+ * @return {object} key -> translation to write into <locale>.js
+ */
+function browserEntries(locale, translations) {
+	if (locale !== 'en' && !locale.startsWith('en_')) {
+		return translations
+	}
+	const kept = {}
+	for (const key of Object.keys(translations)) {
+		if (translations[key] !== key) {
+			kept[key] = translations[key]
+		}
+	}
+	return kept
+}
+
+/**
  *
  */
 function main() {
@@ -139,9 +170,10 @@ function main() {
 			process.exit(1)
 		}
 
+		const entries = browserEntries(locale, doc.translations)
 		const rendered = renderJs(
 			id,
-			doc.translations,
+			entries,
 			doc.pluralForm || DEFAULT_PLURAL_FORM,
 		)
 		const current = fs.existsSync(jsFile)
@@ -150,7 +182,7 @@ function main() {
 
 		if (current === rendered) {
 			console.log(
-				`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
+				`  ✓ l10n/${locale}.js up to date (${Object.keys(entries).length} keys)`,
 			)
 			continue
 		}
@@ -160,7 +192,7 @@ function main() {
 		}
 		fs.writeFileSync(jsFile, rendered)
 		console.log(
-			`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
+			`  ✎ l10n/${locale}.js written (${Object.keys(entries).length} keys)`,
 		)
 	}
 
@@ -172,4 +204,8 @@ function main() {
 	}
 }
 
-main()
+if (require.main === module) {
+	main()
+}
+
+module.exports = { browserEntries, renderJs }
