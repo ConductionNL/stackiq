@@ -155,7 +155,7 @@ export default {
 				this.windows = await loadUpcomingMaintenance(
 					organisationId,
 					async (type, params) => {
-						this.ensureType(type)
+						await this.ensureType(type)
 						return objectStore.fetchCollectionForOptions(type, params)
 					},
 				)
@@ -188,11 +188,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-002-organisations-that-use-a-product-see-its-planned-maintenance
 		 */
-		ensureType(type) {
-			ensureObjectType(type)
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }

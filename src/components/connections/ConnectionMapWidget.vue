@@ -101,7 +101,7 @@ export default {
 			this.loading = true
 			this.error = false
 			try {
-				ensureObjectType('connection')
+				await ensureObjectType('connection')
 				const [outgoing, incoming] = await Promise.all([
 					objectStore.fetchCollectionForOptions('connection', { moduleA: this.objectId, _limit: 200 }),
 					objectStore.fetchCollectionForOptions('connection', { moduleB: this.objectId, _limit: 200 }),

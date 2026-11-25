@@ -108,13 +108,13 @@ function fakeStore(setup, trace) {
  *
  * @param {object} component The component.
  * @param {object} setup The scenario.
- * @return {Array} The trace, ending with the error if one was thrown.
+ * @return {Promise<Array>} The trace, ending with the error if one was thrown.
  */
-function recordEnsure(component, setup) {
+async function recordEnsure(component, setup) {
 	const trace = []
 	store.objectStore = fakeStore(setup, trace)
 	try {
-		component.methods.ensureType.call({}, 'usage')
+		await component.methods.ensureType.call({}, 'usage')
 	} catch (e) {
 		trace.push(['threw', e.message])
 	}
@@ -177,7 +177,7 @@ describe('object type registration golden', () => {
 		const actual = { ensureType: {}, load: {} }
 		for (const [name, component] of Object.entries(COMPONENTS)) {
 			for (const [scenario, setup] of Object.entries(STORES)) {
-				actual.ensureType[name + ' ' + scenario] = recordEnsure(
+				actual.ensureType[name + ' ' + scenario] = await recordEnsure(
 					component,
 					setup,
 				)
