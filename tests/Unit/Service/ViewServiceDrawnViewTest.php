@@ -235,7 +235,7 @@ final class ViewServiceDrawnViewTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-005-the-draft-tools-shall-run-with-the-callers-rights-and-shall-keep-drafts-out-of-shared-readers
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-005-the-draft-tools-shall-run-with-the-callers-rights-and-shall-keep-drafts-out-of-shared-readers
 	 */
 	public function testADraftedViewReadsAsMissing(): void {
 		$this->currentUserId = 'bob';

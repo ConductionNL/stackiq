@@ -2379,19 +2379,19 @@
 			"bluedolphin": "yes",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "no diagram generation in lib/Service or src; no AI integration for diagrams",
+				"state": "built",
+				"evidence": "MCP tools stackiq.searchArchitectureElements and stackiq.draftView (lib/Mcp, lib/Service/ArchitectureViewDraftService.php) write a draft view, its new elements and relations with origin assistant in the AMEF register; the editor shows the drafted-for notice and lays out a fresh draft (src/views/architecture/ArchitectureViewEditor.vue, src/utils/viewGraph.js). Live 25 Nov 2026: tests/e2e/workflows/architecture-assistant-views.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshot architecture-view-drafted.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-assistant-drafted-views",
-				"requirement": "openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views :: REQ-AAV-002 Stackiq SHALL offer a create tool that writes a draft view from elements and relations"
+				"change": "2026-11-25-architecture-assistant-drafted-views",
+				"requirement": "openspec/specs/architecture-assistant-views :: REQ-AAV-002 Stackiq SHALL offer a create tool that writes a draft view from elements and relations"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Hermiq assistant > stackiq.draftView; Architecture > Views (origin assistant)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
-			"note": "Nothing drafts diagrams. Specified in openspec/changes/architecture-assistant-drafted-views (OpenSpec pass 2026-09-27).",
+			"note": "Nothing drafts diagrams. Specified in openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/12528662-ai-capabilities-of-bluedolphin: 'Modelling Assistant or BPMN Generator instantly creates BPMN 2.0-compliant process diagrams from a simple prompt or by uploading existing documentation' (read 2026-09-26). Reached on: Processes > Modeling Assistant.",
 				"stackiq": "no diagram generation in lib/Service or src; no AI integration for diagrams",

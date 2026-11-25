@@ -42,6 +42,7 @@
  * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
  * @spec openspec/changes/architecture-data-model-and-ggm/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -835,6 +836,51 @@ test.describe('documentation screenshots', () => {
 		await viewer.goto(`file://${svg}`)
 		await viewer.screenshot({ path: path.join(IMAGES, 'view-export-svg.png') })
 		await viewer.close()
+	})
+
+	test('a view drafted by an assistant', async ({ page, baseURL }) => {
+		// Drafted through the real stackiq.draftView tool on OpenRegister's MCP
+		// endpoint, as Hermiq does in the signed-in user's session.
+		const request = await api(baseURL)
+		const mcp = `${OR_API}/mcp`
+		const accept = { Accept: 'application/json, text/event-stream', 'Content-Type': 'application/json' }
+		const init = await request.post(mcp, { headers: accept, data: { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'docs', version: '1.0.0' } } } })
+		expect(init.ok()).toBeTruthy()
+		const session = init.headers()['mcp-session-id']
+		const called = await request.post(mcp, {
+			headers: { ...accept, ...(session ? { 'Mcp-Session-Id': session } : {}) },
+			data: {
+				jsonrpc: '2.0',
+				id: 2,
+				method: 'tools/call',
+				params: {
+					name: 'stackiq.draftView',
+					arguments: {
+						name: `${SEED_PREFIX}: how the case system talks to document management`,
+						description: 'Drafted from: draw how our case system talks to document management.',
+						elements: [
+							{ key: 'case', type: 'ApplicationComponent', name: `${SEED_PREFIX} Zaaksysteem` },
+							{ key: 'docs', type: 'ApplicationComponent', name: `${SEED_PREFIX} Documentbeheer` },
+							{ key: 'api', type: 'ApplicationInterface', name: 'Zaken API' },
+						],
+						relations: [
+							{ source: 'case', target: 'api', type: 'Composition' },
+							{ source: 'api', target: 'docs', type: 'Serving' },
+						],
+					},
+				},
+			},
+		})
+		const raw = (await called.text()).trim()
+		const message = JSON.parse(raw.startsWith('{') ? raw : (raw.split('\n').filter((line) => line.startsWith('data:')).pop() ?? '').slice(5))
+		const draft = JSON.parse(message.result.content.find((part: { type: string }) => part.type === 'text').text)
+		expect(draft.uuid, JSON.stringify(draft)).toBeTruthy()
+		await request.dispose()
+
+		await page.goto(`${APP}/views/${draft.uuid}`)
+		await settle(page)
+		await expect(page.getByText(/Drafted by an assistant for/).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'architecture-view-drafted.png')
 	})
 
 	test('API documentation', async ({ page }) => {

@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
 /**
  * Finds elements for a draft and writes a drafted view.
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator is the pure argument reader every MCP tool class shares.
  */
@@ -64,7 +64,7 @@ class McpDraftTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
 	 */
 	public function searchArchitectureElements(array $args): array {
 		$refusal = ($this->validator->string(args: $args, name: 'query', max: 200)
@@ -93,7 +93,7 @@ class McpDraftTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
 	 */
 	public function draftView(array $args): array {
 		$refusal = ($this->validator->string(args: $args, name: 'name', max: 255)

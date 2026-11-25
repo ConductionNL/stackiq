@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * Drafts architecture views for review.
  *
- * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+ * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One draft is one composite write: validation, resolution and three kinds of save belong together.
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The coupling is OpenRegister's save and find value objects and the exceptions a draft can end in.
@@ -51,7 +51,7 @@ use Throwable;
 class ArchitectureViewDraftService {
 
 	/**
-	 * The register every AMEF object lives in.
+	 * The AMEF register's slug, used only when the AMEF mapping names no register.
 	 */
 	public const REGISTER = 'vng-gemma';
 
@@ -135,7 +135,7 @@ class ArchitectureViewDraftService {
 	 *
 	 * @throws InvalidArgumentException When a type is not an ArchiMate element type.
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-001-stackiq-shall-offer-a-read-tool-that-finds-architecture-elements-for-a-draft
 	 */
 	public function searchElements(string $query, array $types = [], int $limit = 20): array {
 		foreach ($types as $type) {
@@ -186,8 +186,8 @@ class ArchitectureViewDraftService {
 	 * @throws DraftRefusedException    When OpenRegister refuses a save under the caller's rights.
 	 * @throws RuntimeException         When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
-	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
 	 */
 	public function draftView(string $name, string $description, array $elements, array $relations): array {
 		$this->validate(name: $name, elements: $elements, relations: $relations);
@@ -231,8 +231,11 @@ class ArchitectureViewDraftService {
 			];
 		}
 
+		// `type` and `properties` are required by the view schema (ArchiMate: a diagram view, its property list).
 		$view = $this->save(schema: 'view', object: [
 			'identifier' => self::newIdentifier(),
+			'type' => 'Diagram',
+			'properties' => [],
 			'name' => $name,
 			'documentation' => $description,
 			'status' => 'draft',
@@ -386,7 +389,7 @@ class ArchitectureViewDraftService {
 
 		$saved = $this->save(
 			schema: 'element',
-			object: ['identifier' => self::newIdentifier(), 'type' => $type, 'name' => $name, 'origin' => self::ORIGIN]
+			object: ['identifier' => self::newIdentifier(), 'type' => $type, 'name' => $name, 'properties' => [], 'origin' => self::ORIGIN]
 		);
 
 		return [self::elementRef(element: $saved), true];
@@ -410,7 +413,14 @@ class ArchitectureViewDraftService {
 
 		$saved = $this->save(
 			schema: 'relation',
-			object: ['identifier' => self::newIdentifier(), 'type' => $type, 'source' => $source, 'target' => $target, 'origin' => self::ORIGIN]
+			object: [
+				'identifier' => self::newIdentifier(),
+				'type' => $type,
+				'source' => $source,
+				'target' => $target,
+				'properties' => [],
+				'origin' => self::ORIGIN,
+			]
 		);
 
 		return [self::identifierOf(object: $saved), true];
@@ -471,10 +481,11 @@ class ArchitectureViewDraftService {
 	 * @throws DraftRefusedException When OpenRegister refuses the save.
 	 */
 	private function save(string $schema, array $object): array {
+		$target = $this->target(schema: $schema);
 		try {
 			$entity = $this->objectService()->saveObject(
 				object: $object,
-				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: $schema))
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']))
 			);
 		} catch (DraftRefusedException $e) {
 			throw $e;
@@ -514,7 +525,8 @@ class ArchitectureViewDraftService {
 	 */
 	private function find(string $schema, string $uuid): ?array {
 		try {
-			$entity = $this->objectService()->find(id: $uuid, options: new ObjectFindOptions(register: self::REGISTER, schema: $schema));
+			$target = $this->target(schema: $schema);
+			$entity = $this->objectService()->find(id: $uuid, options: new ObjectFindOptions(register: $target['register'], schema: $target['schema']));
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -533,21 +545,40 @@ class ArchitectureViewDraftService {
 	 * @param array<string, mixed> $filters The filters.
 	 *
 	 * @return list<array<string, mixed>>
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function search(string $schema, array $filters): array {
-		$objectService = $this->objectService();
-		$found         = $objectService->searchObjectsBySlug(
-			...SearchSelection::bySlug(service: $objectService, register: self::REGISTER, schema: $schema),
-			filters: $filters
-		);
-		if (is_array($found) === false) {
-			return [];
+		$target = $this->target(schema: $schema);
+		$found  = $this->objectService()->searchObjectsPaginated(query: ['@self' => $target] + $filters);
+
+		return array_values(array_map(static fn (mixed $row): array => self::rowOf(row: $row), ($found['results'] ?? [])));
+	}//end search()
+
+	/**
+	 * The register and schema an AMEF schema's objects live in.
+	 *
+	 * The AMEF mapping (`amef_config`, chosen by which register carries the
+	 * AMEF schemas, not by slug) names them; on a current install that is the
+	 * stackiq register. A fixed `vng-gemma` slug pointed the draft at a
+	 * register the views page does not read, so a named element was "not
+	 * found" and a drafted view never showed. The slug is the fallback when
+	 * no mapping exists.
+	 *
+	 * @param string $schema The schema slug: element, relation or view.
+	 *
+	 * @return array{register: string, schema: string}
+	 *
+	 * @spec openspec/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 */
+	private function target(string $schema): array {
+		$config   = $this->registers->getAmefConfig();
+		$register = (string)($config['register'] ?? '');
+		$schemaId = (string)($config[$schema . '_schema'] ?? '');
+		if ($register === '' || $schemaId === '') {
+			return ['register' => self::REGISTER, 'schema' => $schema];
 		}
 
-		return array_values(array_map(static fn (mixed $row): array => self::rowOf(row: $row), ($found['results'] ?? $found)));
-	}//end search()
+		return ['register' => $register, 'schema' => $schemaId];
+	}//end target()
 
 	/**
 	 * An OpenRegister row as a plain array with its uuid.
