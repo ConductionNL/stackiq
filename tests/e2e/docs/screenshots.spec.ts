@@ -129,8 +129,8 @@ async function settle(page: Page): Promise<void> {
 		content: `*, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; caret-color: transparent !important; }
 			[data-testid-modal="cn-support-dialog"], .cn-support-dialog { display: none !important; }`,
 	})
-	await page.waitForLoadState('networkidle')
-	await expect(page.locator('.loading-icon, .cn-skeleton').first()).toBeHidden({ timeout: 20_000 }).catch(() => undefined)
+	await page.waitForLoadState('domcontentloaded')
+	await expect(page.locator('.loading-icon, .cn-skeleton')).toHaveCount(0, { timeout: 20_000 }).catch(() => undefined)
 }
 
 /** Screenshot one element into docs/images. */
@@ -155,7 +155,8 @@ function bodyWidget(page: Page, title: string): Locator {
 /** Scroll a lazily rendered widget into view so it loads. */
 async function reveal(locator: Locator): Promise<Locator> {
 	await locator.scrollIntoViewIfNeeded()
-	await locator.page().waitForLoadState('networkidle')
+	// A widget below the fold loads once it is in view: wait for its spinner to go.
+	await expect(locator.locator('.loading-icon')).toHaveCount(0, { timeout: 20_000 })
 	return locator
 }
 
