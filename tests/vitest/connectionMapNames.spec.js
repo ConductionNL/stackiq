@@ -10,8 +10,8 @@
  */
 
 import { describe, expect, it, vi } from 'vitest'
-import { connectionMap } from '../../src/utils/connectionMap.js'
 import { withEndNames } from '../../src/utils/connectionLayout.js'
+import { connectionMap } from '../../src/utils/connectionMap.js'
 
 const store = vi.hoisted(() => ({ objectStore: {} }))
 
