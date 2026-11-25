@@ -2256,22 +2256,22 @@
 			"bluedolphin": "yes",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
+				"state": "built",
+				"evidence": "Business processes /processen with ordered steps (lib/Settings/register.d/architecture-process-mapping.json: process, processStep with risk level and compliance check, lifecycle draft/active/retired), the step flow on the process page (src/views/architecture/ProcessStepFlow.vue), the supporting applications on the step page and the steps on the application in use. Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/process-mapping.spec.ts 5/5; docs screenshots process-page.png, process-step-flow.png, usage-process-steps.png; Dutch verified.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-process-mapping",
+				"change": "2026-11-25-architecture-process-mapping",
 				"requirement": [
-					"openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-001 A municipal information manager SHALL record a business process with ordered steps",
-					"openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-002 A step SHALL name the applications in use that support it"
+					"openspec/specs/business-process-mapping :: REQ-BPM-001 A municipal information manager SHALL record a business process with ordered steps",
+					"openspec/specs/business-process-mapping :: REQ-BPM-002 A step SHALL name the applications in use that support it"
 				]
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Applications > Business processes (/processen), process and step pages, Process steps on the application in use",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
-			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components. Specified in openspec/changes/architecture-process-mapping (OpenSpec pass 2026-09-27).",
+			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components. Specified in openspec/changes/archive/2026-11-25-architecture-process-mapping (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967673-process-linked-to-ea-perspectives: 'The Create BPMN diagram button allows you to create a diagram directly from a business process'; https://help.bluedolphin.io/en/articles/11967500-getting-started-with-process-publication-portal: 'For each application, you will find different processes in which the selected application is involved' (read 2026-09-26). Reached on: Processes > Process browser.",
 				"stackiq": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
@@ -2297,22 +2297,22 @@
 			"bluedolphin": "yes",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
+				"state": "built",
+				"evidence": "Compare with the plan (/landscape-comparison, from the Portfolio roadmap) shows today's landscape next to the plan on a date; Scenarios (/scenarios) of add, phase out and replace changes compare with the plan on their target date and, once adopted, are applied to the landscape (src/views/architecture/LandscapeComparisonView.vue, lib/Service/LandscapeComparisonService.php, src/store/modules/scenarioApply.js). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/future-state-scenarios.spec.ts 3/3; docs screenshots scenario-plan-comparison.png, scenario-page.png, scenario-applied.png; Dutch verified.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-future-state-scenarios",
+				"change": "2026-11-25-architecture-future-state-scenarios",
 				"requirement": [
-					"openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-002 An information manager SHALL compare today's landscape with the plan on a date",
-					"openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-003 An information manager SHALL write a scenario of additions, phase-outs and replacements"
+					"openspec/specs/future-state-scenarios :: REQ-FSS-002 An information manager SHALL compare today's landscape with the plan on a date",
+					"openspec/specs/future-state-scenarios :: REQ-FSS-003 An information manager SHALL write a scenario of additions, phase-outs and replacements"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
-			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today. Specified in openspec/changes/architecture-future-state-scenarios (OpenSpec pass 2026-09-27).",
+			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today. Specified in openspec/changes/archive/2026-11-25-architecture-future-state-scenarios (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-architecture-and-road-map-planning: 'plan your target architecture and monitor initiative progress', transformation templates and impacts; https://updates.leanix.net/announcements/plan-with-consistent-future-architecture-data-introducing-the-committed-future (2026-09-24): 'Understanding your architecture across the past, present, and future ... introducing the committed future'. In the Architecture and Road Map Planning add on (read 2026-09-26). Reached on: Architecture and Road Map Planning > Transformations, target architecture diagrams.",
 				"stackiq": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
@@ -7649,15 +7649,15 @@
 			"name": "Record structured fields on individual process steps, such as risk level or a compliance check.",
 			"origin": "changelog",
 			"originUrl": "https://bluedolphin.io/blog/july-2026-bluedolphin-updates/",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "stackiq models no processes (see arch-process-mapping)",
+				"state": "built",
+				"evidence": "Business processes /processen with ordered steps (lib/Settings/register.d/architecture-process-mapping.json: process, processStep with risk level and compliance check, lifecycle draft/active/retired), the step flow on the process page (src/views/architecture/ProcessStepFlow.vue), the supporting applications on the step page and the steps on the application in use. Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/process-mapping.spec.ts 5/5; docs screenshots process-page.png, process-step-flow.png, usage-process-steps.png; Dutch verified.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-process-mapping",
-				"requirement": "openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-003 A step SHALL carry a risk level and a compliance check"
+				"change": "2026-11-25-architecture-process-mapping",
+				"requirement": "openspec/specs/business-process-mapping :: REQ-BPM-003 A step SHALL carry a risk level and a compliance check"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Applications > Business processes (/processen), process and step pages, Process steps on the application in use",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
@@ -7670,7 +7670,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'business process\\|process step' over src/ locales/glpi.pot returns nothing; 'Processes' in inventory (src/Glpi/Inventory/Asset/Process.php) are operating system processes, not business process steps.",
 				"topdesk": "unknown: process modelling is not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/architecture-process-mapping (OpenSpec pass 2026-09-27).",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-architecture-process-mapping (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "no",

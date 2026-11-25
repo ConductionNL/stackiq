@@ -11,7 +11,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-003-a-step-shall-carry-a-risk-level-and-a-compliance-check
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

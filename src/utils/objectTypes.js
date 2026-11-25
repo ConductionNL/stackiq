@@ -73,6 +73,20 @@ function registerInVoorzieningen(type) {
 }
 
 /**
+ * Load the app settings once when the store has none yet. A page opened
+ * straight from a link has not loaded them, and registering a type by slug
+ * reads the register from them.
+ *
+ * @return {Promise<void>} Resolves once the settings are there.
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-004-the-process-page-shall-show-the-steps-as-a-read-only-flow
+ */
+export async function ensureSettingsLoaded() {
+	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+		await objectStore.fetchSettings()
+	}
+}
+
+/**
  * Register a type from the settings when the store does not know it yet,
  * loading the settings first when no page has loaded them.
  *

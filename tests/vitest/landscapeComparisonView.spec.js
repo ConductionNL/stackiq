@@ -8,8 +8,8 @@
  * landscape only for an adopted scenario that was not applied. The roadmap's
  * Compare with the plan opens the page for its organisation.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -25,6 +25,7 @@ vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn() } }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
 vi.mock('../../src/utils/objectTypes.js', () => ({
 	ensureObjectTypeOrSlug: vi.fn(),
+	ensureSettingsLoaded: vi.fn(async () => undefined),
 	loadObjectTypeCollection: vi.fn(async () => undefined),
 }))
 vi.mock('../../src/utils/objectTypeCollection.js', () => ({ fetchObjectTypeCollection: vi.fn() }))
@@ -77,6 +78,18 @@ async function mountComparison(props = {}, query = {}) {
 	return wrapper
 }
 
+/**
+ * Pick a date in the date field.
+ *
+ * @param {object} wrapper The mounted page.
+ * @param {string} date    The date as Y-m-d.
+ * @return {Promise<void>}
+ */
+async function pickDate(wrapper, date) {
+	wrapper.findComponent({ name: 'NcTextField' }).vm.$emit('update:modelValue', date)
+	await flushPromises()
+}
+
 beforeEach(() => {
 	objectStore.collections = { organization: { results: [{ uuid: 'o1', name: 'Gemeente A' }, { uuid: 'o2', name: 'Gemeente B' }] } }
 	objectStore.settings = {}
@@ -90,8 +103,11 @@ beforeEach(() => {
 describe('the comparison page', () => {
 	it('compares the plan for the organisation the roadmap passed', async () => {
 		const wrapper = await mountComparison({}, { organisation: 'o2' })
+		// The endpoint refuses a comparison without a date: nothing is asked until one is picked.
+		expect(axios.get).not.toHaveBeenCalled()
+		await pickDate(wrapper, '2027-06-30')
 
-		expect(axios.get).toHaveBeenCalledWith('/index.php/apps/stackiq/api/landscape-comparison', { params: { organisation: 'o2' } })
+		expect(axios.get).toHaveBeenCalledWith('/index.php/apps/stackiq/api/landscape-comparison', { params: { organisation: 'o2', date: '2027-06-30' } })
 		expect(wrapper.get('[data-testid="landscape-today"]').text()).toContain('Zaaksysteem A')
 		expect(wrapper.get('[data-testid="landscape-future"]').text()).toContain('Zaaksysteem B')
 		expect(wrapper.get('[data-testid="landscape-applications"]').text()).toContain('Replaced by Zaaksysteem B')
@@ -110,8 +126,24 @@ describe('the comparison page', () => {
 	it('shows the refusal of the endpoint', async () => {
 		axios.get.mockRejectedValue({ response: { data: { message: 'Not authorised for this organisation' } } })
 		const wrapper = await mountComparison({}, { organisation: 'o1' })
+		await pickDate(wrapper, '2027-06-30')
 
 		expect(wrapper.get('.note-card-stub').text()).toBe('Not authorised for this organisation')
+	})
+
+	it('shows the answer to the latest request when an older one arrives after it', async () => {
+		let refuseOlder
+		axios.get
+			.mockImplementationOnce(() => new Promise((resolve, reject) => { refuseOlder = reject }))
+			.mockResolvedValueOnce({ data: REPORT })
+		const wrapper = await mountComparison({}, { organisation: 'o2' })
+		await pickDate(wrapper, '2027-01-01')
+		await pickDate(wrapper, '2027-06-30')
+		refuseOlder({ response: { data: { message: 'date must be a date as YYYY-MM-DD' } } })
+		await flushPromises()
+
+		expect(wrapper.find('.note-card-stub').exists()).toBe(false)
+		expect(wrapper.get('[data-testid="landscape-applications"]').text()).toContain('Replaced by Zaaksysteem B')
 	})
 })
 
