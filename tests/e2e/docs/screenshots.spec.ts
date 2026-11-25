@@ -95,9 +95,24 @@ async function shoot(locator: Locator, file: string): Promise<void> {
 	await locator.screenshot({ path: path.join(IMAGES, file), animations: 'disabled' })
 }
 
-/** A widget card on a detail page, by its title. */
-function widget(page: Page, title: string): Locator {
-	return page.locator('.cn-widget-wrapper, [class*="widget-wrapper"]').filter({ has: page.getByText(title, { exact: true }) }).first()
+/** A manifest widget on a detail page, by its id (rendered as a group named after it). */
+function widget(page: Page, id: string): Locator {
+	return page.getByRole('group', { name: id, exact: true })
+}
+
+/** A custom body widget on a detail page, by its title: the innermost card holding its heading and region. */
+function bodyWidget(page: Page, title: string): Locator {
+	return page.locator('div, section')
+		.filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+		.filter({ has: page.getByRole('region', { name: title, exact: true }) })
+		.last()
+}
+
+/** Scroll a lazily rendered widget into view so it loads. */
+async function reveal(locator: Locator): Promise<Locator> {
+	await locator.scrollIntoViewIfNeeded()
+	await locator.page().waitForLoadState('networkidle')
+	return locator
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -137,11 +152,11 @@ test.describe('documentation screenshots', () => {
 		await ensure(request, register, 'module', { name: `${SEED_PREFIX} Zaaksysteem portaal`, shortDescription: 'Lets residents follow their own cases.', partOf: main.id, provider: supplier.id, type: 'Application' })
 		await ensure(request, register, 'module', { name: `${SEED_PREFIX} Zaaksysteem koppelvlak`, shortDescription: 'Exposes cases to other applications.', partOf: main.id, provider: supplier.id, type: 'Application' })
 
-		const zaken = await ensure(request, register, 'applicationInterface', { name: 'Zaken API', module: main.id, style: 'REST', version: '1.5.1', status: 'in use', specificationUrl: 'https://vng-realisatie.github.io/gemma-zaken/standaard/zaken/' })
+		const zaken = await ensure(request, register, 'applicationInterface', { name: 'Zaken API', module: main.id, style: 'REST', version: '1.5.1', status: 'in development', specificationUrl: 'https://vng-realisatie.github.io/gemma-zaken/standaard/zaken/' })
 		await ensure(request, register, 'applicationInterface', { name: 'Zaakstatus berichten', module: main.id, style: 'event or message', version: '1.0', status: 'in development' })
 
-		await ensure(request, register, 'connection', { name: 'Zaaksysteem naar Documentbeheer', moduleA: main.id, moduleB: documents.id, dataExchangeDirection: 'AtoB', type: 'api', status: 'in use', interface: zaken.id })
-		await ensure(request, register, 'connection', { name: 'Klantcontact naar Zaaksysteem', moduleA: contact.id, moduleB: main.id, dataExchangeDirection: 'bi-directional', type: 'digikoppeling', status: 'in use' })
+		await ensure(request, register, 'connection', { name: 'Zaaksysteem naar Documentbeheer', moduleA: main.id, moduleB: documents.id, dataExchangeDirection: 'AtoB', type: 'api', status: 'in development', interface: zaken.id })
+		await ensure(request, register, 'connection', { name: 'Klantcontact naar Zaaksysteem', moduleA: contact.id, moduleB: main.id, dataExchangeDirection: 'bi-directional', type: 'digikoppeling', status: 'in development' })
 
 		const year = new Date().getFullYear()
 		await ensure(request, register, 'complianceDocument', { title: 'DPIA Zaaksysteem', documentType: 'DPIA', module: main.id, publisher: organisation.id, audience: 'government', issuedOn: `${year}-02-01`, validUntil: `${year + 2}-02-01`, summary: 'Data protection impact assessment of case handling.' })
@@ -150,9 +165,9 @@ test.describe('documentation screenshots', () => {
 
 		// The organisation uses all three; only the documents usage records its
 		// connection, so the case system's usage gets suggestions.
-		usage = await ensure(request, register, 'usage', { consumer: organisation.id, module: main.id, status: 'In production', businessOwner: anna.id, contactPerson: bas.id }, ['consumer', 'module'])
-		await ensure(request, register, 'usage', { consumer: organisation.id, module: documents.id, status: 'In production', businessOwner: anna.id }, ['consumer', 'module'])
-		await ensure(request, register, 'usage', { consumer: organisation.id, module: contact.id, status: 'In production' }, ['consumer', 'module'])
+		usage = await ensure(request, register, 'usage', { consumer: organisation.id, module: main.id, status: 'Acquisition', businessOwner: anna.id, contactPerson: bas.id }, ['consumer', 'module'])
+		await ensure(request, register, 'usage', { consumer: organisation.id, module: documents.id, status: 'Acquisition', businessOwner: anna.id }, ['consumer', 'module'])
+		await ensure(request, register, 'usage', { consumer: organisation.id, module: contact.id, status: 'Acquisition' }, ['consumer', 'module'])
 
 		const rounds = await request.get(`${OBJECTS}/${register}/attestationRound`, { params: { name: `${SEED_PREFIX} Q4`, _limit: '1' } })
 		const existing = rounds.ok() ? (((await rounds.json()).results ?? []) as Obj[]).filter((r) => r.name === `${SEED_PREFIX} Q4`) : []
@@ -169,7 +184,7 @@ test.describe('documentation screenshots', () => {
 	test('application components', async ({ page }) => {
 		await page.goto(`${APP}/modules/${main.id}`)
 		await settle(page)
-		const card = widget(page, 'Components')
+		const card = await reveal(widget(page, 'md-components'))
 		await expect(card.getByText(`${SEED_PREFIX} Zaaksysteem portaal`)).toBeVisible()
 		await shoot(card, 'application-components.png')
 	})
@@ -177,7 +192,7 @@ test.describe('documentation screenshots', () => {
 	test('application APIs', async ({ page }) => {
 		await page.goto(`${APP}/modules/${main.id}`)
 		await settle(page)
-		const card = widget(page, 'APIs')
+		const card = await reveal(widget(page, 'md-apis'))
 		await expect(card.getByText('Zaken API')).toBeVisible()
 		await shoot(card, 'application-apis.png')
 	})
@@ -185,7 +200,7 @@ test.describe('documentation screenshots', () => {
 	test('compliance documents', async ({ page }) => {
 		await page.goto(`${APP}/modules/${main.id}`)
 		await settle(page)
-		const card = widget(page, 'Compliance documents')
+		const card = await reveal(widget(page, 'md-compliance-documents'))
 		await expect(card.getByText('DPIA Zaaksysteem')).toBeVisible()
 		await shoot(card, 'compliance-documents.png')
 	})
@@ -193,8 +208,8 @@ test.describe('documentation screenshots', () => {
 	test('connection map', async ({ page }) => {
 		await page.goto(`${APP}/modules/${main.id}`)
 		await settle(page)
-		const card = widget(page, 'Connection map')
-		await expect(card).toBeVisible()
+		const card = await reveal(bodyWidget(page, 'Connection map'))
+		await expect(card.getByText('could not be loaded')).toHaveCount(0)
 		await expect(card.getByText(`${SEED_PREFIX} Documentbeheer`).first()).toBeVisible()
 		await shoot(card, 'connection-map.png')
 	})
@@ -202,7 +217,7 @@ test.describe('documentation screenshots', () => {
 	test('change entry type', async ({ page }) => {
 		await page.goto(`${APP}/modules/${main.id}`)
 		await settle(page)
-		const card = widget(page, 'Entry type')
+		const card = await reveal(bodyWidget(page, 'Entry type'))
 		await card.getByRole('button', { name: 'Change type' }).click()
 		const dialog = page.getByRole('dialog').last()
 		await expect(dialog).toBeVisible()
@@ -245,7 +260,7 @@ test.describe('documentation screenshots', () => {
 	test('connection suggestions', async ({ page }) => {
 		await page.goto(`${APP}/gebruik/${usage.id}`)
 		await settle(page)
-		const card = widget(page, 'Suggested connections')
+		const card = await reveal(bodyWidget(page, 'Suggested connections'))
 		await expect(card).toBeVisible()
 		await shoot(card, 'connection-suggestions.png')
 	})
