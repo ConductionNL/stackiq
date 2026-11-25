@@ -7,7 +7,7 @@
  defined over one catalogue schema, run as a download from OpenRegister, and
  deleted. OpenRegister owns the profiles, the export right and the file.
 
- @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+ @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 -->
 <template>
 	<div class="custom-reports">
@@ -135,7 +135,7 @@ export default {
 	computed: {
 		/**
 		 * @return {object[]} The caller's own catalogue reports.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		reports() {
 			return ownReports(this.profiles, { userId: getCurrentUser()?.uid ?? '', registerId: this.register })
@@ -143,7 +143,7 @@ export default {
 
 		/**
 		 * @return {Array<{slug: string, label: string}>} The catalogue schemas OpenRegister knows.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		schemaOptions() {
 			const known = new Set(this.schemaObjects.map((schema) => schema.slug))
@@ -154,7 +154,7 @@ export default {
 
 		/**
 		 * @return {object|null} The OpenRegister schema picked for a new report.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		newSchemaObject() {
 			return this.schemaObjects.find((schema) => schema.slug === this.newSchema?.slug) ?? null
@@ -172,7 +172,7 @@ export default {
 		 * Read the caller's profiles and the catalogue register's schemas.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		async load() {
 			this.loading = true
@@ -196,7 +196,7 @@ export default {
 		 *
 		 * @param {string|number} schemaId The schema id.
 		 * @return {string} Its label, or '' when it is not a catalogue schema.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		schemaLabelOf(schemaId) {
 			const schema = this.schemaObjects.find((candidate) => String(candidate.id) === String(schemaId))
@@ -207,7 +207,7 @@ export default {
 		/**
 		 * @param {object} report The report.
 		 * @return {string} The URL that runs it.
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		runUrlOf(report) {
 			return runUrl(generateUrl, report.id)
@@ -218,7 +218,7 @@ export default {
 		 *
 		 * @param {object} profile The stored profile.
 		 * @return {void}
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		onCreated(profile) {
 			if (profile && profile.id !== undefined) {
@@ -231,7 +231,7 @@ export default {
 		 *
 		 * @param {object} report The report.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+		 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
 		 */
 		async remove(report) {
 			this.error = ''

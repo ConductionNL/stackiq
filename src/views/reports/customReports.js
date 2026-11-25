@@ -8,7 +8,7 @@
  * defined in, turn the form's answer into a profile, and name the URLs the
  * page calls. Pure, so the rules are tested without a browser.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
  */
 
 /** The OpenRegister export profile API. */

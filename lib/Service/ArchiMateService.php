@@ -270,7 +270,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 * @throws \InvalidArgumentException When the mode is unknown.
 	 * @throws \RuntimeException         When the stored objects cannot be read.
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function checkRoundTrip(string $filePath, string $mode): array {
 		$check = new ArchiMateRoundTripService(importService: $this->importService, exportService: $this->exportService);

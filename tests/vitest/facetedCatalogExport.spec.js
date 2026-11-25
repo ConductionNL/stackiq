@@ -7,7 +7,7 @@
  * FacetedCatalogIndexView's Export menu: the download carries the list's facets,
  * search, active quick filter and columns.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'

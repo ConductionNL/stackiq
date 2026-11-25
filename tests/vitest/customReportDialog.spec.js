@@ -7,7 +7,7 @@
  * as the caller's OpenRegister export profile over the chosen schema, and
  * reports a refusal in the dialog.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

@@ -8,7 +8,7 @@
  * `filter` as JSON, the page's columns as JSON and the format. Pure, so the
  * request the Export menu sends is tested without a browser.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 
 /** The prefix of a facet key, as the facet store keeps it in the route. */
@@ -19,7 +19,7 @@ export const FACET_PREFIX = '_gf_'
  *
  * @param {Array<string|object>} columns The manifest columns.
  * @return {Array<{key: string, label: string}>}
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 export function exportColumns(columns) {
 	return (columns ?? [])
@@ -39,7 +39,7 @@ export function exportColumns(columns) {
  * @param {string} options.format `csv` or `xlsx`.
  * @param {(path: string, params: object) => string} generateUrl Nextcloud's URL generator.
  * @return {string}
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
  */
 export function catalogExportUrl({ schema, activeFilters = {}, search = '', quickFilter = null, columns = [], format }, generateUrl) {
 	const params = new URLSearchParams()

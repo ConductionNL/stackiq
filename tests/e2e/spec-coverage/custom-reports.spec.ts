@@ -15,7 +15,7 @@
  * The reports are created through OpenRegister's export-profile route, the one
  * the page's dialog posts to, so the field order and filter are exact.
  *
- * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md
+ * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

@@ -162,7 +162,7 @@ class SettingsRouteTableTest extends TestCase {
 	 * The old ArchiMate round-trip test is gone (#1075): it let any signed-in
 	 * user write a test model into the live register and could never succeed.
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md#task-4
 	 */
 	public function testTheOldArchiMateRoundTripIsNotRoutedOrCallable(): void {
 		foreach ($this->routes() as $route) {
@@ -181,7 +181,7 @@ class SettingsRouteTableTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
 	 */
 	public function testTheRoundTripCheckIsRouted(): void {
 		$found = $this->match(
