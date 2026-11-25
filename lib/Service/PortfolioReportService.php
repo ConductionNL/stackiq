@@ -778,7 +778,7 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 	 *
 	 * @return array<string,string> Names by component id; an unresolved component keeps its id.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
 	 */
 	private function componentNames(array $usages): array {
 		$names = [];

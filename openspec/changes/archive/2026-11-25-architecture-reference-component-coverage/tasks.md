@@ -68,7 +68,7 @@
   - GIVEN the feature pages WHEN they are read THEN they show the coverage table, the map and the Overlap section, each in a screenshot
   - GIVEN a Dutch instance WHEN the coverage page renders THEN every new label reads in Dutch
 - [x] Implement
-- [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+- [x] Test (`tests/l10n` key parity, screenshots captured with Playwright) (25 Nov 2026, live sandbox: `npm run test:l10n` OK; `gemma-plate-coverage.png`, `gemma-plate-coverage-map.png` and `portfolio-report-overlap.png` captured with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`; the map's view is answered by the test because the sandbox imports no GEMMA views, the coverage on it is real) and placed in `docs/features/reference-component-coverage.md` and `portfolio-rationalization-time.md`; with the language set to Dutch every label on the plate and the map reads in Dutch)
 
 Live run 25 Nov 2026: the module names were read with an `id` list, which OpenRegister main matches nothing for, so every tile and map node in state Overlap or Covered said "No application"; `ReferenceComponentCoverageService::modulesWithIds()` now selects with `_ids`. The e2e seeded its components into the fixed slug `vng-gemma`, a register the app does not read when the AMEF mapping names another; it now takes the register and element schema from `/api/amef/config`, and picks the view through the vue-select option list.
 

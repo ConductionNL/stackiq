@@ -11,13 +11,10 @@ applications cover the same component. It answers the information manager's
 question "where are we missing something, and where do we have too much?"
 
 Specifications:
-[`reference-component-coverage`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md)
+[`reference-component-coverage`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/reference-component-coverage/spec.md)
 and
 [`gemma-plate`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md).
 
-> Screenshots of the coverage table, the map and the Overlap section are
-> still pending a live-instance capture; the Playwright-captured images
-> follow in a later docs pass.
 
 ## Where the coverage comes from
 
@@ -55,6 +52,8 @@ then says "Import the GEMMA model to see coverage." instead of an empty table.
 - a detail panel for the chosen component, naming the applications in use
   that could fill a fillable gap.
 
+![The GEMMA plate of a municipality: three reference components, one covered, one gap that an application in use could fill, and one overlap where two applications cover document registration](../images/gemma-plate-coverage.png)
+
 ### Grouping the plate by a GEMMA view
 
 The **GEMMA view** picker lists the GEMMA views imported with the GEMMA model, each with its GEMMA release when the import recorded one. Pick a view, for example *GEMMA Applicatiearchitectuur, gemeentebreed*, and the plate draws that view's reference components in the view's own groups (such as Front-office, Mid-office, Back-office en basisregistraties), each with its state and the organisation's applications. Clear the picker to see the whole model grouped by the components' own GEMMA grouping.
@@ -85,6 +84,8 @@ applications. A node of any other element, such as a grouping, carries no
 state. A node finds its component through its `elementRef`, which is the
 component's ArchiMate identifier.
 
+![Coverage drawn on a GEMMA view: a gap, a covered component with its application, and an overlap with both applications named](../images/gemma-plate-coverage-map.png)
+
 ## API
 
 `GET /apps/stackiq/api/reference-component-coverage?organisation=<uuid>`
@@ -97,3 +98,5 @@ Each row of `components` holds `id`, `identifier` (the ArchiMate identifier),
 
 The Portfolio rationalization report shows the same overlap next to ageing:
 see [Portfolio rationalization](portfolio-rationalization-time.md#overlap).
+
+![The Overlap section of the portfolio report: the reference component and the applications that share it](../images/portfolio-report-overlap.png)

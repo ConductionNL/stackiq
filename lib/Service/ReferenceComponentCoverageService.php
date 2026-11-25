@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  *
  * The caller has already checked the user may read the organisation.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+ * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  */
 class ReferenceComponentCoverageService implements ReferenceComponentCoverageServiceInterface {
 	/**
@@ -70,7 +70,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function build(string $organisationUuid): array {
 		$source   = $this->usageSource();
@@ -220,7 +220,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function buildCsv(string $organisationUuid): string {
 		$coverage = $this->build(organisationUuid: $organisationUuid);
@@ -307,7 +307,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @return array<string,array<string,mixed>> Modules by id.
 	 *
-	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	 */
 	private function modulesWithIds(array $ids, array $source): array {
 		if ($ids === [] || $source['module'] === 0) {
