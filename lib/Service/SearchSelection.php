@@ -39,12 +39,23 @@ final class SearchSelection {
 	/**
 	 * The OpenRegister contract that carries the selection as one argument.
 	 */
-	public const OPTIONS_CLASS = 'OCA\\OpenRegister\\Kernel\\Contracts\\SearchOptions';
+	public const OPTIONS_CLASS = 'OCA\\OpenRegister\\Contract\\SearchOptions';
 
 	/**
 	 * The OpenRegister contract for the selection inside the options.
 	 */
-	public const SELECTION_CLASS = 'OCA\\OpenRegister\\Kernel\\Contracts\\ObjectSelection';
+	public const SELECTION_CLASS = 'OCA\\OpenRegister\\Contract\\ObjectSelection';
+
+	/**
+	 * The (options, selection) class pairs OpenRegister has shipped, newest first.
+	 *
+	 * OpenRegister main moved both from Kernel\Contracts to Contract without
+	 * leaving the old names behind, so an install has one pair or the other.
+	 */
+	public const CLASS_PAIRS = [
+		[self::OPTIONS_CLASS, self::SELECTION_CLASS],
+		['OCA\\OpenRegister\\Kernel\\Contracts\\SearchOptions', 'OCA\\OpenRegister\\Kernel\\Contracts\\ObjectSelection'],
+	];
 
 	/**
 	 * The named arguments that select objects by id.
@@ -87,23 +98,43 @@ final class SearchSelection {
 	 * The selection as one `options` argument for a search that takes one,
 	 * else as its own named arguments.
 	 *
-	 * @param bool                 $takesOptions Whether the search takes an `options` parameter.
-	 * @param array<string, mixed> $selection    The selection's named values.
+	 * @param bool                            $takesOptions Whether the search takes an `options` parameter.
+	 * @param array<string, mixed>            $selection    The selection's named values.
+	 * @param array<int, array{string,string}> $pairs        The (options, selection) classes to look for, preferred first.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
 	 */
-	public static function arguments(bool $takesOptions, array $selection): array {
-		if ($takesOptions === false || class_exists(self::OPTIONS_CLASS) === false || class_exists(self::SELECTION_CLASS) === false) {
+	public static function arguments(bool $takesOptions, array $selection, array $pairs=self::CLASS_PAIRS): array {
+		$classes = self::installedPair(pairs: $pairs);
+		if ($takesOptions === false || $classes === null) {
 			return $selection;
 		}
 
-		$optionsClass   = self::OPTIONS_CLASS;
-		$selectionClass = self::SELECTION_CLASS;
+		[$optionsClass, $selectionClass] = $classes;
 
 		return ['options' => new $optionsClass(selection: new $selectionClass(...$selection))];
 	}//end arguments()
+
+	/**
+	 * The first (options, selection) class pair this install has.
+	 *
+	 * @param array<int, array{string,string}> $pairs The pairs, preferred first.
+	 *
+	 * @return array{string,string}|null The pair, or null when OpenRegister has neither.
+	 *
+	 * @spec exclude Adapter between two OpenRegister search signatures, no functional requirement.
+	 */
+	private static function installedPair(array $pairs): ?array {
+		foreach ($pairs as $pair) {
+			if (class_exists($pair[0]) === true && class_exists($pair[1]) === true) {
+				return $pair;
+			}
+		}
+
+		return null;
+	}//end installedPair()
 
 	/**
 	 * Whether the search method takes an `options` parameter.

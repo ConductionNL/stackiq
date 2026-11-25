@@ -80,6 +80,48 @@ class SearchSelectionTest extends TestCase {
 	public function testWithoutTakingOptionsTheSelectionIsUnchanged(): void {
 		$this->assertSame(['uses' => 'x'], SearchSelection::arguments(takesOptions: false, selection: ['uses' => 'x']));
 	}//end testWithoutTakingOptionsTheSelectionIsUnchanged()
+
+	/**
+	 * The first class pair the install has is used; a pair it lacks is skipped.
+	 *
+	 * OpenRegister main moved SearchOptions and ObjectSelection to the Contract
+	 * namespace; looking only under Kernel\Contracts sent `ids` to a search that
+	 * no longer takes it (a live 500 when starting a confirmation round).
+	 *
+	 * @return void
+	 */
+	public function testTheFirstInstalledClassPairIsUsed(): void {
+		$pairs = [
+			['No\\Such\\SearchOptions', 'No\\Such\\ObjectSelection'],
+			[SearchOptions::class, ObjectSelection::class],
+		];
+
+		$arguments = SearchSelection::arguments(takesOptions: true, selection: ['ids' => ['a']], pairs: $pairs);
+
+		$this->assertInstanceOf(expected: SearchOptions::class, actual: $arguments['options']);
+		$this->assertSame(expected: ['a'], actual: $arguments['options']->selection->ids);
+	}//end testTheFirstInstalledClassPairIsUsed()
+
+	/**
+	 * With no pair installed, the selection stays its own named arguments.
+	 *
+	 * @return void
+	 */
+	public function testWithNoInstalledPairTheSelectionIsUnchanged(): void {
+		$pairs = [['No\\Such\\SearchOptions', 'No\\Such\\ObjectSelection']];
+
+		$this->assertSame(expected: ['ids' => ['a']], actual: SearchSelection::arguments(takesOptions: true, selection: ['ids' => ['a']], pairs: $pairs));
+	}//end testWithNoInstalledPairTheSelectionIsUnchanged()
+
+	/**
+	 * The Contract namespace is looked for first, the Kernel\Contracts one second.
+	 *
+	 * @return void
+	 */
+	public function testTheContractNamespaceIsPreferred(): void {
+		$this->assertSame(expected: 'OCA\\OpenRegister\\Contract\\SearchOptions', actual: SearchSelection::CLASS_PAIRS[0][0]);
+		$this->assertSame(expected: 'OCA\\OpenRegister\\Kernel\\Contracts\\SearchOptions', actual: SearchSelection::CLASS_PAIRS[1][0]);
+	}//end testTheContractNamespaceIsPreferred()
 }//end class
 
 /**
