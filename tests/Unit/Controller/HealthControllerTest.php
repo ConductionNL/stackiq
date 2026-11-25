@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\Stackiq\Controller\OpenRegisterUnavailableHealthController;
+use OCA\Stackiq\Controller\HealthController;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -31,33 +31,33 @@ use ReflectionMethod;
 use RuntimeException;
 
 /**
- * Covers OpenRegisterUnavailableHealthController.
+ * Covers HealthController.
  *
- * @covers \OCA\Stackiq\Controller\OpenRegisterUnavailableHealthController
+ * @covers \OCA\Stackiq\Controller\HealthController
  */
-class OpenRegisterUnavailableHealthControllerTest extends TestCase {
+class HealthControllerTest extends TestCase {
 
 	/**
 	 * A controller over a database that answers, or throws.
 	 *
 	 * @param bool $databaseUp Whether the trivial query succeeds
 	 *
-	 * @return OpenRegisterUnavailableHealthController
+	 * @return HealthController
 	 */
-	private function controller(bool $databaseUp): OpenRegisterUnavailableHealthController {
-		$appManager = $this->createMock(IAppManager::class);
+	private function controller(bool $databaseUp): HealthController {
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppVersion')->with('stackiq')->willReturn('1.2.3');
 
-		$db = $this->createMock(IDBConnection::class);
+		$db = $this->createMock(originalClassName: IDBConnection::class);
 		if ($databaseUp === true) {
-			$db->method('executeQuery')->with('SELECT 1')->willReturn($this->createMock(IResult::class));
+			$db->method('executeQuery')->with('SELECT 1')->willReturn($this->createMock(originalClassName: IResult::class));
 		} else {
 			$db->method('executeQuery')->willThrowException(new RuntimeException('connection refused'));
 		}
 
-		return new OpenRegisterUnavailableHealthController(
+		return new HealthController(
 			appName: 'stackiq',
-			request: $this->createMock(IRequest::class),
+			request: $this->createMock(originalClassName: IRequest::class),
 			appManager: $appManager,
 			db: $db
 		);
@@ -71,15 +71,15 @@ class OpenRegisterUnavailableHealthControllerTest extends TestCase {
 	public function testAnswers503WithTheOpenRegisterCheckFailed(): void {
 		$response = $this->controller(databaseUp: true)->index();
 
-		$this->assertSame(503, $response->getStatus());
+		$this->assertSame(expected: 503, actual: $response->getStatus());
 		$this->assertSame(
-			[
+			expected: [
 				'status'  => 'error',
 				'app'     => 'stackiq',
 				'version' => '1.2.3',
 				'checks'  => ['database' => 'ok', 'openregister' => 'failed: openregister unavailable'],
 			],
-			$response->getData()
+			actual: $response->getData()
 		);
 	}//end testAnswers503WithTheOpenRegisterCheckFailed()
 
@@ -91,8 +91,8 @@ class OpenRegisterUnavailableHealthControllerTest extends TestCase {
 	public function testAFailingDatabaseIsReportedWithoutItsMessage(): void {
 		$data = $this->controller(databaseUp: false)->index()->getData();
 
-		$this->assertSame('failed', $data['checks']['database']);
-		$this->assertStringNotContainsString('connection refused', (string)json_encode($data));
+		$this->assertSame(expected: 'failed', actual: $data['checks']['database']);
+		$this->assertStringNotContainsString(needle: 'connection refused', haystack: (string)json_encode($data));
 	}//end testAFailingDatabaseIsReportedWithoutItsMessage()
 
 	/**
@@ -101,9 +101,9 @@ class OpenRegisterUnavailableHealthControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheEndpointIsPublic(): void {
-		$method = new ReflectionMethod(OpenRegisterUnavailableHealthController::class, 'index');
+		$method = new ReflectionMethod(HealthController::class, 'index');
 
-		$this->assertNotEmpty($method->getAttributes(PublicPage::class));
-		$this->assertNotEmpty($method->getAttributes(NoCSRFRequired::class));
+		$this->assertNotEmpty(actual: $method->getAttributes(PublicPage::class));
+		$this->assertNotEmpty(actual: $method->getAttributes(NoCSRFRequired::class));
 	}//end testTheEndpointIsPublic()
 }//end class

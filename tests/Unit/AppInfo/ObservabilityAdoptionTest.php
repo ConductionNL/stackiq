@@ -20,7 +20,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
 use OCA\Stackiq\AppInfo\Application;
-use OCA\Stackiq\Controller\OpenRegisterUnavailableHealthController;
+use OCA\Stackiq\Controller\HealthController;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IDBConnection;
@@ -75,11 +75,11 @@ class ObservabilityAdoptionTest extends TestCase {
 				}
 
 				if ($id === 'OCP\\App\\IAppManager') {
-					return $this->createMock(IAppManager::class);
+					return $this->createMock(originalClassName: IAppManager::class);
 				}
 
 				if ($id === 'OCP\\IDBConnection') {
-					return $this->createMock(IDBConnection::class);
+					return $this->createMock(originalClassName: IDBConnection::class);
 				}
 
 				return $this->createMock($id);
@@ -95,14 +95,14 @@ class ObservabilityAdoptionTest extends TestCase {
 				$controller = $registered[$name]($container);
 			} catch (\Error $missing) {
 				// Only metrics has no stand-in; health answers without OpenRegister.
-				$this->assertSame('OCA\\Stackiq\\Controller\\MetricsController', $name);
+				$this->assertSame(expected: 'OCA\\Stackiq\\Controller\\MetricsController', actual: $name);
 				// OpenRegister is not on this test autoloader: the factory still named the generic.
 				$this->assertSame('Class "' . $generic . '" not found', $missing->getMessage());
 				continue;
 			}
 
 			if (class_exists($generic) === false) {
-				$this->assertInstanceOf(OpenRegisterUnavailableHealthController::class, $controller);
+				$this->assertInstanceOf(expected: HealthController::class, actual: $controller);
 				continue;
 			}
 

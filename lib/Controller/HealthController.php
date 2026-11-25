@@ -3,11 +3,13 @@
 /**
  * Stackiq's health answer while OpenRegister is not available.
  *
- * @category Controller
- * @package  OCA\Stackiq\Controller
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://github.com/ConductionNL/stackiq
+ * @category  Controller
+ * @package   OCA\Stackiq\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,13 +35,18 @@ use Throwable;
 /**
  * Answers `/api/health` with 503 when OpenRegister is disabled or missing.
  *
- * The health route is served by OpenRegister's AppHost health controller. With
+ * `health#index` names this class, but Application registers a factory for it:
+ * while OpenRegister is present the factory hands the route to the AppHost
+ * GenericHealthController, and only without OpenRegister does it build this
+ * class. The health route is served by OpenRegister's AppHost health controller. With
  * OpenRegister gone that class cannot load, and the probe got a 500 error page
  * instead of the ADR-006 answer. The manifest marks the OpenRegister check
  * critical, so the answer the generic would give is `error` with 503; this
  * controller gives that answer, in the same shape, without OpenRegister.
+ *
+ * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
  */
-class OpenRegisterUnavailableHealthController extends Controller {
+class HealthController extends Controller {
 
 	/**
 	 * Constructor.
