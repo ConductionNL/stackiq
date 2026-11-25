@@ -34,7 +34,7 @@ use RuntimeException;
 /**
  * Fires only for contract and module version saves in the stackiq register.
  *
- * @spec openspec/changes/adopt-integration-leaves/tasks.md#4.2
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#4.2
  */
 #[CoversClass(LifecycleCalendarListener::class)]
 final class LifecycleCalendarListenerTest extends TestCase {

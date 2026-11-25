@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Throwable;
  * Caller and administrator checks for MCP tools.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 class McpAdminGate {
 
@@ -57,7 +57,7 @@ class McpAdminGate {
 	 *
 	 * @return IUser|null The user.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function currentUser(): ?IUser {
 		return $this->userSession->getUser();
@@ -68,7 +68,7 @@ class McpAdminGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function requireUser(): ?array {
 		if ($this->currentUser() === null) {
@@ -83,7 +83,7 @@ class McpAdminGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null for an administrator.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function requireAdmin(): ?array {
 		$user = $this->currentUser();

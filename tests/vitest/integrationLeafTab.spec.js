@@ -7,7 +7,7 @@
  * with the sidebar's object props, a mount-mode provider through the mount
  * host, and the generic linked-items tab when no provider is registered.
  *
- * @spec openspec/changes/adopt-integration-leaves
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves
  */
 
 import { mount } from '@vue/test-utils'

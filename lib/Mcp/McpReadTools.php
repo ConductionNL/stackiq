@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md#requirement-read-tools-must-be-side-effect-free-and-separated-from-write-tools
+ * @spec openspec/specs/mcp-tool-surface/spec.md#requirement-read-tools-must-be-side-effect-free-and-separated-from-write-tools
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCP\AppFramework\Http;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) One handler per read tool, each on its own service.
  * @SuppressWarnings(PHPMD.ExcessiveParameterList) The constructor takes one service per tool.
  *
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
  */
 class McpReadTools {
 
@@ -96,7 +96,7 @@ class McpReadTools {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getMyContactProfile(array $args): array {
 		$refusal = $this->session->requireUser();
@@ -124,7 +124,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function listOffers(array $args): array {
 		$refusal = ($this->pagingRefusal(args: $args) ?? $this->session->requireUser());
@@ -143,7 +143,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function listOfferedUsages(array $args): array {
 		$refusal = ($this->validator->oneOf(args: $args, name: 'as', allowed: ['consumer', 'participant'])
@@ -168,7 +168,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getPortfolioReport(array $args): array {
 		$refusal = $this->validator->uuid(args: $args, name: 'organisationUuid');
@@ -196,7 +196,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function listPendingModerations(array $args): array {
 		$refusal = ($this->validator->oneOf(args: $args, name: 'type', allowed: McpWriteTools::MODERATION_TYPES, required: false)
@@ -216,7 +216,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getReviewAggregate(array $args): array {
 		$refusal = ($this->validator->oneOf(args: $args, name: 'subjectType', allowed: McpWriteTools::REVIEW_SUBJECTS)
@@ -245,7 +245,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getSbomImportStatus(array $args): array {
 		$refusal = ($this->validator->uuid(args: $args, name: 'moduleVersionUuid')
@@ -275,7 +275,7 @@ class McpReadTools {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function listViews(array $args): array {
 		$refusal = $this->session->requireUser();
@@ -293,7 +293,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getView(array $args): array {
 		$refusal = ($this->validator->string(args: $args, name: 'viewId', max: 255) ?? $this->session->requireUser());
@@ -311,7 +311,7 @@ class McpReadTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md#scenario-merge-preview-never-mutates
+	 * @spec openspec/specs/mcp-tool-surface/spec.md#scenario-merge-preview-never-mutates
 	 */
 	public function previewOrganisationMerge(array $args): array {
 		$refusal = ($this->validator->uuid(args: $args, name: 'sourceUuid')
@@ -335,7 +335,7 @@ class McpReadTools {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function getEolSyncStatus(array $args): array {
 		$refusal = $this->session->requireAdmin();

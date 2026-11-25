@@ -16,7 +16,7 @@
  * instance is skipped with that reason; the empty-leaf behaviour itself is
  * PHPUnit's.
  *
- * @spec openspec/changes/adopt-integration-leaves/specs/catalog-integration-leaves/spec.md
+ * @spec openspec/specs/catalog-integration-leaves/spec.md
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

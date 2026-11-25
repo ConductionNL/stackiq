@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
  * The MCP tool provider for StackIQ.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 class StackiqToolProvider implements IMcpToolProvider {
 
@@ -493,7 +493,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function getAppId(): string {
 		return self::APP_ID;
@@ -504,7 +504,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 	 *
 	 * @return list<array<string, mixed>> The descriptors.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function getTools(): array {
 		return self::TOOL_DESCRIPTORS;
@@ -518,7 +518,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 	 *
 	 * @return array<string, mixed> The result, or a structured error.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function invokeTool(string $toolId, array $arguments): array {
 		return match ($toolId) {

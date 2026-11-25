@@ -28,7 +28,7 @@ use ReflectionMethod;
  *
  * @covers \OCA\Stackiq\Service\SettingsService
  *
- * @spec openspec/changes/adopt-integration-leaves/tasks.md#1.3
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#1.3
  */
 final class IntegrationLeavesFragmentTest extends TestCase {
 

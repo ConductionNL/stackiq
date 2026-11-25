@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.5
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.5
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCP\IGroupManager;
  * Proves the caller may read or import the SBOM of one application version.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.5
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.5
  */
 class McpSbomGate {
 
@@ -67,7 +67,7 @@ class McpSbomGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#4.1
 	 */
 	public function authoriseRead(string $moduleVersionUuid): ?array {
 		$user = $this->session->currentUser();
@@ -89,7 +89,7 @@ class McpSbomGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.5
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.5
 	 */
 	public function authoriseImport(string $moduleVersionUuid): ?array {
 		$user = $this->session->currentUser();
