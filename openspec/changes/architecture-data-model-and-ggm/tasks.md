@@ -22,7 +22,7 @@
   - GIVEN the effective menu WHEN it renders THEN Data model sits under the Architecture group
   - GIVEN an entity page WHEN it renders THEN "Applications that hold this data" lists usages filtered on `dataEntities`
 - [x] Implement
-- [x] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`) (e2e verified live 25 Nov 2026)
 
 ### Task 3: Relations drawn around an entity
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
@@ -32,7 +32,7 @@
   - GIVEN a relation with cardinalities WHEN it is drawn THEN the edge label holds its name and both cardinalities
   - GIVEN the graph WHEN it renders THEN every colour prop is a CSS variable and a text table lists the same relations
 - [x] Implement
-- [x] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario) (e2e verified live 25 Nov 2026)
 
 ### Task 4: Attributes with keys
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
@@ -42,6 +42,7 @@
   - GIVEN an imported entity WHEN its page renders THEN no edit control shows and the notice about the GGM file does
 - [x] Implement
 - [x] Test (vitest `dataEntityAttributes.spec.js`, Playwright new entity scenario) (e2e written, runs in nightly; not verified on a live instance)
+  - Live 25 Nov 2026 (NC 34, PostgreSQL 16, OpenRegister main): the new entity scenario is RED, an app fault. The element schema requires `identifier` and `properties`, and the "New data entity" form neither shows nor fills them, so the create is refused ("The required properties (identifier, properties) are missing"). The views editor's element and relation creates (`src/store/modules/architectureView.js`) send no `properties` either. Decision queued (COORDINATOR-QUEUE 25 Nov): generate the identifier and send an empty property list on create. Built in #2265 (data entity) and #2254 (views editor).
       25 Nov 2026: live on OpenRegister main the New data entity create was refused (the AMEF element schema requires `identifier` and `properties`, which the form never sends). The page now names the create-override `createDrawnDataEntity` (`src/utils/drawnDataEntity.js`), which fills a fresh `id-<uuid>` and `properties: []` and posts through OpenRegister's objects API; the AMEF schema is unchanged. vitest `drawnDataEntity.spec.js`. Live re-check of the new entity scenario still open.
 
 ### Task 5: Data entities on the usage page
@@ -50,7 +51,7 @@
 - **acceptance_criteria**:
   - GIVEN a usage page WHEN it is edited THEN the data entities picker offers business objects only, and the saved list shows on the page
 - [x] Implement
-- [x] Test (Playwright usage link scenario) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (Playwright usage link scenario) (e2e verified live 25 Nov 2026)
 
 ### Task 6: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
@@ -58,8 +59,9 @@
 - **acceptance_criteria**:
   - GIVEN the feature page WHEN it is read THEN it shows the Data model page, an entity page with its graph and a usage with data entities, each in a screenshot, and says how to import a newer GGM
   - GIVEN a Dutch instance WHEN the Data model page renders THEN every new label reads in Dutch
-- [ ] Implement
-- [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+- [x] Implement
+  - 25 Nov, live: `data-model-list.png`, `data-entity-relations.png` and `usage-data-entities.png`, captured by a test in `tests/e2e/docs/screenshots.spec.ts` and placed in `docs/features/data-model.md`. On the usage page the link shows under Connections and services: the data widget lists `dataEntities` in its include, but does not draw it.
+- [x] Test (`tests/l10n` key parity: nl complete with #2249; screenshots captured with Playwright)
 
 ## Round 2 notes
 
