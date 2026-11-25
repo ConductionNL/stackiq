@@ -9,7 +9,7 @@ An application can be made of other applications: a case system with its citizen
 
 Specification: [`openspec/changes/landscape-application-components/specs/application-components/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-application-components/specs/application-components/spec.md).
 
-<!-- Screenshot: docs/images/application-components.png, the Components list on an application page. To be captured with Playwright. -->
+![The Components list on an application page](../images/application-components.png)
 
 ## Recording a component
 

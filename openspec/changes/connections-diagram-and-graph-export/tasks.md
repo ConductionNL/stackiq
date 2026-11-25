@@ -51,8 +51,8 @@
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Connections THEN the map, the diagram and the export option are explained with a screenshot
 - [x] Implement
-- [ ] Test (docs build, screenshot with Playwright)
-- Done: `docs/features/connections.md` explains the map, its downloads and the ArchiMate option. The screenshot (`docs/images/connection-map.png`) needs a Playwright run against a live instance and is left open.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
+- Done: `docs/features/connections.md` explains the map, its downloads and the ArchiMate option. The screenshot `docs/images/connection-map.png` was added 25 Nov 2026.
 
 ## Verification
 

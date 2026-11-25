@@ -25,8 +25,8 @@
 - **files**: `docs/features/compliance-documents.md`, `docs/images/compliance-documents.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Compliance documents THEN publishing, the three audiences and expiry are explained with a screenshot
-- [ ] Implement. Built: `docs/features/compliance-documents.md` (publishing, the three audiences, finding documents). Left: the screenshot, which needs a running instance.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement. Built: `docs/features/compliance-documents.md` (publishing, the three audiences, finding documents). The screenshot `docs/images/compliance-documents.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

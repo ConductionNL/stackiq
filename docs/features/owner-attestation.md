@@ -9,6 +9,8 @@ An information manager asks the owners of the organisation's entries to confirm 
 
 Specification: [`openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md).
 
+![A confirmation round with its pending, confirmed, corrected and overdue counts](../images/confirmation-round.png)
+
 ## Starting a round
 
 Open **Organisations → Confirmation rounds** and choose **Start round**. Pick:

@@ -7,6 +7,8 @@
 
 Organisations publish compliance documents about an application, so other organisations can reuse them instead of asking the supplier again. A document is a DPIA, a processing agreement, a pentest report, an assurance report, a certificate, an ENSIA statement or another kind.
 
+![The compliance documents on an application page, soonest expiry first](../images/compliance-documents.png)
+
 ## Publishing a document
 
 Open the application and go to **Compliance documents**. Choose **Publish a compliance document** and fill in:

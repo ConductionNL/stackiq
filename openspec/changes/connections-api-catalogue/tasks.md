@@ -27,9 +27,9 @@
 - **files**: `docs/features/application-interfaces.md`, `docs/images/application-apis.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens APIs THEN it explains how to record an API and link a connection to it, with a screenshot
-- [ ] Implement
-  - `docs/features/application-interfaces.md` is written; the screenshot needs a live instance, so the task stays open.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+  - `docs/features/application-interfaces.md` is written; the screenshot `docs/images/application-apis.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

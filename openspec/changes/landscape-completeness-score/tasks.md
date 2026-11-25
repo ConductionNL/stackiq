@@ -42,8 +42,8 @@
 - **files**: `docs/features/data-quality.md`, `docs/images/data-quality-report.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Data quality THEN the rules, the score, the confirm action and the report are explained with a screenshot
-- [ ] Implement
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 
