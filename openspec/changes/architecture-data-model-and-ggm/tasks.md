@@ -42,6 +42,7 @@
   - GIVEN an imported entity WHEN its page renders THEN no edit control shows and the notice about the GGM file does
 - [x] Implement
 - [x] Test (vitest `dataEntityAttributes.spec.js`, Playwright new entity scenario) (e2e written, runs in nightly; not verified on a live instance)
+      25 Nov 2026: live on OpenRegister main the New data entity create was refused (the AMEF element schema requires `identifier` and `properties`, which the form never sends). The page now names the create-override `createDrawnDataEntity` (`src/utils/drawnDataEntity.js`), which fills a fresh `id-<uuid>` and `properties: []` and posts through OpenRegister's objects API; the AMEF schema is unchanged. vitest `drawnDataEntity.spec.js`. Live re-check of the new entity scenario still open.
 
 ### Task 5: Data entities on the usage page
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
