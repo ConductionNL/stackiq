@@ -171,11 +171,7 @@ function main() {
 		}
 
 		const entries = browserEntries(locale, doc.translations)
-		const rendered = renderJs(
-			id,
-			entries,
-			doc.pluralForm || DEFAULT_PLURAL_FORM,
-		)
+		const rendered = renderJs(id, entries, doc.pluralForm || DEFAULT_PLURAL_FORM)
 		const current = fs.existsSync(jsFile)
 			? fs.readFileSync(jsFile, 'utf8')
 			: null

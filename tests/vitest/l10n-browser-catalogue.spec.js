@@ -9,10 +9,10 @@
  * l10n/en.json stays complete for PHP and the source-key checks.
  */
 import fs from 'fs'
-import path from 'path'
-import vm from 'vm'
 import { createRequire } from 'module'
+import path from 'path'
 import { describe, expect, it } from 'vitest'
+import vm from 'vm'
 
 const require = createRequire(import.meta.url)
 const { browserEntries } = require('../../scripts/build-l10n-js.js')
@@ -26,7 +26,15 @@ const L10N = path.resolve(__dirname, '../../l10n')
  */
 function loadJs(file) {
 	let captured = null
-	const sandbox = { OC: { L10N: { register: (id, obj) => { captured = obj } } } }
+	const sandbox = {
+		OC: {
+			L10N: {
+				register: (id, obj) => {
+					captured = obj
+				},
+			},
+		},
+	}
 	vm.createContext(sandbox)
 	vm.runInContext(fs.readFileSync(file, 'utf8'), sandbox)
 	return captured
@@ -35,8 +43,14 @@ function loadJs(file) {
 describe('browser catalogue entries', () => {
 	it('drops identity entries for en and en_*', () => {
 		const translations = { Save: 'Save', Colour: 'Color', _a_: ['_a_', '_b_'] }
-		expect(browserEntries('en', translations)).toEqual({ Colour: 'Color', _a_: ['_a_', '_b_'] })
-		expect(browserEntries('en_US', translations)).toEqual({ Colour: 'Color', _a_: ['_a_', '_b_'] })
+		expect(browserEntries('en', translations)).toEqual({
+			Colour: 'Color',
+			_a_: ['_a_', '_b_'],
+		})
+		expect(browserEntries('en_US', translations)).toEqual({
+			Colour: 'Color',
+			_a_: ['_a_', '_b_'],
+		})
 	})
 
 	it('keeps every entry for other locales', () => {
@@ -46,7 +60,9 @@ describe('browser catalogue entries', () => {
 })
 
 describe('l10n/en*.js as committed', () => {
-	const english = fs.readdirSync(L10N).filter((f) => /^en(_[A-Za-z]+)?\.js$/.test(f))
+	const english = fs
+		.readdirSync(L10N)
+		.filter((f) => /^en(_[A-Za-z]+)?\.js$/.test(f))
 
 	it('finds the English catalogues', () => {
 		expect(english).toContain('en.js')
@@ -55,7 +71,12 @@ describe('l10n/en*.js as committed', () => {
 	for (const file of english) {
 		it(`${file} carries no identity entry and agrees with its .json`, () => {
 			const js = loadJs(path.join(L10N, file))
-			const json = JSON.parse(fs.readFileSync(path.join(L10N, file.replace(/\.js$/, '.json')), 'utf8')).translations
+			const json = JSON.parse(
+				fs.readFileSync(
+					path.join(L10N, file.replace(/\.js$/, '.json')),
+					'utf8',
+				),
+			).translations
 			const identity = Object.keys(js).filter((k) => js[k] === k)
 			expect(identity).toEqual([])
 			for (const key of Object.keys(js)) {
