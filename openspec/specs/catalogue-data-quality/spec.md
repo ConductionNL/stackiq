@@ -38,7 +38,17 @@ The application page and the usage page SHALL offer "Confirm this entry is curre
 
 ### Requirement: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is
 
-The app SHALL offer a Data quality page (board SkDatakwaliteit) for one organisation's applications in use. It SHALL show the register score (the average score, out of 100, against the declared rules), the average completeness (the share of the required rules met), and how many entries were never confirmed or were confirmed longer ago than the freshness rule allows. It SHALL list every declared rule with how many entries meet it, and the entries with the lowest completeness first, each with what is missing and when it was last confirmed. The figures SHALL be computed on the server from the rules the usage schema declares, over a bounded, organisation-scoped set of usages, and a user SHALL only see an organisation they may see the portfolio report of.
+The app SHALL offer a Data quality page (board SkDatakwaliteit) for one organisation's applications in use. Its figures SHALL be computed on the server from the rules the usage schema declares, over a bounded, organisation-scoped set of usages, and a user SHALL only see an organisation they may see the portfolio report of.
+
+#### Scenario: The page shows the score, the completeness, the confirmations and the rules
+
+- **GIVEN** an organisation with applications in use
+- **WHEN** a user who may see its portfolio report opens Data quality and picks it
+- **THEN** the page shows the register score (the average score, out of 100, against the declared rules)
+- **AND** the average completeness (the share of the required rules met)
+- **AND** how many entries were never confirmed or were confirmed longer ago than the freshness rule allows
+- **AND** every declared rule with how many entries meet it
+- **AND** the entries with the lowest completeness first, each with what is missing and when it was last confirmed
 
 #### Scenario: An information manager finds what to fix first
 @e2e tests/e2e/workflows/data-quality.spec.ts
