@@ -43,12 +43,14 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
 
 import { expect, request as playwrightRequest, test } from '@playwright/test'
 import * as path from 'path'
+import { createObject } from '../workflows/_fixtures.ts'
 
 const IMAGES = path.resolve(__dirname, '../../../docs/images')
 const APP = '/index.php/apps/stackiq'
@@ -887,5 +889,52 @@ test.describe('documentation screenshots', () => {
 		await page.goto(`${APP}/api-docs`)
 		await settle(page)
 		await shoot(page.locator('#app-content, main').first(), 'api-documentation.png')
+	})
+})
+
+// Its own block: it seeds what it shows, so it does not wait on the catalogue seed above.
+test.describe('documentation screenshots: role mapping and access review', () => {
+	test('role mapping and access review: the Role mapping tab and an organisation\'s review list', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const register = await registerId(request)
+		const password = `Voorbeeld-${Date.now()}-Pw1!`
+		const people: Array<[string, string]> = [['voorbeeldstad-anna', 'Anna de Vries'], ['voorbeeldstad-bram', 'Bram Jansen']]
+		for (const [userid, displayName] of people) {
+			// An existing account answers 400/102; that is fine, it only has to exist.
+			await request.post('/ocs/v2.php/cloud/users?format=json', { data: { userid, password, displayName } })
+		}
+		// Active, as a reviewed organisation is: createObject walks the lifecycle from Draft.
+		const orgName = `${SEED_PREFIX} Leverancier B.V.`
+		const existing = await request.get(`${OBJECTS}/${register}/organization`, { params: { name: orgName, _limit: '1' } })
+		const known = existing.ok() ? (((await existing.json()).results ?? []) as Obj[]).find((o) => o.name === orgName) : undefined
+		const organisation = known ?? { id: await createObject(request, register, 'organization', { name: orgName, type: 'Supplier', status: 'Active', contactsUid: 'voorbeeldstad-leverancier' }) }
+		await ensure(request, register, 'contactPerson', { username: 'voorbeeldstad-anna', organization: organisation.id }, ['username'])
+		await ensure(request, register, 'contactPerson', { username: 'voorbeeldstad-bram', organization: organisation.id, roles: ['Gebruik-beheerder'] }, ['username'])
+		await request.dispose()
+
+		// Wide enough for every column of the review table, actions included.
+		await page.setViewportSize({ width: 1600, height: 900 })
+		const clearToasts = (): Promise<void> => page.locator('.toastify').evaluateAll((toasts) => toasts.forEach((toast) => toast.remove()))
+		await page.goto('/settings/admin/stackiq', { waitUntil: 'domcontentloaded' })
+		const tab = page.getByRole('button', { name: 'Role mapping', exact: true })
+		await expect(tab).toBeVisible({ timeout: 30_000 })
+		await tab.click()
+		const mapping = page.getByTestId('role-mapping-table')
+		await expect(mapping).toBeVisible({ timeout: 30_000 })
+		// The section toasts once its groups have loaded; wait for it, then clear it off the table.
+		await page.locator('.toastify').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => undefined)
+		await clearToasts()
+		await shoot(mapping, 'role-mapping.png')
+
+		await page.goto(`${APP}/organisaties/access-review`)
+		await settle(page)
+		const picker = page.getByTestId('access-review-organisation')
+		await expect(picker).toBeVisible({ timeout: 30_000 })
+		await picker.locator('input').fill(`${SEED_PREFIX} Leverancier`)
+		await page.getByRole('option').filter({ hasText: `${SEED_PREFIX} Leverancier` }).first().click()
+		const table = page.getByTestId('access-review-table')
+		await expect(table).toContainText('Bram Jansen', { timeout: 30_000 })
+		await clearToasts()
+		await shoot(page.locator('#app-content, main').first(), 'access-review.png')
 	})
 })

@@ -78,7 +78,7 @@ Only a Nextcloud admin reads or changes the mapping. It is saved with the rest
 of the user groups configuration (`/api/user-groups/config`); an invalid
 mapping is refused as a whole.
 
-<!-- Screenshot: role mapping tab, captured by tests/e2e/spec-coverage/role-mapping.spec.ts -->
+![The Role mapping tab: each role, its role group and the groups that grant it](../images/role-mapping.png)
 
 ## The Access review page
 
@@ -110,7 +110,7 @@ Endpoints: `GET /api/access-review/{organisationUuid}`,
 `POST /api/access-review/{contactPersonId}/confirm` and
 `POST /api/access-review/{contactPersonId}/withdraw` (body `role`).
 
-<!-- Screenshot: access review page with one current and two due rows, captured by tests/e2e/spec-coverage/access-review.spec.ts -->
+![The Access review page for a supplier: two people due, each role with where it comes from](../images/access-review.png)
 
 ## Demo data
 
