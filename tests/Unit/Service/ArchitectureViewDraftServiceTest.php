@@ -58,6 +58,12 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	/** @var string|null A schema whose save is refused. */
 	private ?string $refuse = null;
 
+	/** @var array<string, string> The AMEF mapping: the stackiq register carries the AMEF schemas, as on a current install. */
+	private array $amefConfig = ['register' => '26', 'element_schema' => '51', 'relation_schema' => '55', 'view_schema' => '52'];
+
+	/** @var string The register every read and write must name. */
+	private string $register = '26';
+
 	/**
 	 * A malformed draft is refused before any save.
 	 *
@@ -271,13 +277,29 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	}//end testARefusedViewSaveIsForbidden()
 
 	/**
+	 * Without an AMEF mapping the draft falls back to the vng-gemma register by slug.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
+	 */
+	public function testWithoutAnAmefMappingTheDraftUsesTheVngGemmaSlug(): void {
+		$this->amefConfig = [];
+		$this->register = ArchitectureViewDraftService::REGISTER;
+
+		$this->service()->draftView(name: 'Concept', description: '', elements: [['key' => 'a', 'type' => 'Node', 'name' => 'Server']], relations: []);
+
+		self::assertSame(expected: ['element', 'view'], actual: array_column($this->saves, 'schema'));
+	}//end testWithoutAnAmefMappingTheDraftUsesTheVngGemmaSlug()
+
+	/**
 	 * A save that fails for another reason is not reported as forbidden.
 	 *
 	 * @return void
 	 */
 	public function testAnotherSaveFailureIsNotForbidden(): void {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$objects->method('searchObjectsBySlug')->willReturn([]);
+		$objects->method('searchObjectsPaginated')->willReturn(['results' => []]);
 		$objects->method('saveObject')->willThrowException(new RuntimeException('database gone'));
 
 		$this->expectException(exception: RuntimeException::class);
@@ -359,6 +381,7 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 		$objects ??= $this->fakeObjects();
 		$registers = $this->createMock(originalClassName: RegisterConfigReaderInterface::class);
 		$registers->method('getObjectService')->willReturn($objects);
+		$registers->method('getAmefConfig')->willReturn($this->amefConfig);
 
 		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn($uid);
@@ -375,11 +398,14 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 	 */
 	private function fakeObjects(): ObjectServiceInterface {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters = []): array {
-				$this->assertSame(expected: 'vng-gemma', actual: $registerSlug);
+		$objects->method('searchObjectsPaginated')->willReturnCallback(
+			function (array $query): array {
+				$this->assertSame(expected: $this->register, actual: $query['@self']['register']);
+				$schemaSlug = $this->schemaSlugOf(schema: $query['@self']['schema']);
+				$filters = $query;
+				unset($filters['@self']);
 				$this->searches[] = ['schema' => $schemaSlug, 'filters' => $filters];
-				return $this->rows[$schemaSlug] ?? [];
+				return ['results' => ($this->rows[$schemaSlug] ?? [])];
 			}
 		);
 		$objects->method('find')->willReturnCallback(
@@ -393,8 +419,8 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (array $object, ObjectSaveOptions $options): ObjectEntityInterface {
-				$schema = (string)$options->target->schema;
-				$this->assertSame(expected: 'vng-gemma', actual: $options->target->register);
+				$schema = $this->schemaSlugOf(schema: (string)$options->target->schema);
+				$this->assertSame(expected: $this->register, actual: $options->target->register);
 				$this->saves[] = ['schema' => $schema, 'object' => $object];
 				if ($this->refuse === $schema) {
 					throw new RuntimeException("User 'Anna' does not have permission to 'create' objects in schema '{$schema}'");
@@ -406,6 +432,18 @@ final class ArchitectureViewDraftServiceTest extends TestCase {
 
 		return $objects;
 	}//end fakeObjects()
+
+	/**
+	 * The schema slug the fake files a target schema under: an id from the AMEF mapping, or the slug itself.
+	 *
+	 * @param string $schema The target schema.
+	 *
+	 * @return string
+	 */
+	private function schemaSlugOf(string $schema): string {
+		$bySchemaId = ['51' => 'element', '55' => 'relation', '52' => 'view'];
+		return ($bySchemaId[$schema] ?? $schema);
+	}//end schemaSlugOf()
 
 	/**
 	 * An object entity double.

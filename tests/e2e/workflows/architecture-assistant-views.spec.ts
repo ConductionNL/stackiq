@@ -20,7 +20,7 @@
  * tests/Unit/Service/ViewServiceDrawnViewTest.php and
  * tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php.
  *
- * Written from the change's scenarios; not yet run against a live instance.
+ * Run live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main.
  *
  * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-002-stackiq-shall-offer-a-create-tool-that-writes-a-draft-view-from-elements-and-relations
  * @spec openspec/changes/architecture-assistant-drafted-views/specs/architecture-assistant-views/spec.md#requirement-req-aav-003-every-object-the-draft-tool-writes-shall-carry-the-assistant-mark-in-the-same-write
@@ -119,7 +119,10 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<Re
 		return result.structuredContent
 	}
 	const text = (result.content ?? []).find((part: { type?: string }) => part.type === 'text')?.text
-	return text ? JSON.parse(text) : result
+	const payload = text ? JSON.parse(text) : result
+	// A refused tool answers isError inside its text payload, not on the result.
+	expect(payload.isError, `MCP ${name} returned an error: ${text}`).not.toBe(true)
+	return payload
 }
 
 /**
@@ -183,18 +186,24 @@ test.beforeAll(async () => {
 		identifier: `id-${RUN_ID}-case-system`,
 		name: caseSystem,
 		type: 'ApplicationComponent',
+		// The element schema requires `properties` (the ArchiMate property list).
+		properties: [],
 		origin: 'drawn',
 	})
 	ids.documentStore = await seed('element', {
 		identifier: `id-${RUN_ID}-document-store`,
 		name: documentStore,
 		type: 'ApplicationComponent',
+		// The element schema requires `properties` (the ArchiMate property list).
+		properties: [],
 		origin: 'drawn',
 	})
 	ids.caseRegister = await seed('element', {
 		identifier: `id-${RUN_ID}-case-register`,
 		name: caseRegister,
 		type: 'ApplicationComponent',
+		// The element schema requires `properties` (the ArchiMate property list).
+		properties: [],
 		origin: 'drawn',
 	})
 })
@@ -306,7 +315,12 @@ test('a fresh draft is laid out on open and is listed under the origin assistant
 
 	await gotoAppRoute(page, `/views?_search=${encodeURIComponent(RUN_ID)}`)
 	await dismissSupportDialog(page)
-	await page.getByLabel('Origin', { exact: true }).first().click()
-	await page.getByRole('option', { name: /assistant/i }).first().click()
+	// The facets sit in the index sidebar, which opens collapsed.
+	const openSidebar = page.getByRole('button', { name: 'Open sidebar' })
+	if (await openSidebar.isVisible()) {
+		await openSidebar.click()
+	}
+	await page.getByRole('combobox', { name: 'Origin', exact: true }).first().click()
+	await page.locator('.vs__dropdown-option', { hasText: /assistant/i }).first().click()
 	await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible({ timeout: 30000 })
 })
