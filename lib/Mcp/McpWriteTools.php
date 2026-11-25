@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md#requirement-every-write-tool-must-delegate-to-the-existing-workflow-service-behind-its-existing-guard
+ * @spec openspec/specs/mcp-tool-surface/spec.md#requirement-every-write-tool-must-delegate-to-the-existing-workflow-service-behind-its-existing-guard
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList) The constructor takes one service per tool family.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)   One public method per tool.
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md#requirement-every-write-tool-must-delegate-to-the-existing-workflow-service-behind-its-existing-guard
+ * @spec openspec/specs/mcp-tool-surface/spec.md#requirement-every-write-tool-must-delegate-to-the-existing-workflow-service-behind-its-existing-guard
  */
 class McpWriteTools {
 
@@ -111,7 +111,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.2
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.2
 	 */
 	public function publishObject(array $args): array {
 		$refusal = ($this->publicationArgs(args: $args)
@@ -138,7 +138,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.2
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.2
 	 */
 	public function depublishObject(array $args): array {
 		$refusal = ($this->publicationArgs(args: $args)
@@ -159,7 +159,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.3
 	 */
 	public function approveRegistration(array $args): array {
 		return $this->moderate(args: $args, approve: true);
@@ -172,7 +172,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.3
 	 */
 	public function rejectRegistration(array $args): array {
 		return $this->moderate(args: $args, approve: false);
@@ -185,7 +185,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md#scenario-review-submission-cannot-bypass-moderation
+	 * @spec openspec/specs/mcp-tool-surface/spec.md#scenario-review-submission-cannot-bypass-moderation
 	 */
 	public function submitReview(array $args): array {
 		$refusal = ($this->validator->oneOf(args: $args, name: 'subjectType', allowed: self::REVIEW_SUBJECTS)
@@ -215,7 +215,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.3
 	 */
 	public function registerOrganisation(array $args): array {
 		$refusal = ($this->validator->object(args: $args, name: 'organisation') ?? $this->session->requireUser());
@@ -242,7 +242,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.4
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.4
 	 */
 	public function acceptOffer(array $args): array {
 		return $this->objectAction(
@@ -259,7 +259,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.4
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.4
 	 */
 	public function declineOffer(array $args): array {
 		return $this->objectAction(
@@ -276,7 +276,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.4
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.4
 	 */
 	public function claimUsage(array $args): array {
 		return $this->objectAction(
@@ -293,7 +293,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.4
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.4
 	 */
 	public function declineUsage(array $args): array {
 		return $this->objectAction(
@@ -310,7 +310,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.4
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.4
 	 */
 	public function mergeOrganisations(array $args): array {
 		$refusal = ($this->validator->uuid(args: $args, name: 'sourceUuid')
@@ -335,7 +335,7 @@ class McpWriteTools {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.5
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.5
 	 */
 	public function importSbom(array $args): array {
 		$refusal = ($this->validator->uuid(args: $args, name: 'moduleVersionUuid')
@@ -372,7 +372,7 @@ class McpWriteTools {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#5.5
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#5.5
 	 */
 	public function triggerEolSync(array $args): array {
 		$refusal = $this->session->requireAdmin();

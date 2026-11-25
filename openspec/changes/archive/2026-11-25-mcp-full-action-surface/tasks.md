@@ -16,9 +16,10 @@
 - [x] 1.3 Agent-facing English `description` prose per verb per schema
   (what the LLM reads to choose the tool), reusing the superseded
   change's descriptions where the schema survived the rename.
-- [ ] 1.4 Import on the dev instance and verify the derived tool listing:
+- [x] 1.4 Import on the dev instance and verify the derived tool listing:
   28 read tools + `vulnerability.create`/`.update`, and no write tool on
   any lifecycle-governed schema.
+  > Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main, register imported by the repair step): MCP `tools/list` as admin lists 66 tools; the derived stackiq ones are `<schema>_search` and `<schema>_get` on exactly the 14 schemas (compliancy, module, usage, software-review, sbomComponent, bioMeasure, contactPerson, suite, vulnerability, moduleVersion, catalogService, organization, connection, catalogContract), 28 read tools, plus `vulnerability_create` and `vulnerability_update`; no other create, update or delete tool on any stackiq schema. The 29 curated tools of `StackiqToolProvider` are listed beside them. (OpenRegister's MCP sessions need `memcache.distributed`; the sandbox used APCu.)
 
 ## 2. Provider skeleton
 
@@ -133,8 +134,9 @@ Left open: 1.4 (import on a dev instance and check the derived listing, a live t
   change (pointer in its archive note); its
   `register.d/stackiq-mcp-adoption.json` is never created.
   Ticked (decision 399): archived early as `openspec/changes/archive/2026-11-12-stackiq-mcp-adoption` with the superseded note at the top of its proposal; no `register.d/stackiq-mcp-adoption.json` exists.
-- [ ] 7.2 Sync this change's spec delta into
+- [x] 7.2 Sync this change's spec delta into
   `openspec/specs/mcp-tool-surface/spec.md` on archive.
+  > Synced 25 Nov 2026: seven requirements, titles unchanged so the `@spec` anchors keep resolving.
 - [x] 7.3 CHANGELOG entry under Unreleased: full MCP action surface
   (28 derived read tools, vulnerability writes, ~29 curated tools) for
   hermiq consumption.
