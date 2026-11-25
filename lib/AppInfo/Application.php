@@ -25,6 +25,7 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\Stackiq\BackgroundJob\JobRegistrar;
 use OCA\Stackiq\Controller\ControllerRegistrar;
+use OCA\Stackiq\Controller\OpenRegisterUnavailableHealthController;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\Kernel\AppIdentity;
@@ -114,8 +115,10 @@ class Application extends App implements IBootstrap {
 	 * responses are proven identical on a running instance (tasks 0.x and 3.2).
 	 *
 	 * The factories name OpenRegister classes by string, so nothing is
-	 * autoloaded until a request reaches the route; with OpenRegister disabled
-	 * only these two routes fail.
+	 * autoloaded until a request reaches the route. With OpenRegister disabled
+	 * the health route answers 503 with the OpenRegister check failed
+	 * (OpenRegisterUnavailableHealthController), as ADR-006 asks of a failed
+	 * critical check, instead of a 500 error page; metrics are not served then.
 	 *
 	 * @param IRegistrationContext $context Registration context
 	 *
@@ -130,6 +133,15 @@ class Application extends App implements IBootstrap {
 			'OCA\\Stackiq\\Controller\\HealthController',
 			static function (ContainerInterface $container) use ($appId) {
 				$class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericHealthController';
+				if (class_exists($class) === false) {
+					return new OpenRegisterUnavailableHealthController(
+						appName: $appId,
+						request: $container->get('OCP\\IRequest'),
+						appManager: $container->get('OCP\\App\\IAppManager'),
+						db: $container->get('OCP\\IDBConnection')
+					);
+				}
+
 				return new $class(
 					appName: $appId,
 					request: $container->get('OCP\\IRequest'),
