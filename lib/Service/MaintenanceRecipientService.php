@@ -315,6 +315,8 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 	 * @return array<string, string> User id per contact person id.
 	 *
 	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	public function contactUserIds(ObjectServiceInterface $objectService, array $contactIds): array {
 		$contactIds = array_values(array_unique($contactIds));
