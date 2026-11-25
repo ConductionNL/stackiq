@@ -496,10 +496,18 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 	/**
 	 * Updates contactpersoon object with username.
 	 *
+	 * The contactPerson schema lets only an admin write `username` through the
+	 * object API, because role-group sync and the access review find a person's
+	 * account by it. This sync writes it for whoever's session triggered the
+	 * event, so it saves as the system (`_rbac: false`, `_multitenancy: false`),
+	 * after the account itself has been created or found.
+	 *
 	 * @param object $contactPersonObject The contactpersoon object.
 	 * @param string $username The username to set.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	private function updateContactPersonUsername(object $contactPersonObject, string $username): void {
 		try {
@@ -529,7 +537,9 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 							),
 						uuid: $contactPersonObject->getUuid(),
 						policy: new SavePolicy(silent: true, validation: false)
-					)
+					),
+					_rbac: false,
+					_multitenancy: false
 				);
 			}
 
