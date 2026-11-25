@@ -97,7 +97,7 @@ class ViewController extends Controller {
 	 *
 	 * @return Response 200 `image/svg+xml` named after the view, 401 without a user, 404 when the view is not there for the caller.
 	 *
-	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -124,7 +124,7 @@ class ViewController extends Controller {
 	 *
 	 * @return string The file name, ending in `.svg`.
 	 *
-	 * @spec openspec/changes/architecture-views-to-office-documents/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md#task-2
 	 */
 	public static function imageFileName(array $view): string {
 		$name = (string)($view['name'] ?? ($view['xml']['name'] ?? ''));

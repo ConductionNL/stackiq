@@ -7,7 +7,7 @@
   document and Create PowerPoint slide through filinq. Without filinq the two
   document actions are disabled and say why.
 
-  @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+  @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
 -->
 <template>
 	<div class="view-export">
@@ -92,7 +92,7 @@ export default {
 		 *
 		 * @return {Array<object>}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
 		 */
 		actions() {
 			return viewExportActions(this.documentExport)
@@ -103,7 +103,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
 		 */
 		unavailableReason() {
 			return this.actions.find((action) => action.disabled)?.reason ?? ''
@@ -114,7 +114,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
 		 */
 		imageUrl() {
 			return viewImageUrl(this.viewId)
@@ -125,7 +125,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
 		 */
 		downloadName() {
 			const base = (this.viewName || 'view').replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'view'
@@ -137,7 +137,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
 		 */
 		openLabel() {
 			return openInFilesLabel()
@@ -153,7 +153,7 @@ export default {
 		 * @param {string} action `word` or `powerpoint`.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+		 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
 		 */
 		async createDocument(action) {
 			this.busy = true

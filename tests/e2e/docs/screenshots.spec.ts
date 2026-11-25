@@ -41,6 +41,7 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
  * @spec openspec/changes/architecture-data-model-and-ggm/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -786,6 +787,54 @@ test.describe('documentation screenshots', () => {
 		}
 		await expect(page.getByText(melding).first()).toBeVisible({ timeout: 30_000 })
 		await shoot(page.getByRole('group').filter({ hasText: melding }).last(), 'usage-data-entities.png')
+	})
+
+	test('architecture view export: the Export menu and the downloaded SVG', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const post = async (schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${String(amef.register)}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const stamp = Date.now()
+		const element = (name: string, type: string, suffix: string): Promise<Obj> => post(String(amef.element_schema || 'element'), {
+			identifier: `id-${stamp}-${suffix}`, type, name, origin: 'drawn', properties: [],
+		})
+		await element(`${SEED_PREFIX} Zaaksysteem`, 'ApplicationComponent', 'zs')
+		await element(`${SEED_PREFIX} Klantportaal`, 'ApplicationComponent', 'kp')
+		// A view node carries the name and type it is drawn with, as the GEMMA import writes them.
+		const node = (id: string, ref: string, name: string, x: number): Record<string, unknown> => ({
+			viewNodeId: id, elementRef: ref, name, type: 'ApplicationComponent', x, y: 40, width: 220, height: 90,
+		})
+		const view = await post(String(amef.view_schema || 'view'), {
+			identifier: `id-${stamp}-view`, type: 'Diagram', name: `${SEED_PREFIX} Zaakgericht werken`, origin: 'drawn', properties: [],
+			documentation: 'The case system and the portal residents use to follow their cases.',
+			nodes: [node('n-kp', `id-${stamp}-kp`, `${SEED_PREFIX} Klantportaal`, 40), node('n-zs', `id-${stamp}-zs`, `${SEED_PREFIX} Zaaksysteem`, 360)],
+			connections: [],
+		})
+		await request.dispose()
+
+		await page.goto(`${APP}/views/${view.id}`)
+		await settle(page)
+		await page.getByRole('button', { name: 'Export' }).first().click()
+		const menu = page.locator('[role="menu"]:visible').last()
+		await expect(menu.getByRole('menuitem', { name: /Download SVG/ })).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'view-export-menu.png')
+
+		const [download] = await Promise.all([
+			page.waitForEvent('download'),
+			menu.getByRole('menuitem', { name: /Download SVG/ }).click(),
+		])
+		// Saved under its own name, so the browser opens it as an image.
+		const svg = path.join(test.info().outputDir, download.suggestedFilename())
+		expect(svg.endsWith('.svg')).toBe(true)
+		await download.saveAs(svg)
+		const viewer = await page.context().newPage()
+		await viewer.setViewportSize({ width: 640, height: 220 })
+		await viewer.goto(`file://${svg}`)
+		await viewer.screenshot({ path: path.join(IMAGES, 'view-export-svg.png') })
+		await viewer.close()
 	})
 
 	test('API documentation', async ({ page }) => {

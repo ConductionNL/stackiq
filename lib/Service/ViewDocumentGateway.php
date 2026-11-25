@@ -25,7 +25,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use RuntimeException;
 /**
  * Asks filinq for a document of a view through its published command event.
  *
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 class ViewDocumentGateway {
 
@@ -94,7 +94,7 @@ class ViewDocumentGateway {
 	 *
 	 * @return bool True when a request can be sent.
 	 *
-	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+	 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
 	 */
 	public function isAvailable(): bool {
 		return class_exists($this->contractEvent) === true && is_subclass_of($this->contractEvent, Event::class) === true;
@@ -112,7 +112,7 @@ class ViewDocumentGateway {
 	 * @throws InvalidArgumentException When the format is neither docx nor pptx.
 	 * @throws RuntimeException When the contract does not resolve, or filinq refuses or does not answer.
 	 *
-	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+	 * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
 	 */
 	public function requestDocument(string $format, array $content, string $userId): array {
 		if (in_array($format, self::FORMATS, true) === false) {
