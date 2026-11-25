@@ -127,8 +127,8 @@ export default {
 			this.loading = true
 			this.error = false
 			try {
-				this.ensureType('module')
-				this.ensureType('moduleVersion')
+				await this.ensureType('module')
+				await this.ensureType('moduleVersion')
 				const module = await objectStore.fetchObject('module', this.objectId)
 				this.statement = module?.roadmapStatement || ''
 				const versions = await objectStore.fetchCollectionForOptions(
@@ -151,11 +151,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-004-a-product-page-shows-the-supplier-s-roadmap
 		 */
-		ensureType(type) {
-			ensureObjectType(type)
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }
