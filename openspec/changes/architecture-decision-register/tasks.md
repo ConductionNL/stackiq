@@ -52,6 +52,7 @@
   - GIVEN a Dutch instance WHEN the pages render THEN every new label and enum value reads in Dutch
 - [x] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
+  - 25 Nov 2026, live sandbox: `npm run test:l10n` OK; the three screenshots are in `docs/features/architecture-decisions.md` (`architecture-decision.png`, `architecture-decision-review.png` with the reviewer's Accept/Reject/Rework, `usage-architecture-decisions.png`). In Dutch every label and enum value reads in Dutch (Categorie Applicatie, Impact Hoog, Status In beoordeling) except the Alternatives table's column headers, which show the raw keys `option` and `reasonRejected` in every language: the data widget heads an array of objects with property keys, not the item schema's titles. Stays open until those headers read Option / Reason rejected (Optie / Reden van afwijzing).
 
 ## Verification
 

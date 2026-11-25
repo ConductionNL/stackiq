@@ -68,5 +68,14 @@ schema each time a report runs.
 
 ## Screenshots
 
-Screenshots of the faceted Export menu, the organisation action and the
-Custom reports page follow with the live verification of this change.
+The Export menu on Applications:
+
+![The Export menu on the Applications list](../images/export-menu.png)
+
+Export as ArchiMate on an organisation page:
+
+![Export as ArchiMate on an organisation page](../images/organisation-archimate-export.png)
+
+Custom reports, with one report over Applications:
+
+![The Custom reports page with one report](../images/custom-reports.png)

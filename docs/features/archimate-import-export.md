@@ -38,3 +38,6 @@ The import and the full export use the same conversion and the same generation a
 ### The API
 
 `POST /index.php/apps/stackiq/api/archimate/round-trip-check` with a multipart upload in the field `archiMateFile` and `mode` set to `before-import` (the default) or `against-imported`. A user who is not an administrator gets 403 before anything is read. A `file_path` parameter, an unknown mode or a missing upload gets 400. The answer holds `mode`, `modelIdentifier` and `imported`, and, when imported, `lossless` and `categories` with the counts and examples per category.
+
+![A round-trip check before import, with losses in two categories](../images/archimate-round-trip-check.png)
+

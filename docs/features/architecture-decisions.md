@@ -22,6 +22,8 @@ Open **Architecture decisions** in the navigation menu and click **Add**. Fill i
 
 A new decision starts as a draft. Only people of your own organisation see it.
 
+![A decision page: context, decision, alternatives and consequences](../images/architecture-decision.png)
+
 ## The review
 
 A decision moves through these statuses:
@@ -40,10 +42,16 @@ When a decision is submitted, the reviewer gets a Nextcloud notification and an 
 
 Under **Architecture decisions**, the quick filter **To review by me** lists the decisions waiting for your review.
 
+The reviewer finds **Accept**, **Reject** and **Rework** under **Actions** on the decision page:
+
+![The review actions on a decision in review](../images/architecture-decision-review.png)
+
 ## Where decisions show
 
 - The page of an application in use lists the architecture decisions that name it, in the **Architecture decisions** section.
 - The page of a standard lists the decisions that name it the same way.
+
+![The Architecture decisions section on an application in use](../images/usage-architecture-decisions.png)
 
 ## Decisions of a board: decidiq
 
