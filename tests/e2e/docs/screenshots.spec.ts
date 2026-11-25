@@ -35,6 +35,7 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  */
@@ -626,6 +627,20 @@ test.describe('documentation screenshots', () => {
 		await apply.click()
 		await expect(page.getByText('Applied 2 changes to the landscape.')).toBeVisible({ timeout: 30_000 })
 		await shoot(page.getByText('Applied 2 changes to the landscape.').locator('xpath=ancestor::*[contains(@class, "landscape-comparison")][1]'), 'scenario-applied.png')
+	})
+
+	test('Supplier facet on Applications', async ({ page }) => {
+		// The demo import seeds Voorbeeld Name 2 and Voorbeeld Name 3 as suppliers;
+		// the facet shows each by name with the number of applications it supplies.
+		await page.goto(`${APP}/modules`)
+		await settle(page)
+		const sidebar = page.locator('.faceted-catalog-index__aside').first()
+		const supplier = sidebar.locator('.v-select').filter({ hasText: 'Supplier' }).last()
+		await expect(supplier).toBeVisible({ timeout: 30_000 })
+		await supplier.locator('.vs__dropdown-toggle').click()
+		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 2' }).first()).toBeVisible({ timeout: 30_000 })
+		await expect(page.locator('.vs__dropdown-option', { hasText: 'Voorbeeld Name 3' }).first()).toBeVisible()
+		await shoot(page.locator('.faceted-catalog-index__body').first(), 'supplier-facet.png')
 	})
 
 	test('API documentation', async ({ page }) => {
