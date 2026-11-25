@@ -36,7 +36,7 @@ use Throwable;
 /**
  * Warns when the scheduled organisation sync is switched off.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
  */
 class LogSwitchedOffSync implements IRepairStep {
 
@@ -76,7 +76,7 @@ class LogSwitchedOffSync implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
 	 */
 	public function run(IOutput $output): void {
 		try {

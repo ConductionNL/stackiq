@@ -14,7 +14,7 @@
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -77,7 +77,7 @@ class SyncProgress implements SyncProgressInterface {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	public static function start(ContainerInterface $container, string $trigger): self {
 		$tracker = null;
@@ -109,7 +109,7 @@ class SyncProgress implements SyncProgressInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	public function phase(string $phase, array $statistics = []): void {
 		$this->call(
@@ -151,7 +151,7 @@ class SyncProgress implements SyncProgressInterface {
 	 *
 	 * @return array<string, mixed> startedAt, finishedAt, trigger, the counts and errorCount.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	public function lastResult(array $results): array {
 		$errors     = ($results['errors'] ?? []);

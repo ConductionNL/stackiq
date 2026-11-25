@@ -321,7 +321,7 @@ class OrganizationSyncOrchestrationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
 	 */
 	public function testAScheduledRunKeepsItsLastResult(): void {
 		$this->settings->method('getVoorzieningenConfig')->willReturn([]);
