@@ -25,6 +25,7 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\Stackiq\BackgroundJob\JobRegistrar;
 use OCA\Stackiq\Controller\ControllerRegistrar;
+use OCA\Stackiq\Controller\HealthController;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\Kernel\AppIdentity;
@@ -37,6 +38,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
+use Override;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -78,6 +80,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @spec openspec/specs/settings-service/spec.md
 	 */
+	#[Override]
 	public function register(IRegistrationContext $context): void {
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -105,7 +108,7 @@ class Application extends App implements IBootstrap {
 	 * Stackiq had no health or metrics endpoint: `/api/settings/status` reports
 	 * whether the settings are configured, and a probe that read it as health
 	 * was told "up" while OpenRegister was down. The generics answer from the
-	 * manifest's `observability` block (adopt-apphost task 1.1).
+	 * manifest's `observability` block (openspec/specs/apphost-adoption).
 	 *
 	 * Only these two are registered rather than adopting the whole AppHost with
 	 * `Bootstrap::register()`: that call also replaces this app's own
@@ -114,14 +117,18 @@ class Application extends App implements IBootstrap {
 	 * responses are proven identical on a running instance (tasks 0.x and 3.2).
 	 *
 	 * The factories name OpenRegister classes by string, so nothing is
-	 * autoloaded until a request reaches the route; with OpenRegister disabled
-	 * only these two routes fail.
+	 * autoloaded until a request reaches the route. With OpenRegister disabled
+	 * the health route answers 503 with the OpenRegister check failed
+	 * (HealthController), as ADR-006 asks of a failed
+	 * critical check, instead of a 500 error page; metrics are not served then.
 	 *
 	 * @param IRegistrationContext $context Registration context
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#2-wiring-deletions-real-healthmetrics-routes
+	 * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
+	 *
+	 * @psalm-suppress UndefinedClass The AppHost generics live in OpenRegister, which is not on the static-analysis path.
 	 */
 	private function registerObservabilityControllers(IRegistrationContext $context): void {
 		$appId = self::APP_ID;
@@ -130,6 +137,15 @@ class Application extends App implements IBootstrap {
 			'OCA\\Stackiq\\Controller\\HealthController',
 			static function (ContainerInterface $container) use ($appId) {
 				$class = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericHealthController';
+				if (class_exists($class) === false) {
+					return new HealthController(
+						appName: $appId,
+						request: $container->get('OCP\\IRequest'),
+						appManager: $container->get('OCP\\App\\IAppManager'),
+						db: $container->get('OCP\\IDBConnection')
+					);
+				}
+
 				return new $class(
 					appName: $appId,
 					request: $container->get('OCP\\IRequest'),
@@ -186,6 +202,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
+	#[Override]
 	public function boot(IBootContext $context): void {
 		// Background jobs are registered declaratively in appinfo/info.xml.
 		// Initialization is handled by the Repair step (InitializeSettings).

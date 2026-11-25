@@ -12,7 +12,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#2-wiring-deletions-real-healthmetrics-routes
+ * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
  */
 
 declare(strict_types=1);
@@ -20,7 +20,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
 use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Controller\HealthController;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\IDBConnection;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -71,6 +74,14 @@ class ObservabilityAdoptionTest extends TestCase {
 					return $this->createMock(IRequest::class);
 				}
 
+				if ($id === 'OCP\\App\\IAppManager') {
+					return $this->createMock(originalClassName: IAppManager::class);
+				}
+
+				if ($id === 'OCP\\IDBConnection') {
+					return $this->createMock(originalClassName: IDBConnection::class);
+				}
+
 				return $this->createMock($id);
 			}
 		);
@@ -83,8 +94,15 @@ class ObservabilityAdoptionTest extends TestCase {
 			try {
 				$controller = $registered[$name]($container);
 			} catch (\Error $missing) {
+				// Only metrics has no stand-in; health answers without OpenRegister.
+				$this->assertSame(expected: 'OCA\\Stackiq\\Controller\\MetricsController', actual: $name);
 				// OpenRegister is not on this test autoloader: the factory still named the generic.
 				$this->assertSame('Class "' . $generic . '" not found', $missing->getMessage());
+				continue;
+			}
+
+			if (class_exists($generic) === false) {
+				$this->assertInstanceOf(expected: HealthController::class, actual: $controller);
 				continue;
 			}
 
