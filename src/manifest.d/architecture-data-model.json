@@ -51,6 +51,7 @@
 					}
 				],
 				"addLabel": "New data entity",
+				"createOverride": "createDrawnDataEntity",
 				"createDefaults": {
 					"type": "BusinessObject",
 					"origin": "drawn"
