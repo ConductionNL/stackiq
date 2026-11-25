@@ -30,7 +30,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
+use ReflectionNamedType;
 use RuntimeException;
 
 /**
@@ -129,9 +132,27 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 			groupManager: $groupManager,
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			roleGroupMap: new RoleGroupMap(appConfig: $config),
-			roleGrantSync: $this->sync
+			container: $this->container()
 		);
 	}//end settings()
+
+	/**
+	 * A container that builds the sync mock, or throws when $fails is set.
+	 *
+	 * @param bool $fails Whether resolving the sync throws.
+	 *
+	 * @return ContainerInterface The container.
+	 */
+	private function container(bool $fails=false): ContainerInterface {
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		if ($fails === true) {
+			$container->method('get')->willThrowException(new RuntimeException('cannot build'));
+			return $container;
+		}
+
+		$container->method('get')->with(RoleGrantSync::class)->willReturn($this->sync);
+		return $container;
+	}//end container()
 
 	/**
 	 * Mapping Gebruik-beheerder onto Inkoop syncs each Inkoop member once.
@@ -185,4 +206,56 @@ final class RoleGroupSettingsRemapSyncTest extends TestCase {
 		$this->assertFalse(condition: $result['success']);
 		$this->assertSame(expected: [], actual: $this->synced);
 	}//end testARefusedMappingSyncsNobody()
+
+	/**
+	 * The constructor takes no RoleGrantSync: RoleGrantSync reads the register through SettingsService, which takes
+	 * RoleGroupSettings, so that dependency is a constructor cycle the DI container recurses on until the stack runs out.
+	 *
+	 * @return void
+	 */
+	public function testTheConstructorDoesNotTakeTheRoleGrantSync(): void {
+		$constructor = (new ReflectionClass(objectOrClass: RoleGroupSettings::class))->getConstructor();
+		$this->assertNotNull(actual: $constructor);
+		foreach ($constructor->getParameters() as $parameter) {
+			$type = $parameter->getType();
+			$this->assertFalse(
+				condition: $type instanceof ReflectionNamedType && $type->getName() === RoleGrantSync::class,
+				message: 'RoleGroupSettings must not take RoleGrantSync in its constructor'
+			);
+		}
+	}//end testTheConstructorDoesNotTakeTheRoleGrantSync()
+
+	/**
+	 * When the container cannot build the sync, the save still succeeds and nobody is synced.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvableSyncLeavesTheSaveIntact(): void {
+		$settings = $this->settings();
+		$settings = new RoleGroupSettings(
+			config: $this->readProperty(object: $settings, name: 'config'),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			groupManager: $this->readProperty(object: $settings, name: 'groupManager'),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			roleGroupMap: $this->readProperty(object: $settings, name: 'roleGroupMap'),
+			container: $this->container(fails: true)
+		);
+
+		$result = $settings->updateUserGroupsConfig(['roleMapping' => ['Gebruik-beheerder' => ['Inkoop']]]);
+
+		$this->assertTrue(condition: $result['success']);
+		$this->assertSame(expected: [], actual: $this->synced);
+	}//end testAnUnresolvableSyncLeavesTheSaveIntact()
+
+	/**
+	 * Reads a private property of the settings under test.
+	 *
+	 * @param object $object The object.
+	 * @param string $name   The property name.
+	 *
+	 * @return mixed The value.
+	 */
+	private function readProperty(object $object, string $name): mixed {
+		return (new ReflectionClass(objectOrClass: $object))->getProperty(name: $name)->getValue(object: $object);
+	}//end readProperty()
 }//end class

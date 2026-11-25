@@ -36,6 +36,7 @@
  * @spec openspec/changes/architecture-decision-register/tasks.md
  * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  */
 
@@ -445,6 +446,37 @@ test.describe('documentation screenshots', () => {
 		const card = await reveal(widget(page, 'gb-decisions'))
 		await expect(card.getByText(title).first()).toBeVisible()
 		await shoot(card, 'usage-architecture-decisions.png')
+	})
+
+	test('synchronisation status: the last run and a running sync', async ({ page, baseURL }) => {
+		// A new active organisation and a sync started by hand, so the last run
+		// shows real work: the organisation processed and its entity created.
+		const request = await api(baseURL)
+		// An organisation starts as Draft and is activated through its lifecycle.
+		const created = await request.post(`${OBJECTS}/${register}/organization`, { data: { name: `Gemeente ${SEED_PREFIX}-Zuid ${Date.now()}`, type: 'Municipality' } })
+		expect(created.status(), await created.text()).toBeLessThan(300)
+		const activated = await request.patch(`${OBJECTS}/${register}/organization/${(await created.json()).id}`, { data: { status: 'Active' } })
+		expect(activated.status(), await activated.text()).toBeLessThan(300)
+		const synced = await request.post(`${APP}/api/settings/sync`, { data: { minutesBack: 5 } })
+		expect(synced.status(), await synced.text()).toBeLessThan(300)
+		await request.dispose()
+
+		await page.goto(`${APP}/organisaties/synchronisation`)
+		await settle(page)
+		const main = page.locator('main').first()
+		await expect(main.getByText('Last run', { exact: true }).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'sync-status-last-run.png')
+
+		// A run lasts seconds, so the running state is shown by adding a running
+		// operation to the page's real status answer.
+		await page.route('**/apps/stackiq/api/sync/status*', async (route: Route) => {
+			const real = await (await route.fetch()).json()
+			await route.fulfill({ json: { ...real, current: { phase: 'processing_contacts', percentage: 40, processed_items: 12, total_items: 30, trigger: 'manual' } } })
+		})
+		await page.reload()
+		await settle(page)
+		await expect(main.getByText('Processing contact persons')).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'sync-status-running.png')
 	})
 
 	test('GEMMA plate, coverage on a view and the overlap in the portfolio report', async ({ page, baseURL }) => {

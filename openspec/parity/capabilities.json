@@ -5602,22 +5602,22 @@
 			"bluedolphin": "partial",
 			"glpi": "yes",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211). Corrections round 8 (2026-09-28), stackiq#1138: the tracker's only store is the user's session (lib/Service/ProgressTracker.php:83 ISession, :412 saveProgress, :332 getProgress), so /api/progress answers only the browser session that started the work and a cron job cannot report progress at all; the tracker is also written by lib/Service/SbomImportService.php:144, not only by the merge, at d22033a.",
+				"state": "built",
+				"evidence": "Organisations > Synchronisation (src/views/sync/SyncStatusView.vue, src/manifest.d/operations-sync-status-and-progress.json) over GET /api/sync/status (lib/Controller/SyncStatusController.php): schedule, last run, running sync with phase and percentage polled every three seconds; admins and functional administrators only. Live 25 Nov 2026: tests/e2e/spec-coverage/sync-status.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots sync-status-last-run.png, sync-status-running.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-sync-status-and-progress",
+				"change": "2026-11-25-operations-sync-status-and-progress",
 				"requirement": [
-					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-001 Progress of a long operation SHALL be readable from any request, and only by users allowed to read it",
-					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-002 The organisation sync SHALL report its progress and keep the result of its last run"
+					"openspec/specs/sync-status-and-progress :: REQ-SSP-001 Progress of a long operation SHALL be readable from any request, and only by users allowed to read it",
+					"openspec/specs/sync-status-and-progress :: REQ-SSP-002 The organisation sync SHALL report its progress and keep the result of its last run"
 				]
 			},
-			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
+			"reachedOn": "Organisations > Synchronisation",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "dashboard-and-overviews",
-			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): progress lives in the starting user's PHP session, so no other login or background job can read it, stackiq#1138; rating kept because the partial rests on the sync status block and the final import result, which do not use the tracker.",
+			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/archive/2026-11-25-operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): progress lives in the starting user's PHP session, so no other login or background job can read it, stackiq#1138; rating kept because the partial rests on the sync status block and the final import result, which do not use the tracker.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: massive actions over many records show a progress bar, src/MassiveAction.php:1294 displayProgressBar; the LDAP synchronisation command shows one per user batch, src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:382; long web operations report through src/Glpi/Controller/ProgressController.php:50 /progress/check/{key}. Inventory imports run per agent request without a progress view. Reached on: massive action screen; CLI ldap:sync.",
 				"stackiq": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211).",
@@ -6081,23 +6081,23 @@
 			"bluedolphin": "yes",
 			"glpi": "partial",
 			"topdesk": "partial",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674). Corrections round 8 (2026-09-28), stackiq#1139: the enable switch has no effect, because lib/BackgroundJob/OrganizationContactSyncJob.php:99 run() checks only that OpenRegister is installed before performScheduledSync, and nothing reads the enabled flag that lib/Service/SettingsService.php:6901 updateCronjobConfig stores, at d22033a.",
+				"state": "built",
+				"evidence": "Organisations > Synchronisation (src/views/sync/SyncStatusView.vue, src/manifest.d/operations-sync-status-and-progress.json) over GET /api/sync/status (lib/Controller/SyncStatusController.php): schedule, last run, running sync with phase and percentage polled every three seconds; admins and functional administrators only. Live 25 Nov 2026: tests/e2e/spec-coverage/sync-status.spec.ts 3/3 on NC 34 + PostgreSQL + OpenRegister main; docs screenshots sync-status-last-run.png, sync-status-running.png.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-sync-status-and-progress",
+				"change": "2026-11-25-operations-sync-status-and-progress",
 				"requirement": [
-					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-003 The scheduled sync MUST NOT run while its switch is off",
-					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-004 The Synchronisation page SHALL show the schedule, the last run and a running sync to Nextcloud admins and functional administrators"
+					"openspec/specs/sync-status-and-progress :: REQ-SSP-003 The scheduled sync MUST NOT run while its switch is off",
+					"openspec/specs/sync-status-and-progress :: REQ-SSP-004 The Synchronisation page SHALL show the schedule, the last run and a running sync to Nextcloud admins and functional administrators"
 				]
 			},
-			"reachedOn": "admin settings sections Cronjob configuration and Organization Synchronization",
+			"reachedOn": "Organisations > Synchronisation",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "automatic-user-provisioning",
 			"featureConfidence": "high",
-			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): switching the job off in the settings does not stop it, stackiq#1139; rating kept because the schedule and the last run time, which this row rates, work.",
+			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/archive/2026-11-25-operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): switching the job off in the settings does not stop it, stackiq#1139; rating kept because the schedule and the last run time, which this row rates, work.",
 			"evidence": {
 				"stackiq": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
 				"topdesk": "https://docs.topdesk.com/en/events-that-trigger-actions.html: \"when tracking imports/Exchange exports via system events ... on a schedule\" (read 2026-09-26); https://tip.topdesk.com/c/116-support-for-importing-persons-and-operators-directly-from-local-active-directory: roadmap card in column \"Launched\", person import from AD (read 2026-09-26). Reached on: Settings > Import settings.",

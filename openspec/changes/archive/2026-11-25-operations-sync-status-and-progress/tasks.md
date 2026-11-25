@@ -54,7 +54,7 @@
   - GIVEN a Dutch instance WHEN the page renders THEN every label is Dutch
 - [x] Implement
   - `src/manifest.d/operations-sync-status-and-progress.json` (page `SyncStatus`, menu entry `SyncStatusMenu` with `permission: sync.view`), relocated under Organisations in `src/menu-layout.json`; `src/views/sync/SyncStatusView.vue` registered in `src/customComponents.js`; `DashboardController::page()` provides initial state `permissions` (`user`, `admin`, `sync.view`) and `src/App.vue` reads it; English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`.
-- [x] Test (vitest tests/vitest/syncStatusView.spec.js and Playwright tests/e2e/spec-coverage/sync-status.spec.ts) (e2e written, runs in nightly; not verified on a live instance)
+- [x] Test (vitest tests/vitest/syncStatusView.spec.js and Playwright tests/e2e/spec-coverage/sync-status.spec.ts) (run 25 Nov 2026 against a live sandbox instance: 3 passed, after the regular user's browser session logs in through the login form; Nextcloud's web pages do not take basic auth)
   - 17 Nov: `tests/e2e/spec-coverage/sync-status.spec.ts` written (3 tests: the admin's page, the three-second polling that stops when the run ends, a regular user without the entries and refused with 403); vitest passes; the Playwright run needs a live instance.
   - Done: `tests/vitest/syncStatusView.spec.js` (schedule and last run, polling every three seconds and stopping, refusal) and `tests/Unit/Controller/DashboardControllerPermissionsTest.php`. Owed: the Playwright spec, which needs a live instance.
 
@@ -63,9 +63,9 @@
 - **files**: `docs/features/sync-status-and-progress.md`
 - **acceptance_criteria**:
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the page with a last run and with a running sync, and says who can see it
-- [ ] Implement
-  - Done: `docs/features/sync-status-and-progress.md` (who can see it, schedule, last run, running sync, the API) and its entry in `docs/features/README.md`. Owed: the screenshots of the page with a last run and with a running sync, which need a live instance.
-- [ ] Test (docs build and a manual read against the running app)
+- [x] Implement
+  - Done: `docs/features/sync-status-and-progress.md` (who can see it, schedule, last run, running sync, the API) and its entry in `docs/features/README.md`. Screenshots added 25 Nov 2026 from a live sandbox (NC 34 + PostgreSQL + OpenRegister main): `sync-status-last-run.png` (a sync started by hand that processed one new organisation) and `sync-status-running.png` (the running state, shown by adding a running operation to the page's real status answer, because a run lasts seconds and the sandbox has no shared cache), captured by `tests/e2e/docs/screenshots.spec.ts`.
+- [x] Test (docs build and a manual read against the running app) (25 Nov 2026: read against the running app; the read found the Last run labels running into their values, because a global rule fixes `dt` at 130px with nowrap; `SyncStatusView.vue` now lets the label column take the label's width)
 
 ## Verification
 

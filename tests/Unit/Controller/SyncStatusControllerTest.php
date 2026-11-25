@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * GET /api/sync/status for admins and functional administrators, 403 for others.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
  */
 #[CoversClass(SyncStatusController::class)]
 #[UsesClass(SyncAccessPolicy::class)]

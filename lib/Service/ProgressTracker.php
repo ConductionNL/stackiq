@@ -118,7 +118,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 	 * @param IConfig $config System config, which names the distributed cache class
 	 * @param IAppConfig $appConfig App config, the store when no shared cache is configured
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function __construct(
 		ICacheFactory $cacheFactory,
@@ -142,7 +142,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 	 *
 	 * @return string Unique operation ID
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
 	 */
 	public function startOperation(
@@ -543,7 +543,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 	 *
 	 * @return array<string, mixed>|null The running operation's progress.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getCurrentOperation(string $operationType): ?array {
 		$operationId = $this->store->getCurrent(operationType: $operationType);
@@ -583,7 +583,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 	 *
 	 * @return array|null Progress data or null if not found
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(?string $operationId = null): ?array {
 		if ($operationId !== null && $operationId !== $this->progress['operation_id']) {

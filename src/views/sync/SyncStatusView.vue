@@ -120,7 +120,7 @@ export const POLL_INTERVAL_MS = 3000
  * progress bar with its phase. It reads GET /api/sync/status, asks again every
  * three seconds while a run is going and stops when the run ends.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
  */
 export default {
 	name: 'SyncStatusView',
@@ -173,7 +173,7 @@ export default {
 		 * The interval as words.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+		 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 		 */
 		intervalLabel() {
 			const seconds = Number(this.status.interval) || 0
@@ -235,7 +235,7 @@ export default {
 		 * Read the status, and keep asking while a run is going.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+		 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
 		 */
 		async load() {
 			this.stopPolling()
@@ -336,6 +336,9 @@ export default {
 }
 
 .sync-status__facts dt {
+	/* A global rule fixes dt at 130px with nowrap, so a longer label such as
+	   "Organisations processed" ran into its value; the column takes the label's width. */
+	width: auto;
 	font-weight: bold;
 	color: var(--color-main-text);
 }
