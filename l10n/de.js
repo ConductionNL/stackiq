@@ -283,7 +283,9 @@ OC.L10N.register(
         "Pick a report to open it.": "Wählen Sie einen Bericht, um ihn zu öffnen.",
         "Overlapping and ageing software across the portfolio.": "Überlappende und veraltete Software im Portfolio.",
         "Marketplace": "Store",
-        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben."
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben.",
+        "Anyone can read this pentest report, also without an account. Publish it publicly?": "Jeder kann diesen Pentest-Bericht lesen, auch ohne Konto. Öffentlich veröffentlichen?",
+        "Publish publicly": "Öffentlich veröffentlichen"
     },
     "nplurals=2; plural=(n != 1);"
 )
