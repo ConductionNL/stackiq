@@ -16,7 +16,7 @@ const store = vi.hoisted(() => ({ objectStore: {} }))
 
 vi.mock('../../src/store/store.js', () => store)
 
-const { ensureObjectType } = await import('../../src/utils/objectTypes.js')
+const { ensureObjectType, ensureObjectTypeOrSlug, ensureSettingsLoaded } = await import('../../src/utils/objectTypes.js')
 
 /**
  * A store like the real one: getSchemaConfig throws until the settings are loaded.
@@ -79,6 +79,35 @@ describe('ensureObjectType without loaded settings', () => {
 		store.objectStore.objectTypeRegistry = { connection: { schema: '49', register: '26' } }
 
 		await ensureObjectType('connection')
+
+		expect(trace).toEqual([])
+	})
+})
+
+describe('ensureSettingsLoaded before a slug registration', () => {
+	it('loads missing settings so a type registers by slug in the configured register', async () => {
+		const trace = []
+		const fake = storeWithoutSettings(trace)
+		fake.getSchemaConfig = () => {
+			throw new Error('Settings not loaded')
+		}
+		store.objectStore = fake
+
+		await ensureSettingsLoaded()
+		ensureObjectTypeOrSlug('processStep')
+
+		expect(trace).toEqual([
+			['fetchSettings'],
+			['registerObjectType', 'processStep', 'processStep', '26'],
+		])
+	})
+
+	it('does not fetch again when the settings are there', async () => {
+		const trace = []
+		store.objectStore = storeWithoutSettings(trace)
+		store.objectStore.settings = { voorzieningen: { register: '26' } }
+
+		await ensureSettingsLoaded()
 
 		expect(trace).toEqual([])
 	})

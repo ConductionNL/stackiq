@@ -8,7 +8,7 @@
  * their usage page, how many linked applications the reader may not see, and
  * the empty sentence only when nothing is linked at all.
  *
- * @spec openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
+ * @spec openspec/specs/business-process-mapping/spec.md#requirement-req-bpm-002-a-step-shall-name-the-applications-in-use-that-support-it
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const store = vi.hoisted(() => ({ fetchObject: vi.fn() }))
 
 vi.mock('../../src/store/store.js', () => ({ objectStore: store }))
-vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn() }))
+vi.mock('../../src/utils/objectTypes.js', () => ({ ensureObjectTypeOrSlug: vi.fn(), ensureSettingsLoaded: vi.fn(async () => {}) }))
 vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text) => text,
 	translatePlural: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)),
