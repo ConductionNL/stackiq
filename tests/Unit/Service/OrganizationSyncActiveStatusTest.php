@@ -175,7 +175,11 @@ class OrganizationSyncActiveStatusTest extends TestCase {
 		$this->assertContains(needle: [['active', 'actief'], IQueryBuilder::PARAM_STR_ARRAY], haystack: $this->parameters);
 		$this->assertContains(needle: 'LOWER(o.status) IN (:p1)', haystack: $this->functions);
 		$this->assertContains(needle: 'o._deleted IS NULL', haystack: $this->conditions);
-		$this->assertNotContains(needle: ['actief', IQueryBuilder::PARAM_STR], haystack: $this->parameters, message: 'actief alone matched no current organisation');
+		$this->assertNotContains(
+			needle: ['actief', IQueryBuilder::PARAM_STR],
+			haystack: $this->parameters,
+			message: 'actief alone matched no current organisation'
+		);
 
 	}//end testTheOrganisationBatchMatchesTheEnglishStatusAndSkipsDeletedRows()
 
