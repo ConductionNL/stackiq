@@ -213,7 +213,7 @@ class FacetControllerTest extends TestCase {
 	 * REQ-SFC-003: `supplier[]` reaches FacetService as a filter like the
 	 * other dimensions.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
 	 *
 	 * @return void
 	 */
