@@ -78,8 +78,16 @@ import { createAttestationHandlers } from './services/attestation.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { createMoveHandlers } from './services/moveToOrganisation.js'
 import { navigationStore } from './store/store.js'
+import { createDrawnDataEntity } from './utils/drawnDataEntity.js'
 
 export default {
+	// Create-override: the Data model page's New data entity
+	// (architecture-data-model-and-ggm REQ-DMG-004). The AMEF element schema
+	// requires an ArchiMate identifier and a properties list the generic form
+	// does not ask for; the handler fills both and writes through
+	// OpenRegister's objects API. Named by the page's `createOverride`.
+	createDrawnDataEntity,
+
 	// Header-action handler: the Integrations page's Add integration
 	// (adopt-connection-registry). A FUNCTION, because it leaves the app for
 	// integriq's Connections overview and a header action's `navigate` only
