@@ -2911,7 +2911,7 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 			$this->logger->info('DEBUG: Final config before persist', ['config' => $config]);
 
 			// Persist normalized config.
-			$this->catalogue->setVoorzieningenConfig(config: $config);
+			$this->catalogue->setVoorzieningenConfig(config: array_merge($this->catalogue->getVoorzieningenConfig(), $config));
 
 			return [
 				'success' => true,
@@ -4002,14 +4002,23 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 	/**
 	 * Update Voorzieningen configuration
 	 *
+	 * The posted keys are merged over the stored configuration, so a caller
+	 * that only knows some schema keys never wipes the others. The admin
+	 * settings store posts thirteen schema keys and not the sbomComponent,
+	 * maintenanceWindow, attestationRound and attestationRequest ones; a
+	 * replace blanked those ids (seen live on a fresh install), and starting
+	 * a confirmation round then failed on schema id 0. A key posted empty
+	 * still clears it.
+	 *
 	 * @param array $config Voorzieningen configuration data
 	 *
 	 * @return array Result of the update operation
+	 *
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateVoorzieningenConfig(array $config): array {
 		try {
-			$this->catalogue->setVoorzieningenConfig(config: $config);
+			$this->catalogue->setVoorzieningenConfig(config: array_merge($this->catalogue->getVoorzieningenConfig(), $config));
 
 			return [
 				'success' => true,
