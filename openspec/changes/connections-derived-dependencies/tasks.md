@@ -33,6 +33,7 @@
   - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
 - [x] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes) (Newman run 25 Nov 2026 against a live sandbox instance, folder "Connection suggestions (connections-derived-dependencies)": 5 requests, 6 assertions, 0 failed; the environments' schema slugs were corrected to the renamed ones first)
   - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions"). Run 25 Nov 2026: 6/6 assertions green.
+  - Owner path by hand, same day, with the caller's active organisation set to the usage's consumer: GET 200 `{"results":[]}`, dismiss 200 `{"dismissed":[]}`, accept 200 `{"accepted":[]}`.
 
 ### Task 4: Suggested connections panel
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
