@@ -324,11 +324,16 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 			return [];
 		}
 
+		// OpenRegister main takes the selection as one SearchOptions argument; older releases take `ids`.
 		$people = $objectService->searchObjects(
-			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-			_rbac: false,
-			_multitenancy: false,
-			ids: $contactIds
+			...array_merge(
+				[
+					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+					'_rbac' => false,
+					'_multitenancy' => false,
+				],
+				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
+			)
 		);
 
 		$userIds = [];

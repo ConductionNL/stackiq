@@ -91,7 +91,10 @@ final class MaintenanceRecipientContactUserIdsTest extends TestCase {
 		$asked = [];
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjects')->willReturnCallback(
-			function (array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null) use (&$asked): array {
+			function (array $query = [], bool $_rbac = true, bool $_multitenancy = true, mixed ...$selection) use (&$asked): array {
+				// OpenRegister main passes one SearchOptions; older releases pass `ids`.
+				$given   = ($selection['options'] ?? $selection[0] ?? null);
+				$ids     = (is_object($given) === true ? $given->selection->ids : ($selection['ids'] ?? $given));
 				$asked[] = [$query, $_rbac, $ids];
 				return [$this->person('c-anna', 'book-anna'), $this->person('c-bob', 'card-bob'), $this->person('c-nobody', 'gone')];
 			}
