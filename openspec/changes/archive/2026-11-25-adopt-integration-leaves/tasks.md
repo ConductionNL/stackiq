@@ -22,9 +22,10 @@
   `contract.configuration.linkedTypes` contains `decidesk-decisions` AND
   `calendar` exactly once each (guards the array-merge semantic either way);
   all seven schemas carry their declared leaf.
-- [ ] 1.4 Re-import on the dev instance (fragment signature change triggers
+- [x] 1.4 Re-import on the dev instance (fragment signature change triggers
   re-import) and confirm `Repair/LogDanglingLinkedTypes` reports zero
   dangling entries.
+  > Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main, no decidesk): after the import the six leaves are on their schemas (contactPerson and organization `contacts`, moduleVersion `calendar`, software-review `deck`, module and catalogService `bookmarks`), and `occ maintenance:repair` runs OpenRegister's LogDanglingLinkedTypes with "All schemas linkedTypes are covered by registered integrations". Found: without decidesk, `catalogContract` lost its whole `linkedTypes`, `calendar` included, because OpenRegister dropped the key for the one unregistered id (`decidesk-decisions`). Fixed in OpenRegister (ConductionNL/openregister#11197, keeps the registered ids); with that branch a forced re-import gives `catalogContract` `["calendar"]`. On an instance with decidesk both ids stay, as before.
 
 ## 2. Lifecycle-date calendar sync
 
@@ -95,7 +96,7 @@
 
 ## 5. Spec + docs
 
-- [ ] 5.1 Sync this change's spec delta into
+- [x] 5.1 Sync this change's spec delta into
   `openspec/specs/catalog-integration-leaves/spec.md` on archive.
 - [x] 5.2 CHANGELOG entry under Unreleased: contacts/calendar/deck/bookmarks
   leaf adoption + lifecycle-date calendar sync.
