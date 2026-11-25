@@ -8312,7 +8312,7 @@
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings :: A pending review is readable only by its author and the moderators (REQ-CLR-008)"
 				],
 				"plan": [
-					"openspec/changes/the-review-moderation-overlay-names-the-wrong-schema",
+					"openspec/changes/archive/2026-11-25-the-review-moderation-overlay-names-the-wrong-schema",
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet"
 				]
 			},
