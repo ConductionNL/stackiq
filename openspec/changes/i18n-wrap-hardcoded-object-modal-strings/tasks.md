@@ -41,9 +41,15 @@
   `npm run test:l10n` passes. Parity across the other locales already
   failed on development (about 970 missing keys per locale) and is not
   made green here.
-- [ ] 4.3 Manual spot-check: switch a test user's Nextcloud language to
+- [x] 4.3 Manual spot-check: switch a test user's Nextcloud language to
   Dutch and open MergeObject, UploadObject, and ArchiMateImportExport —
   confirm no residual English prose renders.
+  Done 25 Nov 2026 on a live sandbox instance with the language set to Dutch:
+  ArchiMateImportExport (admin settings, ArchiMate-import/-export) renders
+  entirely in Dutch, with no English prose. MergeObject no longer exists in
+  `src/`. Nothing in `src/` sets the `uploadOrganisatie` modal, so UploadObject
+  cannot be opened from the UI. Its template has no text outside `t()`
+  (16 calls).
 
 ## 5. Follow-up scope (tracked, not blocking this change)
 

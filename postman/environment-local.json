@@ -69,27 +69,27 @@
 		},
 		{
 			"key": "schema_contactpersoon",
-			"value": "contactpersoon",
+			"value": "contactPerson",
 			"enabled": true
 		},
 		{
 			"key": "schema_dienst",
-			"value": "dienst",
+			"value": "catalogService",
 			"enabled": true
 		},
 		{
 			"key": "schema_koppeling",
-			"value": "koppeling",
+			"value": "connection",
 			"enabled": true
 		},
 		{
 			"key": "schema_organisatie",
-			"value": "organisatie",
+			"value": "organization",
 			"enabled": true
 		},
 		{
 			"key": "schema_gebruik",
-			"value": "gebruik",
+			"value": "usage",
 			"enabled": true
 		},
 		{
