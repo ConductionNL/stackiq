@@ -9516,22 +9516,21 @@
 			"bluedolphin": "unknown",
 			"glpi": "unknown",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: lib/Service/OrganisatieService.php createOrganisationEntityInternal() has the parent call commented out under a HOTFIX for RBAC issues, so every new organisation is flat.",
+				"state": "built",
+				"evidence": "lib/Service/OrganisatieService.php createOrganisationEntityInternal() links the new organisation to the active organisation after creating it (linkResolvedParent/linkParentOrganisation); tests/Unit/Service/OrganisatieServiceParentLinkCreateTest.php, OrganisatieServiceParentHierarchyTest.php. Live 25 Nov 2026: a non-admin's new organisation synced with parent = their active organisation, and they keep read and write access to it.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/organisation-parent-hierarchy-rbac-fix",
-				"requirement": "openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service :: New organisations MUST inherit a parent linkage from the active organisation",
-				"plan": "openspec/changes/organisation-parent-hierarchy-rbac-fix"
+				"change": "2026-11-25-organisation-parent-hierarchy-rbac-fix",
+				"requirement": "openspec/specs/organisatie-service :: New organisations MUST inherit a parent linkage from the active organisation"
 			},
-			"reachedOn": "",
+			"reachedOn": "creating an organisation while another organisation is active (the organisation sync links it as a child)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "organisation-register",
 			"note": "Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
-				"stackiq": "Not built: lib/Service/OrganisatieService.php createOrganisationEntityInternal() has the parent call commented out under a HOTFIX for RBAC issues, so every new organisation is flat."
+				"stackiq": "lib/Service/OrganisatieService.php createOrganisationEntityInternal() links the new organisation to the active organisation after creating it (linkResolvedParent/linkParentOrganisation); tests/Unit/Service/OrganisatieServiceParentLinkCreateTest.php, OrganisatieServiceParentHierarchyTest.php. Live 25 Nov 2026: a non-admin's new organisation synced with parent = their active organisation, and they keep read and write access to it."
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {

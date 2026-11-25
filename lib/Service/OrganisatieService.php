@@ -325,7 +325,7 @@ class OrganisatieService {
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
 	 *
-	 * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	private function createOrganisationEntityInternal(
 		\OCA\OpenRegister\Service\OrganisationService $organisationService,
@@ -456,7 +456,7 @@ class OrganisatieService {
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The entity with the parent set (or the original on failure).
 	 *
-	 * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	private function linkParentOrganisation(
 		\OCA\OpenRegister\Db\Organisation $organisationEntity,
