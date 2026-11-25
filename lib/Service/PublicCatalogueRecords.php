@@ -240,7 +240,8 @@ class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 
 		$names = [];
 		// `_ids`: OpenRegister main matches no row for an `id` list.
-		foreach ($this->search(query: ['@self' => ['register' => $registerId, 'schema' => $schemaId], '_ids' => $ids, '_limit' => count($ids)]) as $object) {
+		$query = ['@self' => ['register' => $registerId, 'schema' => $schemaId], '_ids' => $ids, '_limit' => count($ids)];
+		foreach ($this->search(query: $query) as $object) {
 			$names[$this->objectId(object: $object)] = (string)($object['name'] ?? '');
 		}
 
