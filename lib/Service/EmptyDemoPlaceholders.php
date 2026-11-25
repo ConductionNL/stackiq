@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
+ * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ namespace OCA\Stackiq\Service;
 /**
  * Empties top-level properties of demo objects whose value is a list of only empty objects.
  *
- * @spec openspec/changes/insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
+ * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
  */
 class EmptyDemoPlaceholders {
 	/**
@@ -46,7 +46,7 @@ class EmptyDemoPlaceholders {
 	 *
 	 * @return array<string, mixed> The descriptor without empty placeholders.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
+	 * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
 	 */
 	public function strip(array $data): array {
 		$objects = ($data['components']['objects'] ?? null);
@@ -79,7 +79,7 @@ class EmptyDemoPlaceholders {
 	 *
 	 * @return bool True for `[{}]` and `[{}, {}]`.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
+	 * @spec openspec/changes/archive/2026-11-25-insight-supplier-facet/tasks.md#task-4-seed-suppliers-and-document-the-facet
 	 */
 	private static function isPlaceholderList(mixed $value): bool {
 		if (is_array($value) === false || $value === [] || array_is_list($value) === false) {

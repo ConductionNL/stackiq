@@ -1174,7 +1174,7 @@ class FacetService implements FacetServiceInterface {
 	 *
 	 * @return list<string> Zero or one identifier.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
 	 */
 	private static function relatedIdentifier(mixed $value): array {
 		if (is_string($value) === true && trim($value) !== '') {
@@ -1206,7 +1206,7 @@ class FacetService implements FacetServiceInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
 	 */
 	private function organisationNames(ObjectServiceInterface $objectService, array $identifiers): array {
 		$names = array_combine($identifiers, $identifiers);
