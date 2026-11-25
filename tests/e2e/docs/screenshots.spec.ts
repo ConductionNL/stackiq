@@ -40,7 +40,7 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
- * @spec openspec/changes/architecture-data-model-and-ggm/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  */

@@ -113,6 +113,11 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 						'1',
 					)
 				}
+				// And the first-open support note (CnSupportDialog): stackiq has
+				// no support-dialog-seen preference endpoint, so the library
+				// keeps the flag here. Undismissed, its dialog covers the menu
+				// and every click on the shell times out on a fresh instance.
+				window.localStorage.setItem('cn-support-dialog-shown:stackiq', '1')
 			} catch {
 				// localStorage unavailable — specs fall back to dismissing by hand.
 			}

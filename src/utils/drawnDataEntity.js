@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  * A fresh ArchiMate identifier, `id-<uuid>`, the form the import's identifiers take.
  *
  * @return {string}
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function newArchimateIdentifier() {
 	const random = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -36,7 +36,7 @@ export function newArchimateIdentifier() {
  * @param {object} formData The create form's values (with the page's createDefaults).
  * @param {function(): string} [newIdentifier] Makes a fresh ArchiMate identifier.
  * @return {object}
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function drawnDataEntityBody(formData, newIdentifier = newArchimateIdentifier) {
 	const data = { ...(formData || {}) }
@@ -68,7 +68,7 @@ function segmentOf(value) {
  * @param {{post: function(string, object): Promise<{data: object}>}} [options.http] An axios-like client.
  * @param {function(): string} [options.newIdentifier] Makes a fresh ArchiMate identifier.
  * @return {function(object, {register: (string|number|object), schema: (string|number|object)}): Promise<object>}
- * @spec openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+ * @spec openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
  */
 export function createDrawnDataEntityHandler({ http = axios, newIdentifier = newArchimateIdentifier } = {}) {
 	return async function createDrawnDataEntity(formData, ctx = {}) {

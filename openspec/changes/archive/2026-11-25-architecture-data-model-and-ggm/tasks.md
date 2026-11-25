@@ -3,7 +3,7 @@
 ## Implementation tasks
 
 ### Task 1: Register fragment for data entities, attributes and the usage link
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
 - **files**: `lib/Settings/register.d/architecture-data-model-and-ggm.json`, `tests/Unit/Settings/DataModelRegisterShapeTest.php`
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN it loads THEN `usage.dataEntities` relates to `element` with the query type=BusinessObject and is facetable
@@ -14,7 +14,7 @@
 - [x] Test (PHPUnit `DataModelRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Data model index and entity page
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
 - **files**: `src/manifest.d/architecture-data-model.json`, `src/menu-layout.json`
 - **acceptance_criteria**:
   - GIVEN the effective manifest WHEN it is built THEN `Gegevensmodel` filters `element` on type BusinessObject with the quick filters All, GGM and Own
@@ -25,7 +25,7 @@
 - [x] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/data-model.spec.ts`) (e2e verified live 25 Nov 2026)
 
 ### Task 3: Relations drawn around an entity
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-002-a-data-entity-page-shall-draw-the-entitys-relations-to-other-entities
 - **files**: `src/views/architecture/DataEntityRelations.vue`, `src/utils/dataEntityGraph.js`, `src/customComponents.js`, `tests/vitest/dataEntityRelations.spec.js`
 - **acceptance_criteria**:
   - GIVEN an imported and a drawn entity WHEN their relations load THEN both are found through the identifier field
@@ -35,7 +35,7 @@
 - [x] Test (vitest `dataEntityRelations.spec.js`, Playwright relation scenario) (e2e verified live 25 Nov 2026)
 
 ### Task 4: Attributes with keys
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-004-a-municipality-shall-add-its-own-data-entities-with-attributes-keys-and-cardinalities
 - **files**: `src/views/architecture/DataEntityAttributes.vue`, `tests/vitest/dataEntityAttributes.spec.js`
 - **acceptance_criteria**:
   - GIVEN a drawn entity WHEN its page renders THEN key attributes come first, marked key in text, and can be edited
@@ -46,7 +46,7 @@
       25 Nov 2026: live on OpenRegister main the New data entity create was refused (the AMEF element schema requires `identifier` and `properties`, which the form never sends). The page now names the create-override `createDrawnDataEntity` (`src/utils/drawnDataEntity.js`), which fills a fresh `id-<uuid>` and `properties: []` and posts through OpenRegister's objects API; the AMEF schema is unchanged. vitest `drawnDataEntity.spec.js`. Live re-check of the new entity scenario still open.
 
 ### Task 5: Data entities on the usage page
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-003-an-application-in-use-shall-record-the-data-entities-it-holds-data-for
 - **files**: `src/manifest.d/usages.json`
 - **acceptance_criteria**:
   - GIVEN a usage page WHEN it is edited THEN the data entities picker offers business objects only, and the saved list shows on the page
@@ -54,7 +54,7 @@
 - [x] Test (Playwright usage link scenario) (e2e verified live 25 Nov 2026)
 
 ### Task 6: Documentation and translations
-- **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
+- **spec_ref**: openspec/changes/archive/2026-11-25-architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
 - **files**: `docs/features/data-model.md`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the feature page WHEN it is read THEN it shows the Data model page, an entity page with its graph and a usage with data entities, each in a screenshot, and says how to import a newer GGM
