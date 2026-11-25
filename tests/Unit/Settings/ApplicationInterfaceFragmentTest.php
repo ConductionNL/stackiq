@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-001-a-user-can-record-an-api-that-an-application-offers
+ * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-001-a-user-can-record-an-api-that-an-application-offers
  */
 
 declare(strict_types=1);

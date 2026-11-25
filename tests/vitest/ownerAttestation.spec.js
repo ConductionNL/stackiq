@@ -6,7 +6,7 @@
  * row handlers of My confirmation requests, and the pages as the app builds
  * them (manifest.d merged the way src/main.js merges it).
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-004-the-round-shows-who-answered-and-who-is-overdue
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-004-the-round-shows-who-answered-and-who-is-overdue
  */
 
 import * as fs from 'fs'

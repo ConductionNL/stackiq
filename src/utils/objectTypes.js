@@ -119,7 +119,7 @@ export function ensureObjectTypeOrSlug(type) {
  *
  * @param {string} type The schema slug.
  * @return {Promise<void>} Resolves once fetched.
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
  */
 export async function loadObjectTypeCollection(type) {
 	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {

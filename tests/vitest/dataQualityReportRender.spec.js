@@ -9,7 +9,7 @@
  * (name or fallback, rounded completeness, missing fields or "Nothing",
  * confirmation date or "Never").
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md
  */
 
 import { mount } from '@vue/test-utils'

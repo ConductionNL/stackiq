@@ -19,16 +19,16 @@
  * Needs the voorzieningen register imported (tests/e2e/ci-seed.sh) and,
  * for the confirmation round, the users `anna` and `bas`.
  *
- * @spec openspec/changes/landscape-application-components/tasks.md
- * @spec openspec/changes/connections-api-catalogue/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-application-components/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/tasks.md
  * @spec openspec/changes/sharing-compliance-documents/tasks.md
- * @spec openspec/changes/connections-diagram-and-graph-export/tasks.md
- * @spec openspec/changes/landscape-change-entry-type/tasks.md
- * @spec openspec/changes/landscape-move-between-organisations/tasks.md
- * @spec openspec/changes/landscape-completeness-score/tasks.md
- * @spec openspec/changes/landscape-owner-attestation/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/tasks.md
  * @spec openspec/changes/connections-derived-dependencies/tasks.md
- * @spec openspec/changes/sharing-generated-api-docs/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page} from '@playwright/test';

@@ -10,7 +10,7 @@
  * transport type and drawn from the sending end: a bi-directional connection
  * is labelled with a double arrow (design D1, REQ-CDX-001).
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 
 import { connectionEnds } from './connectionLayout.js'
@@ -22,7 +22,7 @@ import { connectionEnds } from './connectionLayout.js'
  * @param {string} rootLabel The application's name, used when no connection names it.
  * @param {Array<object>} connections The connections with the application at either end.
  * @return {{nodes: Array<object>, edges: Array<object>}} The graph for CnRelationshipGraph.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 export function connectionMap(rootId, rootLabel, connections) {
 	const root = { id: rootId, label: rootLabel || rootId, isRoot: true, kind: 'application' }
@@ -70,7 +70,7 @@ export function connectionMap(rootId, rootLabel, connections) {
  *
  * @param {{nodes: Array<object>, edges: Array<object>}} graph A graph from connectionMap.
  * @return {Array<{id: string, text: string}>} The connection id and its text, in edge order.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 export function connectionLinks(graph) {
 	const names = new Map((graph?.nodes || []).map((node) => [node.id, node.label || node.id]))

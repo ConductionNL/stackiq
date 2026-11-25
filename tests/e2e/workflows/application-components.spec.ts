@@ -19,8 +19,8 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
- * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-002-the-application-page-lists-its-components
+ * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+ * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-002-the-application-page-lists-its-components
  */
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

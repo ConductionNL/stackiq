@@ -18,7 +18,7 @@ import { ensureObjectType } from '../../utils/objectTypes.js'
  * connection with around it. A node opens that application, a line opens the
  * connection, and the action menu downloads the drawing or the links.
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 export default {
 	name: 'ConnectionMapWidget',
@@ -54,7 +54,7 @@ export default {
 		 * The nodes and edges of the map.
 		 *
 		 * @return {{nodes: Array<object>, edges: Array<object>}} The graph.
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		graph() {
 			return connectionMap(this.objectId, t('stackiq', 'This application'), this.connections)
@@ -64,7 +64,7 @@ export default {
 		 * One link per connection, the keyboard path to each line on the map.
 		 *
 		 * @return {Array<{id: string, text: string}>} The links.
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		links() {
 			return connectionLinks(this.graph)
@@ -76,7 +76,7 @@ export default {
 		 * Reload when the page moves to another application.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		objectId() {
 			this.load()
@@ -96,7 +96,7 @@ export default {
 		 * not among them.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		async load() {
 			this.loading = true
@@ -124,7 +124,7 @@ export default {
 		 *
 		 * @param {Array<object>} connections The connections as read.
 		 * @return {Promise<Array<object>>} The connections, named where possible.
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		async named(connections) {
 			const missing = unnamedModuleIds(connections, {})
@@ -141,7 +141,7 @@ export default {
 		 *
 		 * @param {object} node The clicked node.
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		openNode(node) {
 			if (node?.kind === 'application' && node.id !== this.objectId) {
@@ -154,7 +154,7 @@ export default {
 		 *
 		 * @param {MouseEvent} event The click on the map.
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		openEdge(event) {
 			const id = event?.target?.closest?.('[data-edge-id]')?.getAttribute('data-edge-id')
@@ -167,7 +167,7 @@ export default {
 		 * The drawn map.
 		 *
 		 * @return {SVGElement|null} The svg element.
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
 		 */
 		drawing() {
 			return this.$refs.map?.querySelector('svg') ?? null
@@ -177,7 +177,7 @@ export default {
 		 * Download the drawing as SVG.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
 		 */
 		downloadSvg() {
 			const svg = this.drawing()
@@ -190,7 +190,7 @@ export default {
 		 * Download the drawing as PNG: the SVG drawn on a canvas.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
 		 */
 		downloadPng() {
 			const svg = this.drawing()
@@ -225,7 +225,7 @@ export default {
 		 * Download the links as CSV, one line per connection.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
 		 */
 		downloadCsv() {
 			downloadText(connectionsCsv(this.connections), 'connections.csv', 'text/csv;charset=utf-8')

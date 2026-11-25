@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ interface AttestationServiceInterface {
 	 * @throws InvalidArgumentException When the scope, organisation or deadline is not valid.
 	 * @throws RuntimeException         When OpenRegister or the schemas are not available.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 	 */
 	public function start(string $scopeSchema, string $organisationId, string $deadline, string $name, string $startedBy): array;
 }//end interface

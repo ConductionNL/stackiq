@@ -10,7 +10,7 @@
 
   @visual exclude A screenshot baseline needs a live instance serving both documents; tests/e2e/workflows/api-docs.spec.ts drives the page and is not run yet.
 
-  @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
+  @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
 -->
 <template>
 	<div class="api-documentation">
@@ -66,7 +66,7 @@ export default {
 	 * Read the catalogue register id from the app settings, then show the tabs.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+	 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
 	 */
 	async mounted() {
 		try {

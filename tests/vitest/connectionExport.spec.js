@@ -5,7 +5,7 @@
 /**
  * The CSV and SVG downloads of an application's connections.
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
  */
 
 import { describe, expect, it } from 'vitest'

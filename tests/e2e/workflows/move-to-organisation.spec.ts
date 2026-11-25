@@ -19,7 +19,7 @@
  * tests/Unit/Controller/OwnershipTransferControllerTest.php and the Newman
  * folder "13 - Move between organisations".
  *
- * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

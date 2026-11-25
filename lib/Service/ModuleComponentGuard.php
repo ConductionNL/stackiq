@@ -36,7 +36,7 @@ use Throwable;
  * at one it cannot read, at a loop elsewhere in the chain, or after
  * {@see self::MAX_DEPTH} steps.
  *
- * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+ * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
  */
 class ModuleComponentGuard {
 
@@ -65,7 +65,7 @@ class ModuleComponentGuard {
 	 *
 	 * @return string|null The message, or null.
 	 *
-	 * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+	 * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
 	 */
 	public function refusal(array $data, ?string $moduleUuid): ?string {
 		$parent = self::reference(value: ($data['partOf'] ?? null));
@@ -96,7 +96,7 @@ class ModuleComponentGuard {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+	 * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
 	 */
 	public static function reference(mixed $value): ?string {
 		if (is_array($value) === true) {

@@ -9,7 +9,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
- * @spec      openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+ * @spec      openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * unassigned. The objects are written without RBAC, so the caller must have
  * been checked with AttestationRoundAccess first.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  */
 class AttestationService implements AttestationServiceInterface {
 
@@ -86,7 +86,7 @@ class AttestationService implements AttestationServiceInterface {
 	 * @throws InvalidArgumentException When the scope, organisation or deadline is not valid.
 	 * @throws RuntimeException         When OpenRegister or the schemas are not available.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 	 */
 	public function start(string $scopeSchema, string $organisationId, string $deadline, string $name, string $startedBy): array {
 		$round = [
@@ -114,7 +114,7 @@ class AttestationService implements AttestationServiceInterface {
 	 * @throws InvalidArgumentException When the scope, organisation or deadline is not valid.
 	 * @throws RuntimeException         When OpenRegister or the schemas are not available.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 	 */
 	private function open(array $round): array {
 		self::assertValid(round: $round);

@@ -16,7 +16,7 @@ use ReflectionMethod;
 /**
  * REQ-OAT-002: the confirmation round and request schemas, their lifecycle and the owner's notifications.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-002-each-owner-is-notified-and-reminded
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-002-each-owner-is-notified-and-reminded
  */
 final class OwnerAttestationFragmentTest extends TestCase {
 	/**

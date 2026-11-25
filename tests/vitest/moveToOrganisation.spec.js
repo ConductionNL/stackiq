@@ -7,7 +7,7 @@
  * the target list leaves the source out, and the dry run splits into
  * moving, skipped and staying behind.
  *
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 
 import { describe, expect, it, vi } from 'vitest'

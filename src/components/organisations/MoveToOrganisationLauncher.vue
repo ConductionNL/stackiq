@@ -18,7 +18,7 @@ import { openMoveForRecord } from '../../services/moveToOrganisation.js'
 import { navigationStore } from '../../store/store.js'
 
 /**
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export default {
 	name: 'MoveToOrganisationLauncher',

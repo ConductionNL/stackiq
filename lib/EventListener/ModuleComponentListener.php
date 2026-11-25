@@ -35,7 +35,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+ * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
  */
 class ModuleComponentListener implements IEventListener {
 
@@ -56,7 +56,7 @@ class ModuleComponentListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
+	 * @spec openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md#requirement-req-acm-001-an-application-can-name-the-application-it-is-a-component-of
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatingEvent) {

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ interface AttestationAnswerServiceInterface {
 	 * @throws DomainException          When the user is not the request's assignee.
 	 * @throws UnexpectedValueException When the request was already answered.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function confirm(string $requestId, string $uid): array;
 
@@ -66,7 +66,7 @@ interface AttestationAnswerServiceInterface {
 	 *
 	 * @return int How many requests were marked corrected.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function markCorrected(string $entrySchema, string $entryId, string $uid): int;
 
@@ -75,7 +75,7 @@ interface AttestationAnswerServiceInterface {
 	 *
 	 * @return int How many requests became overdue.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function markOverdue(): int;
 
@@ -87,7 +87,7 @@ interface AttestationAnswerServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function isChangedByHand(array $before, array $after): bool;
 }//end interface

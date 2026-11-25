@@ -11,7 +11,7 @@
   - administrator of both organisations) and answers anyone else with a
   - refusal, which the dialog shows.
   -
-  - @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
+  - @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
   -->
 
 <template>
@@ -220,7 +220,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/landscape-move-between-organisations
+	 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
 	 */
 	mounted() {
 		this.loadOrganisations()
@@ -235,7 +235,7 @@ export default {
 		 * Load the user's organisations and take the active one as the source.
 		 *
 		 * @return {Promise<void>} Resolves once loaded.
-		 * @spec openspec/changes/landscape-move-between-organisations
+		 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
 		 */
 		async loadOrganisations() {
 			try {
@@ -256,7 +256,7 @@ export default {
 		 * Ask the plan endpoint what would move.
 		 *
 		 * @return {Promise<void>} Resolves once the plan is in.
-		 * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
+		 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
 		 */
 		async preview() {
 			const plan = await this.request('plan')
@@ -269,7 +269,7 @@ export default {
 		 * Carry out the move and report how many entries moved.
 		 *
 		 * @return {Promise<void>} Resolves once moved.
-		 * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-001-an-administrator-moves-chosen-entries-to-another-organisation-and-they-keep-their-identity
+		 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-001-an-administrator-moves-chosen-entries-to-another-organisation-and-they-keep-their-identity
 		 */
 		async move() {
 			const result = await this.request('execute')
@@ -285,7 +285,7 @@ export default {
 		 *
 		 * @param {string} step plan or execute.
 		 * @return {Promise<?object>} The answer, or null when refused or failed.
-		 * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
+		 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
 		 */
 		async request(step) {
 			this.busy = true

@@ -8,7 +8,7 @@
  * only says where each one lives and reads what a fetch returns; the page renders
  * them with the library's CnApiReference, so no third-party viewer is loaded.
  *
- * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
  */
 
 /** The slug of the register that holds the catalogue objects. */
@@ -41,7 +41,7 @@ export const API_DOCUMENT_TABS = [
  * @param {object|null|undefined} settings The app settings (`GET /api/settings`).
  * @return {string|number|null}
  *
- * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
  */
 export function catalogueRegisterId(settings) {
 	const registers = Array.isArray(settings?.availableRegisters)
@@ -60,7 +60,7 @@ export function catalogueRegisterId(settings) {
  * @param {object|null|undefined} settings The app settings.
  * @return {{catalogue: string|null, endpoints: string}}
  *
- * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
  */
 export function documentPaths(settings) {
 	const registerId = catalogueRegisterId(settings)
@@ -81,7 +81,7 @@ export function documentPaths(settings) {
  * @param {object|string|null|undefined} data The response body.
  * @return {object|null}
  *
- * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
  */
 export function readDocument(data) {
 	let document = data
@@ -112,7 +112,7 @@ export function readDocument(data) {
  * @param {function(string): string} translate Translates an English text.
  * @return {string}
  *
- * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
  */
 export function documentFailure(error, translate) {
 	const status = error?.response?.status

@@ -6,7 +6,7 @@
  * links as CSV, the drawn map as SVG. Nothing goes to the server, so a
  * download holds exactly what the user may read.
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
  */
 
 import { connectionEnds } from './connectionLayout.js'
@@ -38,7 +38,7 @@ export function csvField(value) {
  *
  * @param {Array<object>} connections The connections.
  * @return {string} The CSV text.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
  */
 export function connectionsCsv(connections) {
 	const lines = [CSV_COLUMNS.map(csvField).join(',')]
@@ -60,7 +60,7 @@ export function connectionsCsv(connections) {
  *
  * @param {SVGElement} svg The drawn map.
  * @return {string} The SVG markup, with the namespace declared.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
  */
 export function svgDocument(svg) {
 	const clone = svg.cloneNode(true)

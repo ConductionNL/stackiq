@@ -7,7 +7,7 @@
 
 Read the two documents that describe the catalogue's API, inside stackiq.
 
-Specification: [`openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md).
 
 ![The API documentation page with both documents](../images/api-documentation.png)
 

@@ -11,7 +11,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
- * @spec      openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec      openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
  * Moves pending requests past their deadline to overdue, once a day. Idempotent:
  * only pending moves, so a second run the same day changes nothing.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
 class AttestationOverdueJob extends TimedJob {
 
@@ -43,7 +43,7 @@ class AttestationOverdueJob extends TimedJob {
 	 * @param IAppManager              $appManager  Whether OpenRegister is installed.
 	 * @param LoggerInterface          $logger      The logger.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
@@ -62,7 +62,7 @@ class AttestationOverdueJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	protected function run($argument): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {

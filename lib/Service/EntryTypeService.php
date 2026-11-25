@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * Previews and performs the type change of one entry.
  *
- * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
  */
 class EntryTypeService {
 
@@ -156,7 +156,7 @@ class EntryTypeService {
 	 *
 	 * @throws EntryTypeRefusal 404 when the entry is not found, 422 for a change that is not offered.
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 	 */
 	public function preview(string $uuid, string $targetType): array {
 		return $this->context(uuid: $uuid, targetType: $targetType)['preview'];
@@ -174,7 +174,7 @@ class EntryTypeService {
 	 *
 	 * @throws EntryTypeRefusal 403, 404, 409 or 422.
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 	 */
 	public function change(string $uuid, string $targetType, array $serviceTypes=[]): array {
 		$context = $this->context(uuid: $uuid, targetType: $targetType);
@@ -194,7 +194,7 @@ class EntryTypeService {
 	 *
 	 * @throws EntryTypeRefusal 409 with the blockers.
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 	 */
 	private static function assertUnblocked(array $preview): void {
 		if ($preview['blockers'] !== []) {
@@ -217,7 +217,7 @@ class EntryTypeService {
 	 *
 	 * @throws EntryTypeRefusal 422 when the change is refused.
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 	 */
 	private function apply(array $context, array $serviceTypes): array {
 		if ($context['sourceSchemaId'] === $context['targetSchemaId']) {
@@ -358,7 +358,7 @@ class EntryTypeService {
 	 *
 	 * @return array{carried: array<int, string>, dropped: array<string, mixed>, serviceTypes: array<int, string>}
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 	 */
 	public function fields(array $found, int $targetSchemaId): array {
 		$sourceSchemaId = $found['schemaId'];
