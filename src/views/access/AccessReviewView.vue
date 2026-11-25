@@ -181,20 +181,6 @@ export default {
 		}
 	},
 
-	/**
-	 * Load the organisations the picker offers.
-	 *
-	 * A page opened straight from a link has no organisation collection yet,
-	 * and live updates only follow a list someone loaded: without this the
-	 * picker offered nothing (found on a live instance).
-	 *
-	 * @return {Promise<void>}
-	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
-	 */
-	async mounted() {
-		await loadObjectTypeCollection('organization')
-	},
-
 	computed: {
 		/**
 		 * The organisations the user can see, as picker options.
@@ -279,6 +265,20 @@ export default {
 				}
 			},
 		},
+	},
+
+	/**
+	 * Load the organisations the picker offers.
+	 *
+	 * A page opened straight from a link has no organisation collection yet,
+	 * and live updates only follow a list someone loaded: without this the
+	 * picker offered nothing (found on a live instance).
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	 */
+	async mounted() {
+		await loadObjectTypeCollection('organization')
 	},
 
 	methods: {
