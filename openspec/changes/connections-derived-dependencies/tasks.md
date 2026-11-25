@@ -31,8 +31,9 @@
   - GIVEN the owning organisation WHEN it accepts a suggestion THEN the connection is in usage.koppelingen
 - [x] Implement
   - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
-- [ ] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes)
-  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions"). Owed: a run of those requests against a live instance.
+- [x] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes)
+  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions").
+  - Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main, stackiq development): the five Newman requests pass 6/6 assertions (usage listing 200; GET, dismiss and accept 403 with a reason for a usage of another organisation; accept for an unknown usage 404). By hand, with the caller's active organisation set to the usage's consumer: GET 200 `{"results":[]}`, dismiss 200 `{"dismissed":[]}`, accept 200 `{"accepted":[]}`. The run needed the environments' schema slugs brought to the English register (`organization`, `contactPerson`, `catalogService`, `connection`, `usage`); before that the usage listing was 404.
 
 ### Task 4: Suggested connections panel
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
