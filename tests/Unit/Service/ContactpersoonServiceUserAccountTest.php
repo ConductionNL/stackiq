@@ -46,6 +46,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the user-account operations of ContactpersoonService.
@@ -581,4 +582,81 @@ class ContactpersoonServiceUserAccountTest extends TestCase {
 		$this->assertSame(['ContactpersoonService: Failed to handle contactpersoon update'], $this->messages('error'));
 		$this->assertSame(['contactId' => 6, 'error' => 'group backend down'], end($this->logs)[2]);
 	}//end testContactUpdateLogsAFailure()
+	/**
+	 * The contactPerson schema lets only an admin write username through the object API, so the sync,
+	 * which runs in whoever's session triggered the event, writes it as the system.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	public function testTheUsernameIsWrittenAsTheSystem(): void {
+		$contactPerson = new class {
+			private array $data = ['email' => 'anna@example.nl', 'roles' => ['beheerder']];
+
+			/**
+			 * @return int
+			 */
+			public function getId(): int {
+				return 7;
+			}
+
+			/**
+			 * @return string
+			 */
+			public function getUuid(): string {
+				return 'cp-7';
+			}
+
+			/**
+			 * @return string
+			 */
+			public function getRegister(): string {
+				return '3';
+			}
+
+			/**
+			 * @return string
+			 */
+			public function getSchema(): string {
+				return '12';
+			}
+
+			/**
+			 * @return array
+			 */
+			public function getObject(): array {
+				return $this->data;
+			}
+
+			/**
+			 * @param array $data The new data.
+			 *
+			 * @return void
+			 */
+			public function setObject(array $data): void {
+				$this->data = $data;
+			}
+		};
+
+		$this->objectService->expects($this->once())
+			->method('saveObject')
+			->with(
+				$this->callback(fn (array $object): bool => $object['username'] === 'anna@example.nl' && $object['roles'] === ['beheerder']),
+				$this->callback(
+					fn (ObjectSaveOptions $options): bool => $options->uuid === 'cp-7'
+						&& $options->target->register === '3'
+						&& $options->target->schema === '12'
+						&& $options->policy->silent === true
+				),
+				false,
+				false
+			);
+
+		$update = new \ReflectionMethod(ContactpersoonService::class, 'updateContactPersonUsername');
+		$update->invoke($this->service(), $contactPerson, 'anna@example.nl');
+
+		$this->assertContains('ContactpersoonService: Updated contactpersoon with username', $this->messages('info'));
+		$this->assertSame([], $this->messages('error'));
+	}//end testTheUsernameIsWrittenAsTheSystem()
 }//end class

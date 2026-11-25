@@ -63,6 +63,11 @@ final class AccessReviewDeclarationTest extends TestCase {
 
 		$this->assertSame(expected: 'date-time', actual: $contactPerson['properties']['accessReviewedAt']['format']);
 		$this->assertSame(expected: 'string', actual: $contactPerson['properties']['accessReviewedBy']['type']);
+		$this->assertSame(
+			expected: 'string',
+			actual: $contactPerson['properties']['username']['type'],
+			message: 'Role-group sync and the access review find the account by username; undeclared, OpenRegister drops it.'
+		);
 		foreach (array_keys($base['components']['schemas']['contactPerson']['properties']) as $existing) {
 			$this->assertArrayHasKey(key: $existing, array: $contactPerson['properties'], message: $existing . ' must survive the merge');
 		}
@@ -71,18 +76,19 @@ final class AccessReviewDeclarationTest extends TestCase {
 			condition: version_compare($contactPerson['version'], $base['components']['schemas']['contactPerson']['version'], '>'),
 			message: 'Without a higher version an existing install skips the import and never gets the fields.'
 		);
-		$this->assertSame(expected: '0.0.30', actual: $contactPerson['version']);
+		$this->assertSame(expected: '0.0.31', actual: $contactPerson['version']);
 	}//end testContactPersonCarriesTheReview()
 
 	/**
-	 * Only an admin sets the review fields through the plain object API, so nobody marks themselves reviewed.
+	 * Only an admin sets the review fields through the plain object API, so nobody marks themselves reviewed,
+	 * and only an admin sets username, so nobody puts an account of their choice into a contact person's role groups.
 	 *
 	 * @return void
 	 */
 	public function testOnlyAnAdminWritesTheReviewDirectly(): void {
 		$properties = $this->merged()['components']['schemas']['contactPerson']['properties'];
 
-		foreach (['accessReviewedAt', 'accessReviewedBy'] as $field) {
+		foreach (['accessReviewedAt', 'accessReviewedBy', 'username'] as $field) {
 			$this->assertSame(expected: ['admin'], actual: $properties[$field]['authorization']['update'], message: $field);
 			$this->assertSame(expected: ['admin'], actual: $properties[$field]['authorization']['create'], message: $field);
 			$this->assertTrue(condition: $properties[$field]['hideOnForm'], message: $field);
