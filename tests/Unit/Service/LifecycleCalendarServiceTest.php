@@ -28,7 +28,7 @@ use RuntimeException;
 /**
  * One linked event per tracked lifecycle date: create, move, delete, keep, fail soft.
  *
- * @spec openspec/changes/adopt-integration-leaves/tasks.md#4.1
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#4.1
  */
 #[CoversClass(LifecycleCalendarService::class)]
 final class LifecycleCalendarServiceTest extends TestCase {

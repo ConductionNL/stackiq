@@ -44,7 +44,7 @@ interface LifecycleCalendarServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.1
 	 */
 	public function syncContract(array $object): void;
 
@@ -56,7 +56,7 @@ interface LifecycleCalendarServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.1
 	 */
 	public function syncModuleVersion(array $object): void;
 }//end interface

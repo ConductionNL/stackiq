@@ -13,7 +13,7 @@
   - Used as `{ "type": "IntegrationLeafTab", "props": { "integrationId": "calendar" } }`
   - in a sidebar tab's `widgets` (adopt-integration-leaves task 3.1).
   -
-  - @spec openspec/changes/adopt-integration-leaves
+  - @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves
   -->
 
 <template>
@@ -93,7 +93,7 @@ export default {
 		 * The registered provider of the leaf, or null.
 		 *
 		 * @return {?object} The provider.
-		 * @spec openspec/changes/adopt-integration-leaves
+		 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves
 		 */
 		provider() {
 			const list = this.leaves.integrations.value || []
@@ -113,7 +113,7 @@ export default {
 		 * The provider's tab component, or null when it has none.
 		 *
 		 * @return {?object} The component.
-		 * @spec openspec/changes/adopt-integration-leaves
+		 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves
 		 */
 		tabComponent() {
 			return this.provider ? this.leaves.resolveTab(this.integrationId) : null
