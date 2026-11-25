@@ -525,20 +525,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		// Query per-schema magic table directly (NOT the empty openregister_objects blob table).
 		$contactTableName = 'openregister_table_' . $registerIdContact . '_' . $schemaIdContact;
 
-		// Find contacts without a username that DO have a matching Nextcloud account (by email).
-		$qb = $this->db->getQueryBuilder();
-		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organization', 'a.uid')
-			->from($contactTableName, 'o')
-			->innerJoin('o', 'accounts_data', 'a', 'o.e_mailadres = a.value')
-			->where(
-				$qb->createFunction(
-					'(o.username IS NULL OR o.username = ' . $qb->createNamedParameter('') . ')'
-				)
-			)
-			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
-			->orderBy('o._updated', 'ASC')
-			->setMaxResults($batchSize);
-
+		$qb = $this->contactsWithAnAccountQuery(table: $contactTableName, batchSize: $batchSize);
 		$contacts = $this->contactRowsOrNull(qb: $qb, step: 'ContactSync', table: $contactTableName);
 		if ($contacts === null) {
 			$stats['skipped'] = self::NO_CONTACT_COLUMNS;
@@ -607,6 +594,33 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 		$stats['duration'] = (time() - $startTime);
 		return $stats;
 	}//end performContactSync()
+
+	/**
+	 * Contacts without a username that DO have a matching Nextcloud account (by e-mail).
+	 *
+	 * @param string $table     The contact table
+	 * @param int    $batchSize The most rows to read
+	 *
+	 * @return IQueryBuilder The prepared query
+	 *
+	 * @spec openspec/specs/organization-sync/spec.md
+	 */
+	private function contactsWithAnAccountQuery(string $table, int $batchSize): IQueryBuilder {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organization', 'a.uid')
+			->from($table, 'o')
+			->innerJoin('o', 'accounts_data', 'a', 'o.e_mailadres = a.value')
+			->where(
+				$qb->createFunction(
+					'(o.username IS NULL OR o.username = ' . $qb->createNamedParameter('') . ')'
+				)
+			)
+			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
+			->orderBy('o._updated', 'ASC')
+			->setMaxResults($batchSize);
+
+		return $qb;
+	}//end contactsWithAnAccountQuery()
 
 	/**
 	 * The rows of a contact-table query, or null when the table lacks its columns.
