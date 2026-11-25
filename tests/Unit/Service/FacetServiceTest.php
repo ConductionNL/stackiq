@@ -797,7 +797,7 @@ class FacetServiceTest extends TestCase {
 	 * two, valued by organisation id, labelled by name, counted 2 and 1; the
 	 * names come from one bounded read.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
 	 *
 	 * @return void
 	 */
@@ -881,7 +881,7 @@ class FacetServiceTest extends TestCase {
 	 * REQ-SFC-003: the service and the controller read the same five names,
 	 * and the dimension set is part of the cache key.
 	 *
-	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
 	 *
 	 * @return void
 	 */
