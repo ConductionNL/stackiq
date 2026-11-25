@@ -223,6 +223,6 @@ class PublicationFieldRulesTest extends TestCase {
 		);
 		// Application-interfaces.json (connections-api-catalogue) adds connection.interface at 0.3.6; later fragments may raise it.
 		$this->assertTrue(condition: version_compare($schemas['connection']['version'], '0.3.6', '>='));
-		$this->assertSame(expected: '0.1.8', actual: $schemas['moduleVersion']['version']);
+		$this->assertTrue(condition: version_compare($schemas['moduleVersion']['version'], '0.1.8', '>='), message: 'lifecycle-initial-defaults.json raises it to 0.1.9');
 	}//end testAFragmentNeverLowersAVersion()
 }//end class
