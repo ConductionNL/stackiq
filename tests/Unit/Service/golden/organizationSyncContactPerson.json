@@ -706,6 +706,8 @@
                     "register": "reg-entity",
                     "schema": "schema-entity",
                     "uuid": "org-6",
+                    "_rbac": false,
+                    "_multitenancy": false,
                     "silent": true,
                     "_validation": false
                 }

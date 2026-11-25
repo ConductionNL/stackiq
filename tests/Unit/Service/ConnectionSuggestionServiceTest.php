@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-1-suggestion-service
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-1-suggestion-service
  */
 
 declare(strict_types=1);
@@ -108,6 +108,25 @@ class ConnectionSuggestionServiceTest extends TestCase {
 		$this->assertSame('u-x1', $carried[0]['from']);
 		$this->assertSame('mod-z', $carried[0]['otherModule']);
 		$this->assertFalse($carried[0]['draft']);
+	}
+
+	/**
+	 * A connection the older version had that also lies in the landscape (here
+	 * the national provision) is offered as carried over, once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 */
+	public function testACarriedOverConnectionKeepsThatReasonWhenItIsAlsoInTheLandscape(): void {
+		$this->store->put('u-x1', 10, ['consumer' => 'org-a', 'module' => 'mod-x', 'moduleVersion' => 'x-1', 'koppelingen' => ['c-xn', 'c-xy']]);
+
+		$suggestions = $this->suggestionsFor(uuid: 'u-x');
+		$reasons = array_column($suggestions, 'reason', 'id');
+
+		$this->assertSame(expected: ['c-xn', 'c-xy'], actual: array_column($suggestions, 'id'));
+		$this->assertSame(expected: ConnectionSuggestionService::REASON_CARRY_OVER, actual: $reasons['c-xn']);
+		$this->assertSame(expected: ConnectionSuggestionService::REASON_CARRY_OVER, actual: $reasons['c-xy']);
 	}
 
 	/**

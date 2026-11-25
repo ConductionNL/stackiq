@@ -29,7 +29,7 @@
  * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/tasks.md
- * @spec openspec/changes/connections-derived-dependencies/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md
  * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md

@@ -32,8 +32,9 @@ use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
-use OCP\IAppConfig;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\DB\QueryBuilder\IQueryFunction;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -75,6 +76,12 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.
 	 */
 	private const LINK_KEY_PREFIX = 'linked_organisation_';
+
+	/**
+	 * Lower-cased organisation statuses that count as active (English enum
+	 * value and the pre-rename Dutch one).
+	 */
+	private const ACTIVE_STATUSES = ['active', 'actief'];
 
 	/**
 	 * Why the contact and user steps link nothing on the current contactPerson table.
@@ -386,11 +393,8 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			->from($magicTableName, 'o')
 			->leftJoin('o', 'openregister_organisations', 'org', 'o._uuid = org.uuid')
 			->where('org.uuid IS NULL')
-			->andWhere(
-				$countQb->createFunction(
-					'LOWER(o.status) = ' . $countQb->createNamedParameter('actief')
-				)
-			)
+			->andWhere('o._deleted IS NULL')
+			->andWhere($this->activeStatusCondition(qb: $countQb))
 			->executeQuery()->fetchOne();
 
 		$stats['totalRemaining'] = $totalRemaining;
@@ -410,11 +414,8 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			->from($magicTableName, 'o')
 			->leftJoin('o', 'openregister_organisations', 'org', 'o._uuid = org.uuid')
 			->where('org.uuid IS NULL')
-			->andWhere(
-				$qb->createFunction(
-					'LOWER(o.status) = ' . $qb->createNamedParameter('actief')
-				)
-			)
+			->andWhere('o._deleted IS NULL')
+			->andWhere($this->activeStatusCondition(qb: $qb))
 			->orderBy('o._updated', 'ASC')
 			->setMaxResults($batchSize);
 
@@ -471,6 +472,26 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 
 		return $stats;
 	}//end performOrganizationsSync()
+
+	/**
+	 * The condition "this organisation is active", for the batch queries.
+	 *
+	 * The organization schema stores the English enum value `Active`; rows
+	 * written before the rename still carry `actief`. Matching only `actief`
+	 * made the scheduled sync find no organisation at all, so no register
+	 * organisation ever got its OpenRegister organisation.
+	 *
+	 * @param IQueryBuilder $qb The query the condition goes into.
+	 *
+	 * @return IQueryFunction The condition.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 */
+	private function activeStatusCondition(IQueryBuilder $qb): IQueryFunction {
+		$statuses = $qb->createNamedParameter(self::ACTIVE_STATUSES, IQueryBuilder::PARAM_STR_ARRAY);
+		return $qb->createFunction('LOWER(o.status) IN (' . $statuses . ')');
+
+	}//end activeStatusCondition()
 
 	/**
 	 * Perform synchronization of contact persons.
@@ -4431,6 +4452,39 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	}//end getSyncStatusWithErrorHandling()
 
 	/**
+	 * Save the organisatie object after it was made to own itself.
+	 *
+	 * A system write, with validation, RBAC and multitenancy off: the cron job
+	 * runs as the anonymous user, and RBAC refused it ("User 'Anonymous' does
+	 * not have permission to 'update' objects in schema 'Organization'").
+	 *
+	 * @param object $organisationObject The organisatie object, owner already set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 */
+	private function saveOwnedOrganisationObject(object $organisationObject): void {
+		$this->objectService->saveObject(
+			object: array_merge(
+				$organisationObject->getObject(),
+				['@self' => ['organisation' => $organisationObject->getOrganisation()]]
+			),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+					register: $organisationObject->getRegister(),
+					schema: $organisationObject->getSchema()
+				),
+				uuid: $organisationObject->getUuid(),
+				policy: new SavePolicy(silent: true, validation: false)
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
+
+	}//end saveOwnedOrganisationObject()
+
+	/**
 	 * Updates the organisatie object's @self metadata to set owner to the organisation entity UUID
 	 *
 	 * @param object $organisationObject The organisatie object to update.
@@ -4499,22 +4553,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			$organisationObject->setOwner($organisationEntityUuid);
 			$organisationObject->setOrganisation($organisationEntityUuid);
 
-			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			// Published contract instead of OpenRegister's Db layer.
-			$this->objectService->saveObject(
-				object: array_merge(
-					$organisationObject->getObject(),
-					['@self' => ['organisation' => $organisationObject->getOrganisation()]]
-				),
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(
-							register: $organisationObject->getRegister(),
-							schema: $organisationObject->getSchema()
-						),
-					uuid: $organisationObject->getUuid(),
-					policy: new SavePolicy(silent: true, validation: false)
-				)
-			);
+			$this->saveOwnedOrganisationObject(organisationObject: $organisationObject);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated organisatie object owner and organisation',
