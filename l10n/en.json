@@ -2511,6 +2511,7 @@
         "No connections to draw": "No connections to draw",
         "Diagram": "Diagram",
         "Anyone can read this pentest report, also without an account. Publish it publicly?": "Anyone can read this pentest report, also without an account. Publish it publicly?",
-        "Publish publicly": "Publish publicly"
+        "Publish publicly": "Publish publicly",
+        "This contract names no service, so no supplier": "This contract names no service, so no supplier"
     }
 }

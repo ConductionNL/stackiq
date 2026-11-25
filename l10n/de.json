@@ -284,6 +284,7 @@
         "Marketplace": "Store",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben.",
         "Anyone can read this pentest report, also without an account. Publish it publicly?": "Jeder kann diesen Pentest-Bericht lesen, auch ohne Konto. Öffentlich veröffentlichen?",
-        "Publish publicly": "Öffentlich veröffentlichen"
+        "Publish publicly": "Öffentlich veröffentlichen",
+        "This contract names no service, so no supplier": "Dieser Vertrag nennt keinen Dienst und damit keinen Lieferanten"
     }
 }

@@ -8,13 +8,9 @@
  * that service, all carrying this run's RUN_ID, through the objects API, and
  * removes exactly those rows afterwards.
  *
- * The contract page (ContractDetail in src/manifest.json) has no supplier
- * field: catalogContract points at its service only, and the "Service &
- * usage" related widget (ct-related) declares no source that reads the
- * service's provider. The scenario is therefore marked fixme until the page
- * shows the supplier.
- *
- * Written from the change's scenarios; not yet run against a live instance.
+ * catalogContract points at its service only; the contract page's Supplier
+ * list (ct-supplier in src/manifest.json) holds that service and reads its
+ * provider, and its row opens the supplier's organisation page.
  *
  * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/vendor-product-master-data/spec.md#requirement-a-contract-shows-its-supplier-through-the-service-it-is-for-req-clr-014
  */
@@ -58,15 +54,22 @@ test.beforeAll(async () => {
 	ids.service = await seed('catalogService', {
 		name: service,
 		provider: ids.supplier,
+		type: ['Technical management'],
 	})
+	// A contract is for an application in use (catalogContract requires usage).
+	ids.municipality = await seed('organization', { name: `${RUN_ID} Gemeente`, type: 'Municipality' })
+	ids.module = await seed('module', { name: `${RUN_ID} Zaaksysteem X`, provider: ids.supplier })
+	ids.usage = await seed('usage', { consumer: ids.municipality, module: ids.module, status: 'Acquisition' })
 	ids.contract = await seed('catalogContract', {
 		contractNumber: `${RUN_ID}-1`,
 		contractType: 'SLA',
-		status: 'Active',
+		// A new contract is in negotiation; Active needs an approved decision (contract-approval guard).
+		status: 'In negotiation',
 		startDate: '2026-01-01',
 		cost: 5000,
 		costPeriod: 'Annually',
 		service: ids.service,
+		usage: ids.usage,
 	})
 })
 
@@ -79,17 +82,20 @@ test.afterAll(async () => {
 })
 
 // @e2e vendor-product-master-data::a-contract-manager-reads-a-contract-s-supplier
-// fixme: the contract page shows no supplier; neither ct-data nor ct-related reads the service's provider.
-test.fixme('the contract page shows the supplier of its service, linking to the organisation page', async ({
+test('the contract page shows the supplier of its service, linking to the organisation page', async ({
 	page,
 }) => {
 	await gotoAppRoute(page, `/contracten/${ids.contract}`)
 	await dismissSupportDialog(page)
 	await expect(page.getByText(service).first()).toBeVisible({ timeout: 30000 })
 
-	const link = page.getByRole('link', { name: supplier }).first()
-	await expect(link).toBeVisible({ timeout: 30000 })
-	await link.click()
+	// The Supplier list holds the contract's service; its row names the supplier and opens its page.
+	const list = page.getByRole('region', { name: 'Supplier' })
+	await list.scrollIntoViewIfNeeded()
+	const row = list.getByRole('row').filter({ hasText: supplier })
+	await expect(row).toBeVisible({ timeout: 30000 })
+	await expect(row).toContainText(service)
+	await row.click()
 	await expect(page).toHaveURL(new RegExp(`/organisaties/${ids.supplier}`), { timeout: 30000 })
 	await expect(page.getByText(supplier).first()).toBeVisible({ timeout: 30000 })
 })

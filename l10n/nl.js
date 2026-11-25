@@ -2536,7 +2536,8 @@ OC.L10N.register(
         "Failed to add contact person: {error}": "Contactpersoon toevoegen mislukt: {error}",
         "Invalid contact person data structure": "Ongeldige gegevensstructuur van de contactpersoon",
         "Anyone can read this pentest report, also without an account. Publish it publicly?": "Iedereen kan dit pentestrapport lezen, ook zonder account. Openbaar publiceren?",
-        "Publish publicly": "Openbaar publiceren"
+        "Publish publicly": "Openbaar publiceren",
+        "This contract names no service, so no supplier": "Dit contract noemt geen dienst, dus ook geen leverancier"
     },
     "nplurals=2; plural=(n != 1);"
 )

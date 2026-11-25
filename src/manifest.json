@@ -676,14 +676,14 @@
 					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "catalogContract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
 					{ "id": "ct-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
-					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" },
+					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" }, { "id": "ct-supplier", "type": "object-list", "title": "Supplier", "icon": "OfficeBuilding", "_note": "capability-rows REQ-CLR-014: a contract reaches its supplier through the service it is for. The list holds that one service, reads its provider as the supplier, and the row opens the supplier's organisation page (rowRouteIdField provider).", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "_ids": "@object.service" }, "columns": [ { "key": "provider", "label": "Supplier", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "organization", "labelField": "name" } }, { "key": "name", "label": "Service" } ], "limit": 1, "allowCreate": false, "rowRoute": "OrganisatieDetail", "rowRouteIdField": "provider", "emptyText": "This contract names no service, so no supplier" } },
 					{ "id": "ct-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "ct-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
 					{ "id": "2", "widgetId": "ct-value", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "3", "widgetId": "ct-files", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 8, "gridHeight": 3 }, { "id": "6", "widgetId": "ct-supplier", "gridX": 8, "gridY": 7, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
