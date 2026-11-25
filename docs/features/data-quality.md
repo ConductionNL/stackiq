@@ -4,6 +4,8 @@ Every application and every usage of an application gets a data quality score. T
 score shows how complete and how current an entry is, so an information manager knows
 what to fix first.
 
+![The data quality report of one organisation](../images/data-quality-report.png)
+
 ## The rules
 
 OpenRegister scores an entry each time it is saved, from rules the schema declares in

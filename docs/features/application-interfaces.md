@@ -9,6 +9,8 @@ An API records an interface an application offers to other applications: how it 
 
 Specification: [`openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md).
 
+![The APIs an application offers, on its page](../images/application-apis.png)
+
 ## Recording an API
 
 Open the page of the application, scroll to **APIs** and choose **Add API**. The new API belongs to that application. Fill in:

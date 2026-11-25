@@ -37,8 +37,8 @@
 - **files**: `lib/Controller/ViewController.php`, `lib/Controller/AangebodenGebruikController.php`, `docs/API_REFERENCE.md`, `docs/features/api-documentation.md`, `docs/images/api-documentation.png`
 - **acceptance_criteria**:
   - GIVEN GET /api/aangeboden-gebruik/docs WHEN it answers THEN the body carries a documentation link to the API documentation page
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Controller/AangebodenGebruikControllerTest.php` docs case; docs build with a screenshot)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Controller/AangebodenGebruikControllerTest.php` docs case; docs build with a screenshot) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 - Progress 21 Nov: both hand-written bodies keep their content and carry `documentation` (`ApiDocumentationLink::LINK`: the page `/apps/stackiq/api-docs`, the document `/apps/stackiq/api/openapi.json` and a deprecation note); their docblocks say new integrations use the OpenAPI document. `docs/API_REFERENCE.md` opens with a pointer to the page and both documents, and `docs/features/api-documentation.md` (linked from the features index) explains the page. Tests: `AangebodenGebruikControllerTest::testDocsCarryALinkToTheApiDocumentationPage`, the views docs case in `ViewControllerContractTest` and the updated golden `tests/fixtures/api-documentation/documentation.json`. Left: the screenshot `docs/images/api-documentation.png`, which needs a live instance, so Implement and Test stay open.
 
 ## Verification

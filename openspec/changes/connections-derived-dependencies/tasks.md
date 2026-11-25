@@ -50,9 +50,9 @@
 - **files**: `docs/features/connection-suggestions.md`, `docs/images/connection-suggestions.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Connection suggestions THEN both sources of suggestions are explained with a screenshot
-- [ ] Implement
-  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. Owed: `docs/images/connection-suggestions.png`, a screenshot from a live instance.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. `docs/images/connection-suggestions.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

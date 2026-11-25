@@ -28,9 +28,9 @@
 - **files**: `docs/features/application-components.md`, `docs/images/application-components.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Application components THEN recording a component and the list filter are explained with a screenshot
-- [ ] Implement
-  - `docs/features/application-components.md` is written (recording a component, the cycle refusal, the Components list, the list filter, the demo data) and linked from `docs/features/README.md`. Open: the screenshot `docs/images/application-components.png`, which needs a running instance.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+  - `docs/features/application-components.md` is written (recording a component, the cycle refusal, the Components list, the list filter, the demo data) and linked from `docs/features/README.md`. The screenshot `docs/images/application-components.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

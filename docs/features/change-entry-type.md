@@ -9,7 +9,7 @@ An entry registered as the wrong kind can change type without being registered a
 
 Specification: [`openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md).
 
-<!-- Screenshot: docs/images/change-entry-type.png, the Change type dialog with its preview. To be captured with Playwright. -->
+![The Change type dialog: what blocks the change, what is dropped and what carries over](../images/change-entry-type.png)
 
 ## Changing the type
 

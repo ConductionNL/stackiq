@@ -26,9 +26,9 @@
 - **files**: `docs/features/change-entry-type.md`, `docs/images/change-entry-type.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Change entry type THEN the preview, the blockers and what survives are explained with a screenshot
-- [ ] Implement
-  - `docs/features/change-entry-type.md` is written (the dialog, the preview, the blockers, who may change a type) and linked from `docs/features/README.md`. Open: the screenshot `docs/images/change-entry-type.png`, which needs a running instance.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+  - `docs/features/change-entry-type.md` is written (the dialog, the preview, the blockers, who may change a type) and linked from `docs/features/README.md`. The screenshot `docs/images/change-entry-type.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

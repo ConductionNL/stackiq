@@ -12,6 +12,8 @@ have to register each one by hand.
 
 Specification: [`openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md).
 
+![Suggested connections on an application in use](../images/connection-suggestions.png)
+
 ## Where suggestions come from
 
 - **Both applications are in your landscape.** A connection in the catalogue

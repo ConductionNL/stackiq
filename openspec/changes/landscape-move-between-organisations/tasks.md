@@ -32,8 +32,8 @@
 - **files**: `docs/features/move-to-organisation.md`, `docs/images/move-to-organisation.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Move to organisation THEN who may move, the dry run and what stays are explained with a screenshot
-- [ ] Implement (page `docs/features/move-to-organisation.md` written; the screenshot `docs/images/move-to-organisation.png` needs a running instance and is left)
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement (page `docs/features/move-to-organisation.md` written; the screenshot `docs/images/move-to-organisation.png` was added 25 Nov 2026)
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 
