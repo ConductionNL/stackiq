@@ -95,6 +95,8 @@ test.beforeAll(async () => {
 		name: melding,
 		documentation: 'Een melding over de openbare ruimte, zoals een losliggende stoeptegel.',
 		origin: 'drawn',
+		// The element schema requires its ArchiMate property list, empty here.
+		properties: [],
 		attributes: [
 			{ name: 'meldingnummer', dataType: 'text', isKey: true },
 			{ name: 'datum melding', dataType: 'date', isKey: false },
@@ -106,6 +108,7 @@ test.beforeAll(async () => {
 		name: melder,
 		documentation: 'De persoon die een melding doet.',
 		origin: 'drawn',
+		properties: [],
 		attributes: [{ name: 'e-mailadres', dataType: 'text', isKey: true }],
 	})
 	ids.relation = await seed(amef.register, amef.relation_schema, {
@@ -117,15 +120,19 @@ test.beforeAll(async () => {
 		sourceCardinality: '0..*',
 		targetCardinality: '1',
 		origin: 'drawn',
+		properties: [],
 	})
 
-	ids.org = await seed(cfg.register, 'organization', { name: `${RUN_ID} municipality` })
+	ids.org = await seed(cfg.register, 'organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
 	ids.module = await seed(cfg.register, 'module', { name: application })
+	// A usage starts in Acquisition (its lifecycle refuses another status on
+	// create) and is then taken into production.
 	ids.usage = await seed(cfg.register, 'usage', {
 		consumer: ids.org,
 		module: ids.module,
-		status: 'In production',
 	})
+	const live = await apiCtx.patch(`/index.php/apps/openregister/api/objects/${cfg.register}/usage/${ids.usage}`, { data: { status: 'In production' } })
+	expect(live.ok(), await live.text()).toBe(true)
 })
 
 test.afterAll(async () => {
@@ -156,7 +163,8 @@ test('the Data model page lists an own entity under Own and opens its page', asy
 	await expect(row).toBeVisible({ timeout: 30000 })
 	await expect(row).toContainText('drawn')
 
-	await row.getByText(melding).first().click()
+	// A row opens through its overlay link, which covers the cells.
+	await row.getByTestId('cn-row-link').first().click()
 	await expect(page).toHaveURL(new RegExp(`/gegevensmodel/${ids.melding}`), { timeout: 30000 })
 	await expect(page.getByText(melding).first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText('Een melding over de openbare ruimte').first()).toBeVisible()
@@ -193,6 +201,11 @@ test('a usage linked to the entity shows it, and the entity lists the usage', as
 	await dialog.getByRole('button', { name: /save/i }).last().click()
 	await expect(dialog).toBeHidden({ timeout: 30000 })
 
+	// The data section shows its first fields; Data entities is further down the list.
+	const showAll = page.getByRole('button', { name: /^Show all/ }).first()
+	if (await showAll.count() > 0) {
+		await showAll.click()
+	}
 	await expect(page.getByText('Data entities').first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText(melding).first()).toBeVisible({ timeout: 30000 })
 
@@ -213,7 +226,7 @@ test('a new data entity with a text key is listed under Own with the key first',
 	await page.getByRole('tab', { name: 'Own', exact: true }).click()
 	const row = page.getByRole('row').filter({ hasText: vergunning })
 	await expect(row).toBeVisible({ timeout: 30000 })
-	await row.getByText(vergunning).first().click()
+	await row.getByTestId('cn-row-link').first().click()
 	await expect(page).toHaveURL(/\/gegevensmodel\/[^/]+$/, { timeout: 30000 })
 
 	const attributes = page.getByTestId('data-entity-attributes')

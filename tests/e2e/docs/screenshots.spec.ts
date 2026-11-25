@@ -34,6 +34,7 @@
  * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/tasks.md
  * @spec openspec/changes/architecture-decision-register/tasks.md
+ * @spec openspec/changes/architecture-data-model-and-ggm/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-sync-status-and-progress/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  */
@@ -560,6 +561,65 @@ test.describe('documentation screenshots', () => {
 		const overlap = page.getByTestId('pr-overlap')
 		await expect(overlap.getByTestId('pr-overlap-row').filter({ hasText: 'Documentregistratiecomponent' })).toBeVisible({ timeout: 30_000 })
 		await shoot(overlap, 'portfolio-report-overlap.png')
+	})
+
+	test('data model: the list, an entity with its relations, and an application in use that holds it', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const elements = String(amef.element_schema || 'element')
+		const post = async (registerId: string, schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${registerId}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const stamp = Date.now()
+		const melding = `${SEED_PREFIX} Melding openbare ruimte`
+		const reported = await post(String(amef.register), elements, {
+			identifier: `id-${stamp}-melding`, type: 'BusinessObject', name: melding, origin: 'drawn', properties: [],
+			documentation: 'Een melding over de openbare ruimte, zoals een losliggende stoeptegel.',
+			attributes: [{ name: 'meldingnummer', dataType: 'text', isKey: true }, { name: 'datum melding', dataType: 'date', isKey: false }],
+		})
+		await post(String(amef.register), elements, {
+			identifier: `id-${stamp}-melder`, type: 'BusinessObject', name: `${SEED_PREFIX} Melder`, origin: 'drawn', properties: [],
+			documentation: 'De persoon die een melding doet.', attributes: [{ name: 'e-mailadres', dataType: 'text', isKey: true }],
+		})
+		await post(String(amef.register), String(amef.relation_schema || 'relation'), {
+			identifier: `id-${stamp}-rel`, type: 'Association', name: 'gedaan door', origin: 'drawn', properties: [],
+			source: `id-${stamp}-melding`, target: `id-${stamp}-melder`, sourceCardinality: '0..*', targetCardinality: '1',
+		})
+		const org = await post(register, 'organization', { name: `Gemeente ${SEED_PREFIX}-Oost ${stamp}`, type: 'Municipality' })
+		const module = await post(register, 'module', { name: `${SEED_PREFIX} Meldingen openbare ruimte` })
+		const usage = await post(register, 'usage', { consumer: org.id, module: module.id, dataEntities: [reported.id] })
+		await request.dispose()
+
+		await page.goto(`${APP}/gegevensmodel`)
+		await settle(page)
+		await page.getByRole('tab', { name: 'Own', exact: true }).click()
+		await expect(page.getByRole('row').filter({ hasText: melding }).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'data-model-list.png')
+
+		await page.goto(`${APP}/gegevensmodel/${reported.id}`)
+		await settle(page)
+		const relations = page.getByTestId('data-entity-relations')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await relations.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(page.getByTestId('data-entity-relations-table')).toContainText('gedaan door', { timeout: 30_000 })
+		await shoot(relations, 'data-entity-relations.png')
+
+		await page.goto(`${APP}/gebruik/${usage.id}`)
+		await settle(page)
+		const showAll = page.getByRole('button', { name: /^Show all/ }).first()
+		if (await showAll.count() > 0) {
+			await showAll.click()
+		}
+		await expect(page.getByText(melding).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.getByRole('group').filter({ hasText: melding }).last(), 'usage-data-entities.png')
 	})
 
 	test('API documentation', async ({ page }) => {
