@@ -107,6 +107,7 @@ export function usageOverlayNodes(componentNode, show, { width, height, t }) {
 	const nodes = shown.map(({ usage, shared }, index) => {
 		const name = applicationName(usage)
 		const partner = String(usage?._sourceOrganization ?? '')
+		const ariaLabel = shared ? t('stackiq', '{name}, shared by {partner}', { name, partner }) : name
 		return {
 			id: parentId + '::usage::' + usageId(usage),
 			type: 'default',
@@ -117,12 +118,16 @@ export function usageOverlayNodes(componentNode, show, { width, height, t }) {
 			style: { width: nodeWidth + 'px', height: (USAGE_ROW_HEIGHT - 4) + 'px' },
 			class: shared ? 'usage-node usage-node--shared' : 'usage-node usage-node--own',
 			data: {
-				label: name,
+				// The canvas node announces `label` to a screen reader (CnFlowNode,
+				// the focusable element), so it carries who shares the application;
+				// `name` is what the node shows.
+				label: ariaLabel,
+				name,
 				usageId: usageId(usage),
 				shared,
 				partner: shared ? partner : null,
 				badge: shared ? t('stackiq', 'Shared') : null,
-				ariaLabel: shared ? t('stackiq', '{name}, shared by {partner}', { name, partner }) : name,
+				ariaLabel,
 			},
 		}
 	})

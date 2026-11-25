@@ -33,6 +33,9 @@ describe('usageOverlayNodes', () => {
 		expect(shared.class).toContain('usage-node--shared')
 		expect(shared.data.badge).toBe('Shared')
 		expect(shared.data.ariaLabel).toBe('Belastingen, shared by Gemeente Noord')
+		// The canvas node announces `label` (CnFlowNode is the focusable element), so it says who shares it; `name` is shown.
+		expect(shared.data.label).toBe('Belastingen, shared by Gemeente Noord')
+		expect(shared.data.name).toBe('Belastingen')
 		expect(shared.data.partner).toBe('Gemeente Noord')
 		expect(own.class).toContain('usage-node--own')
 		expect(own.data.badge).toBeNull()
@@ -57,8 +60,8 @@ describe('usageOverlayNodes', () => {
 	})
 
 	it('follows the switches, and draws nothing without a component id or usages', () => {
-		expect(usageOverlayNodes(component, { own: true, shared: false }, { width: 200, height: 120, t }).map((node) => node.data.label)).toEqual(['Zaaksysteem'])
-		expect(usageOverlayNodes(component, { own: false, shared: true }, { width: 200, height: 120, t }).map((node) => node.data.label)).toEqual(['Belastingen'])
+		expect(usageOverlayNodes(component, { own: true, shared: false }, { width: 200, height: 120, t }).map((node) => node.data.name)).toEqual(['Zaaksysteem'])
+		expect(usageOverlayNodes(component, { own: false, shared: true }, { width: 200, height: 120, t }).map((node) => node.data.name)).toEqual(['Belastingen'])
 		expect(usageOverlayNodes({ ...component, id: '' }, both, { width: 200, height: 120, t })).toEqual([])
 		expect(usageOverlayNodes({ id: 'x' }, both, { width: 200, height: 120, t })).toEqual([])
 	})

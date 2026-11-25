@@ -137,7 +137,7 @@
 						:class="{ 'view-editor__usage-node--shared': node.data.shared, 'view-editor__usage-node--more': node.data.more }"
 						:aria-label="node.data.ariaLabel"
 						:title="node.data.ariaLabel">
-						<span class="view-editor__usage-name">{{ node.data.label }}</span>
+						<span class="view-editor__usage-name">{{ node.data.name || node.data.label }}</span>
 						<span v-if="node.data.badge" class="view-editor__usage-badge">{{ node.data.badge }}</span>
 					</div>
 					<div v-else class="view-editor__node" :class="`view-editor__node--${layerOf(node.data.type)}`">
