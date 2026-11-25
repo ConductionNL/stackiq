@@ -776,9 +776,10 @@ class FacetServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturn(['results' => $baseObjects, 'total' => count($baseObjects), 'page' => 1, 'pages' => 1]);
 		$objectService->method('searchObjects')->willReturnCallback(
-			function (array $query) use ($organisations, &$orgQueries): array {
+			function (array $query, bool $rbac=true, bool $multitenancy=true, ?array $ids=null) use ($organisations, &$orgQueries): array {
 				if (($query['@self']['schema'] ?? null) === 30) {
-					$orgQueries[] = $query;
+					// The id selection travels beside the query (SearchSelection), not in it.
+					$orgQueries[] = $query + ['ids' => $ids];
 					return $organisations;
 				}
 
@@ -822,7 +823,8 @@ class FacetServiceTest extends TestCase {
 			$result['supplier']
 		);
 		$this->assertCount(1, $orgQueries);
-		$this->assertSame(['org-a', 'org-b'], $orgQueries[0]['id']);
+		$this->assertSame(['org-a', 'org-b'], $orgQueries[0]['ids']);
+		$this->assertArrayNotHasKey('id', $orgQueries[0], 'OpenRegister main ignores an id list in the query');
 		$this->assertSame(1000, $orgQueries[0]['_limit']);
 	}//end testSupplierFacetCountsPerOrganisation()
 

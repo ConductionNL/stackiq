@@ -1215,12 +1215,19 @@ class FacetService implements FacetServiceInterface {
 		}
 
 		try {
+			// OpenRegister main takes the id selection as a SearchOptions
+			// argument and ignores an `id` list in the query, which then
+			// matched nothing and left every supplier labelled by its id.
 			$results = $objectService->searchObjects(
-				[
-					'@self' => ['register' => (int)$registerId, 'schema' => (int)$schemaId],
-					'id' => $identifiers,
-					'_limit' => self::ELEMENT_LOOKUP_LIMIT,
-				]
+				...array_merge(
+					[
+						'query' => [
+							'@self' => ['register' => (int)$registerId, 'schema' => (int)$schemaId],
+							'_limit' => self::ELEMENT_LOOKUP_LIMIT,
+						],
+					],
+					SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $identifiers)
+				)
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(message: 'FacetService: failed to read supplier names', context: ['error' => $e->getMessage()]);

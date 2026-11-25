@@ -95,10 +95,12 @@ async function openList(page: Page, route: string): Promise<void> {
  * @return Nothing.
  */
 async function chooseSupplier(page: Page, supplier: string): Promise<void> {
+	// NcSelect splits a long label in two spans around a middle ellipsis, which
+	// puts a space in the option's accessible name; its text content stays whole.
 	const group = page.locator('.cn-facet-sidebar__group').filter({ hasText: 'Supplier' }).first()
 	await expect(group).toBeVisible({ timeout: 30000 })
 	await group.getByLabel('Supplier', { exact: true }).click()
-	await page.getByRole('option', { name: new RegExp(escapeRegExp(supplier)) }).first().click()
+	await page.getByRole('option').filter({ hasText: supplier }).first().click()
 	await page.keyboard.press('Escape')
 }
 
@@ -138,8 +140,8 @@ test('choosing a supplier on Applications leaves only its applications and puts 
 	// The facet lists each supplier by name with its count, not by id.
 	const group = page.locator('.cn-facet-sidebar__group').filter({ hasText: 'Supplier' }).first()
 	await group.getByLabel('Supplier', { exact: true }).click()
-	await expect(page.getByRole('option', { name: new RegExp(escapeRegExp(supplierA)) }).first()).toContainText('2')
-	await expect(page.getByRole('option', { name: new RegExp(escapeRegExp(supplierB)) }).first()).toContainText('1')
+	await expect(page.getByRole('option').filter({ hasText: supplierA }).first()).toContainText('2')
+	await expect(page.getByRole('option').filter({ hasText: supplierB }).first()).toContainText('1')
 	await expect(page.getByRole('option', { name: new RegExp(ids.supplierA) })).toHaveCount(0)
 	await page.keyboard.press('Escape')
 
