@@ -46,6 +46,10 @@ On a saved view, the **Export** menu in the header has three actions:
 
 Without filinq on the instance, the two document actions are disabled and the menu says "Word and PowerPoint need the document app filinq". Download SVG still works.
 
+![The Export menu of a drawn view on an instance without filinq](../images/view-export-menu.png)
+
+![The downloaded SVG of that view](../images/view-export-svg.png)
+
 ## Views drafted by an assistant
 
 An assistant in Hermiq can draft a view for you from a description, such as "draw how our case system talks to document management". It uses two stackiq tools:

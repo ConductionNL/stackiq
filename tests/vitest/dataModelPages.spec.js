@@ -63,6 +63,13 @@ describe('the Data model pages', () => {
 		expect(config.includeFields).toEqual(['name', 'documentation', 'attributes'])
 	})
 
+	it('creates through the handler that fills the identifier and properties the element schema requires', () => {
+		expect(page('Gegevensmodel').config.createOverride).toBe('createDrawnDataEntity')
+		const registered = fs.readFileSync(path.resolve(__dirname, '../../src/customComponents.js'), 'utf8')
+		expect(registered).toMatch(/^\tcreateDrawnDataEntity,$/m)
+		expect(registered).toContain("import { createDrawnDataEntity } from './utils/drawnDataEntity.js'")
+	})
+
 	it('puts Data model under the Architecture group without growing the top level', () => {
 		const group = merged.menu.find((entry) => entry.id === 'Architecture')
 		expect(group.children.map((child) => child.id)).toContain('Gegevensmodel')

@@ -6159,20 +6159,20 @@
 			"name": "Put architecture views into Word or PowerPoint documents straight from the tool.",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "appinfo/routes.php:97-98 the only view exports are ArchiMate exchange files (POST /api/archimate/export, GET /api/archimate/export/organization/{organizationUuid}); no image, docx or pptx export of a view anywhere in lib/ or src/ (the docx/pptx strings in src/modals/object/MergeObject.vue are file-type labels)",
+				"state": "built",
+				"evidence": "The Export menu on an architecture view (src/components/architecture/ViewExportMenu.vue): Download SVG from the stored positions (lib/Service/ViewImageService.php, image route with RBAC), Create Word document and Create PowerPoint slide through filinq (disabled with the reason when filinq is absent). Live 25 Nov 2026 on NC 34 + PostgreSQL + OpenRegister main: tests/e2e/workflows/architecture-view-export.spec.ts 2/2; docs screenshots view-export-menu.png, view-export-svg.png. The Word and PowerPoint documents need filinq, not run in the sandbox.",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-views-to-office-documents",
-				"requirement": "openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export :: REQ-AVO-002 Stackiq SHALL ask filinq for a Word document or a PowerPoint slide that holds the view"
+				"change": "2026-11-25-architecture-views-to-office-documents",
+				"requirement": "openspec/specs/architecture-view-office-export :: REQ-AVO-002 Stackiq SHALL ask filinq for a Word document or a PowerPoint slide that holds the view"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "high",
-			"note": "Helmond REQ19 asks for architecture views embedded in office documents. stackiq renders no view at all (see arch-gemma-views) and exports only ArchiMate files. Specified in openspec/changes/architecture-views-to-office-documents (OpenSpec pass 2026-09-27).",
+			"note": "Helmond REQ19 asks for architecture views embedded in office documents. stackiq renders no view at all (see arch-gemma-views) and exports only ArchiMate files. Specified in openspec/changes/archive/2026-11-25-architecture-views-to-office-documents (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Hoe%20print%20ik%20een%20kaart%3F: \"Download de kaart met de knop [download SVG] ... De kaart volledig schaalbaar\" (read 2026-09-26). A map is downloaded as SVG for printing; placing it in Word or PowerPoint is a manual step. Reached on: Mijn softwarecatalogus > Pakketten > Toon kaart > download SVG.",

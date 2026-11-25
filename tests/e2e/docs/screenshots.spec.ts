@@ -40,6 +40,8 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-reference-component-coverage/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-future-state-scenarios/tasks.md
  * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md
+ * @spec openspec/changes/architecture-data-model-and-ggm/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  */
 
@@ -727,6 +729,113 @@ test.describe('documentation screenshots', () => {
 		await expect(banner).toBeVisible({ timeout: 30_000 })
 		await expect(banner.getByRole('link')).toContainText('Zaaksysteem (origineel)', { timeout: 30_000 })
 		await shoot(page.locator('#app-content, main').first(), 'record-reconciliation-merged-banner.png')
+	})
+
+	test('data model: the list, an entity with its relations, and an application in use that holds it', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const elements = String(amef.element_schema || 'element')
+		const post = async (registerId: string, schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${registerId}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const stamp = Date.now()
+		const melding = `${SEED_PREFIX} Melding openbare ruimte`
+		const reported = await post(String(amef.register), elements, {
+			identifier: `id-${stamp}-melding`, type: 'BusinessObject', name: melding, origin: 'drawn', properties: [],
+			documentation: 'Een melding over de openbare ruimte, zoals een losliggende stoeptegel.',
+			attributes: [{ name: 'meldingnummer', dataType: 'text', isKey: true }, { name: 'datum melding', dataType: 'date', isKey: false }],
+		})
+		await post(String(amef.register), elements, {
+			identifier: `id-${stamp}-melder`, type: 'BusinessObject', name: `${SEED_PREFIX} Melder`, origin: 'drawn', properties: [],
+			documentation: 'De persoon die een melding doet.', attributes: [{ name: 'e-mailadres', dataType: 'text', isKey: true }],
+		})
+		await post(String(amef.register), String(amef.relation_schema || 'relation'), {
+			identifier: `id-${stamp}-rel`, type: 'Association', name: 'gedaan door', origin: 'drawn', properties: [],
+			source: `id-${stamp}-melding`, target: `id-${stamp}-melder`, sourceCardinality: '0..*', targetCardinality: '1',
+		})
+		const org = await post(register, 'organization', { name: `Gemeente ${SEED_PREFIX}-Oost ${stamp}`, type: 'Municipality' })
+		const module = await post(register, 'module', { name: `${SEED_PREFIX} Meldingen openbare ruimte` })
+		const usage = await post(register, 'usage', { consumer: org.id, module: module.id, dataEntities: [reported.id] })
+		await request.dispose()
+
+		await page.goto(`${APP}/gegevensmodel`)
+		await settle(page)
+		await page.getByRole('tab', { name: 'Own', exact: true }).click()
+		await expect(page.getByRole('row').filter({ hasText: melding }).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'data-model-list.png')
+
+		await page.goto(`${APP}/gegevensmodel/${reported.id}`)
+		await settle(page)
+		const relations = page.getByTestId('data-entity-relations')
+		await page.mouse.move(800, 450)
+		await expect.poll(async () => {
+			if (await relations.count() > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 800)
+			return 0
+		}, { timeout: 30_000 }).toBe(1)
+		await expect(page.getByTestId('data-entity-relations-table')).toContainText('gedaan door', { timeout: 30_000 })
+		await shoot(relations, 'data-entity-relations.png')
+
+		await page.goto(`${APP}/gebruik/${usage.id}`)
+		await settle(page)
+		const showAll = page.getByRole('button', { name: /^Show all/ }).first()
+		if (await showAll.count() > 0) {
+			await showAll.click()
+		}
+		await expect(page.getByText(melding).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.getByRole('group').filter({ hasText: melding }).last(), 'usage-data-entities.png')
+	})
+
+	test('architecture view export: the Export menu and the downloaded SVG', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const amef = (await (await request.get(`${APP}/api/amef/config`)).json()).config
+		const post = async (schema: string, data: Record<string, unknown>): Promise<Obj> => {
+			const res = await request.post(`${OBJECTS}/${String(amef.register)}/${schema}`, { data })
+			expect(res.status(), await res.text()).toBeLessThan(300)
+			return (await res.json()) as Obj
+		}
+		const stamp = Date.now()
+		const element = (name: string, type: string, suffix: string): Promise<Obj> => post(String(amef.element_schema || 'element'), {
+			identifier: `id-${stamp}-${suffix}`, type, name, origin: 'drawn', properties: [],
+		})
+		await element(`${SEED_PREFIX} Zaaksysteem`, 'ApplicationComponent', 'zs')
+		await element(`${SEED_PREFIX} Klantportaal`, 'ApplicationComponent', 'kp')
+		// A view node carries the name and type it is drawn with, as the GEMMA import writes them.
+		const node = (id: string, ref: string, name: string, x: number): Record<string, unknown> => ({
+			viewNodeId: id, elementRef: ref, name, type: 'ApplicationComponent', x, y: 40, width: 220, height: 90,
+		})
+		const view = await post(String(amef.view_schema || 'view'), {
+			identifier: `id-${stamp}-view`, type: 'Diagram', name: `${SEED_PREFIX} Zaakgericht werken`, origin: 'drawn', properties: [],
+			documentation: 'The case system and the portal residents use to follow their cases.',
+			nodes: [node('n-kp', `id-${stamp}-kp`, `${SEED_PREFIX} Klantportaal`, 40), node('n-zs', `id-${stamp}-zs`, `${SEED_PREFIX} Zaaksysteem`, 360)],
+			connections: [],
+		})
+		await request.dispose()
+
+		await page.goto(`${APP}/views/${view.id}`)
+		await settle(page)
+		await page.getByRole('button', { name: 'Export' }).first().click()
+		const menu = page.locator('[role="menu"]:visible').last()
+		await expect(menu.getByRole('menuitem', { name: /Download SVG/ })).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'view-export-menu.png')
+
+		const [download] = await Promise.all([
+			page.waitForEvent('download'),
+			menu.getByRole('menuitem', { name: /Download SVG/ }).click(),
+		])
+		// Saved under its own name, so the browser opens it as an image.
+		const svg = path.join(test.info().outputDir, download.suggestedFilename())
+		expect(svg.endsWith('.svg')).toBe(true)
+		await download.saveAs(svg)
+		const viewer = await page.context().newPage()
+		await viewer.setViewportSize({ width: 640, height: 220 })
+		await viewer.goto(`file://${svg}`)
+		await viewer.screenshot({ path: path.join(IMAGES, 'view-export-svg.png') })
+		await viewer.close()
 	})
 
 	test('a view drafted by an assistant', async ({ page, baseURL }) => {

@@ -13,7 +13,7 @@
  * they are disabled with the reason, so the absence is visible.
  *
  * @module Services/viewExport
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 
 import axios from '@nextcloud/axios'
@@ -29,7 +29,7 @@ export const DOCUMENT_FORMATS = { word: 'docx', powerpoint: 'pptx' }
  *
  * @param {function(string, string, boolean): boolean} [load] Reads an initial state; `loadState` by default.
  * @return {boolean} True when the document actions may be offered.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 export function documentExportAvailable(load = loadState) {
 	try {
@@ -44,7 +44,7 @@ export function documentExportAvailable(load = loadState) {
  *
  * @param {boolean} documentExport Whether filinq's document contract resolves.
  * @return {Array<{id: string, label: string, disabled: boolean, reason: string}>} The actions, in menu order.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 export function viewExportActions(documentExport) {
 	const reason = documentExport === true ? '' : t('stackiq', 'Word and PowerPoint need the document app filinq')
@@ -62,7 +62,7 @@ export function viewExportActions(documentExport) {
  *
  * @param {string} viewId The view.
  * @return {string} The image route.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-003-the-document-actions-shall-say-why-they-are-unavailable-when-filinq-cannot-take-the-request
  */
 export function viewImageUrl(viewId) {
 	return generateUrl('/apps/stackiq/api/views/{viewId}/image.svg', { viewId })
@@ -76,7 +76,7 @@ export function viewImageUrl(viewId) {
  * @param {string} viewId The view.
  * @param {string} action `word` or `powerpoint`.
  * @return {Promise<{ok: true, name: string, path: string, fileId: (number|string)}|{ok: false, error: string, unavailable: boolean}>} The outcome.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 export async function createViewDocument(viewId, action) {
 	const format = DOCUMENT_FORMATS[action]
@@ -106,7 +106,7 @@ export async function createViewDocument(viewId, action) {
  *
  * @param {string} name The file name.
  * @return {string} The text naming the file.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 export function documentSavedMessage(name) {
 	return t('stackiq', '{name} was saved in Files', { name })
@@ -117,7 +117,7 @@ export function documentSavedMessage(name) {
  *
  * @param {number|string} fileId The file id.
  * @return {string} The Files URL.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 export function filesLink(fileId) {
 	return generateUrl('/f/{fileId}', { fileId: String(fileId) })
@@ -127,7 +127,7 @@ export function filesLink(fileId) {
  * The label of the toast's action that opens the filed document.
  *
  * @return {string} The label.
- * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
+ * @spec openspec/specs/architecture-view-office-export/spec.md#requirement-req-avo-002-stackiq-shall-ask-filinq-for-a-word-document-or-a-powerpoint-slide-that-holds-the-view
  */
 export function openInFilesLabel() {
 	return t('stackiq', 'Open in Files')
