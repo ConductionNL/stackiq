@@ -99,7 +99,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	public function readOrganisationUsages(string $organisationUuid): array {
 		return $this->organisationUsages(organisationUuid: $organisationUuid, source: $this->usageSource());
@@ -114,7 +114,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	public function readModules(array $moduleIds): array {
 		$ids = array_values(array_unique(array_filter(array_map('strval', $moduleIds), static fn (string $id): bool => $id !== '')));
@@ -127,7 +127,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 *
 	 * @return array<int, array<string, mixed>> The reference components.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	public function readReferenceComponents(): array {
 		return $this->components();

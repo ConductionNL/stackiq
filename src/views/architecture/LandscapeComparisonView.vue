@@ -13,7 +13,7 @@
   -
   - @visual exclude A screenshot baseline needs a live instance with dated usages; tests/e2e/workflows/future-state-scenarios.spec.ts drives the page and is not run yet.
   -
-  - @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+  - @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 -->
 <template>
 	<div class="landscape-comparison" data-testid="landscape-comparison">
@@ -45,7 +45,7 @@
 				class="landscape-comparison__date"
 				type="date"
 				:label="t('stackiq', 'Date')"
-				@update:modelValue="loadComparison" />
+				@update:modelValue="onDate" />
 		</div>
 
 		<div v-if="canApply" class="landscape-comparison__apply">
@@ -140,7 +140,7 @@ import {
 	landscapeNames,
 	organisationPickerOptions,
 } from '../../utils/landscapeComparison.js'
-import { ensureObjectTypeOrSlug, loadObjectTypeCollection } from '../../utils/objectTypes.js'
+import { ensureObjectTypeOrSlug, ensureSettingsLoaded, loadObjectTypeCollection } from '../../utils/objectTypes.js'
 
 /** The types the comparison reads and an apply writes. */
 const SCENARIO_TYPES = ['scenario', 'scenarioChange', 'usage']
@@ -151,7 +151,7 @@ const SCENARIO_TYPES = ['scenario', 'scenarioChange', 'usage']
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
  */
 export default {
 	name: 'LandscapeComparisonView',
@@ -184,6 +184,8 @@ export default {
 	data() {
 		return {
 			report: null,
+			/** Numbers the comparison requests, so only the latest answer is shown. */
+			requestSeq: 0,
 			date: '',
 			selectedOrg: null,
 			loading: false,
@@ -199,7 +201,7 @@ export default {
 		 * The scenario compared, when on a scenario page.
 		 *
 		 * @return {string} The scenario uuid, or empty.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
 		 */
 		scenarioId() {
 			return this.objectId || ''
@@ -209,7 +211,7 @@ export default {
 		 * Organisation options for the picker.
 		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		organisationOptions() {
 			return organisationPickerOptions(objectStore.getCollection('organization')?.results)
@@ -219,7 +221,7 @@ export default {
 		 * Whether Apply to landscape is offered.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
 		 */
 		canApply() {
 			return Boolean(this.scenarioId) && canApply(this.scenario)
@@ -227,7 +229,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} Application difference rows.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		applications() {
 			return applicationRows(this.report)
@@ -235,7 +237,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} Coverage difference rows.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		coverage() {
 			return coverageRows(this.report)
@@ -245,7 +247,7 @@ export default {
 		 * The two landscapes side by side: today and the date.
 		 *
 		 * @return {Array<{side: string, title: string, names: Array<string>}>} The columns.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		columns() {
 			return [
@@ -256,7 +258,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} Columns of the application table.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		applicationColumns() {
 			return [
@@ -269,7 +271,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} Columns of the coverage table.
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		coverageColumns() {
 			return [
@@ -289,7 +291,7 @@ export default {
 			 *
 			 * @param {Array<object>} options The organisation options.
 			 * @return {void}
-			 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+			 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 			 */
 			handler(options) {
 				if (this.scenarioId || this.selectedOrg) {
@@ -310,10 +312,13 @@ export default {
 	 * Load the scenario on a scenario page, else the organisations to pick from.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 	 */
 	async mounted() {
 		if (this.scenarioId) {
+			// Opened from a link, the store has no settings yet; without them
+			// the scenario types do not register and the section failed.
+			await ensureSettingsLoaded()
 			SCENARIO_TYPES.forEach(ensureObjectTypeOrSlug)
 			await this.loadScenario()
 			return
@@ -329,7 +334,7 @@ export default {
 		 * Read the scenario and compare it.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
 		 */
 		async loadScenario() {
 			this.scenario = await objectStore.fetchObject('scenario', this.scenarioId)
@@ -337,17 +342,37 @@ export default {
 		},
 
 		/**
+		 * The date field changed: take its value, then compare again.
+		 *
+		 * @param {string} value The date as Y-m-d, or empty.
+		 * @return {void}
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 */
+		onDate(value) {
+			this.date = value || ''
+			this.loadComparison()
+		},
+
+		/**
 		 * Load the comparison for the chosen organisation and date, or the scenario.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
 		 */
 		async loadComparison() {
 			const organisation = this.scenarioId
 				? relationId(this.scenario?.organisation)
 				: this.selectedOrg?.uuid
-			if (!organisation) {
+			// The plan comparison needs a date (the endpoint refuses one
+			// without); until there is one the page asks for it. An answer to
+			// an older request is dropped: the request sent on load without a
+			// date could arrive after the dated one and replace its result
+			// with an error.
+			const request = ++this.requestSeq
+			if (!organisation || (!this.scenarioId && !this.date)) {
 				this.report = null
+				this.error = null
+				this.loading = false
 				return
 			}
 			this.loading = true
@@ -360,14 +385,22 @@ export default {
 						scenario: this.scenarioId || null,
 					}),
 				})
+				if (request !== this.requestSeq) {
+					return
+				}
 				this.report = response.data
 			} catch (error) {
+				if (request !== this.requestSeq) {
+					return
+				}
 				this.report = null
 				this.error = error?.response?.data?.message
 					|| error?.response?.data?.error
 					|| t('stackiq', 'The comparison could not be loaded.')
 			} finally {
-				this.loading = false
+				if (request === this.requestSeq) {
+					this.loading = false
+				}
 			}
 		},
 
@@ -375,7 +408,7 @@ export default {
 		 * Apply the adopted scenario to the landscape, then compare again.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
+		 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-004-a-scenario-shall-move-through-a-declared-lifecycle-and-an-adopted-scenario-shall-be-applied-to-the-landscape
 		 */
 		async apply() {
 			this.applying = true

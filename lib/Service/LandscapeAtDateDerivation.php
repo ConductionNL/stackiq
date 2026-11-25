@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ use DateTimeImmutable;
 /**
  * Derives the landscape on a date, with or without a scenario.
  *
- * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
+ * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
  */
 class LandscapeAtDateDerivation {
 
@@ -54,7 +54,7 @@ class LandscapeAtDateDerivation {
 	 *
 	 * @param PortfolioReportDerivation $phases Derives a usage's phase on a date and reads relation ids.
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
 	 */
 	public function __construct(
 		private readonly PortfolioReportDerivation $phases,
@@ -76,7 +76,7 @@ class LandscapeAtDateDerivation {
 	 *
 	 * @return array{entries: array<int,array<string,mixed>>, removed: array<int,array<string,mixed>>, notDated: int}
 	 *
-	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
+	 * @spec openspec/specs/future-state-scenarios/spec.md#requirement-req-fss-001-stackiq-shall-derive-an-organisations-landscape-on-any-date-from-its-usage-dates
 	 */
 	public function derive(array $usages, DateTimeImmutable $date, array $changes=[]): array {
 		$entries  = [];

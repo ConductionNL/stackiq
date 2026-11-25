@@ -32,6 +32,8 @@ The page shows:
 
 Every state is written out in words, so the page does not rely on colour.
 
+![The plan comparison on 30 June 2027: today, the date, and the planned replacement](../images/scenario-plan-comparison.png)
+
 ## Write a scenario
 
 Under **Architecture**, **Scenarios** lists the scenarios, with quick filters for draft,
@@ -56,6 +58,8 @@ The scenario page compares today with the scenario landscape on the target date.
 plan on that date with the scenario's changes applied in order of effective date. When a
 scenario change and the plan touch the same application in use, the scenario wins, and the
 difference names both sources.
+
+![A scenario page: its changes and the landscape with the scenario applied](../images/scenario-page.png)
 
 ## The lifecycle of a scenario
 
@@ -88,6 +92,8 @@ applied only once every change is in. After that, the button is gone.
 
 The Portfolio roadmap and the plan comparison read the same fields, so they show the applied
 changes straight away.
+
+![After Apply to landscape: the changes are written and now come from the plan](../images/scenario-applied.png)
 
 ## The API
 
