@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Stackiq\Service\OrganizationSyncService
  *
- * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
  */
 class OrganizationSyncActiveStatusTest extends TestCase {
 

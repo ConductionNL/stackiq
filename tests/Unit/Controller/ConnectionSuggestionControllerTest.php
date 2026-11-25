@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-3-endpoints-with-a-per-object-guard
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-3-endpoints-with-a-per-object-guard
  */
 
 declare(strict_types=1);

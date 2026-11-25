@@ -485,7 +485,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 *
 	 * @return IQueryFunction The condition.
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
 	 */
 	private function activeStatusCondition(IQueryBuilder $qb): IQueryFunction {
 		$statuses = $qb->createNamedParameter(self::ACTIVE_STATUSES, IQueryBuilder::PARAM_STR_ARRAY);
@@ -4462,7 +4462,7 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
+	 * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
 	 */
 	private function saveOwnedOrganisationObject(object $organisationObject): void {
 		$this->objectService->saveObject(

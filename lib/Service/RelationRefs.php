@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,7 +24,7 @@ namespace OCA\Stackiq\Service;
 /**
  * Reads a relation stored as a uuid string or as an object with `id`, `uuid` or `@self.id`.
  *
- * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+ * @spec openspec/specs/derived-connections/spec.md
  */
 final class RelationRefs {
 	/**
@@ -34,7 +34,7 @@ final class RelationRefs {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+	 * @spec openspec/specs/derived-connections/spec.md
 	 */
 	public static function ref(mixed $value): ?string {
 		if (is_array($value) === true) {
@@ -55,7 +55,7 @@ final class RelationRefs {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
+	 * @spec openspec/specs/derived-connections/spec.md
 	 */
 	public static function refs(mixed $values): array {
 		if (is_array($values) === false) {

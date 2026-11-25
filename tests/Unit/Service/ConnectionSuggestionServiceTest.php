@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-1-suggestion-service
+ * @spec openspec/changes/archive/2026-11-25-connections-derived-dependencies/tasks.md#task-1-suggestion-service
  */
 
 declare(strict_types=1);
@@ -116,7 +116,7 @@ class ConnectionSuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+	 * @spec openspec/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
 	 */
 	public function testACarriedOverConnectionKeepsThatReasonWhenItIsAlsoInTheLandscape(): void {
 		$this->store->put('u-x1', 10, ['consumer' => 'org-a', 'module' => 'mod-x', 'moduleVersion' => 'x-1', 'koppelingen' => ['c-xn', 'c-xy']]);

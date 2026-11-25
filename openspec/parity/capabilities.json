@@ -6693,15 +6693,15 @@
 			"name": "Carry an application's connections over automatically when a new version replaces the old one.",
 			"origin": "featureRequest",
 			"originUrl": "https://www.softwarecatalogus.nl/gebruikersonderzoek%202021",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "moduleVersion (lib/Settings/softwarecatalogus_register.json) is created on the Moduleversies index form; no copy of a version with its connections and no carry-over logic in lib/Service/ModuleVersionService.php",
+				"state": "built",
+				"evidence": "lib/Service/ConnectionSuggestionService.php (shared-landscape and carry-over suggestions, successor drafts), lib/Controller/ConnectionSuggestionController.php (consumer-or-participant guard), src/components/connections/ConnectionSuggestionsPanel.vue on the usage page; tests/Unit/Service/ConnectionSuggestionServiceTest.php, tests/Unit/Controller/ConnectionSuggestionControllerTest.php, Newman folder Connection suggestions. Live 25 Nov 2026: tests/e2e/workflows/connection-suggestions.spec.ts 2/2 on NC 34 + PostgreSQL + OpenRegister main.",
 				"owner": "ConductionNL/stackiq",
-				"change": "connections-derived-dependencies",
-				"requirement": "openspec/changes/connections-derived-dependencies/specs/derived-connections :: REQ-DCN-002 A replacing usage is offered the connections of the usage it replaces"
+				"change": "2026-11-25-connections-derived-dependencies",
+				"requirement": "openspec/specs/derived-connections :: REQ-DCN-002 A replacing usage is offered the connections of the usage it replaces"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Usage detail > Suggested connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
@@ -6714,7 +6714,7 @@
 				"glpi": "source read at 11.0.9: installations can be moved to another version by the massive action src/Item_SoftwareVersion.php:179 move_version, but impact relations (install/mysql/glpi-empty.sql:1247 glpi_impactrelations) point at the item and are never copied to a replacing version or appliance; grep -n 'Impact' src/SoftwareVersion.php returns nothing.",
 				"topdesk": "unknown: versions of applications are not modelled; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -6997,15 +6997,15 @@
 			"name": "Fill in an application's dependencies automatically from what is already known about connected items, instead of drawing each link by hand.",
 			"origin": "featureRequest",
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/336",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "connections are registered one at a time or arrive through the ArchiMate import (lib/Service/ArchiMateImportService.php); nothing derives dependencies from known relations",
+				"state": "built",
+				"evidence": "lib/Service/ConnectionSuggestionService.php (shared-landscape and carry-over suggestions, successor drafts), lib/Controller/ConnectionSuggestionController.php (consumer-or-participant guard), src/components/connections/ConnectionSuggestionsPanel.vue on the usage page; tests/Unit/Service/ConnectionSuggestionServiceTest.php, tests/Unit/Controller/ConnectionSuggestionControllerTest.php, Newman folder Connection suggestions. Live 25 Nov 2026: tests/e2e/workflows/connection-suggestions.spec.ts 2/2 on NC 34 + PostgreSQL + OpenRegister main.",
 				"owner": "ConductionNL/stackiq",
-				"change": "connections-derived-dependencies",
-				"requirement": "openspec/changes/connections-derived-dependencies/specs/derived-connections :: REQ-DCN-001 Stackiq suggests the known connections of an application inside the organisation's landscape"
+				"change": "2026-11-25-connections-derived-dependencies",
+				"requirement": "openspec/specs/derived-connections :: REQ-DCN-001 Stackiq suggests the known connections of an application inside the organisation's landscape"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Usage detail > Suggested connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
@@ -7018,7 +7018,7 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967645-use-datasource-to-create-relationships: 'how to automatically create relationships between objects based on a loaded datasource', for example application component to node (read 2026-09-26). Reached on: Admin > Sources > relationship creation.",
 				"topdesk": "unknown: relations are created by hand in the Relationships widget; automatic filling is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",
