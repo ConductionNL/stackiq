@@ -98,8 +98,8 @@ class SearchSelectionTest extends TestCase {
 
 		$arguments = SearchSelection::arguments(takesOptions: true, selection: ['ids' => ['a']], pairs: $pairs);
 
-		$this->assertInstanceOf(SearchOptions::class, $arguments['options']);
-		$this->assertSame(['a'], $arguments['options']->selection->ids);
+		$this->assertInstanceOf(expected: SearchOptions::class, actual: $arguments['options']);
+		$this->assertSame(expected: ['a'], actual: $arguments['options']->selection->ids);
 	}//end testTheFirstInstalledClassPairIsUsed()
 
 	/**
@@ -110,7 +110,7 @@ class SearchSelectionTest extends TestCase {
 	public function testWithNoInstalledPairTheSelectionIsUnchanged(): void {
 		$pairs = [['No\\Such\\SearchOptions', 'No\\Such\\ObjectSelection']];
 
-		$this->assertSame(['ids' => ['a']], SearchSelection::arguments(takesOptions: true, selection: ['ids' => ['a']], pairs: $pairs));
+		$this->assertSame(expected: ['ids' => ['a']], actual: SearchSelection::arguments(takesOptions: true, selection: ['ids' => ['a']], pairs: $pairs));
 	}//end testWithNoInstalledPairTheSelectionIsUnchanged()
 
 	/**
@@ -119,8 +119,8 @@ class SearchSelectionTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheContractNamespaceIsPreferred(): void {
-		$this->assertSame('OCA\\OpenRegister\\Contract\\SearchOptions', SearchSelection::CLASS_PAIRS[0][0]);
-		$this->assertSame('OCA\\OpenRegister\\Kernel\\Contracts\\SearchOptions', SearchSelection::CLASS_PAIRS[1][0]);
+		$this->assertSame(expected: 'OCA\\OpenRegister\\Contract\\SearchOptions', actual: SearchSelection::CLASS_PAIRS[0][0]);
+		$this->assertSame(expected: 'OCA\\OpenRegister\\Kernel\\Contracts\\SearchOptions', actual: SearchSelection::CLASS_PAIRS[1][0]);
 	}//end testTheContractNamespaceIsPreferred()
 }//end class
 
