@@ -116,7 +116,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 *
 	 * @return array<string, array{field: string, arrayField: string|null, schema?: string}>
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 */
 	private static function fieldRelationTypes(): array {
 		return CatalogueReferenceMap::organisationRelationTypes();

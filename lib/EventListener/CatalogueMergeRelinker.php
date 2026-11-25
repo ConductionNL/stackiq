@@ -45,7 +45,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-3-re-point-references-after-openregister-merges-applications-or-services
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-3-re-point-references-after-openregister-merges-applications-or-services
  */
 class CatalogueMergeRelinker implements IEventListener {
 
@@ -70,7 +70,7 @@ class CatalogueMergeRelinker implements IEventListener {
 	 * @param RegisterConfigReaderInterface $settings The register and schema ids, and OpenRegister's object service.
 	 * @param LoggerInterface               $logger   The audit log and the errors.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/tasks.md#task-3-re-point-references-after-openregister-merges-applications-or-services
+	 * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation/tasks.md#task-3-re-point-references-after-openregister-merges-applications-or-services
 	 */
 	public function __construct(
 		private readonly RegisterConfigReaderInterface $settings,
@@ -86,7 +86,7 @@ class CatalogueMergeRelinker implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectsMergedEvent === false || $event->isReversal() === true) {
@@ -194,7 +194,7 @@ class CatalogueMergeRelinker implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function relinkPage(array $run, array $page): void {
 		$objects   = $run['objects'];
@@ -237,7 +237,7 @@ class CatalogueMergeRelinker implements IEventListener {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public static function repointed(array $data, array $reference, array $merge): ?array {
 		$value = ($data[$reference['field']] ?? null);

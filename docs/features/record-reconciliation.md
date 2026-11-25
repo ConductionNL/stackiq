@@ -10,7 +10,7 @@ after an import or when two people register it. Duplicates are found and
 merged in OpenRegister; stackiq makes sure the rest of the catalogue follows
 the merge.
 
-Specification: [`openspec/changes/operations-record-reconciliation`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-operations-record-reconciliation`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/record-reconciliation/spec.md).
 
 ## Who can do this
 
@@ -23,10 +23,15 @@ Nextcloud admins and functional administrators (members of the
 2. Choose **Find duplicates** in the toolbar (on the organisations page, in
    the page header). OpenRegister's **Duplicate
    candidates** page opens.
+
+   ![Find duplicates in the Applications toolbar](../images/record-reconciliation-find-duplicates.png)
 3. Pick the register and schema. The page lists the pairs that look alike.
    Applications and services are compared on their name (normalised and by
    spelling distance), their supplier and their website; a pair that scores
-   0.7 or more is a candidate.
+   0.7 or more is a candidate. The page names each record of a pair by its
+   id; **Matched on** says which fields matched.
+
+   ![The demo pair on OpenRegister's Duplicate candidates page](../images/record-reconciliation-candidates.png)
 4. Open a pair to start OpenRegister's merge wizard, check the preview, and
    merge. Or dismiss a pair that is not a duplicate.
 
@@ -49,6 +54,8 @@ When OpenRegister merges two applications or two services, stackiq:
 A merged record leaves the **Applications** and **Services** lists and their
 filter counts. Its page stays reachable, so an old link still works, and
 shows a banner with a link to the record it was merged into.
+
+![The page of a merged application, with Merged into and a link to the original](../images/record-reconciliation-merged-banner.png)
 
 ## Reversing a merge
 

@@ -8,19 +8,22 @@
   - that is not merged. A body widget, because no built-in widget shows a
   - relation only when a status field has one value.
   -
-  - @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+  - @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
   -->
 <template>
-	<NcNoteCard
-		v-if="survivorId"
-		type="warning"
-		class="merged-record-banner"
-		data-testid="merged-record-banner">
-		{{ t('stackiq', 'This entry was merged into another one.') }}
-		<router-link :to="{ name: detailRoute, params: { id: survivorId } }">
-			{{ t('stackiq', 'Merged into {name}', { name: survivorName || survivorId }) }}
-		</router-link>
-	</NcNoteCard>
+	<!-- The test hook sits one level in: NcNoteCard does not pass attributes to
+	     its root, and the detail page's body section sets its own data-testid
+	     on this component's root, so the e2e spec found neither. -->
+	<div v-if="survivorId" class="merged-record-banner">
+		<div data-testid="merged-record-banner">
+			<NcNoteCard type="warning">
+				{{ t('stackiq', 'This entry was merged into another one.') }}
+				<router-link :to="{ name: detailRoute, params: { id: survivorId } }">
+					{{ t('stackiq', 'Merged into {name}', { name: survivorName || survivorId }) }}
+				</router-link>
+			</NcNoteCard>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -71,7 +74,7 @@ export default {
 			 * Load the record whenever the page shows another one.
 			 *
 			 * @return {void}
-			 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+			 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
 			 */
 			handler() {
 				this.load()
@@ -90,7 +93,7 @@ export default {
 		 * a reason for the page to fail.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
 		 */
 		async load() {
 			this.survivorId = null

@@ -8,7 +8,7 @@
  * when `/api/me` says the reader may find duplicates (a Nextcloud admin or a
  * functional administrator). The candidates page checks access itself.
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
  */
 
 import { evaluateVisibleWhen } from '@conduction/nextcloud-vue/src/utils/visibleWhen.js'

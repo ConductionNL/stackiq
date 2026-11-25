@@ -5,11 +5,11 @@
  * Merged records: the survivor of a merged record, and the address of
  * OpenRegister's Duplicate candidates page.
  *
- * @spec openspec/changes/operations-record-reconciliation
+ * @spec openspec/changes/archive/2026-11-25-operations-record-reconciliation
  */
 
 import { describe, expect, it } from 'vitest'
-import { duplicateCandidatesUrl, MERGED_STATUS, survivorOf } from '../../src/utils/mergedRecord.js'
+import { duplicateCandidatesUrl, MERGED_STATUS, survivorOf, withoutMerged } from '../../src/utils/mergedRecord.js'
 
 describe('survivorOf', () => {
 	it('is the mergedInto uuid of a Merged record', () => {
@@ -37,5 +37,16 @@ describe('survivorOf', () => {
 describe('duplicateCandidatesUrl', () => {
 	it("is OpenRegister's duplicates page", () => {
 		expect(duplicateCandidatesUrl((path) => '/index.php' + path)).toBe('/index.php/apps/openregister/duplicates')
+	})
+})
+
+describe('withoutMerged', () => {
+	it('adds recordStatus[ne]=Merged to an empty filter', () => {
+		expect(withoutMerged({})).toEqual({ 'recordStatus[ne]': 'Merged' })
+		expect(withoutMerged(null)).toEqual({ 'recordStatus[ne]': 'Merged' })
+	})
+
+	it('keeps the facet id selection beside it', () => {
+		expect(withoutMerged({ _ids: ['u-1', 'u-2'] })).toEqual({ _ids: ['u-1', 'u-2'], 'recordStatus[ne]': 'Merged' })
 	})
 })
