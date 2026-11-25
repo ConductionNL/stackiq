@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use RuntimeException;
  * Contract approval tools.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 class McpContractTools {
 
@@ -63,7 +63,7 @@ class McpContractTools {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every handler takes the arguments.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function getContractApprovalConfig(array $args): array {
 		$refusal = $this->session->requireUser();
@@ -81,7 +81,7 @@ class McpContractTools {
 	 *
 	 * @return array<string, mixed> `{decisionId, approvalState}`, or a refusal.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function submitContractApproval(array $args): array {
 		return $this->submit(args: $args, isRenewal: false);
@@ -94,7 +94,7 @@ class McpContractTools {
 	 *
 	 * @return array<string, mixed> `{decisionId, approvalState}`, or a refusal.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function submitContractRenewal(array $args): array {
 		return $this->submit(args: $args, isRenewal: true);

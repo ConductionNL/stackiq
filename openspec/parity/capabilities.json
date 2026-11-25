@@ -714,7 +714,7 @@
 			"area": "insight",
 			"overlay": null,
 			"specs": [
-				"mcp-full-action-surface",
+				"mcp-tool-surface",
 				"insight-assistant-answers-and-action-trail"
 			]
 		},
@@ -9183,26 +9183,26 @@
 			"bluedolphin": "partial",
 			"glpi": "no",
 			"topdesk": "no",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Still no MCP, tool-provider, TaskProcessing or ContextChat code in stackiq lib/, src/ or the register (grep 'mcp|ToolProvider|TaskProcessing|ContextChat|x-openregister-mcp' finds only an info.xml comment about OpenRegister's ContextChat). OpenRegister's generic MCP server (openregister appinfo/routes.php:2011 /api/mcp/v1/discover, :2018 POST /api/mcp; lib/Mcp/BuiltIn/ObjectsToolProvider.php:80-87 tool 'objects' with list/get/create/update/delete over any register) is the only path. Open changes mcp-full-action-surface (specs/mcp-tool-surface/spec.md: hand-written provider, read tools on 14 schemas, write tools behind existing guards; supersedes stackiq-mcp-adoption) and stackiq-mcp-adoption have no task ticked.",
-				"owner": "ConductionNL/openregister",
-				"change": "mcp-full-action-surface",
-				"readOn": "2026-10-07",
+				"state": "built",
+				"evidence": "lib/Mcp/StackiqToolProvider.php (29 curated tools behind the existing guards: McpContractGate, McpPublicationGate, McpAdminGate, McpSbomGate) registered as OCA\\OpenRegister\\Mcp\\IMcpToolProvider::stackiq; lib/Settings/register.d/mcp-full-action-surface.json derives search/get on 14 catalogue schemas and create/update on vulnerability; tests/Unit/Mcp/*. Live 25 Nov 2026 on OpenRegister main: MCP tools/list shows the 28 derived read tools, vulnerability_create/_update and the 29 curated tools.",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-11-25-mcp-full-action-surface",
+				"readOn": "2026-11-25",
 				"requirement": [
-					"openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Software Catalog MUST register a hand-written MCP tool provider",
-					"openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Every write tool MUST delegate to the existing workflow service behind its existing guard",
-					"openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Derived read tools MUST cover the 14 live catalogue schemas under their current English slugs"
+					"openspec/specs/mcp-tool-surface :: Software Catalog MUST register a hand-written MCP tool provider",
+					"openspec/specs/mcp-tool-surface :: Every write tool MUST delegate to the existing workflow service behind its existing guard",
+					"openspec/specs/mcp-tool-surface :: Derived read tools MUST cover the 14 live catalogue schemas under their current English slugs"
 				]
 			},
-			"reachedOn": "nothing in stackiq reaches it; only OpenRegister's generic MCP endpoint",
-			"provider": "openregister",
+			"reachedOn": "OpenRegister's MCP endpoint (POST /apps/openregister/api/mcp), stackiq tools",
+			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "ai-assistant",
-			"note": "Stackiq has nothing of its own here. An AI client can reach catalogue objects only through OpenRegister's generic MCP 'objects' tool. A stackiq tool surface is specified in mcp-full-action-surface but not built.",
+			"note": "Stackiq's own MCP tool surface (mcp-full-action-surface, archived 25 Nov 2026): derived read tools, vulnerability writes and curated workflow tools on OpenRegister's MCP server.",
 			"evidence": {
-				"stackiq": "Still no MCP, tool-provider, TaskProcessing or ContextChat code in stackiq lib/, src/ or the register (grep 'mcp|ToolProvider|TaskProcessing|ContextChat|x-openregister-mcp' finds only an info.xml comment about OpenRegister's ContextChat). OpenRegister's generic MCP server (openregister appinfo/routes.php:2011 /api/mcp/v1/discover, :2018 POST /api/mcp; lib/Mcp/BuiltIn/ObjectsToolProvider.php:80-87 tool 'objects' with list/get/create/update/delete over any register) is the only path. Open changes mcp-full-action-surface (specs/mcp-tool-surface/spec.md: hand-written provider, read tools on 14 schemas, write tools behind existing guards; supersedes stackiq-mcp-adoption) and stackiq-mcp-adoption have no task ticked.",
+				"stackiq": "lib/Mcp/StackiqToolProvider.php (29 curated tools behind the existing guards: McpContractGate, McpPublicationGate, McpAdminGate, McpSbomGate) registered as OCA\\OpenRegister\\Mcp\\IMcpToolProvider::stackiq; lib/Settings/register.d/mcp-full-action-surface.json derives search/get on 14 catalogue schemas and create/update on vulnerability; tests/Unit/Mcp/*. Live 25 Nov 2026 on OpenRegister main: MCP tools/list shows the 28 derived read tools, vulnerability_create/_update and the 29 curated tools.",
 				"topdesk": "https://tip.topdesk.com/c/200-ai-mcp-based-service-: roadmap card in column \"Building\", \"Model Context Protocol (MCP-based service) allows secure, controlled connectivity between your TOPdesk environment and LLM-powered assistants\" (read 2026-09-26); the shipped TOPdesk Robin works inside tickets (https://docs.topdesk.com/en/td-robin-for-operators.html).",
 				"vng-softwarecatalogus": "unknown: no assistant or tool interface is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/15602927-add-bluedolphin-mcp-server-to-an-ai-assistant: 'This feature enables the third-party AI assistant to query data from BlueDolphin. BlueDolphin MCP can only retrieve data. It cannot create, update, or delete anything' (read 2026-09-26). Reached on: System settings > Integration > MCP API key.",

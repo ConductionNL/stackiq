@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Stackiq\Mcp;
  * Argument checks returning structured MCP errors.
  *
  * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $required marks an optional argument; the check is the same either way.
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 class McpArgumentValidator {
 
@@ -44,7 +44,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array{isError: true, error: string, message: string}
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public static function error(string $code, string $message): array {
 		return ['isError' => true, 'error' => $code, 'message' => $message];
@@ -58,7 +58,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array<string, mixed>|null The error, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function uuid(array $args, string $name): ?array {
 		$value = ($args[$name] ?? null);
@@ -79,7 +79,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array<string, mixed>|null The error, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function string(array $args, string $name, int $max, bool $required=true): ?array {
 		if (array_key_exists($name, $args) === false && $required === false) {
@@ -103,7 +103,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array<string, mixed>|null The error, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#6.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#6.3
 	 */
 	public function oneOf(array $args, string $name, array $allowed, bool $required=true): ?array {
 		if (array_key_exists($name, $args) === false && $required === false) {
@@ -125,7 +125,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array<string, mixed>|null The error, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#6.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#6.3
 	 */
 	public function object(array $args, string $name): ?array {
 		$value = ($args[$name] ?? null);
@@ -146,7 +146,7 @@ class McpArgumentValidator {
 	 *
 	 * @return array<string, mixed>|null The error, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#6.3
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#6.3
 	 */
 	public function optionalInt(array $args, string $name, int $min, int $max): ?array {
 		if (array_key_exists($name, $args) === false) {

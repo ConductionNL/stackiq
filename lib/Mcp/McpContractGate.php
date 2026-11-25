@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IUser;
  * Ownership check for contract tools.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+ * @spec openspec/specs/mcp-tool-surface/spec.md
  */
 class McpContractGate {
 
@@ -65,7 +65,7 @@ class McpContractGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null when the caller may proceed.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	public function authorise(string $contractUuid): ?array {
 		$user = $this->session->currentUser();

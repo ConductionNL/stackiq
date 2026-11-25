@@ -369,7 +369,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 * @spec openspec/specs/mcp-tool-surface/spec.md
 	 */
 	private function registerMcpToolProvider(IRegistrationContext $context): void {
 		$context->registerServiceAlias(

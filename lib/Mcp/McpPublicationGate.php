@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#3.2
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\IUser;
  * Proves the caller may publish or depublish one catalogue entry.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) McpArgumentValidator::error() is the one pure builder of the structured MCP error.
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#3.2
  */
 class McpPublicationGate {
 
@@ -67,7 +67,7 @@ class McpPublicationGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/mcp-full-action-surface/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#3.2
 	 */
 	public function authorise(string $objectType, string $uuid): ?array {
 		$user = $this->session->currentUser();

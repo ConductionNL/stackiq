@@ -29,8 +29,8 @@ use ReflectionMethod;
  *
  * @covers \OCA\Stackiq\Service\SettingsService
  *
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#1.1
- * @spec openspec/changes/mcp-full-action-surface/tasks.md#6.5
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-11-25-mcp-full-action-surface/tasks.md#6.5
  */
 final class McpFragmentTest extends TestCase {
 
