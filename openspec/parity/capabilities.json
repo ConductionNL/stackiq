@@ -885,8 +885,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-application-components",
 				"requirement": [
-					"openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-001 An application can name the application it is a component of",
-					"openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-002 The application page lists its components"
+					"openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components :: REQ-ACM-001 An application can name the application it is a component of",
+					"openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components :: REQ-ACM-002 The application page lists its components"
 				]
 			},
 			"reachedOn": "Suites /suites and SuiteDetail /suites/:id (Related panel); ModuleDetail Related panel shows suites that include it",
@@ -894,7 +894,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "high",
-			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition. Specified in openspec/changes/landscape-application-components (OpenSpec pass 2026-09-27).",
+			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition. Specified in openspec/changes/archive/2026-11-25-landscape-application-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications often consist of multiple entities or modules within a common ecosystem or platform', modeled as parent/child hierarchy, e.g. Adobe Photoshop as child of Adobe Creative Cloud (read 2026-09-26). Reached on: Application fact sheet > parent/child relations.",
 				"stackiq": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
@@ -1330,15 +1330,15 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-owner-attestation",
 				"requirement": [
-					"openspec/changes/landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-001 An information manager starts a confirmation round for a scope",
-					"openspec/changes/landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-003 An owner confirms or corrects each entry"
+					"openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-001 An information manager starts a confirmation round for a scope",
+					"openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-003 An owner confirms or corrects each entry"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "data-quality",
-			"note": "Nothing asks owners to confirm or correct their entries. Specified in openspec/changes/landscape-owner-attestation (OpenSpec pass 2026-09-27).",
+			"note": "Nothing asks owners to confirm or correct their entries. Specified in openspec/changes/archive/2026-11-25-landscape-owner-attestation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/reviewing-responses: 'Review and approve survey responses before they are saved to fact sheets'; https://help.sap.com/docs/leanix/ea/application-modernization-collect-data: 'Create a new survey to get key information from application or business owners' (read 2026-09-26). Reached on: Surveys.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967524-create-a-survey: surveys 'gather input from stakeholders outside your core BlueDolphin users ... allowing external stakeholders to contribute directly to the Enterprise Architecture repository' on an object's questionnaire (read 2026-09-26). Reached on: Object > Questionnaire tab > Create survey.",
@@ -1371,15 +1371,15 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-completeness-score",
 				"requirement": [
-					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set",
-					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
+					"openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set",
+					"openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "data-quality",
-			"note": "No page scores how complete or current an entry is. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
+			"note": "No page scores how complete or current an entry is. Specified in openspec/changes/archive/2026-11-25-landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
 				"topdesk": "unknown: the only readiness score described is the AI readiness score for the knowledge base; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -1694,8 +1694,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "connections-diagram-and-graph-export",
 				"requirement": [
-					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map",
-					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-002 The connections list can be shown as a diagram of the filtered rows"
+					"openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map",
+					"openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-002 The connections list can be shown as a diagram of the filtered rows"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -1703,7 +1703,7 @@
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
 			"featureConfidence": "medium",
-			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
+			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections. Specified in openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/data-flow: data flow diagrams help 'understand how applications are connected, identify dependencies, and trace data movement between systems' (read 2026-09-26). Reached on: Diagrams > Data Flow Diagram.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967472-welcome-to-bluedolphin: 'insight into connections between business processes, applications, and their underlying infrastructure. This way, you can visualize chains and information flows'; https://help.bluedolphin.io/en/articles/11967545-spider-tool adds related objects with 'all existing relationships' to a view (read 2026-09-26). Reached on: Views > architecture view.",
@@ -1737,7 +1737,7 @@
 				"change": "openregister/relations-that-travel-and-what-they-expose",
 				"requirement": [
 					"openregister:openspec/changes/relations-that-travel-and-what-they-expose/specs/referential-integrity :: The relations of a record answer who else is affected (REQ-RTE-001)",
-					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map"
+					"openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map"
 				]
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
@@ -1815,15 +1815,15 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "connections-api-catalogue",
 				"requirement": [
-					"openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-001 A user can record an API that an application offers",
-					"openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-002 The application page lists its APIs"
+					"openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces :: REQ-AIF-001 A user can record an API that an application offers",
+					"openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces :: REQ-AIF-002 The application page lists its APIs"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
-			"note": "Stackiq has no record for an API an application exposes. Specified in openspec/changes/connections-api-catalogue (OpenSpec pass 2026-09-27).",
+			"note": "Stackiq has no record for an API an application exposes. Specified in openspec/changes/archive/2026-11-25-connections-api-catalogue (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines: interface subtype 'API ... APIs provide functionalities accessible to external applications ... Examples: Metrics API, Import API', related to the providing application (read 2026-09-26). Reached on: Inventory > Interface fact sheet, subtype API.",
 				"stackiq": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
@@ -1855,14 +1855,14 @@
 				"evidence": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*",
 				"owner": "ConductionNL/stackiq",
 				"change": "connections-diagram-and-graph-export",
-				"requirement": "openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-003 A user can download an application's map and its links"
+				"requirement": "openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-003 A user can download an application's map and its links"
 			},
 			"reachedOn": "nothing reaches it (nearest: admin settings ArchiMate organisation export)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "application-connections",
 			"featureConfidence": "medium",
-			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
+			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported. Specified in openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: front/impactcsv.php streams Glpi\\Csv\\ImpactCsvExport for an item, linked from the impact list view at src/Impact.php:393; the graph Download button src/Impact.php:1165 calls js/impact.js:2528 download, which writes PNG (js/impact.js:2539) or JPEG (js/impact.js:2546). Reached on: Appliance > Impact analysis tab, Download and CSV export.",
 				"stackiq": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*",
@@ -2780,15 +2780,15 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-completeness-score",
 				"requirement": [
-					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set",
-					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
+					"openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set",
+					"openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "data-quality",
-			"note": "No rule-based score of register correctness or completeness exists on any page. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
+			"note": "No rule-based score of register correctness or completeness exists on any page. Specified in openspec/changes/archive/2026-11-25-landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "grep for completeness/health score/quality score in lib and src: no hits; lib/Command/ReferencesAuditCommand.php:34 (occ stackiq:references:audit) only audits cross-app uuid references, it is not a scored rule set",
 				"topdesk": "unknown: standards compliance of applications, BIO and DPIA are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -5057,13 +5057,13 @@
 				"owner": "ConductionNL/stackiq",
 				"readOn": "2026-09-26",
 				"change": "sharing-generated-api-docs",
-				"requirement": "openspec/changes/sharing-generated-api-docs/specs/generated-api-docs :: REQ-GAD-002 A developer reads both documents on one page in stackiq"
+				"requirement": "openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs :: REQ-GAD-002 A developer reads both documents on one page in stackiq"
 			},
 			"reachedOn": "API only: GET /api/views/docs and /api/aangeboden-gebruik/docs; docs site https://stackiq.conduction.nl (Documentation footer link)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "api-and-integrations",
-			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it. Specified in openspec/changes/sharing-generated-api-docs (OpenSpec pass 2026-09-27).",
+			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it. Specified in openspec/changes/archive/2026-11-25-sharing-generated-api-docs (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Api/HL/Controller/CoreController.php:322 route /doc serves a Swagger UI 'GLPI API Documentation' (:329 to :331) over the spec built by src/Glpi/Api/HL/OpenAPIGenerator.php. Reached on: /api.php/doc. Driven on the lab at 11.0.9 (2026-09-26): on a fresh install /api.php/v2/doc answers 403 \"The High-Level API is disabled\"; after switching on enable_hlapi in Setup > General > API it serves the Swagger UI \"GLPI API Documentation\".",
 				"stackiq": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
@@ -6816,7 +6816,7 @@
 				"evidence": "each entry lives in one schema (module, catalogService, suite) and no action moves an object to another schema",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-change-entry-type",
-				"requirement": "openspec/changes/landscape-change-entry-type/specs/entry-type-change :: REQ-ETC-001 An entry changes type and keeps its identity"
+				"requirement": "openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change :: REQ-ETC-001 An entry changes type and keeps its identity"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -6831,7 +6831,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; changing the type of a BPMN element is documented (https://help.bluedolphin.io/en/articles/11967561-add-an-object), changing the object definition of an existing repository object is not (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: the type of an appliance is an editable dropdown (install/mysql/glpi-empty.sql:8941 appliancetypes_id), changeable in place or by massive update (src/MassiveAction.php:666); changing the itemtype itself (for example a custom asset to another definition) is not possible, since each custom asset class is bound to one definition (src/Glpi/Asset/Asset.php:113), and the open request github.com/glpi-project/roadmap/discussions/232 asks for it. Reached on: Management > Appliances, Type field."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26. Specified in openspec/changes/landscape-change-entry-type (OpenSpec pass 2026-09-27).",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-landscape-change-entry-type (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -7585,7 +7585,7 @@
 				"evidence": "entries belong to an organisation through OpenRegister multitenancy (see org-data-segregation); no stackiq page or action moves an entry to another organisation or register",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-move-between-organisations",
-				"requirement": "openspec/changes/landscape-move-between-organisations/specs/move-between-organisations :: REQ-MBO-001 An administrator moves chosen entries to another organisation and they keep their identity"
+				"requirement": "openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations :: REQ-MBO-001 An administrator moves chosen entries to another organisation and they keep their identity"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -7600,7 +7600,7 @@
 				"glpi": "source read at 11.0.9: selected records are moved to another entity with their links by src/Transfer.php:50 Transfer, queued through the massive action add_transfer_list (src/MassiveAction.php:598), for one or many entries at once. Reached on: any list, Actions > Add to transfer list; Administration > Entities > transfer.",
 				"topdesk": "unknown: workspaces are not described; changing an asset's type is still an idea at https://tip.topdesk.com/c/89-changing-the-type-of-an-asset; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/landscape-move-between-organisations (OpenSpec pass 2026-09-27).",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/archive/2026-11-25-landscape-move-between-organisations (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "yes",
@@ -8657,8 +8657,8 @@
 				"change": "contracts-expiry-warning-fires",
 				"readOn": "2026-10-07",
 				"requirement": [
-					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days",
-					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
+					"openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days",
+					"openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
 				]
 			},
 			"reachedOn": "nothing reaches it",

@@ -23,7 +23,7 @@ use RuntimeException;
  *
  * @covers \OCA\Stackiq\BackgroundJob\AttestationOverdueJob
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
 final class AttestationOverdueJobTest extends TestCase {
 

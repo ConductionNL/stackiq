@@ -11,10 +11,12 @@ entries keep their identity: the same records, with the same links and
 history, now owned by the other organisation. Nothing is copied and nothing
 is deleted.
 
+![The Move to organisation dialog on an application page](../images/move-to-organisation.png)
+
 Unlike an [organisation merge](organisation-merge.md), a move takes only the
 entries you pick and leaves the source organisation as it is.
 
-Specification: [`openspec/changes/landscape-move-between-organisations`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-landscape-move-between-organisations`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md).
 
 ## Who may move
 

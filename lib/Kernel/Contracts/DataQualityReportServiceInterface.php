@@ -48,7 +48,7 @@ interface DataQualityReportServiceInterface {
 	 *
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	 */
 	public function build(string $organisationUuid): array;
 }//end interface

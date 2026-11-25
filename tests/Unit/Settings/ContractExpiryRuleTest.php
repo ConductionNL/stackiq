@@ -12,9 +12,9 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-001-the-contract-expiry-rule-must-match-active-and-expiring-contracts-whose-end-date-falls-within-90-days
- * @spec openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-002-the-warning-must-name-the-contract-number-and-the-end-date
- * @spec openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-003-the-warning-shall-come-once-per-end-date
+ * @spec openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-001-the-contract-expiry-rule-must-match-active-and-expiring-contracts-whose-end-date-falls-within-90-days
+ * @spec openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-002-the-warning-must-name-the-contract-number-and-the-end-date
+ * @spec openspec/changes/archive/2026-11-25-contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-003-the-warning-shall-come-once-per-end-date
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

@@ -11,7 +11,7 @@ rows the list shows, after its filters and search, drawn as applications
 connection, labelled with its transport type. The layout is stable: the same
 rows always land in the same places. A line opens its connection.
 
-@spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+@spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
 -->
 
 <template>
@@ -91,7 +91,7 @@ export default {
 		 * The nodes and edges in the canvas's shape.
 		 *
 		 * @return {{nodes: Array<object>, edges: Array<object>}}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
 		 */
 		flow() {
 			return diagramFlow(this.rows, this.names)
@@ -112,7 +112,7 @@ export default {
 		 * Read the names of the applications the rows name only by uuid.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
 		 */
 		async loadNames() {
 			const missing = unnamedModuleIds(this.rows, this.names)
@@ -133,7 +133,7 @@ export default {
 		 * Open the connection a line stands for.
 		 *
 		 * @param {object} event The canvas's edge event, with `edge.id`.
-		 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+		 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
 		 */
 		onEdgeSelect(event) {
 			const id = String(event?.edge?.id ?? event?.id ?? '')

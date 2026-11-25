@@ -7,9 +7,9 @@
 
 An application can be made of other applications: a case system with its citizen portal and its API, for example. Each part is an application of its own, with its own versions, usages, connections and standards, and names the application it is a component of.
 
-Specification: [`openspec/changes/landscape-application-components/specs/application-components/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-application-components/specs/application-components/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-landscape-application-components/specs/application-components/spec.md).
 
-<!-- Screenshot: docs/images/application-components.png, the Components list on an application page. To be captured with Playwright. -->
+![The Components list on an application page](../images/application-components.png)
 
 ## Recording a component
 

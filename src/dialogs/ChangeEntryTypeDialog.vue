@@ -12,7 +12,7 @@
  there are blockers, and, for a change to a service, until a service type is
  picked. The entry keeps its uuid; OpenRegister moves it.
 
- @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+ @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 -->
 <template>
 	<NcDialog
@@ -128,7 +128,7 @@ export default {
 		/**
 		 * The types this entry may change into, as options.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {Array<object>} The options.
 		 */
 		targetOptions() {
@@ -143,7 +143,7 @@ export default {
 		/**
 		 * The filled fields the change drops, as rows with their values.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {Array<object>} The rows.
 		 */
 		dropped() {
@@ -153,7 +153,7 @@ export default {
 		/**
 		 * Whether the change may be confirmed: a preview without blockers, and a service type for a service.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {boolean} True when Confirm is enabled.
 		 */
 		canConfirm() {
@@ -170,7 +170,7 @@ export default {
 			/**
 			 * On opening, select the first target the entry may change into.
 			 *
-			 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+			 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 			 * @param {boolean} open Whether the dialog is open.
 			 */
 			handler(open) {
@@ -187,7 +187,7 @@ export default {
 		/**
 		 * Pick a target type and load its preview.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @param {string|null} value The target type.
 		 * @return {void}
 		 */
@@ -202,7 +202,7 @@ export default {
 		/**
 		 * Load the preview for the chosen type.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {Promise<void>}
 		 */
 		async load() {
@@ -222,7 +222,7 @@ export default {
 		/**
 		 * Change the type and tell the parent.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 		 * @return {Promise<void>}
 		 */
 		async confirm() {

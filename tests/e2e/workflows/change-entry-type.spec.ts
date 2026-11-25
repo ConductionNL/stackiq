@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * Spec coverage: openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md
+ * Spec coverage: openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md
  * (REQ-ETC-001, REQ-ETC-002)
  *
  * An application changes into a service from its own page: the Change type

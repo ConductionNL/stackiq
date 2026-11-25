@@ -30,7 +30,7 @@ namespace OCA\Stackiq\Service\ArchiMate;
  * status as properties. A connection with an end that is not in the exported
  * model is skipped and counted.
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
  */
 class ConnectionFlows {
 
@@ -52,7 +52,7 @@ class ConnectionFlows {
 	 *
 	 * @return array{relationships: array<int, array<string, mixed>>, skipped: int} The flows and the skipped count.
 	 *
-	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
 	 */
 	public function flows(array $connections, array $elements, string $sourcePropDefId): array {
 		$relationships = [];

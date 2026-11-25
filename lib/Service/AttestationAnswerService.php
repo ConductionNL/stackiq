@@ -9,7 +9,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
- * @spec      openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec      openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use UnexpectedValueException;
  * else moves. Each answer updates the round's `answeredCount`. Requests and
  * rounds are written without RBAC: the assignee check, or the job, stands in.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
 class AttestationAnswerService implements AttestationAnswerServiceInterface {
 
@@ -118,7 +118,7 @@ class AttestationAnswerService implements AttestationAnswerServiceInterface {
 	 * @throws DomainException           When the user is not the request's assignee.
 	 * @throws UnexpectedValueException  When the request was already answered.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function confirm(string $requestId, string $uid): array {
 		$this->objectService();
@@ -155,7 +155,7 @@ class AttestationAnswerService implements AttestationAnswerServiceInterface {
 	 *
 	 * @return int How many requests were marked corrected.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function markCorrected(string $entrySchema, string $entryId, string $uid): int {
 		if ($uid === '' || $entryId === '' || array_key_exists($entrySchema, AttestationService::SCOPES) === false) {
@@ -185,7 +185,7 @@ class AttestationAnswerService implements AttestationAnswerServiceInterface {
 	 *
 	 * @return int How many requests became overdue.
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function markOverdue(): int {
 		$this->objectService();
@@ -216,7 +216,7 @@ class AttestationAnswerService implements AttestationAnswerServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function isChangedByHand(array $before, array $after): bool {
 		return self::changedByHand(before: $before, after: $after);
@@ -230,7 +230,7 @@ class AttestationAnswerService implements AttestationAnswerServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public static function changedByHand(array $before, array $after): bool {
 		foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $field) {

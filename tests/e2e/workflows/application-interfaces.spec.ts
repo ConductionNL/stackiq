@@ -17,8 +17,8 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-001-a-user-can-record-an-api-that-an-application-offers
- * @spec openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-002-the-application-page-lists-its-apis
+ * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-001-a-user-can-record-an-api-that-an-application-offers
+ * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces/spec.md#requirement-req-aif-002-the-application-page-lists-its-apis
  */
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

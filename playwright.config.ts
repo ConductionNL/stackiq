@@ -65,8 +65,17 @@ export default defineConfig({
 			name: 'chromium',
 			// Visual specs run only under the opt-in `visual` project (GAP-5);
 			// smoke has its own project and must not run twice.
-			testIgnore: ['**/visual/**', '**/smoke/**'],
+			testIgnore: ['**/visual/**', '**/smoke/**', '**/docs/**'],
 			use: { ...devices['Desktop Chrome'] },
+		},
+		// Documentation screenshots (docs/images). Opt-in only: it seeds a small
+		// scenario and writes into the repository.
+		//   npx playwright test --project docs --output test-results/docs
+		{
+			name: 'docs',
+			testMatch: /docs\/.*\.spec\.ts$/,
+			use: { ...devices['Desktop Chrome'] },
+			timeout: 120_000,
 		},
 		// Visual-regression project (GAP-5). Opt-in / non-gating:
 		//   npx playwright test --project visual

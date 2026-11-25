@@ -335,7 +335,7 @@ export default {
 	// --- Lib gap: the organisation-scoped data quality report. ---
 	// GET /api/data-quality evaluates the usage schema's declared quality
 	// rules over one organisation's usages, bounded like the portfolio report.
-	// @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	// @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	DataQualityReportView,
 	// --- Lib gap: the access review of one organisation's people. ---
 	// GET /api/access-review/{organisationUuid} derives each person's roles and

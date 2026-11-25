@@ -9,6 +9,8 @@ A connection records that one application exchanges data with another applicatio
 
 Specification: [`openspec/specs/catalogue-connection-pages/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/catalogue-connection-pages/spec.md).
 
+![The connection map on an application page](../images/connection-map.png)
+
 ## The connections list
 
 Open **Applications** in the navigation menu, then **Connections**. The list at `/koppelingen` shows every connection you may read, with its type, its status, both applications, the national provision and the direction.

@@ -9,7 +9,7 @@
  * which connections stay with the source, Move posts to execute and reports
  * the count, and a refusal shows the administrator message.
  *
- * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

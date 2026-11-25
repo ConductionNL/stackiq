@@ -10,7 +10,7 @@
  * positions, so a re-render never moves a node, which a force layout would
  * (design D2).
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
  */
 
 /** Horizontal distance between columns, in px. */
@@ -81,7 +81,7 @@ function roles(direction, a, b) {
  *
  * @param {Array<object>} connections The rows the list fetched.
  * @return {{nodes: Array<{id: string, label: string, provision: boolean, position: {x: number, y: number}}>, edges: Array<{id: string, source: string, target: string, label: string, bidirectional: boolean}>}} The diagram.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
  */
 export function layoutConnections(connections) {
 	const nodes = new Map()
@@ -143,7 +143,7 @@ export function layoutConnections(connections) {
  * @param {Array<object>} connections The rows the list shows.
  * @param {{[id: string]: string}} names Names for ends the rows carry as a bare id.
  * @return {{nodes: Array<object>, edges: Array<object>}} The canvas nodes and edges.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
  */
 export function diagramFlow(connections, names = {}) {
 	// An end the row carries as a bare id gets its name first, so the columns
@@ -176,7 +176,7 @@ export function diagramFlow(connections, names = {}) {
  * @param {Array<object>} connections The rows the list shows.
  * @param {{[id: string]: string}} names The names read so far.
  * @return {Array<string>} The ids, each once.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
  */
 export function unnamedModuleIds(connections, names) {
 	const ids = new Set()
@@ -194,7 +194,7 @@ export function unnamedModuleIds(connections, names) {
  *
  * @param {Array<object>|null} modules The applications.
  * @return {{[id: string]: string}} The names.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
  */
 export function moduleNames(modules) {
 	const names = {}
@@ -218,7 +218,7 @@ export function moduleNames(modules) {
  * @param {Array<object>|null} connections The connections.
  * @param {{[id: string]: string}} names Application names by id.
  * @return {Array<object>} The connections, the named ends as {id, name}.
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
  */
 export function withEndNames(connections, names) {
 	const named = (value) => {

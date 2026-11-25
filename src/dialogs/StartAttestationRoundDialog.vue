@@ -11,7 +11,7 @@
   - lists the entries no request could be sent for, so an owner can be
   - assigned first.
   -
-  - @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+  - @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
   -->
 
 <template>
@@ -159,7 +159,7 @@ export default {
 		 * The organisations the round can be for.
 		 *
 		 * @return {Array<{value: string, label: string}>} The options.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		organisationChoices() {
 			return organisationOptions(this.organisations)
@@ -169,7 +169,7 @@ export default {
 		 * The entry types a round asks about.
 		 *
 		 * @return {Array<{value: string, label: string}>} The options.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		scopeChoices() {
 			return [
@@ -182,7 +182,7 @@ export default {
 		 * The request body, or null while a field is missing.
 		 *
 		 * @return {object|null} The body.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		body() {
 			return roundBody(this.form)
@@ -192,7 +192,7 @@ export default {
 		 * Whether the round can be started.
 		 *
 		 * @return {boolean} Whether it can.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		canStart() {
 			return !this.busy && this.body !== null
@@ -202,7 +202,7 @@ export default {
 		 * The entries no request could be sent for.
 		 *
 		 * @return {Array<{entryId: string, entryName: string}>} The entries.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		unassigned() {
 			return Array.isArray(this.result?.unassigned)
@@ -212,7 +212,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 	 */
 	mounted() {
 		this.loadOrganisations()
@@ -225,7 +225,7 @@ export default {
 		 * Load the organisations the user belongs to.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		async loadOrganisations() {
 			this.loadingOrganisations = true
@@ -245,7 +245,7 @@ export default {
 		 * Start the round and show what it sent.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		async start() {
 			if (!this.canStart) {
@@ -273,7 +273,7 @@ export default {
 		 * Close the dialog.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 */
 		close() {
 			this.navigationStore.setDialog(null)

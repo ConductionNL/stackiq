@@ -7,7 +7,9 @@
 
 An information manager asks the owners of the organisation's entries to confirm that each entry is still right, or to correct it, by a deadline. The round shows who answered, who corrected and who is overdue, and every confirmed entry counts as fresh again in its data quality score.
 
-Specification: [`openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md).
+
+![A confirmation round with its pending, confirmed, corrected and overdue counts](../images/confirmation-round.png)
 
 ## Starting a round
 

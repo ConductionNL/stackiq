@@ -31,9 +31,9 @@
   - GIVEN the owning organisation WHEN it accepts a suggestion THEN the connection is in usage.koppelingen
 - [x] Implement
   - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
-- [x] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes)
-  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions").
-  - Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main, stackiq development): the five Newman requests pass 6/6 assertions (usage listing 200; GET, dismiss and accept 403 with a reason for a usage of another organisation; accept for an unknown usage 404). By hand, with the caller's active organisation set to the usage's consumer: GET 200 `{"results":[]}`, dismiss 200 `{"dismissed":[]}`, accept 200 `{"accepted":[]}`. The run needed the environments' schema slugs brought to the English register (`organization`, `contactPerson`, `catalogService`, `connection`, `usage`); before that the usage listing was 404.
+- [x] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes) (Newman run 25 Nov 2026 against a live sandbox instance, folder "Connection suggestions (connections-derived-dependencies)": 5 requests, 6 assertions, 0 failed; the environments' schema slugs were corrected to the renamed ones first)
+  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions"). Run 25 Nov 2026: 6/6 assertions green.
+  - Owner path by hand, same day, with the caller's active organisation set to the usage's consumer: GET 200 `{"results":[]}`, dismiss 200 `{"dismissed":[]}`, accept 200 `{"accepted":[]}`.
 
 ### Task 4: Suggested connections panel
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
@@ -51,9 +51,9 @@
 - **files**: `docs/features/connection-suggestions.md`, `docs/images/connection-suggestions.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Connection suggestions THEN both sources of suggestions are explained with a screenshot
-- [ ] Implement
-  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. Owed: `docs/images/connection-suggestions.png`, a screenshot from a live instance.
-- [ ] Test (docs build, screenshot with Playwright)
+- [x] Implement
+  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. `docs/images/connection-suggestions.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
 
 ## Verification
 

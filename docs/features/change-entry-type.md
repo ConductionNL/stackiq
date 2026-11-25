@@ -7,9 +7,9 @@
 
 An entry registered as the wrong kind can change type without being registered again: an application becomes a service or system software, and a service or system software becomes an application. The entry keeps its identity, so its history, files, notes and the links to it stay.
 
-Specification: [`openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md).
 
-<!-- Screenshot: docs/images/change-entry-type.png, the Change type dialog with its preview. To be captured with Playwright. -->
+![The Change type dialog: what blocks the change, what is dropped and what carries over](../images/change-entry-type.png)
 
 ## Changing the type
 
