@@ -20,7 +20,7 @@
 ## 2. Fix
 
   > Recorded in design.md, "Decision": hierarchy-direction scoping is the intended OpenRegister invariant, and `createOrganisation()` has no parent argument.
-- [ ] 2.1 If upstream-fixed: uncomment `$parentOrganisationUuid =
+- [x] 2.1 (not applicable) If upstream-fixed: uncomment `$parentOrganisationUuid =
   $this->getActiveOrganisationUuid(organisationService: $organisationService)`
   (`lib/Service/OrganisatieService.php:281`) and pass it into
   `$organisationService->createOrganisation(...)`'s parent argument; restore
@@ -40,10 +40,11 @@
 - [x] 3.1 `OrganisatieServiceTest`: creating an organisation with an active
   parent organisation results in `getParent()` returning the parent's uuid.
   > `OrganisatieServiceParentLinkCreateTest::testAChildIsLinkedToTheActiveOrganisation`, `OrganisatieServiceParentHierarchyTest`.
-- [ ] 3.2 `OrganisatieServiceTest`/integration: the creating user retains
+- [x] 3.2 `OrganisatieServiceTest`/integration: the creating user retains
   read/write access to the newly created child organisation (the exact
   regression the hotfix was guarding against) — assert access is NOT lost.
   > Left open: design.md decides not to force-add the creator (`addCurrentUser: false` external-organisation model); access on the real create path comes from the admin/system context, which a unit test cannot show. Needs an integration test against OpenRegister.
+  > Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main): a non-admin (`gebruik-beheerder`, active organisation "Default Organisation") created the stackiq organisation "Wijkteam Gemeente Live" (201); the organisation sync, run as that user through `processSpecificOrganization()`, created its OpenRegister organisation (`entitiesCreated: 1`) with `parent` = the user's active organisation. Afterwards the creating user still reads it (GET 200), writes it (PUT 200) and finds it in the organisation list. No access regression.
 - [x] 3.3 Regression: creating an organisation with no active parent still
   results in a parentless (root) organisation, unchanged from today.
 

@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+ * @spec openspec/specs/organisatie-service/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,7 +25,7 @@ namespace OCA\Stackiq\Service;
  * The data mapped for OpenRegister and the uuid of the organisation to create,
  * carried through the steps of OrganisatieService's create-then-link sequence.
  *
- * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+ * @spec openspec/specs/organisatie-service/spec.md
  */
 final class OrganisationCreation {
 	/**
