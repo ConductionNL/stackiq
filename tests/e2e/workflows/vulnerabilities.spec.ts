@@ -14,7 +14,8 @@ import type { APIRequestContext } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import { createObject, deleteObject, newApiContext, resolveConfig, RUN_ID } from './_fixtures.ts'
 
-const CVE = `CVE-2026-${RUN_ID.slice(-5)}`
+// The CVE pattern takes digits only (^CVE-\d{4}-\d{4,}$); RUN_ID carries letters and dashes.
+const CVE = `CVE-2026-${RUN_ID.replace(/\D/g, "").slice(-6).padStart(4, "0")}`
 
 test.describe('vulnerability page', () => {
 	let admin: APIRequestContext
@@ -32,8 +33,9 @@ test.describe('vulnerability page', () => {
 		}
 		ids.org = await seed('organization', { name: `Gemeente ${RUN_ID}`, type: 'Municipality' })
 		ids.module = await seed('module', { name: `Zaaksysteem ${RUN_ID}` })
-		ids.usage = await seed('usage', { consumer: ids.org, module: ids.module, status: 'In production' })
-		ids.vulnerability = await seed('vulnerability', { name: CVE, cveCode: CVE, cvssScore: 9.1, modules: [ids.module] })
+		// In production means a start date in production and no phase-out date (REQ: exposure across in-production usage), not the status alone.
+		ids.usage = await seed('usage', { consumer: ids.org, module: ids.module, status: 'In production', startDateInProduction: '2026-01-01' })
+		ids.vulnerability = await seed('vulnerability', { name: CVE, shortDescription: `Remote code execution in Zaaksysteem ${RUN_ID}`, cveCode: CVE, cvssScore: 9.1, modules: [ids.module] })
 	})
 
 	test.afterAll(async () => {
@@ -54,6 +56,11 @@ test.describe('vulnerability page', () => {
 		await expect(page).toHaveURL(new RegExp(`/kwetsbaarheden/${ids.vulnerability}`), { timeout: 30_000 })
 		await expect(page.getByText(`Zaaksysteem ${RUN_ID}`).first()).toBeVisible({ timeout: 30_000 })
 
+		// The Exposure tab lives in the record sidebar, which mounts collapsed.
+		const openSidebar = page.getByRole('button', { name: /Open sidebar|Zijbalk openen/i })
+		if (await openSidebar.isVisible().catch(() => false)) {
+			await openSidebar.click()
+		}
 		await page.getByRole('tab', { name: /exposure|blootstelling/i }).click()
 		await expect(page.getByText(`Gemeente ${RUN_ID}`).first()).toBeVisible({ timeout: 30_000 })
 	})
