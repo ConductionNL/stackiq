@@ -11,7 +11,7 @@
 		<template #title-icon>
 			<CnIcon name="OfficeBuildingOutline" :size="20" />
 		</template>
-		<div class="contract-supplier-panel" data-testid="contract-supplier-panel">
+		<section class="contract-supplier-panel" data-testid="contract-supplier-panel">
 			<NcLoadingIcon
 				v-if="loading"
 				:size="32"
@@ -39,11 +39,16 @@
 					<dd>{{ service.name }}</dd>
 				</div>
 			</dl>
-		</div>
+		</section>
 	</CnWidgetWrapper>
 </template>
 
 <script>
+/**
+ * The supplier of a contract (REQ-CLR-014): a contract names the service it
+ * is for, and that service names its provider, so the panel reads the three
+ * records in turn and links the provider to its organisation page.
+ */
 import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
