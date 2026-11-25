@@ -17,7 +17,7 @@
  * - The regular user is a fresh Nextcloud account in a context with an empty
  *   storage state, so none of the admin's cookies come along.
  *
- * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administr
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
  */
 import type { Route } from '@playwright/test'
 
