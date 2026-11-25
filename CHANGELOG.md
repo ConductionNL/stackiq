@@ -1,6 +1,16 @@
 # Changelog
 
 ## [Unreleased]
+### Upgrade notes
+- Reviews: on an instance that imported stackiq before the review overlay was
+  keyed to `software-review`, the upgrade gates the review schema's public read
+  on `status: approved`. If an administrator edited that schema's authorization
+  by hand, OpenRegister keeps the local edit: read `authorization.read` of
+  `software-review` back. The empty `assessment` schema such an instance holds
+  can be removed with
+  `occ openregister:schemas:prune-retired --app=stackiq --slug=assessment --apply`
+  (run it without `--apply` first to see what it removes).
+
 ### Added
 - Health and metrics documentation (adopt-apphost): `docs/features/observability.md`
   describes the public `/api/health` check, the administrator-only Prometheus

@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ class LifecycleCalendarListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.2
 	 */
 	public function handle(Event $event): void {
 		$object = null;

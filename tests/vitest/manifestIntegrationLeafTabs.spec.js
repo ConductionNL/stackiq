@@ -8,7 +8,7 @@
  * own sidebar tabs does not get the registry's leaf tabs, so without the
  * declared tab the leaf would not show at all (adopt-integration-leaves 3.1).
  *
- * @spec openspec/changes/adopt-integration-leaves
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves
  */
 import * as fs from 'fs'
 import * as path from 'path'

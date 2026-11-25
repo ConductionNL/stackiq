@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -79,7 +79,7 @@ class LifecycleCalendarService implements LifecycleCalendarServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.1
 	 */
 	public function syncContract(array $object): void {
 		$data   = $this->dataOf(object: $object);
@@ -100,7 +100,7 @@ class LifecycleCalendarService implements LifecycleCalendarServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-integration-leaves/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-11-25-adopt-integration-leaves/tasks.md#2.1
 	 */
 	public function syncModuleVersion(array $object): void {
 		$data    = $this->dataOf(object: $object);

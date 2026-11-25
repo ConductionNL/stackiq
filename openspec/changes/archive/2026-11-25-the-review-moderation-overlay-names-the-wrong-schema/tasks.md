@@ -27,12 +27,14 @@
 
 ## 3. Not covered
 
-- [ ] 3.1 The live import. See the proposal: the descriptor path is tested
+- [x] 3.1 The live import. See the proposal: the descriptor path is tested
       against the real files, but OpenRegister's `ImportHandler` applying the
       authorization change to an already-existing `software-review` row is not
       exercised here. An operator upgrading such an instance should read the
       schema's `authorization.read` back.
-- [ ] 3.2 The `assessment` schema row this fragment created on any instance
+      > Live 25 Nov 2026 (sandbox Nextcloud 34, PostgreSQL 16, OpenRegister main): an upgrade replayed by importing first with the fragment keyed `assessment` (the shipped read is the ungated `{"group": "public"}`), then with the fixed fragment: the existing `software-review` row now reads `{"group": "public", "match": {"status": "approved"}}`. With one pending, one approved and one rejected review, an anonymous list returns only the approved one and an anonymous GET of the pending or rejected one is 404. One case keeps the old read, by OpenRegister's design: an instance where an admin edited the schema's `authorization` by hand keeps that local edit ("schema kept its local definition for parts the app also changed") until the shipped definition is accepted; that is the operator check the line above asks for.
+- [x] 3.2 The `assessment` schema row this fragment created on any instance
       where it already imported. It carries two properties and no objects, and
       `occ openregister:schemas:prune-retired` is the tool; it is left alone here
       because removing a row is a data operation, not a descriptor change.
+      > Decision 25 Nov 2026: stackiq does not delete it itself (removing data stays an operator step). Verified live: the pre-fix import creates `assessment` (properties `auteur`, `status`, 0 objects); `occ openregister:schemas:prune-retired --app=stackiq --slug=assessment` reports it as WOULD DELETE (objects=0), and with `--apply` unlinks and removes it while `software-review` stays. The step is in the CHANGELOG.

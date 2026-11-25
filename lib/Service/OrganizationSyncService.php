@@ -84,6 +84,11 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	private const ACTIVE_STATUSES = ['active', 'actief'];
 
 	/**
+	 * Why the contact and user steps link nothing on the current contactPerson table.
+	 */
+	private const NO_CONTACT_COLUMNS = 'the contact person table has no e-mail or username column';
+
+	/**
 	 * OrganisatieService instance
 	 *
 	 * @var OrganisatieService The service for organization operations
@@ -489,42 +494,15 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	}//end activeStatusCondition()
 
 	/**
-	 * Whether the contact schema still carries the account columns a
-	 * contact or user sync query reads (`eMailadres`, `username`).
-	 *
-	 * The contactPerson schema now keeps its person data on the Nextcloud
-	 * contact (`contactsUid`), so on a current install those columns do not
-	 * exist and the query failed with "column o.e_mailadres does not exist",
-	 * which aborted the whole scheduled sync after the organisations (and the
-	 * user sync failed the same way on `o.username`).
-	 *
-	 * @param int           $schemaId   The contact schema id.
-	 * @param array<string> $properties The schema properties the query reads.
-	 *
-	 * @return bool True when every one of them exists.
-	 *
-	 * @spec openspec/changes/connections-derived-dependencies/tasks.md#task-4-suggested-connections-panel
-	 */
-	private function contactSchemaCarriesAccountColumns(int $schemaId, array $properties): bool {
-		try {
-			$schema = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class)->find($schemaId);
-		} catch (\Throwable $exception) {
-			$this->logger->debug('ContactSync: contact schema could not be read: ' . $exception->getMessage());
-			return false;
-		}
-
-		$declared = ($schema->getProperties() ?? []);
-		return array_diff($properties, array_keys($declared)) === [];
-
-	}//end contactSchemaCarriesAccountColumns()
-
-	/**
 	 * Perform synchronization of contact persons.
 	 *
 	 * @param int $batchSize The batch size for processing.
 	 * @param int $maxExecutionSeconds The maximum execution time in seconds.
 	 *
-	 * @return array The sync statistics.
+	 * @return array The sync statistics; `skipped` says why nothing was linked when the table has no e-mail or username column.
+	 *
+	 * @throws \OCP\DB\Exception When the contact query fails for any other reason.
+	 *
 	 * @spec   openspec/specs/organization-sync/spec.md
 	 */
 	public function performContactSync(int $batchSize = 100, int $maxExecutionSeconds = 30): array {
@@ -565,29 +543,16 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			return $stats;
 		}
 
-		if ($this->contactSchemaCarriesAccountColumns(schemaId: $schemaIdContact, properties: ['eMailadres', 'username']) === false) {
-			$this->logger->debug('ContactSync: contact schema has no eMailadres/username columns, nothing to link');
-			return $stats;
-		}
-
 		// Query per-schema magic table directly (NOT the empty openregister_objects blob table).
 		$contactTableName = 'openregister_table_' . $registerIdContact . '_' . $schemaIdContact;
 
-		// Find contacts without a username that DO have a matching Nextcloud account (by email).
-		$qb = $this->db->getQueryBuilder();
-		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organization', 'a.uid')
-			->from($contactTableName, 'o')
-			->innerJoin('o', 'accounts_data', 'a', 'o.e_mailadres = a.value')
-			->where(
-				$qb->createFunction(
-					'(o.username IS NULL OR o.username = ' . $qb->createNamedParameter('') . ')'
-				)
-			)
-			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
-			->orderBy('o._updated', 'ASC')
-			->setMaxResults($batchSize);
+		$qb = $this->contactsWithAnAccountQuery(table: $contactTableName, batchSize: $batchSize);
+		$contacts = $this->contactRowsOrNull(qb: $qb, step: 'ContactSync', table: $contactTableName);
+		if ($contacts === null) {
+			$stats['skipped'] = self::NO_CONTACT_COLUMNS;
+			return $stats;
+		}
 
-		$contacts = $qb->executeQuery()->fetchAll();
 		$stats['totalRemaining'] = count($contacts);
 
 		if (empty($contacts) === true) {
@@ -652,9 +617,72 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 	}//end performContactSync()
 
 	/**
+	 * Contacts without a username that DO have a matching Nextcloud account (by e-mail).
+	 *
+	 * @param string $table     The contact table
+	 * @param int    $batchSize The most rows to read
+	 *
+	 * @return IQueryBuilder The prepared query
+	 *
+	 * @spec openspec/specs/organization-sync/spec.md
+	 */
+	private function contactsWithAnAccountQuery(string $table, int $batchSize): IQueryBuilder {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organization', 'a.uid')
+			->from($table, 'o')
+			->innerJoin('o', 'accounts_data', 'a', 'o.e_mailadres = a.value')
+			->where(
+				$qb->createFunction(
+					'(o.username IS NULL OR o.username = ' . $qb->createNamedParameter('') . ')'
+				)
+			)
+			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
+			->orderBy('o._updated', 'ASC')
+			->setMaxResults($batchSize);
+
+		return $qb;
+	}//end contactsWithAnAccountQuery()
+
+	/**
+	 * The rows of a contact-table query, or null when the table lacks its columns.
+	 *
+	 * The contactPerson schema no longer carries an e-mail address or a
+	 * username (contacts live in Nextcloud Contacts, by contactsUid), so the
+	 * contact and user steps, which read those columns, have nothing to link.
+	 * Throwing would end the scheduled sync before it records the run.
+	 *
+	 * @param IQueryBuilder $qb    The prepared query
+	 * @param string        $step  The step name for the log
+	 * @param string        $table The contact table
+	 *
+	 * @return array|null The rows, or null when a column the query reads does not exist
+	 *
+	 * @throws \OCP\DB\Exception When the query fails for any other reason.
+	 *
+	 * @spec openspec/specs/organization-sync/spec.md
+	 */
+	private function contactRowsOrNull(IQueryBuilder $qb, string $step, string $table): ?array {
+		try {
+			return $qb->executeQuery()->fetchAll();
+		} catch (\OCP\DB\Exception $e) {
+			if ($e->getReason() !== \OCP\DB\Exception::REASON_INVALID_FIELD_NAME) {
+				throw $e;
+			}
+		}
+
+		$this->logger->info(
+			$step . ': skipped, ' . self::NO_CONTACT_COLUMNS,
+			['app' => 'stackiq', 'table' => $table]
+		);
+		return null;
+	}//end contactRowsOrNull()
+
+	/**
 	 * Perform synchronization of users.
 	 *
-	 * @return array The sync statistics.
+	 * @return array The sync statistics; `skipped` says why nothing was linked when the table has no username column.
+	 *
+	 * @throws \OCP\DB\Exception When the user query fails for any other reason.
 	 *
 	 * @psalm-suppress UndefinedClass
 	 * @spec           openspec/specs/organization-sync/spec.md
@@ -683,11 +711,6 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			return [];
 		}
 
-		if ($this->contactSchemaCarriesAccountColumns(schemaId: $schemaId, properties: ['username']) === false) {
-			$this->logger->debug('UserSync: contact schema has no username column, nothing to add');
-			return [];
-		}
-
 		// Query per-schema magic table directly (NOT the empty openregister_objects blob table).
 		$contactTableName = 'openregister_table_' . $registerId . '_' . $schemaId;
 
@@ -711,7 +734,10 @@ class OrganizationSyncService implements OrganizationSyncServiceInterface {
 			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
 			->andWhere($qb->createFunction($jsonContainsCheck));
 
-		$users = $qb->executeQuery()->fetchAll();
+		$users = $this->contactRowsOrNull(qb: $qb, step: 'UserSync', table: $contactTableName);
+		if ($users === null) {
+			return ['skipped' => self::NO_CONTACT_COLUMNS];
+		}
 
 		if (empty($users) === false) {
 			$this->logger->info('UserSync: adding ' . count($users) . ' users to their org entities');

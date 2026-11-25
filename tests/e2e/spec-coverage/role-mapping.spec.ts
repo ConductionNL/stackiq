@@ -65,16 +65,17 @@ test.afterAll(async () => {
 // @e2e role-mapping-and-access-review::an-admin-makes-the-inkoop-group-buyers
 test('mapping Gebruik-beheerder onto the Inkoop group puts its member in gebruik-beheerder', async ({ page }) => {
 	await page.goto('/settings/admin/stackiq', { waitUntil: 'domcontentloaded' })
-	const tab = page.getByRole('tab', { name: 'Role mapping' })
-	if (await tab.isVisible().catch(() => false)) {
-		await tab.click()
-	}
+	// The settings section renders its tabs as buttons (no tab role); the table sits in a hidden panel until chosen.
+	const tab = page.getByRole('button', { name: 'Role mapping', exact: true })
+	await expect(tab).toBeVisible({ timeout: 30000 })
+	await tab.click()
 	const table = page.getByTestId('role-mapping-table')
 	await expect(table).toBeVisible({ timeout: 30000 })
 
 	const row = page.getByTestId('role-mapping-row-Gebruik-beheerder')
 	await row.locator('input').fill(group)
-	await page.getByRole('option', { name: group }).first().click()
+	// The picker highlights the typed text, which splits the option's accessible name: match on its text.
+	await page.getByRole('option').filter({ hasText: group }).first().click()
 	await page.keyboard.press('Escape')
 
 	await page.getByRole('button', { name: 'Save User Groups' }).click()

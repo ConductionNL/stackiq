@@ -8312,7 +8312,7 @@
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/catalog-ratings :: A pending review is readable only by its author and the moderators (REQ-CLR-008)"
 				],
 				"plan": [
-					"openspec/changes/the-review-moderation-overlay-names-the-wrong-schema",
+					"openspec/changes/archive/2026-11-25-the-review-moderation-overlay-names-the-wrong-schema",
 					"openspec/changes/capability-rows-the-code-does-not-yet-meet"
 				]
 			},
@@ -9516,22 +9516,21 @@
 			"bluedolphin": "unknown",
 			"glpi": "unknown",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: lib/Service/OrganisatieService.php createOrganisationEntityInternal() has the parent call commented out under a HOTFIX for RBAC issues, so every new organisation is flat.",
+				"state": "built",
+				"evidence": "lib/Service/OrganisatieService.php createOrganisationEntityInternal() links the new organisation to the active organisation after creating it (linkResolvedParent/linkParentOrganisation); tests/Unit/Service/OrganisatieServiceParentLinkCreateTest.php, OrganisatieServiceParentHierarchyTest.php. Live 25 Nov 2026: a non-admin's new organisation synced with parent = their active organisation, and they keep read and write access to it.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/organisation-parent-hierarchy-rbac-fix",
-				"requirement": "openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service :: New organisations MUST inherit a parent linkage from the active organisation",
-				"plan": "openspec/changes/organisation-parent-hierarchy-rbac-fix"
+				"change": "2026-11-25-organisation-parent-hierarchy-rbac-fix",
+				"requirement": "openspec/specs/organisatie-service :: New organisations MUST inherit a parent linkage from the active organisation"
 			},
-			"reachedOn": "",
+			"reachedOn": "creating an organisation while another organisation is active (the organisation sync links it as a child)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "organisation-register",
 			"note": "Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
-				"stackiq": "Not built: lib/Service/OrganisatieService.php createOrganisationEntityInternal() has the parent call commented out under a HOTFIX for RBAC issues, so every new organisation is flat."
+				"stackiq": "lib/Service/OrganisatieService.php createOrganisationEntityInternal() links the new organisation to the active organisation after creating it (linkResolvedParent/linkParentOrganisation); tests/Unit/Service/OrganisatieServiceParentLinkCreateTest.php, OrganisatieServiceParentHierarchyTest.php. Live 25 Nov 2026: a non-admin's new organisation synced with parent = their active organisation, and they keep read and write access to it."
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {
@@ -9551,19 +9550,18 @@
 			"bluedolphin": "unknown",
 			"glpi": "unknown",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: no stackiq schema declares an integration leaf id in configuration.linkedTypes (openspec/changes/adopt-integration-leaves, 0 of 15 tasks).",
+				"state": "built",
+				"evidence": "lib/Settings/register.d/catalog-integration-leaves.json declares the leaves (contactPerson/organization contacts, catalogContract decidesk-decisions + calendar, moduleVersion calendar, software-review deck, module/catalogService bookmarks); lib/Service/LifecycleCalendarService.php + lib/EventListener/LifecycleCalendarListener.php sync contract end dates and version end-of-support dates as calendar events; src/components/integrations/IntegrationLeafTab.vue; tests/Unit/Service/IntegrationLeavesFragmentTest.php, LifecycleCalendarServiceTest.php. Live 25 Nov 2026: imported leaves on OpenRegister main, no dangling linkedTypes.",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/adopt-integration-leaves",
+				"change": "2026-11-25-adopt-integration-leaves",
 				"requirement": [
-					"openspec/changes/adopt-integration-leaves/specs/catalog-integration-leaves :: Contact persons and organisations MUST expose the contacts leaf",
-					"openspec/changes/adopt-integration-leaves/specs/catalog-integration-leaves :: Contract end dates and version end-of-support dates MUST surface as calendar leaf events",
-					"openspec/changes/adopt-integration-leaves/specs/catalog-integration-leaves :: Assessments MUST expose the deck leaf for follow-up work",
-					"openspec/changes/adopt-integration-leaves/specs/catalog-integration-leaves :: Applications and services MUST expose the bookmarks leaf for vendor and documentation links"
-				],
-				"plan": "openspec/changes/adopt-integration-leaves"
+					"openspec/specs/catalog-integration-leaves :: Contact persons and organisations MUST expose the contacts leaf",
+					"openspec/specs/catalog-integration-leaves :: Contract end dates and version end-of-support dates MUST surface as calendar leaf events",
+					"openspec/specs/catalog-integration-leaves :: Assessments MUST expose the deck leaf for follow-up work",
+					"openspec/specs/catalog-integration-leaves :: Applications and services MUST expose the bookmarks leaf for vendor and documentation links"
+				]
 			},
 			"reachedOn": "",
 			"provider": "stackiq",
@@ -9571,7 +9569,7 @@
 			"feature": "api-and-integrations",
 			"note": "Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
-				"stackiq": "Not built: no stackiq schema declares an integration leaf id in configuration.linkedTypes (openspec/changes/adopt-integration-leaves, 0 of 15 tasks)."
+				"stackiq": "lib/Settings/register.d/catalog-integration-leaves.json declares the leaves (contactPerson/organization contacts, catalogContract decidesk-decisions + calendar, moduleVersion calendar, software-review deck, module/catalogService bookmarks); lib/Service/LifecycleCalendarService.php + lib/EventListener/LifecycleCalendarListener.php sync contract end dates and version end-of-support dates as calendar events; src/components/integrations/IntegrationLeafTab.vue; tests/Unit/Service/IntegrationLeavesFragmentTest.php, LifecycleCalendarServiceTest.php. Live 25 Nov 2026: imported leaves on OpenRegister main, no dangling linkedTypes."
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {
