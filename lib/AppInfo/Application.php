@@ -108,7 +108,7 @@ class Application extends App implements IBootstrap {
 	 * Stackiq had no health or metrics endpoint: `/api/settings/status` reports
 	 * whether the settings are configured, and a probe that read it as health
 	 * was told "up" while OpenRegister was down. The generics answer from the
-	 * manifest's `observability` block (adopt-apphost task 1.1).
+	 * manifest's `observability` block (openspec/specs/apphost-adoption).
 	 *
 	 * Only these two are registered rather than adopting the whole AppHost with
 	 * `Bootstrap::register()`: that call also replaces this app's own
@@ -126,7 +126,7 @@ class Application extends App implements IBootstrap {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#2-wiring-deletions-real-healthmetrics-routes
+	 * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
 	 *
 	 * @psalm-suppress UndefinedClass The AppHost generics live in OpenRegister, which is not on the static-analysis path.
 	 */

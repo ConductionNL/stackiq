@@ -89,7 +89,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#getEmailTemplateDefault', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
         ['name' => 'settings#getEmailTemplateVariables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
 
-        // Health and metrics (adopt-apphost task 2.2): the OpenRegister AppHost
+        // Health and metrics (openspec/specs/apphost-adoption): the OpenRegister AppHost
         // generics, registered as Health/MetricsController in Application.php and
         // driven by the manifest's `observability` block. Health is public (an
         // uptime probe needs no session), metrics are administrators only.

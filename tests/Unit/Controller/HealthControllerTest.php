@@ -12,7 +12,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+ * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
  */
 
 declare(strict_types=1);

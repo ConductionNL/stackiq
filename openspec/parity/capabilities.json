@@ -9592,25 +9592,24 @@
 			"bluedolphin": "unknown",
 			"glpi": "unknown",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: appinfo/routes.php has no /api/health route; settings#status at /api/settings/status needs a session and returns configuration status (openspec/changes/adopt-apphost, 0 of 19 tasks).",
+				"state": "built",
+				"evidence": "GET /api/health public (database and openregister checks, 503 with checks.openregister failed when OpenRegister is unavailable) and GET /api/metrics admin-only Prometheus 0.0.4 (stackiq_info, stackiq_up, stackiq_gebruik_total) on the OpenRegister AppHost generics, from the observability block in src/manifest.json; lib/AppInfo/Application.php registerObservabilityControllers, lib/Controller/HealthController.php; tests/Unit/AppInfo/ObservabilityAdoptionTest.php, tests/Unit/Controller/HealthControllerTest.php; OpenRegister AppHost Newman contract 12/12 live 25 Nov 2026",
 				"owner": "ConductionNL/stackiq",
-				"change": "openspec/changes/adopt-apphost",
+				"change": "2026-11-25-adopt-apphost",
 				"requirement": [
-					"openspec/changes/adopt-apphost/specs/apphost-adoption :: ADR-006 Health Endpoint",
-					"openspec/changes/adopt-apphost/specs/apphost-adoption :: ADR-006 Metrics Endpoint"
-				],
-				"plan": "openspec/changes/adopt-apphost"
+					"openspec/specs/apphost-adoption :: REQ-AHA-001 Stackiq SHALL serve an ADR-006 health endpoint",
+					"openspec/specs/apphost-adoption :: REQ-AHA-002 Stackiq SHALL serve an ADR-006 metrics endpoint"
+				]
 			},
-			"reachedOn": "",
+			"reachedOn": "GET /apps/stackiq/api/health (public), GET /apps/stackiq/api/metrics (admin)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "open-platform",
 			"note": "Reworded on 13 Nov to the deliberate spec (decision 407, ADR-006): the health endpoint is public, the metrics endpoint is admin-only. Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
-				"stackiq": "Not built: appinfo/routes.php has no /api/health route; settings#status at /api/settings/status needs a session and returns configuration status (openspec/changes/adopt-apphost, 0 of 19 tasks)."
+				"stackiq": "GET /api/health public (database and openregister checks, 503 with checks.openregister failed when OpenRegister is unavailable) and GET /api/metrics admin-only Prometheus 0.0.4 (stackiq_info, stackiq_up, stackiq_gebruik_total) on the OpenRegister AppHost generics, from the observability block in src/manifest.json; lib/AppInfo/Application.php registerObservabilityControllers, lib/Controller/HealthController.php; tests/Unit/AppInfo/ObservabilityAdoptionTest.php, tests/Unit/Controller/HealthControllerTest.php; OpenRegister AppHost Newman contract 12/12 live 25 Nov 2026"
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {

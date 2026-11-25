@@ -14,7 +14,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+ * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
  * critical, so the answer the generic would give is `error` with 503; this
  * controller gives that answer, in the same shape, without OpenRegister.
  *
- * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+ * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
  */
 class HealthController extends Controller {
 
@@ -56,7 +56,7 @@ class HealthController extends Controller {
 	 * @param IAppManager   $appManager Reads the installed version
 	 * @param IDBConnection $db         Checked with a trivial query
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+	 * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
 	 */
 	public function __construct(
 		string $appName,
@@ -72,7 +72,7 @@ class HealthController extends Controller {
 	 *
 	 * @return JSONResponse `{status: error, app, version, checks: {database, openregister}}`
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+	 * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -97,7 +97,7 @@ class HealthController extends Controller {
 	 *
 	 * @return string `ok` or `failed`
 	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#3-verification
+	 * @spec openspec/specs/apphost-adoption/spec.md#requirement-req-aha-001-stackiq-shall-serve-an-adr-006-health-endpoint
 	 */
 	private function databaseCheck(): string {
 		try {
