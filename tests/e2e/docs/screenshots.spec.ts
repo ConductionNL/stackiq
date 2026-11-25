@@ -31,7 +31,9 @@
  * @spec openspec/changes/sharing-generated-api-docs/tasks.md
  */
 
-import { test, expect, request as playwrightRequest, type APIRequestContext, type Locator, type Page } from '@playwright/test'
+import type {APIRequestContext, Locator, Page} from '@playwright/test';
+
+import { expect, request as playwrightRequest, test } from '@playwright/test'
 import * as path from 'path'
 
 const IMAGES = path.resolve(__dirname, '../../../docs/images')
