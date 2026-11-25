@@ -823,8 +823,8 @@ class FacetServiceTest extends TestCase {
 			$result['supplier']
 		);
 		$this->assertCount(1, $orgQueries);
-		$this->assertSame(['org-a', 'org-b'], $orgQueries[0]['ids']);
-		$this->assertArrayNotHasKey('id', $orgQueries[0], 'OpenRegister main ignores an id list in the query');
+		$this->assertSame(expected: ['org-a', 'org-b'], actual: $orgQueries[0]['ids']);
+		$this->assertArrayNotHasKey(key: 'id', array: $orgQueries[0], message: 'OpenRegister main ignores an id list in the query');
 		$this->assertSame(1000, $orgQueries[0]['_limit']);
 	}//end testSupplierFacetCountsPerOrganisation()
 

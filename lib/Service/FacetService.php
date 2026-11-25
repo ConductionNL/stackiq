@@ -1203,6 +1203,8 @@ class FacetService implements FacetServiceInterface {
 	 *
 	 * @return array<string, string> Name by id.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
+	 *
 	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
 	 */
 	private function organisationNames(ObjectServiceInterface $objectService, array $identifiers): array {
