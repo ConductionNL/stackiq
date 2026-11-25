@@ -298,10 +298,16 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	/**
 	 * The modules with these ids, by id, in one bounded read.
 	 *
+	 * Selected with `_ids`: OpenRegister main matches no row for an `id` list,
+	 * so every application in the coverage read "No application" on the plate
+	 * and on the map while its state still said Overlap.
+	 *
 	 * @param array<int,string>                         $ids    The module ids.
 	 * @param array{register:int,usage:int,module:int} $source The voorzieningen register and its schemas.
 	 *
 	 * @return array<string,array<string,mixed>> Modules by id.
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	 */
 	private function modulesWithIds(array $ids, array $source): array {
 		if ($ids === [] || $source['module'] === 0) {
@@ -310,7 +316,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 
 		$modules = $this->lookup(query: [
 			'@self' => ['register' => $source['register'], 'schema' => $source['module']],
-			'id' => $ids,
+			'_ids' => $ids,
 			'_limit' => count($ids),
 		]);
 
