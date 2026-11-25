@@ -101,7 +101,8 @@ async function openReview(page: Page): Promise<void> {
 	const picker = page.getByTestId('access-review-organisation')
 	await expect(picker).toBeVisible({ timeout: 30000 })
 	await picker.locator('input').fill(organisationName)
-	await page.getByRole('option', { name: organisationName }).first().click()
+	// The picker highlights the typed text, which splits the option's accessible name: match on its text.
+	await page.getByRole('option').filter({ hasText: organisationName }).first().click()
 	await expect(page.getByTestId('access-review-table')).toBeVisible({ timeout: 30000 })
 }
 

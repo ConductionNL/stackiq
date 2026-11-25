@@ -137,6 +137,24 @@ describe('AccessReviewView', () => {
 		expect(v.columns.map((c) => c.key)).toEqual(['person', 'roles', 'lastLogin', 'enabled', 'reviewed', 'due', 'actions'])
 	})
 
+	it('loads the organisations when the page is opened straight from a link', async () => {
+		const asked = []
+		const before = store.objectStore
+		store.objectStore = {
+			...before,
+			settings: {},
+			objectTypeRegistry: { organization: {} },
+			fetchCollection: async (type, params) => asked.push([type, params]),
+		}
+		try {
+			await AccessReviewView.mounted.call(view())
+		} finally {
+			store.objectStore = before
+		}
+
+		expect(asked).toEqual([['organization', { _limit: 1000 }]])
+	})
+
 	it('shows the refusal of another organisation', async () => {
 		http.get.mockRejectedValue({ response: { status: 403, data: { message: 'You may not review the access of this organisation.' } } })
 		const v = view()
