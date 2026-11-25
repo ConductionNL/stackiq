@@ -175,8 +175,15 @@ test('a saved Services view applied on a fresh page chooses the supplier again a
 	await expect(page).toHaveURL(/_gf_supplier/, { timeout: 30000 })
 	await expect(main.getByText(serviceB)).toHaveCount(0, { timeout: 30000 })
 
-	await page.getByRole('button', { name: 'Saved views' }).first().click()
-	await page.locator('.v-popper__popper--shown').last().getByRole('menuitem', { name: 'Save current filters as view' }).click()
+	// With no saved view yet NcActions holds one action and shows it inline;
+	// once views exist it is a "Saved views" menu.
+	const saveInline = page.getByRole('button', { name: 'Save current filters as view' }).first()
+	if (await saveInline.isVisible().catch(() => false)) {
+		await saveInline.click()
+	} else {
+		await page.getByRole('button', { name: 'Saved views' }).first().click()
+		await page.locator('.v-popper__popper--shown').last().getByRole('menuitem', { name: 'Save current filters as view' }).click()
+	}
 	const dialog = page.getByRole('dialog').filter({ hasText: 'Save as view' })
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 	await dialog.getByLabel('View name').fill(viewName)
