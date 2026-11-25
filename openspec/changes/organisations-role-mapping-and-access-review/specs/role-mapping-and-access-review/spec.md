@@ -55,6 +55,14 @@ A person's roles SHALL be the union of their contact person's `roles`, the roles
 - **WHEN** stackiq is upgraded and the sync runs
 - **THEN** they SHALL still be in `gebruik-beheerder`
 
+#### Scenario: Only the sync and an admin set the account a contact person signs in with
+@e2e exclude A property authorization; tests/Unit/Settings/AccessReviewDeclarationTest.php asserts contactPerson declares `username` with create and update for admin only, and tests/Unit/Service/ContactpersoonServiceUserAccountTest.php asserts the sync writes it as a system save.
+
+- **GIVEN** a contact person that holds roles
+- **WHEN** a user who is not a Nextcloud admin sets its `username` through the object API
+- **THEN** OpenRegister SHALL refuse the write, because that username decides whose account joins the role groups
+- **AND** when the contact person sync creates or finds the account it SHALL write `username` as the system
+
 ### Requirement: REQ-RMA-003 A functional administrator SHALL review the access of their organisation's people
 
 A page `AccessReview` at `/organisaties/access-review`, under Organisations, SHALL list each contact person of an organisation who has an account, with their roles and the source of each role, their last sign-in, whether the account is enabled, when their access was last reviewed and by whom, and whether a review is due under the configured interval. It SHALL answer Nextcloud admins for any organisation and members of `functioneel-beheerder` or `organisatie-beheerder` for their own active organisation, and refuse others.

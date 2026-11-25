@@ -19,6 +19,8 @@ Open **Architecture** in the navigation menu, then **Data model**. The list hold
 
 Search on a name to find one entity, and click it to open its page.
 
+![The Data model page, Own tab](../images/data-model-list.png)
+
 ## The page of a data entity
 
 The page shows the entity's name, documentation, GGM guid, GGM UML type and origin, and three sections:
@@ -26,6 +28,8 @@ The page shows the entity's name, documentation, GGM guid, GGM UML type and orig
 - **Relations** draws the entity in the middle with every entity it is related to around it, by an association, aggregation, composition or specialization. Each line carries the relation's name, or its type when it has no name, and the cardinalities when they are set, such as *gedaan door, 0..\* to 1*. A specialization is drawn dashed. The table under the drawing lists the same relations as text; click an entity in the drawing or in the table to open its page. Only the direct neighbours are drawn, and when an entity has more than 200 relations at one end the page says so.
 - **Attributes** lists the attributes of an entity your organisation added, the key attributes first and marked *key*. A GGM entity shows that the GGM does not publish attributes in the GEMMA file.
 - **Applications that hold this data** lists the applications in use whose data entities name this entity.
+
+![The relations drawn around a data entity, with the same relations as text](../images/data-entity-relations.png)
 
 ## Adding your own data entity
 
@@ -38,6 +42,8 @@ A relation drawn between two of your own entities in the view editor can carry a
 ## Linking an application in use to data entities
 
 Open **Applications**, then **Applications in use**, and open the application. Edit it and pick the entities it holds data for under **Data entities**; the picker offers data entities only. After saving, the page lists them, and the page of each entity lists the application under **Applications that hold this data**.
+
+![An application in use linked to a data entity](../images/usage-data-entities.png)
 
 ## Importing a newer GGM
 
