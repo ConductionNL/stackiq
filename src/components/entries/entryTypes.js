@@ -6,7 +6,7 @@
  * EntryTypeService defines them (TRANSITIONS, MODULE_TYPE), plus the API calls
  * of the type-change routes.
  *
- * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
  */
 
 import axios from '@nextcloud/axios'

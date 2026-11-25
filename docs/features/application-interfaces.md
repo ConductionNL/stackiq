@@ -7,7 +7,7 @@
 
 An API records an interface an application offers to other applications: how it is called, its version, where its specification and documentation live, the standards it follows and where it is in its life. The catalogue keeps APIs next to the application that offers them.
 
-Specification: [`openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/connections-api-catalogue/specs/application-interfaces/spec.md).
+Specification: [`openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-25-connections-api-catalogue/specs/application-interfaces/spec.md).
 
 ![The APIs an application offers, on its page](../images/application-apis.png)
 

@@ -7,7 +7,7 @@
   instance with the user's session, then rendered by the library's
   CnApiReference (operations, parameters, responses, models, Download).
 
-  @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
+  @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
 -->
 <template>
 	<div class="api-document-panel">
@@ -63,7 +63,7 @@ export default {
 			/**
 			 * Load the document again when the path changes.
 			 *
-			 * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+			 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
 			 */
 			handler() {
 				this.load()
@@ -78,7 +78,7 @@ export default {
 		 * Fetch and read the document at `path`.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
+		 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/tasks.md#task-3-api-documentation-page
 		 */
 		async load() {
 			this.document = null

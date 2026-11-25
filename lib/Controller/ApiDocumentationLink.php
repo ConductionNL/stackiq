@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ namespace OCA\Stackiq\Controller;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
  */
 final class ApiDocumentationLink {
 	/**

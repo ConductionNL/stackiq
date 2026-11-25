@@ -35,7 +35,7 @@ use SimpleXMLElement;
  * @uses \OCA\Stackiq\Service\ArchiMate\XmlAttributeRun
  * @uses \OCA\Stackiq\Service\ViewOrigin
  *
- * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
  */
 final class ArchiMateExportConnectionsTest extends TestCase {
 

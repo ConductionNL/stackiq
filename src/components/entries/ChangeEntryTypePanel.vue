@@ -11,7 +11,7 @@
  lives in the applications list, so the panel opens the Services list; after a
  change between Application and System software the page reloads in place.
 
- @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+ @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 -->
 <template>
 	<CnWidgetWrapper
@@ -70,7 +70,7 @@ export default {
 		/**
 		 * The sentence naming the entry's current type.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {string} The label.
 		 */
 		currentLabel() {
@@ -95,7 +95,7 @@ export default {
 		/**
 		 * Read the module to learn whether it is an application or system software.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 		 * @return {Promise<void>}
 		 */
 		async load() {
@@ -113,7 +113,7 @@ export default {
 		/**
 		 * Follow the entry to where it lives now.
 		 *
-		 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+		 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 		 * @param {object} outcome The change outcome ({uuid, targetType, moved}).
 		 * @return {void}
 		 */

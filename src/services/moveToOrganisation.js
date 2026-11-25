@@ -11,7 +11,7 @@
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 
 /** The dialog name the handlers open in the navigation store. */
@@ -35,7 +35,7 @@ export const MOVE_HANDLERS = {
  *
  * @param {Function} setDialog The navigation store's `setDialog(name, properties)`.
  * @return {Object<string, Function>} Handler name to `(scope) => void`.
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export function createMoveHandlers(setDialog) {
 	const handlers = {}
@@ -69,7 +69,7 @@ export const MOVE_LAUNCHER = 'MoveToOrganisationLauncher'
  * @param {string} schema The schema of the record.
  * @param {string|number|undefined} id The record's id, from the route.
  * @return {boolean} Whether the dialog was opened.
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export function openMoveForRecord(setDialog, schema, id) {
 	if (!schema || id === undefined || id === null || String(id) === '') {
@@ -87,7 +87,7 @@ export function openMoveForRecord(setDialog, schema, id) {
  * @param {string} source The organisation they move from.
  * @param {string} target The organisation they move to.
  * @return {{objects: Array<{schema: string, id: string}>, sourceOrganisation: string, targetOrganisation: string}} The body.
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export function transferBody(schema, ids, source, target) {
 	return {
@@ -104,7 +104,7 @@ export function transferBody(schema, ids, source, target) {
  * @param {Array<object>} organisations The user's organisations (`/api/me`).
  * @param {?string} source The source organisation's uuid.
  * @return {Array<{value: string, label: string}>} The options, by label.
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export function targetOptions(organisations, source) {
 	return (organisations || [])
@@ -118,7 +118,7 @@ export function targetOptions(organisations, source) {
  *
  * @param {object} plan The plan endpoint's answer: `items` and `staysBehind`.
  * @return {{moving: Array<object>, skipped: Array<object>, staysBehind: Array<object>}} The split.
- * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
  */
 export function splitPlan(plan) {
 	const items = Array.isArray(plan?.items) ? plan.items : []
@@ -134,7 +134,7 @@ export function splitPlan(plan) {
  *
  * @param {object} item A planned or staying entry.
  * @return {string} The label.
- * @spec openspec/changes/landscape-move-between-organisations
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations
  */
 export function entryLabel(item) {
 	return item?.name ? String(item.name) : String(item?.id ?? '')

@@ -5,7 +5,7 @@
  * Confirmation rounds (landscape-owner-attestation): the manifest handlers of
  * the round and request pages, and the pure helpers of the Start round dialog.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
 
 /**
@@ -37,7 +37,7 @@ export const SCOPES = ['usage', 'module']
  * The request body of a new round, or null when a required field is missing.
  *
  * @param {object} form The dialog's fields: organisation, scopeSchema, deadline, name.
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  * @return {object|null} The body.
  */
 export function roundBody(form) {
@@ -63,7 +63,7 @@ export function roundBody(form) {
  * Organisations as select options, sorted by name.
  *
  * @param {Array<object>} organisations OpenRegister's organisations ({ uuid, name }).
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  * @return {Array<{value: string, label: string}>} The options.
  */
 export function organisationOptions(organisations) {
@@ -93,7 +93,7 @@ function rowId(item) {
  * @param {function(string): void} deps.assign Opens a URL.
  * @param {function(): void} deps.refresh Asks the page to refetch.
  * @param {function(string): void} deps.notifyError Shows an error.
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  * @return {{startAttestationRound: function(): void, confirmAttestationRequest: function(object): Promise<void>, openAttestationEntry: function(object): void}} The handlers.
  */
 export function createAttestationHandlers({
@@ -108,7 +108,7 @@ export function createAttestationHandlers({
 		/**
 		 * Opens the dialog that starts a confirmation round.
 		 *
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
 		 * @return {void}
 		 */
 		startAttestationRound() {
@@ -120,7 +120,7 @@ export function createAttestationHandlers({
 		 *
 		 * @param {object} context The row context.
 		 * @param {object} context.item The attestation request row.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 		 * @return {Promise<void>}
 		 */
 		async confirmAttestationRequest({ item } = {}) {
@@ -145,7 +145,7 @@ export function createAttestationHandlers({
 		 *
 		 * @param {object} context The row context.
 		 * @param {object} context.item The attestation request row.
-		 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+		 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 		 * @return {void}
 		 */
 		openAttestationEntry({ item } = {}) {

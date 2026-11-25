@@ -2798,7 +2798,7 @@ XML;
 	 *
 	 * @return int The count.
 	 *
-	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
 	 */
 	public function lastSkippedConnections(): int {
 		return $this->lastSkippedConnections;

@@ -58,7 +58,7 @@ class OrganisationReportAccess implements OrganisationReportAccessInterface {
 	 * @return bool True when the caller may see the organisation's reports.
 	 *
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-and-csv-export-are-scoped-to-the-requesters-authorised-organisations
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	 */
 	public function mayRead(IUser $user, string $organisationUuid): bool {
 		$groupNames = array_map(

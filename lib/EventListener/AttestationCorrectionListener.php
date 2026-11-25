@@ -11,7 +11,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
- * @spec      openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec      openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * (landscape-owner-attestation D3). A save that changed only derived fields,
  * such as a confirmation, answers nothing.
  *
- * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+ * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  */
 class AttestationCorrectionListener implements IEventListener {
 
@@ -61,7 +61,7 @@ class AttestationCorrectionListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false || $event->getOldObject() === null) {

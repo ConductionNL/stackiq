@@ -136,7 +136,7 @@ class AangebodenGebruikControllerTest extends TestCase {
 	 * GET /api/aangeboden-gebruik/docs keeps its body and points an old
 	 * integration to the API documentation page and the OpenAPI document.
 	 *
-	 * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
+	 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
 	 *
 	 * @return void
 	 */

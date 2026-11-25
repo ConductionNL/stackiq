@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's find and save value objects and the confirmation's refusals.
  */
@@ -92,7 +92,7 @@ class EntryConfirmationService implements EntryConfirmationServiceInterface {
 	 * @throws EntryConfirmationRefused 404 for an unknown kind or an unreadable entry, 403 without the update right,
 	 *                                  503 without OpenRegister or its configuration, 500 when the save fails.
 	 *
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
 	 */
 	public function confirm(string $kind, string $id): array {
 		$source = $this->source(kind: $kind);

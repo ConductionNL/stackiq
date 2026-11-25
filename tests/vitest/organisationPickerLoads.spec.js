@@ -8,7 +8,7 @@
  * the organisations themselves. Opened straight from a link, nothing else has
  * fetched that collection, and the picker answered "No results".
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

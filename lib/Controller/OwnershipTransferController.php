@@ -21,7 +21,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Plan and execute an ownership transfer.
  *
- * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
+ * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
  */
 class OwnershipTransferController extends Controller {
 	/**
@@ -88,7 +88,7 @@ class OwnershipTransferController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the plan, 400, 401 or 403.
 	 *
-	 * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
+	 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
 	 */
 	#[NoAdminRequired]
 	public function plan(): JSONResponse {
@@ -100,7 +100,7 @@ class OwnershipTransferController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the plan and the number moved, 400, 401 or 403.
 	 *
-	 * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-001-an-administrator-moves-chosen-entries-to-another-organisation-and-they-keep-their-identity
+	 * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-001-an-administrator-moves-chosen-entries-to-another-organisation-and-they-keep-their-identity
 	 */
 	#[NoAdminRequired]
 	public function execute(): JSONResponse {

@@ -705,7 +705,7 @@ class AangebodenGebruikController extends Controller {
 	 * @PublicPage
 	 *
 	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
-	 * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
+	 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getApiDocumentation(): JSONResponse {

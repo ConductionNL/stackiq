@@ -15,7 +15,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use OCP\IUserSession;
 /**
  * The type-change endpoints of a catalogue entry.
  *
- * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+ * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
  */
 class EntryTypeController extends Controller {
 
@@ -68,7 +68,7 @@ class EntryTypeController extends Controller {
 	 * @NoAdminRequired
 	 * @no-admin-idor-exempt EntryTypeService::locate() reads the entry with RBAC on; an entry the caller may not read is a 404
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
 	 */
 	#[NoAdminRequired]
 	public function preview(string $uuid): JSONResponse {
@@ -93,7 +93,7 @@ class EntryTypeController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
+	 * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
 	 */
 	#[NoAdminRequired]
 	public function change(string $uuid): JSONResponse {

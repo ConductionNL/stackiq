@@ -8,7 +8,7 @@
  * manifest, and the panel that fetches one document and hands it to
  * CnApiReference.
  *
- * @spec openspec/changes/sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
+ * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-002-a-developer-reads-both-documents-on-one-page-in-stackiq
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
  */
 class RescoreDataQuality implements IRepairStep {
 	/**
@@ -87,7 +87,7 @@ class RescoreDataQuality implements IRepairStep {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
 	 */
 	public function getName(): string {
 		return 'Give every application and usage a data quality score';
@@ -100,7 +100,7 @@ class RescoreDataQuality implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
 	 */
 	public function run(IOutput $output): void {
 		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, false) === true) {

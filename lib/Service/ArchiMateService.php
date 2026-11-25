@@ -471,7 +471,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 *
 	 * @return array<int, mixed> The connections, or none.
 	 *
-	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
 	 */
 	private function orgConnections(ObjectServiceInterface $objectService, array $orgScope, mixed $schemaId, array $options): array {
 		if (($options['connections'] ?? false) !== true) {

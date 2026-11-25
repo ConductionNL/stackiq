@@ -9,7 +9,7 @@
  declared rules with how many entries meet each, and the least complete
  entries first with what is missing.
 
- @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+ @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 -->
 <template>
 	<div class="data-quality">
@@ -163,7 +163,7 @@ import { loadObjectTypeCollection } from '../../utils/objectTypes.js'
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+ * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
  */
 export default {
 	name: 'DataQualityReport',
@@ -204,7 +204,7 @@ export default {
 		 * Organisation options for the picker.
 		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		organisationOptions() {
 			return (objectStore.getCollection('organization')?.results || []).map(
@@ -222,7 +222,7 @@ export default {
 		 * The rules as progress bars: how many entries meet each.
 		 *
 		 * @return {Array<object>} CnProgressBar items.
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		ruleItems() {
 			return (this.report?.rules || []).map((rule) => ({
@@ -241,7 +241,7 @@ export default {
 		 * Columns of the completeness table.
 		 *
 		 * @return {Array<object>} Columns.
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		columns() {
 			return [
@@ -259,7 +259,7 @@ export default {
 		 *
 		 * @param {Array<object>} options The organisation options.
 		 * @return {void}
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		organisationOptions: {
 			immediate: true,
@@ -276,7 +276,7 @@ export default {
 	 * Load the organisations the picker offers.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	 */
 	async mounted() {
 		await loadObjectTypeCollection('organization')
@@ -289,7 +289,7 @@ export default {
 		 * Load the report of the selected organisation.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		async loadReport() {
 			if (!this.selectedOrg?.uuid) {
@@ -322,7 +322,7 @@ export default {
 		 *
 		 * @param {object} rule A rule row from the report.
 		 * @return {string} The sentence.
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		ruleLabel(rule) {
 			const field = rule.title || rule.field
@@ -340,7 +340,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date.
 		 * @return {string} The date.
-		 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+		 * @spec openspec/changes/archive/2026-11-25-landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 		 */
 		formatDate(value) {
 			const date = new Date(value)
