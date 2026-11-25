@@ -70,7 +70,8 @@ test.beforeAll(async () => {
 		startDate: '2026-01-01',
 		cost: 10000,
 		costPeriod: 'Annually',
-		status: 'Active',
+		// No status: a contract becomes Active only through an approved
+		// decision, and the report costs a contract whatever its status.
 	})
 })
 
