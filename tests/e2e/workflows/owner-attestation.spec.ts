@@ -43,7 +43,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, revealSection } from './_ui.ts'
 
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
@@ -133,6 +133,30 @@ function catalogCard(page: Page, title: string): Locator {
 }
 
 /**
+ * A round page's catalogue card, scrolled into the page until it has mounted:
+ * the cards below the fold mount only when scrolled into view.
+ *
+ * @param page The page.
+ * @param title The card's title.
+ * @return The card.
+ */
+async function revealCard(page: Page, title: string): Promise<Locator> {
+	const card = catalogCard(page, title)
+	await page.mouse.move(800, 450)
+	await expect
+		.poll(async () => {
+			if ((await card.getByRole('table').count()) > 0) {
+				return 1
+			}
+			await page.mouse.wheel(0, 600)
+			return 0
+		}, { timeout: 30000 })
+		.toBe(1)
+	await card.scrollIntoViewIfNeeded()
+	return card
+}
+
+/**
  * Wait until a register organisation has synced to an OpenRegister organisation.
  *
  * @param uuid The organisation's uuid.
@@ -142,6 +166,10 @@ async function awaitOrganisation(uuid: string): Promise<void> {
 	for (let attempt = 0; attempt < 20; attempt++) {
 		const res = await apiCtx.get(`${OR_API}/organisations/${uuid}`)
 		if (res.ok()) return
+		// The sync is cron-only (every five minutes); the administrator's manual sync runs the same pass now.
+		if (attempt % 5 === 0) {
+			await apiCtx.post('/index.php/apps/stackiq/api/settings/sync', { data: { minutesBack: 5 } })
+		}
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 	}
 	throw new Error(`organisation ${uuid} did not sync to OpenRegister`)
@@ -175,8 +203,9 @@ async function openRound(page: Page, name: string): Promise<void> {
 	await dismissSupportDialog(page)
 	const row = page.getByRole('row').filter({ hasText: name })
 	await expect(row).toBeVisible({ timeout: 30000 })
-	await row.getByText(name).first().click()
-	await expect(page).toHaveURL(/\/confirmation-rounds\/[^/]+$/, { timeout: 30000 })
+	// The whole row is a link laid over its cells.
+	await row.getByTestId('cn-row-link').first().click()
+	await expect(page).toHaveURL(/\/confirmation-rounds\/[^/?]+(\?|$)/, { timeout: 30000 })
 	await dismissSupportDialog(page)
 }
 
@@ -270,7 +299,15 @@ test('a round over the applications in use sends four requests and names the usa
 }) => {
 	await gotoAppRoute(page, '/confirmation-rounds')
 	await dismissSupportDialog(page)
-	await page.getByRole('button', { name: 'Start round' }).first().click()
+	// Start round is a header action: a button, or an item of the list's Actions menu.
+	await expect(page.getByRole('button', { name: /^(Start round|Actions)$/ }).first()).toBeVisible({ timeout: 30000 })
+	const startButton = page.getByRole('button', { name: 'Start round' }).first()
+	if (await startButton.isVisible().catch(() => false)) {
+		await startButton.click()
+	} else {
+		await page.getByRole('button', { name: 'Actions' }).first().click()
+		await page.getByRole('menuitem', { name: 'Start round' }).first().click()
+	}
 	const dialog = page.getByRole('dialog').filter({ hasText: 'Start confirmation round' })
 	await expect(dialog).toBeVisible({ timeout: 30000 })
 
@@ -278,7 +315,7 @@ test('a round over the applications in use sends four requests and names the usa
 	await dialog.getByRole('combobox', { name: 'Organisation' }).fill(municipality)
 	await page.locator('.vs__dropdown-option', { hasText: municipality }).first().click()
 	await dialog.getByRole('combobox', { name: 'Entries to confirm' }).click()
-	await page.getByRole('option', { name: 'Applications in use', exact: true }).first().click()
+	await page.locator('.vs__dropdown-option', { hasText: /^\s*Applications in use\s*$/ }).first().click()
 	await dialog.getByLabel('Deadline', { exact: true }).first().fill(isoDay(14))
 	await dialog.getByRole('button', { name: 'Start round', exact: true }).click()
 
@@ -288,14 +325,19 @@ test('a round over the applications in use sends four requests and names the usa
 	for (const [index, name] of ownedApps.entries()) {
 		await expect(ownerless).not.toContainText(entryLabel(name, usageIds[index]))
 	}
-	await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+	await dialog.getByRole('button', { name: 'Close', exact: true }).last().click()
 	await expect(dialog).toBeHidden({ timeout: 30000 })
 
 	await openRound(page, roundName)
 	const pending = catalogCard(page, 'Pending')
 	await expect(pending).toBeVisible({ timeout: 30000 })
-	await expect(pending.getByRole('row').filter({ hasText: NC_ADMIN_USER })).toHaveCount(4, { timeout: 30000 })
-	await expect(page.getByText('Entries without an owner').first()).toBeVisible()
+	await expect(pending.getByText(NC_ADMIN_USER, { exact: true }).first()).toBeVisible({ timeout: 30000 })
+	// The card's list fills progressively, so the four requests are counted on the round itself.
+	const roundId = new URL(page.url()).pathname.split('/').pop() ?? ''
+	await expect
+		.poll(async () => (await requestsOf(roundId)).filter((request) => request.status === 'pending').length, { timeout: 30000 })
+		.toBe(4)
+	// The entries without an owner are reported by the start dialog (asserted above); the round page lists requests only.
 })
 
 // @e2e owner-attestation::confirming-from-the-list
@@ -313,12 +355,14 @@ test('confirming a request from My confirmation requests marks it confirmed and 
 	await expect(page.getByRole('row').filter({ hasText: label })).toHaveCount(0, { timeout: 30000 })
 
 	await openRound(page, roundName)
-	const confirmed = catalogCard(page, 'Confirmed')
-	await expect(confirmed.getByRole('row').filter({ hasText: label })).toBeVisible({ timeout: 30000 })
-	await expect(catalogCard(page, 'Pending').getByRole('row').filter({ hasText: label })).toHaveCount(0)
+	const confirmed = await revealCard(page, 'Confirmed')
+	await expect(confirmed.getByText(label).first()).toBeVisible({ timeout: 30000 })
+	await expect(catalogCard(page, 'Pending').getByText(label)).toHaveCount(0)
 
 	await gotoAppRoute(page, `/gebruik/${usageIds[0]}`)
 	await dismissSupportDialog(page)
+	// Last confirmed is in the Data quality widget, below the fold.
+	await revealSection(page, 'Data quality')
 	const today = new Date()
 	const day = String(today.getDate())
 	const month = String(today.getMonth() + 1)
@@ -368,10 +412,8 @@ test('a round past its deadline shows its one overdue request with the owner', a
 	expect(moved.ok(), `marking the request overdue returned ${moved.status()}`).toBe(true)
 
 	await openRound(page, lateRoundName)
-	const overdue = catalogCard(page, 'Overdue')
-	await expect(overdue).toBeVisible({ timeout: 30000 })
-	const rows = overdue.getByRole('row').filter({ hasText: NC_ADMIN_USER })
-	await expect(rows).toHaveCount(1, { timeout: 30000 })
-	await expect(rows.first()).toContainText(entryLabel(lateApp, ids.lateUsage))
-	await expect(catalogCard(page, 'Pending').getByRole('row').filter({ hasText: NC_ADMIN_USER })).toHaveCount(0)
+	const overdue = await revealCard(page, 'Overdue')
+	await expect(overdue.getByText(NC_ADMIN_USER, { exact: true })).toHaveCount(1, { timeout: 30000 })
+	await expect(overdue).toContainText(entryLabel(lateApp, ids.lateUsage))
+	await expect(catalogCard(page, 'Pending').getByText(NC_ADMIN_USER, { exact: true })).toHaveCount(0)
 })
