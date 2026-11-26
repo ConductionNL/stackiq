@@ -8162,7 +8162,7 @@
         "slug": "architectureDecision",
         "title": "Architecture decision",
         "description": "An architecture decision of the organisation: its context, the decision, the options not chosen and the consequences, reviewed by a second person.",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "icon": "ScaleBalance",
         "required": [
           "title"
@@ -8548,6 +8548,7 @@
             "type": "array",
             "title": "Alternatives",
             "description": "The options that were not chosen, each with the reason.",
+            "x-widget": "sub-objects",
             "order": 4,
             "facetable": false,
             "items": {

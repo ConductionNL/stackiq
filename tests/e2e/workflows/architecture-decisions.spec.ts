@@ -33,7 +33,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute, openCreateDialog } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, openCreateDialog, revealSection } from './_ui.ts'
 
 const OR = '/index.php/apps/openregister/api/objects'
 const SCHEMA = 'architectureDecision'
@@ -94,6 +94,16 @@ function idOf(row: Record<string, unknown>): string {
  */
 async function reviewerPage(browser: Browser): Promise<Page> {
 	const context = await browser.newContext({ baseURL: BASE_URL, storageState: { cookies: [], origins: [] } })
+	// A fresh account gets the welcome tour and the support note; the shared
+	// storage state that suppresses them belongs to the admin only.
+	await context.addInitScript(() => {
+		try {
+			window.localStorage.setItem('cn-support-dialog-shown:stackiq', '1')
+			window.localStorage.setItem('cn-walkthrough-seen:stackiq', '999.0.0')
+		} catch {
+			// No storage: the helpers dismiss them by hand.
+		}
+	})
 	const page = await context.newPage()
 	await page.goto('/index.php/login', { timeout: 60000 })
 	const user = page.locator('input[autocomplete="username"], input[name="user"], input[id="user"]')
@@ -178,7 +188,8 @@ test('a recorded decision is listed as draft and its page shows the rejected alt
 	const dialog = await openCreateDialog(page, /Add/)
 	await dialog.getByLabel('Title').fill(title)
 	await dialog.getByLabel('Context').fill('File exchange over FTP cannot be traced.')
-	await dialog.getByLabel('Decision').fill('A new integration uses a documented API.')
+	// exact: "Board decisions" also contains "Decision".
+	await dialog.getByLabel('Decision', { exact: true }).fill('A new integration uses a documented API.')
 	await dialog.getByLabel('Category').click()
 	await page.getByRole('option', { name: 'Integration', exact: true }).click()
 	await dialog.getByLabel('Impact').click()
@@ -212,16 +223,35 @@ test('the reviewer applies Accept and the History tab shows the transition', asy
 		await dismissSupportDialog(page)
 		await expect(page.getByText(inReview).first()).toBeVisible({ timeout: 30000 })
 
-		await page.getByTestId('cn-lifecycle-action-accept').click()
-		await expect(page.getByTestId('cn-lifecycle-actions-error')).toHaveCount(0)
+		// Accept is the reviewer's action in the page's Actions menu.
+		await page.getByRole('button', { name: 'Actions' }).first().click()
+		await page.getByRole('menuitem', { name: /Accept/ }).first().click()
 		await expect(page.getByText('Accepted', { exact: true }).first()).toBeVisible({ timeout: 30000 })
-		await expect(page.getByTestId('cn-lifecycle-action-accept')).toHaveCount(0)
+		await page.getByRole('button', { name: 'Actions' }).first().click()
+		await expect(page.getByRole('menuitem', { name: /Accept/ })).toHaveCount(0)
+		await page.keyboard.press('Escape')
 
 		const res = await apiCtx.get(`${OR}/${cfg.register}/${SCHEMA}/${ids.inReview}`)
 		expect((await res.json()).status).toBe('accepted')
 
-		await page.getByRole('tab', { name: 'History' }).click()
-		await expect(page.getByRole('tabpanel').filter({ hasText: /accepted/i }).first()).toBeVisible({ timeout: 30000 })
+		// The sidebar reads the history when the page loads and does not refresh
+		// it after a transition (reported for nextcloud-vue), so reload first.
+		await page.reload()
+		await expect(page.getByText(inReview).first()).toBeVisible({ timeout: 30000 })
+		// The History tab lives in the record sidebar, which a fresh account starts closed.
+		const openSidebar = page.getByRole('button', { name: /Open sidebar|Zijbalk openen/i })
+		if (await openSidebar.isVisible().catch(() => false)) {
+			await openSidebar.click()
+		}
+		// With one tab group showing, the sidebar draws History without a tab strip.
+		const historyTab = page.getByRole('tab', { name: 'History' })
+		if (await historyTab.isVisible().catch(() => false)) {
+			await historyTab.click()
+		}
+		// The transition is the reviewer's own update entry.
+		await expect(
+			page.getByRole('region', { name: 'History' }).getByRole('link', { name: new RegExp(`${reviewer} update`) }).first(),
+		).toBeVisible({ timeout: 30000 })
 	} finally {
 		await page.context().close()
 	}
@@ -231,7 +261,8 @@ test('the reviewer applies Accept and the History tab shows the transition', asy
 test('the usage page lists the accepted decision about it and opens the decision page', async ({ page }) => {
 	await gotoAppRoute(page, `/gebruik/${ids.usage}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByText('Architecture decisions').first()).toBeVisible({ timeout: 30000 })
+	// The decisions widget sits below the fold and mounts when scrolled into view.
+	await revealSection(page, 'Architecture decisions')
 	const row = page.getByRole('row').filter({ hasText: accepted })
 	await expect(row).toBeVisible({ timeout: 30000 })
 	await expect(row).toContainText(/accepted/i)
