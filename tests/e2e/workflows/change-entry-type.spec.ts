@@ -129,8 +129,12 @@ test('a supplier turns an application into a service and it keeps its identifier
 	const service = await asService.json()
 	expect(service.id ?? service['@self']?.id).toBe(ids.hosting)
 	expect(service.name).toBe(`${RUN_ID} Hosting en beheer`)
+	// OpenRegister finds an object by its uuid whatever schema the address names, so the old
+	// address may still answer: then it answers with the service, never with an application.
 	const asModule = await apiCtx.get(`/index.php/apps/openregister/api/objects/${cfg.register}/module/${ids.hosting}`)
-	expect(asModule.status()).not.toBe(200)
+	if (asModule.status() === 200) {
+		expect(String((await asModule.json())['@self']?.schema)).toBe(String(service['@self']?.schema))
+	}
 
 	// Its history came along: the audit trail of the moved object is not empty.
 	const trail = await apiCtx.get(`/index.php/apps/openregister/api/objects/${cfg.register}/catalogService/${ids.hosting}/audit-trails`)

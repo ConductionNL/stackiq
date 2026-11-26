@@ -162,9 +162,9 @@ class EntryTypeFakePermissions {
 	/** @var list<string> */
 	public array $asked = [];
 
-	public function hasPermission(object $schema, string $action, ?string $userId = null, ?string $objectOwner = null, bool $_rbac = true, ?object $object = null, ?string $register = null): bool {
-		$this->asked[] = $schema->getSlug() . '.' . $action . ($objectOwner !== null ? '@' . $objectOwner : '');
-		return $this->allowed[$schema->getSlug() . '.' . $action] ?? false;
+	public function hasPermission(\OCA\OpenRegister\Service\Object\PermissionAsk $ask, bool $_rbac = true): bool {
+		$this->asked[] = $ask->schema->getSlug() . '.' . $ask->action . ($ask->objectOwner !== null ? '@' . $ask->objectOwner : '');
+		return $this->allowed[$ask->schema->getSlug() . '.' . $ask->action] ?? false;
 	}//end hasPermission()
 }//end class
 
@@ -178,10 +178,10 @@ class EntryTypeFakeMove {
 
 	public array $answer = ['moved' => true, 'errors' => []];
 
-	public function move(object $object, object $sourceRegister, object $sourceSchema, object $targetRegister, object $targetSchema, string $actor): array {
-		$this->moves[] = ['data' => $object->getObject(), 'from' => $sourceSchema->getSlug(), 'to' => $targetSchema->getSlug(), 'sameRegister' => $sourceRegister === $targetRegister, 'actor' => $actor];
+	public function perform(\OCA\OpenRegister\Service\Object\ObjectMove $move): array {
+		$this->moves[] = ['data' => $move->object->getObject(), 'from' => $move->source->schema->getSlug(), 'to' => $move->target->schema->getSlug(), 'sameRegister' => $move->source->register === $move->target->register, 'actor' => $move->actor];
 		return $this->answer;
-	}//end move()
+	}//end perform()
 }//end class
 
 /**

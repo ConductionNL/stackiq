@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\LegacyCatalogue;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\PermissionAsk;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
@@ -101,7 +102,7 @@ class LegacyCatalogueOpenRegister {
 
 		try {
 			$schema = $this->container->get(self::SCHEMA_MAPPER)->find($schemaId);
-			return $this->container->get(self::PERMISSIONS)->hasPermission(schema: $schema, action: 'create') === true;
+			return $this->container->get(self::PERMISSIONS)->hasPermission(ask: new PermissionAsk(schema: $schema, action: 'create')) === true;
 		} catch (Throwable $e) {
 			$this->logger->warning('LegacyCatalogueOpenRegister: the permission check failed', ['exception' => $e->getMessage()]);
 			return false;
