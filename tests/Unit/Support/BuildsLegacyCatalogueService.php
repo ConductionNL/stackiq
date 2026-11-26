@@ -131,8 +131,8 @@ trait BuildsLegacyCatalogueService {
 			 *
 			 * @return bool
 			 */
-			public function hasPermission(object $schema, string $action): bool {
-				return $this->answer && $schema->id === $this->usageSchema && $action === 'create';
+			public function hasPermission(\OCA\OpenRegister\Service\Object\PermissionAsk $ask, bool $_rbac = true): bool {
+				return $this->answer && $ask->schema->id === $this->usageSchema && $ask->action === 'create';
 			}//end hasPermission()
 		};
 		$services = [

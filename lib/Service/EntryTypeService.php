@@ -30,6 +30,9 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
+use OCA\OpenRegister\Service\Object\MoveAddress;
+use OCA\OpenRegister\Service\Object\ObjectMove;
+use OCA\OpenRegister\Service\Object\PermissionAsk;
 use OCA\Stackiq\Service\EntryType\EntryReferences;
 use OCA\Stackiq\Service\EntryType\EntryShape;
 use OCA\Stackiq\Service\EntryType\EntryTypeRefusal;
@@ -400,14 +403,14 @@ class EntryTypeService {
 			$permissions = $this->container->get(self::PERMISSIONS);
 			$schemas = $this->container->get(EntryReferences::SCHEMA_MAPPER);
 			$entity = $context['entity'];
+			// OpenRegister takes one PermissionAsk; a null user is the signed-in one.
+			$update = (new PermissionAsk(schema: $schemas->find($context['sourceSchemaId']), action: 'update'))
+				->askedBy(userId: null, objectOwner: $entity->getOwner())
+				->about(object: $entity, register: null);
+			$create = new PermissionAsk(schema: $schemas->find($context['targetSchemaId']), action: 'create');
 			$allowed = $user !== null
-				&& $permissions->hasPermission(
-					schema: $schemas->find($context['sourceSchemaId']),
-					action: 'update',
-					objectOwner: $entity->getOwner(),
-					object: $entity
-				) === true
-				&& $permissions->hasPermission(schema: $schemas->find($context['targetSchemaId']), action: 'create') === true;
+				&& $permissions->hasPermission(ask: $update) === true
+				&& $permissions->hasPermission(ask: $create) === true;
 		} catch (Throwable $e) {
 			$this->logger->warning('EntryTypeService: the permission check failed', ['exception' => $e->getMessage()]);
 			$allowed = false;
@@ -536,13 +539,13 @@ class EntryTypeService {
 		$schemas = $this->container->get(EntryReferences::SCHEMA_MAPPER);
 		$register = $registers->find($context['registerId']);
 
-		return $this->container->get(self::MOVE)->move(
-			object: $object,
-			sourceRegister: $register,
-			sourceSchema: $schemas->find($context['sourceSchemaId']),
-			targetRegister: $register,
-			targetSchema: $schemas->find($context['targetSchemaId']),
-			actor: (string)$this->userSession->getUser()?->getUID(),
+		return $this->container->get(self::MOVE)->perform(
+			move: new ObjectMove(
+				object: $object,
+				source: new MoveAddress(register: $register, schema: $schemas->find($context['sourceSchemaId'])),
+				target: new MoveAddress(register: $register, schema: $schemas->find($context['targetSchemaId'])),
+				actor: (string)$this->userSession->getUser()?->getUID(),
+			)
 		);
 
 	}//end moveWithOpenRegister()
