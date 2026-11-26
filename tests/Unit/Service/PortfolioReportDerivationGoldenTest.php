@@ -92,4 +92,47 @@ class PortfolioReportDerivationGoldenTest extends TestCase {
 		);
 	}//end testTimeClassificationForEveryScorePair()
 
+	/**
+	 * An entity result keeps the organisation that owns it, an array result is
+	 * passed through, and anything else becomes an empty bag.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-value-assessment/spec.md#requirement-the-portfolio-report-shows-each-usage-s-yearly-cost-beside-its-value-and-risk-scores-req-clr-016
+	 */
+	public function testNormalizedEntityKeepsItsOwningOrganisation(): void {
+		$entity = new class {
+			/**
+			 * The stored properties.
+			 *
+			 * @return array<string,mixed>
+			 */
+			public function getObject(): array {
+				return ['id' => 'c-1', 'usage' => 'g-1', 'cost' => 10000];
+			}//end getObject()
+
+			/**
+			 * The owning organisation.
+			 *
+			 * @return string|null
+			 */
+			public function getOrganisation(): ?string {
+				return 'org-a';
+			}//end getOrganisation()
+		};
+
+		$normalized = (new PortfolioReportDerivation())->normalizeResults(
+			results: [$entity, ['id' => 'c-2', '@self' => ['organisation' => 'org-b']], 'garbage']
+		);
+
+		$this->assertSame(
+			expected: [
+				['id' => 'c-1', 'usage' => 'g-1', 'cost' => 10000, '_organisation' => 'org-a'],
+				['id' => 'c-2', '@self' => ['organisation' => 'org-b']],
+				[],
+			],
+			actual: $normalized
+		);
+	}//end testNormalizedEntityKeepsItsOwningOrganisation()
+
 }//end class

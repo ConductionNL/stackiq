@@ -11,7 +11,9 @@
  * "value / fit / risk" and the cost in nl-NL euro formatting. The CSV columns
  * are covered by tests/Unit/Service/PortfolioReportServiceTest.php.
  *
- * Written from the change's scenarios; not yet run against a live instance.
+ * The municipality is also an OpenRegister organisation (same uuid) and the
+ * contract is moved into it, because the report costs only the contracts the
+ * reporting organisation owns.
  *
  * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-value-assessment/spec.md#requirement-the-portfolio-report-shows-each-usage-s-yearly-cost-beside-its-value-and-risk-scores-req-clr-016
  */
@@ -51,7 +53,17 @@ async function seed(schema: string, data: Record<string, unknown>): Promise<stri
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: organisation, type: 'Municipality' })
+	// The report costs only the contracts the reporting organisation owns
+	// (decision 409), so the municipality is an OpenRegister organisation too,
+	// with the same uuid, and the contract is moved into it below.
+	const created = await apiCtx.post('/index.php/apps/openregister/api/organisations', {
+		data: { name: organisation },
+	})
+	if (!created.ok()) {
+		throw new Error(`organisation ${created.status()}: ${await created.text()}`)
+	}
+	ids.tenant = String((await created.json()).organisation.uuid)
+	ids.org = await seed('organization', { id: ids.tenant, name: organisation, type: 'Municipality' })
 	ids.module = await seed('module', { name: application })
 	ids.usage = await seed('usage', {
 		consumer: ids.org,
@@ -63,7 +75,7 @@ test.beforeAll(async () => {
 		riskScore: 2,
 		scoredOn: '2026-10-01',
 	})
-	await seed('catalogContract', {
+	ids.contract = await seed('catalogContract', {
 		usage: ids.usage,
 		contractNumber: `${RUN_ID}-1`,
 		contractType: 'Licence',
@@ -73,12 +85,29 @@ test.beforeAll(async () => {
 		// No status: a contract becomes Active only through an approved
 		// decision, and the report costs a contract whatever its status.
 	})
+	const stored = await apiCtx.get(
+		`/index.php/apps/openregister/api/objects/${cfg.register}/catalogContract/${ids.contract}`,
+	)
+	const source = String((await stored.json())?.['@self']?.organisation ?? '')
+	const moved = await apiCtx.post('/index.php/apps/stackiq/api/ownership-transfers/execute', {
+		data: {
+			objects: [{ schema: 'catalogContract', id: ids.contract }],
+			sourceOrganisation: source,
+			targetOrganisation: ids.tenant,
+		},
+	})
+	if (!moved.ok()) {
+		throw new Error(`moving the contract ${moved.status()}: ${await moved.text()}`)
+	}
 })
 
 test.afterAll(async () => {
 	if (!apiCtx) return
 	for (const [schema, id] of seeded.reverse()) {
 		await deleteObject(apiCtx, cfg.register, schema, id)
+	}
+	if (ids.tenant) {
+		await apiCtx.delete(`/index.php/apps/openregister/api/organisations/${ids.tenant}`)
 	}
 	await apiCtx.dispose()
 })
