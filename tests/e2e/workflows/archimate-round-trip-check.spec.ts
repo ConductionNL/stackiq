@@ -57,5 +57,7 @@ test('an admin checks a small model before importing it', async ({ page }) => {
 test('the old round-trip endpoint is gone', async () => {
 	const res = await apiCtx.post('/index.php/apps/stackiq/api/archimate/test-round-trip')
 
-	expect(res.status()).toBe(404)
+	// No route serves it any more. Nextcloud answers 405 when the path still
+	// matches a route of another verb (the app's page fallback), 404 otherwise.
+	expect([404, 405]).toContain(res.status())
 })
