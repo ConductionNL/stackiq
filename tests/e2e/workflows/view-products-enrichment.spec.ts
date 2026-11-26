@@ -77,11 +77,15 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	const element = await seed(GEMMA_REGISTER, 'element', {
+		// identifier, type and properties are required by the element schema.
+		identifier: `id-${RUN_ID}-component`,
+		type: 'ApplicationComponent',
+		properties: [],
 		name: component,
 		gemmaType: 'referentiecomponent',
 		grouping: RUN_ID,
 	})
-	const org = await seed(cfg.register, 'organization', { name: organisation })
+	const org = await seed(cfg.register, 'organization', { name: organisation, type: 'Municipality' })
 	const module = await seed(cfg.register, 'module', { name: `${RUN_ID} products application` })
 	await seed(cfg.register, 'usage', {
 		consumer: org,
@@ -119,7 +123,7 @@ test('Show products fetches the view with include_products and lists the product
 	await gotoAppRoute(page, '/gemma-plaat')
 	await dismissSupportDialog(page)
 	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
-	await page.getByRole('option', { name: organisation }).click()
+	await page.locator('.vs__dropdown-option', { hasText: organisation }).first().click()
 
 	const map = page.getByTestId('coverage-view-map')
 	await expect(map).toBeVisible({ timeout: 30000 })
