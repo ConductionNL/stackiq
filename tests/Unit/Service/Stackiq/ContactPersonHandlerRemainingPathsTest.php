@@ -35,7 +35,7 @@ use RuntimeException;
  * existing user (logged, the user still returned).
  *
  * @spec openspec/specs/sc-handlers/spec.md
- * @spec openspec/specs/user-provisioning/spec.md
+ * @spec openspec/specs/contactpersoon-sync/spec.md
  */
 #[CoversClass(ContactPersonHandler::class)]
 #[UsesClass(ContactPersonEmail::class)]

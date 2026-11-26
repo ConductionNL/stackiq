@@ -17,7 +17,7 @@
  *
  * @link https://www.OpenRegister.app
  *
- * @spec openspec/specs/object-lifecycle/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
  */
 
 namespace OCA\OpenRegister\Kernel\Contracts\Value;
@@ -27,7 +27,7 @@ use OCP\IUser;
 /**
  * On whose behalf one object save is written, and who owns a row it creates.
  *
- * @spec openspec/specs/object-lifecycle/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
  */
 final class SaveActor {
 
@@ -47,7 +47,7 @@ final class SaveActor {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Attributed writes are the default.
 	 *
-	 * @spec openspec/specs/object-lifecycle/spec.md
+	 * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
 	 */
 	public function __construct(
 		public readonly ?IUser $currentUser=null,

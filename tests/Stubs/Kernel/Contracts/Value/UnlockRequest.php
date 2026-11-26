@@ -17,7 +17,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/changes/run-scoped-object-locking/specs/run-scoped-object-locking/spec.md#requirement-a-lock-is-released-through-its-own-endpoint-and-a-release-says-whether-there-was-one
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's run-scoped-object-locking
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\OpenRegister\Kernel\Contracts\Value;
 /**
  * The object, the kind of lock and who releases it.
  *
- * @spec openspec/changes/run-scoped-object-locking/specs/run-scoped-object-locking/spec.md#requirement-a-lock-is-released-through-its-own-endpoint-and-a-release-says-whether-there-was-one
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's run-scoped-object-locking
  */
 final class UnlockRequest {
 

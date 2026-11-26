@@ -29,7 +29,7 @@ use Psr\Log\LoggerInterface;
  * the handler creates one (local scope, not verified) and saves the account
  * once; it also only writes the name fields that are present.
  *
- * @spec openspec/specs/user-provisioning/spec.md
+ * @spec openspec/specs/contactpersoon-sync/spec.md
  */
 class ContactPersonHandlerStoreRoleTest extends TestCase {
 	private IConfig&MockObject $config;

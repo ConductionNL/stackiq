@@ -9,7 +9,7 @@
  * select labelled from the organisation list, the Save and Run Now buttons'
  * enablement and wiring, and the empty state when there are no jobs.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

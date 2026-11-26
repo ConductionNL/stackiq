@@ -9,7 +9,7 @@
  * writing whole minutes back as seconds, and the section's save, refresh
  * and Sync now wiring.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

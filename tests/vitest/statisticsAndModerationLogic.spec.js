@@ -10,7 +10,7 @@
  * mount. ModerationQueue: its translated prop defaults and loading the
  * pending queue, with the empty and failure answers.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

@@ -659,7 +659,7 @@ interface ObjectServiceInterface {
 	 *
 	 * @return ObjectValidationVerdict `valid`, and one error per refused property with the rule that refused it.
 	 *
-	 * @spec openspec/changes/records-validate-without-saving/specs/objects-crud/spec.md#requirement-a-record-can-be-validated-without-saving-it
+	 * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's records-validate-without-saving
 	 */
 	public function validateObject(array $object, string|int $register, string|int $schema, ?string $id=null): ObjectValidationVerdict;
 

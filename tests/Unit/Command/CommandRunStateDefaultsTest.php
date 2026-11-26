@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * default key set or starting values would silently corrupt the run report;
  * ReferenceAuditRun starts every collection empty and the audit off by default.
  *
- * @spec openspec/specs/gemma-standard-links/spec.md
+ * @spec openspec/specs/archimate-import/spec.md
  */
 class CommandRunStateDefaultsTest extends TestCase {
 	public function testGemmaLinkBackfillStartsWithAZeroedFourOutcomeTally(): void {
