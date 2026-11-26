@@ -975,6 +975,12 @@
 					"rating",
 					"status"
 				],
+				"_note": "REQ-CLR-008: the review form never offers the status; every new review is pending (ReviewService) and only a moderation decision moves it. The schema's hideOnForm is not read by the form, so the field is hidden here.",
+				"fieldOverrides": {
+					"status": {
+						"hidden": true
+					}
+				},
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
