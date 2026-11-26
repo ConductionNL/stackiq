@@ -47,6 +47,25 @@ const usageApp = `${RUN_ID} application in use`
 const connection = `${RUN_ID} connection`
 const OR_API = '/index.php/apps/openregister/api'
 
+/**
+ * Start Move to organisation from a record page's header: a button when the
+ * header has room for it, else an item in the header's Actions menu.
+ *
+ * @param page The page.
+ * @return Nothing.
+ */
+async function openMoveDialog(page: Page): Promise<void> {
+	// The header has rendered once its Edit button shows; only then is a missing button folded away.
+	await expect(page.getByRole('button', { name: 'Edit' }).first()).toBeVisible({ timeout: 30000 })
+	const button = page.getByRole('button', { name: 'Move to organisation' }).first()
+	if (!(await button.isVisible().catch(() => false))) {
+		await page.getByRole('button', { name: 'Actions' }).first().click()
+		await page.getByRole('menuitem', { name: 'Move to organisation' }).first().click()
+		return
+	}
+	await button.click()
+}
+
 test.describe.configure({ mode: 'serial' })
 
 /**
@@ -72,6 +91,10 @@ async function awaitOrganisation(uuid: string): Promise<void> {
 	for (let attempt = 0; attempt < 20; attempt++) {
 		const res = await apiCtx.get(`${OR_API}/organisations/${uuid}`)
 		if (res.ok()) return
+		// The sync is cron-only (every five minutes); the administrator's manual sync runs the same pass now.
+		if (attempt % 5 === 0) {
+			await apiCtx.post('/index.php/apps/stackiq/api/settings/sync', { data: { minutesBack: 5 } })
+		}
 		await new Promise((resolve) => setTimeout(resolve, 1000))
 	}
 	throw new Error(`organisation ${uuid} did not sync to OpenRegister`)
@@ -164,7 +187,8 @@ test.beforeAll(async () => {
 	ids.app1 = await seed('module', { name: app1, provider: ids.orgA })
 	ids.app2 = await seed('module', { name: app2, provider: ids.orgA })
 	ids.usageModule = await seed('module', { name: usageApp, provider: ids.orgA })
-	ids.connection = await seed('connection', { name: connection })
+	// dataExchangeDirection is stored NOT NULL, so a connection names it.
+	ids.connection = await seed('connection', { name: connection, dataExchangeDirection: 'AtoB' })
 	ids.usage = await seed('usage', {
 		consumer: ids.orgA,
 		module: ids.usageModule,
@@ -200,7 +224,8 @@ test('an administrator of both organisations moves two applications and they kee
 	await expect(moving).toContainText(app2)
 	await dialog.getByRole('button', { name: 'Move', exact: true }).click()
 	await expect(dialog).toContainText('2 entries moved.', { timeout: 30000 })
-	await dialog.getByRole('button', { name: 'Close' }).click()
+	// The dialog has a header X and a footer Close, both named Close.
+	await dialog.getByRole('button', { name: 'Close' }).last().click()
 
 	// The same addresses open, now showing supplier B, with their history.
 	for (const [id, name] of [[ids.app1, app1], [ids.app2, app2]]) {
@@ -208,8 +233,17 @@ test('an administrator of both organisations moves two applications and they kee
 		await dismissSupportDialog(page)
 		await expect(page.getByText(name).first()).toBeVisible({ timeout: 30000 })
 		await expect(page.getByText(orgB).first()).toBeVisible({ timeout: 30000 })
-		await page.getByRole('tab', { name: 'History' }).first().click()
-		await expect(page.getByRole('tabpanel').first()).not.toBeEmpty()
+		// History is in the record sidebar; open it, and pick the tab only when a tab strip shows.
+		const openSidebar = page.getByRole('button', { name: /Open sidebar|Zijbalk openen/i })
+		if (await openSidebar.isVisible().catch(() => false)) {
+			await openSidebar.click()
+		}
+		const historyTab = page.getByRole('tab', { name: 'History' }).first()
+		if (await historyTab.isVisible().catch(() => false)) {
+			await historyTab.click()
+		}
+		// Each history entry is a link named by its time, user and action.
+		await expect(page.getByRole('link', { name: / (create|update)\b/ }).first()).toBeVisible({ timeout: 30000 })
 	}
 })
 
@@ -219,7 +253,7 @@ test('the dry run for a usage names the connection that stays with organisation 
 }) => {
 	await gotoAppRoute(page, `/gebruik/${ids.usage}`)
 	await dismissSupportDialog(page)
-	await page.getByRole('button', { name: 'Move to organisation' }).first().click()
+	await openMoveDialog(page)
 
 	const dialog = await previewMoveTo(page, orgB)
 	const moving = dialog.locator('section').filter({ has: page.getByRole('heading', { name: 'Moving' }) })
