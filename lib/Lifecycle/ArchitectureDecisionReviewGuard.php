@@ -211,10 +211,15 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	/**
 	 * OpenRegister's object service, resolved when a superseding decision must be read.
 	 *
+	 * Resolved through the published contract (ADR-084), so the dependency is a
+	 * type a reader and gate-66 can see (ADR-083), not a string literal.
+	 *
 	 * @return ObjectServiceInterface
+	 *
+	 * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
 	 */
 	private function objectService(): ObjectServiceInterface {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->container->get(ObjectServiceInterface::class);
 	}//end objectService()
 
 	/**

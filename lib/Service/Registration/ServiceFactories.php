@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Registration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
@@ -330,7 +331,7 @@ final class ServiceFactories {
 					// ADR-084: the published contract, resolved through the alias
 					// registered above, not the concrete OpenRegister class.
 					objectService: $container->get(ObjectServiceInterface::class),
-					organisationMapper: $container->get('OCA\OpenRegister\Db\OrganisationMapper'),
+					organisationMapper: $container->get(OrganisationMapper::class),
 				);
 			}
 		);

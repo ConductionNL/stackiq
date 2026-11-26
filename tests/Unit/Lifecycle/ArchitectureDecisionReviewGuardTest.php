@@ -246,7 +246,7 @@ class ArchitectureDecisionReviewGuardTest extends TestCase {
 			->willReturn($entity);
 
 		$this->container->expects($this->once())->method('get')
-			->with('OCA\OpenRegister\Service\ObjectService')
+			->with(ObjectServiceInterface::class)
 			->willReturn($service);
 	}//end expectFind()
 }//end class
