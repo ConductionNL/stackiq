@@ -5,7 +5,7 @@
  * the contract is for, linking to that supplier's organisation page.
  *
  * Seeds a supplier organisation, a service it provides and a contract for
- * that service, all carrying this run's RUN_ID, through the objects API, and
+ * that service (with the usage a contract requires), all carrying this run's RUN_ID, through the objects API, and
  * removes exactly those rows afterwards.
  *
  * catalogContract points at its service only; the contract page
@@ -54,17 +54,28 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	ids.supplier = await seed('organization', { name: supplier, type: 'Supplier' })
+	ids.municipality = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
+	ids.app = await seed('module', { name: `${RUN_ID} application`, provider: ids.supplier })
+	ids.usage = await seed('usage', {
+		module: ids.app,
+		consumer: ids.municipality,
+		status: 'In production',
+	})
+	// type and usage are required by the schemas (catalogService.type, catalogContract.usage).
 	ids.service = await seed('catalogService', {
 		name: service,
 		provider: ids.supplier,
+		type: ['Application management'],
 	})
 	ids.contract = await seed('catalogContract', {
 		contractNumber: `${RUN_ID}-1`,
 		contractType: 'SLA',
-		status: 'Active',
+		// Active is reached only through an approved decision; the supplier does not depend on it.
+		status: 'In negotiation',
 		startDate: '2026-01-01',
 		cost: 5000,
 		costPeriod: 'Annually',
+		usage: ids.usage,
 		service: ids.service,
 	})
 })
