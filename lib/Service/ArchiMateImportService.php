@@ -130,7 +130,7 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	 *
 	 * @var string[]
 	 *
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
 	 */
 	private const ORIGIN_SECTIONS = ['view', 'element', 'relationship'];
 

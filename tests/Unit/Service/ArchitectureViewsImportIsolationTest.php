@@ -41,7 +41,7 @@ use ReflectionProperty;
  * @covers \OCA\Stackiq\Service\ArchiMateImportService
  * @uses   \OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
  */
 class ArchitectureViewsImportIsolationTest extends TestCase {
 

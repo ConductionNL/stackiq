@@ -67,7 +67,7 @@ export function freshId(prefix, taken) {
  * @param {{name: string, type: string, elementRef?: string|null}} element What to place.
  * @param {{x: number, y: number}} [position] Where; next to the last node when absent.
  * @return {Array<object>} The nodes with the new one appended.
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 export function placeElement(nodes, element, position = null) {
 	const last = nodes.filter((node) => !node.parentNode).at(-1)
@@ -89,7 +89,7 @@ export function placeElement(nodes, element, position = null) {
  * @param {{source: string, target: string}} connection The two node ids.
  * @param {string} type The ArchiMate relation type.
  * @return {Array<object>}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-003-a-drawn-connection-shall-reference-a-relation-object
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-003-a-drawn-connection-shall-reference-a-relation-object
  */
 export function connect(edges, connection, type) {
 	const source = String(connection?.source ?? '')

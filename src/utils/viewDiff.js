@@ -78,7 +78,7 @@ function compare(before, after, { key, fields }) {
  * @param {{nodes?: object[], connections?: object[]}} before The earlier snapshot.
  * @param {{nodes?: object[], connections?: object[]}} after The later snapshot, or the current view.
  * @return {{nodes: object, connections: object, unchanged: boolean}}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
  */
 export function diffViews(before = {}, after = {}) {
 	const nodes = compare(before.nodes ?? [], after.nodes ?? [], { key: 'viewNodeId', fields: NODE_FIELDS })
@@ -95,7 +95,7 @@ export function diffViews(before = {}, after = {}) {
  * @param {{nodes: object, connections: object}} diff A `diffViews` result.
  * @param {'before'|'after'} side Which side is drawn.
  * @return {{nodes: Map<string, string>, connections: Map<string, string>}}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
  */
 export function statusesFor(diff, side) {
 	const mark = (part, key) => {
@@ -113,7 +113,7 @@ export function statusesFor(diff, side) {
  *
  * @param {{nodes: object, connections: object}} diff A `diffViews` result.
  * @return {Array<{kind: 'node'|'connection', change: 'added'|'removed'|'changed', id: string, name: string, fields: string[]}>}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
  */
 export function describeDiff(diff) {
 	const entries = []

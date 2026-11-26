@@ -2224,13 +2224,13 @@
 				"evidence": "src/manifest.json has no page for the view or element schema beyond Standaarden; no diagram editor in src/views or src/components",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-views-editor",
-				"requirement": "openspec/changes/architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-001 An application owner SHALL draw and save an architecture view"
+				"requirement": "openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-001 An application owner SHALL draw and save an architecture view"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "architecture-modelling",
-			"note": "Models are imported and exported as ArchiMate files; nothing lets a user draw or edit a model inside stackiq. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
+			"note": "Models are imported and exported as ArchiMate files; nothing lets a user draw or edit a model inside stackiq. Specified in openspec/changes/archive/2026-11-26-architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/importing-and-exporting-diagrams and https://help.sap.com/docs/leanix/ea/working-with-fact-sheets-in-diagrams: free draw and data flow diagrams edited in the diagram editor, with an ArchiMate 3.2 shape template (https://help.sap.com/docs/leanix/ea/styles-and-patterns) (read 2026-09-26). Reached on: Diagrams > New Diagram (diagram editor).",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967507-create-an-architecture-view and https://help.bluedolphin.io/en/articles/11967516-add-objects-to-architecture-views: users create and edit ArchiMate architecture views in the view editor (read 2026-09-26). Reached on: Views > Create view.",
@@ -7471,7 +7471,7 @@
 				"evidence": "stackiq renders no architecture view (see arch-gemma-views), so there is nothing to compare; ArchiMate files are imported and exported whole",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-views-editor",
-				"requirement": "openspec/changes/architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-005 An owner SHALL save named versions and compare two of them"
+				"requirement": "openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-005 An owner SHALL save named versions and compare two of them"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -7486,7 +7486,7 @@
 				"glpi": "source read at 11.0.9: impact graphs are not versioned; src/ImpactContext.php:40 stores only positions, zoom and colours (install/mysql/glpi-empty.sql:1293 glpi_impactcontexts) and CommonDBTM defaults dohistory to false (src/CommonDBTM.php:104). Relation adds and removals (src/ImpactRelation.php:39 extends CommonDBRelation) appear in each linked item's history (src/CommonDBRelation.php:844), but there is no saved diagram version and no compare view.",
 				"topdesk": "unknown: architecture diagrams are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/archive/2026-11-26-architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -7694,7 +7694,7 @@
 				"evidence": "no page lists or tags views (src/store/modules/view.js defines a view store nothing imports, see arch-gemma-views)",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-views-editor",
-				"requirement": "openspec/changes/architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-004 The views list SHALL filter on tag, status and owner"
+				"requirement": "openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor :: REQ-AVE-004 The views list SHALL filter on tag, status and owner"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -7709,7 +7709,7 @@
 				"glpi": "source read at 11.0.9: saved searches, the only saved views, have type, itemtype, owner and privacy but no tags (install/mysql/glpi-empty.sql:232 glpi_savedsearches, :237 users_id, :238 is_private), and impact graphs are not saved as named views (src/ImpactContext.php:40 holds display settings only). The list can be filtered by owner, not by tag.",
 				"topdesk": "unknown: saved overviews can be renamed and shared, but tagging them is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/archive/2026-11-26-architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "no",

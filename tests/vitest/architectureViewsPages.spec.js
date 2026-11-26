@@ -7,7 +7,7 @@
  * filters, and Standards and Views sit under an Architecture group without changing
  * the number of top-level entries.
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-004-the-views-list-shall-filter-on-tag-status-and-owner
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-004-the-views-list-shall-filter-on-tag-status-and-owner
  */
 
 import addFormats from 'ajv-formats'

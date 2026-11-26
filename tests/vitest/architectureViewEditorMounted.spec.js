@@ -8,7 +8,7 @@
  * drawing and saving, and the compare's marks and text summary
  * (architecture-views-editor, tasks 4, 6 and 7).
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
