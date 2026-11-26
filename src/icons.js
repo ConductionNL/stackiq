@@ -73,6 +73,7 @@ import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
 import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
@@ -89,6 +90,8 @@ import SitemapOutline from 'vue-material-design-icons/SitemapOutline.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
+import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
+import Sync from 'vue-material-design-icons/Sync.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
 import TransitConnectionVariant from 'vue-material-design-icons/TransitConnectionVariant.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
@@ -158,6 +161,7 @@ export default {
 	PackageVariant,
 	PackageVariantClosed,
 	PencilOutline,
+	Plus,
 	PowerPlugOutline,
 	PuzzleOutline,
 	RobotOutline,
@@ -174,6 +178,8 @@ export default {
 	SourceBranch,
 	Star,
 	StoreOutline,
+	SwapHorizontal,
+	Sync,
 	TagOutline,
 	TransitConnectionVariant,
 	ViewDashboardOutline,

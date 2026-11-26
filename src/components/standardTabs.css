@@ -99,3 +99,10 @@
 		border-top: 1px solid var(--color-border);
 	}
 }
+
+/* WCAG 2.3.3 / ADR-010: no tab transition for readers who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+	.tab-button {
+		transition: none;
+	}
+}

@@ -6,6 +6,8 @@
         "version": "0.3.8",
         "properties": {
           "standardVersions": {
+            "title": "Standard version",
+            "description": "Kies de standaardversie(s) waarop de koppeling is gebaseerd.",
             "items": {
               "x-external-register": "vng-gemma",
               "x-label-field": "name"
