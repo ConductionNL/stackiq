@@ -323,6 +323,36 @@ class ViewServiceTest extends TestCase {
 	}//end testProcessGebruikItemsSetsRegularType()
 
 	/**
+	 * OpenRegister main answers searchObjects() with entities, not arrays: each
+	 * is read through jsonSerialize(), so its @self and fields survive. On an
+	 * entity the old code failed with "Cannot use object of type ObjectEntity
+	 * as array" and the view answered 500 when "Our applications" was on.
+	 *
+	 * @return void
+	 */
+	public function testProcessGebruikItemsReadsEntityRows(): void {
+		$allGebruik = [];
+		$entity = new class {
+			/**
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return ['elementRef' => 'ref-9', 'name' => 'Zaaksysteem', '@self' => ['id' => 'u-9', 'organisation' => 'org-a']];
+			}
+		};
+
+		$this->callPrivateMethod(
+			methodName: 'processGebruikItems',
+			args: [[$entity, 'not a row'], &$allGebruik, 'org-a', 'regular']
+		);
+
+		$this->assertSame(expected: ['ref-9'], actual: array_keys($allGebruik));
+		$this->assertSame(expected: 'Zaaksysteem', actual: $allGebruik['ref-9'][0]['name']);
+		$this->assertSame(expected: 'u-9', actual: $allGebruik['ref-9'][0]['@self']['id']);
+		$this->assertSame(expected: 'regular', actual: $allGebruik['ref-9'][0]['_type']);
+	}//end testProcessGebruikItemsReadsEntityRows()
+
+	/**
 	 * Test processGebruikItems attaches source organisation metadata for deelnames items.
 	 *
 	 * @return void

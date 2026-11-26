@@ -1351,9 +1351,21 @@ class ViewService implements ViewServiceInterface {
 	 * @return void
 	 *
 	 * @spec openspec/changes/deelnames-gebruik/tasks.md#task-3
+	 * @spec openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
 	 */
 	private function processGebruikItems(array $gebruikItems, array &$allGebruik, string $currentOrg, string $type): void {
-		foreach ($gebruikItems as $usage) {
+		foreach ($gebruikItems as $item) {
+			// OpenRegister main answers searchObjects() with ObjectEntity rows: read
+			// each as its serialised array, @self included, as the code below expects.
+			$usage = $item;
+			if (is_object($item) === true && method_exists($item, 'jsonSerialize') === true) {
+				$usage = $item->jsonSerialize();
+			}
+
+			if (is_array($usage) === false) {
+				continue;
+			}
+
 			// Group by elementRef for quick lookup.
 			$elementRef = $usage['elementRef'] ?? $usage['componentRef'] ?? $usage['moduleRef'] ?? null;
 
@@ -1376,6 +1388,8 @@ class ViewService implements ViewServiceInterface {
 			}//end if
 		}//end foreach
 	}//end processGebruikItems()
+
+
 
 	/**
 	 * Extend gebruik data with modules information.
