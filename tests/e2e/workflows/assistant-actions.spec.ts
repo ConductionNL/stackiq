@@ -117,7 +117,8 @@ test.beforeAll(async () => {
 	ids.contract = await seed('catalogContract', {
 		contractNumber,
 		contractType: 'Licence',
-		status: 'Active',
+		// Active is reached only through an approved decision; the audit rows do not depend on it.
+		status: 'In negotiation',
 		startDate: '2026-01-01',
 		endDate: '2027-12-31',
 		usage: ids.usage,
