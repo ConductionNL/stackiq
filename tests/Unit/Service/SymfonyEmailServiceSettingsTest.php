@@ -21,7 +21,7 @@ use ReflectionClass;
  * and the setters that validate their input and write back through
  * EmailSettings, resetting the cached mailer.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/email-delivery/spec.md
  */
 #[CoversClass(SymfonyEmailService::class)]
 class SymfonyEmailServiceSettingsTest extends TestCase {

@@ -9,7 +9,7 @@
  * peer (button and Enter, trimmed, refused when blank), removing the clicked
  * peer, and the pull summary.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

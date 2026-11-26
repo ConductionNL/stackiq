@@ -24,7 +24,7 @@ use ReflectionMethod;
  * and IAppConfig, the step-result accumulator that records a failure or logs a
  * success, and the organisation-type classifier that maps a name to a type.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/settings-service/spec.md
  */
 #[CoversClass(SettingsService::class)]
 class SettingsServiceDelegationTest extends TestCase {

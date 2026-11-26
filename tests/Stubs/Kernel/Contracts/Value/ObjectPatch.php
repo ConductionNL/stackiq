@@ -17,7 +17,7 @@
  *
  * @link https://www.OpenRegister.app
  *
- * @spec openspec/specs/object-lifecycle/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 /**
  * One partial update: the object, the fields that change, where to find it and who acts.
  *
- * @spec openspec/specs/object-lifecycle/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
  */
 final class ObjectPatch {
 
@@ -45,7 +45,7 @@ final class ObjectPatch {
 	 * @phpstan-param array<string, mixed> $data
 	 * @psalm-param   array<string, mixed> $data
 	 *
-	 * @spec openspec/specs/object-lifecycle/spec.md
+	 * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-lifecycle
 	 */
 	public function __construct(
 		public readonly string $objectId,

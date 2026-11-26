@@ -8,7 +8,7 @@
  * and the register, product and cycle schema fields is what Save sends, and
  * Sync now shows a spinner instead of its icon while the sync runs.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

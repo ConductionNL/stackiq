@@ -8,7 +8,7 @@
  * each swap their icon for a spinner and are disabled until their request
  * answers, and the empty peer list shows its disconnected icon.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

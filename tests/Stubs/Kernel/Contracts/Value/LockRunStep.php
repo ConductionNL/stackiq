@@ -17,7 +17,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/object-interactions/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-interactions
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\OpenRegister\Kernel\Contracts\Value;
 /**
  * Which flow run took a lock, and from which node, as LockHandler::lock() was told.
  *
- * @spec openspec/specs/object-interactions/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-interactions
  */
 final class LockRunStep {
 

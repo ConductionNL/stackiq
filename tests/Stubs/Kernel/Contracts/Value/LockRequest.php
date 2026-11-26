@@ -17,7 +17,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/object-interactions/spec.md
+ * @spec exclude OpenRegister stub copy; its source spec is OpenRegister's object-interactions
  */
 
 declare(strict_types=1);

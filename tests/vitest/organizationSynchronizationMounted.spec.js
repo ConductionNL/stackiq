@@ -9,7 +9,7 @@
  * result statistics and error list, and the organisation-to-voorzieningen
  * sync controls, button label (preview vs apply) and result breakdown.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/fe-settings-ui/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
