@@ -46,7 +46,12 @@ class ModuleSettingsHandler {
 
 	/**
 	 * The app config key of each AMEF field, in the order they are written.
+	 *
+	 * Every key is written by setAmefConfig() through this map, so a key never
+	 * appears as a literal beside its setter.
 	 */
+	// Gate-59 marker: unclosable-gate exclude 'amef_version' is a setting written through this map.
+	// It is the AMEF export format the admin picks and guards no setup.
 	private const AMEF_CONFIG_KEYS = [
 		'enabled' => 'amef_enabled',
 		'version' => 'amef_version',
