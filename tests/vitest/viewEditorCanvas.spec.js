@@ -6,7 +6,7 @@
  * task 4): placing elements, connecting them, removing nodes and applying
  * CnGraphCanvas's change stream, which the canvas reports and never applies.
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 import { describe, expect, it } from 'vitest'
 import { applyEdgeChanges, applyNodeChanges, connect, freshId, layerOf, NODE_SIZE, placeElement, removeNode } from '../../src/utils/viewEditorCanvas.js'

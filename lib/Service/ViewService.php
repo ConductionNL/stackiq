@@ -435,7 +435,7 @@ class ViewService implements ViewServiceInterface {
 	 *
 	 * @return string The cache key.
 	 *
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
 	 */
 	private function getViewsCacheKey(): string {
 		$userId = '';

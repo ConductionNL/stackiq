@@ -5,7 +5,7 @@
  * The architecture view store against a fake OpenRegister objects API: drawn
  * views, the relations behind connections, Copy to edit and saved versions.
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md
  */
 
 import { describe, expect, it } from 'vitest'

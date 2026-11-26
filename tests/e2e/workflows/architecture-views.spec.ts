@@ -22,7 +22,7 @@
  * - Save version twice and compare the two (REQ-AVE-005)
  * - a view a colleague holds opens read-only, naming them (REQ-AVE-001)
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 

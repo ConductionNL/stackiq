@@ -5,7 +5,7 @@
  * viewGraph maps an imported GEMMA view to CnGraphCanvas nodes and back without moving
  * a node, and a child keeps its parent (architecture-views-editor, task 3).
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 import { describe, expect, it } from 'vitest'
 import { fromCanvas, layoutUnplacedNodes, toCanvas } from '../../src/utils/viewGraph.js'

@@ -7,7 +7,7 @@
 
 Draw your own ArchiMate views in stackiq, tag them, give them a status, save named versions and compare two of them. The GEMMA views that come in with the GEMMA import stay as VNG published them: you copy one to make your own version.
 
-Specification: [`openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md).
+Specification: [`openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md).
 
 ## Finding views
 

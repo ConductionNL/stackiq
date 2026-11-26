@@ -63,7 +63,7 @@ export const RELATION_TYPES = Object.freeze([
  *
  * @param {object|null|undefined} object The object.
  * @return {boolean}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
  */
 export function isImported(object) {
 	const origin = object?.origin
@@ -155,7 +155,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 *
 	 * @param {{name: string, viewpoint?: string}} fields The name and an optional viewpoint.
 	 * @return {Promise<object>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
 	 */
 	async function createView({ name, viewpoint = '' }) {
 		return create(SCHEMAS.view, {
@@ -178,7 +178,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 * @param {object} source The view to copy.
 	 * @param {string} name The copy's name.
 	 * @return {Promise<object>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
 	 */
 	async function copyToEdit(source, name) {
 		const xml = source?.xml ?? {}
@@ -215,7 +215,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 *
 	 * @param {{type: string, name: string}} fields The ArchiMate type and the name.
 	 * @return {Promise<object>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
 	 */
 	async function createElement({ type, name }) {
 		// The element schema requires its ArchiMate property list; a new element has none yet.
@@ -229,7 +229,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 *
 	 * @param {{type: string, source: string, target: string}} ends The relation type and the two element identifiers.
 	 * @return {Promise<string>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-003-a-drawn-connection-shall-reference-a-relation-object
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-003-a-drawn-connection-shall-reference-a-relation-object
 	 */
 	async function ensureRelation({ type, source, target }) {
 		const found = (await list(SCHEMAS.relation, { type, source, target, _limit: 1 }))
@@ -253,7 +253,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 * @param {object} view The view being edited.
 	 * @param {{nodes: Array<object>, edges: Array<object>}} canvas The canvas nodes and edges, updated in place.
 	 * @return {Promise<object>} The saved view.
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
 	 */
 	async function saveView(view, canvas) {
 		if (isImported(view)) {
@@ -296,7 +296,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 *
 	 * @param {string} viewUuid The view uuid.
 	 * @return {Promise<Array<object>>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
 	 */
 	async function listVersions(viewUuid) {
 		const versions = await list(SCHEMAS.version, { view: viewUuid, _limit: 500 })
@@ -312,7 +312,7 @@ export function createArchitectureViewStore({ http, register, user = '', now = (
 	 * @param {object} view The saved view.
 	 * @param {string} label What the owner calls this version.
 	 * @return {Promise<object>}
-	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+	 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
 	 */
 	async function saveVersion(view, label) {
 		const viewUuid = uuidOf(view)

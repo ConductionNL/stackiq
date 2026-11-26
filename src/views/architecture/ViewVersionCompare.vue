@@ -99,7 +99,7 @@ const CURRENT = 'current'
  * on two read-only canvases with added, removed and changed items marked, and
  * the same changes as text for screen readers.
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
  */
 export default {
 	name: 'ViewVersionCompare',

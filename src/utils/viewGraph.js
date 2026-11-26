@@ -43,7 +43,7 @@ function absolutePositions(viewNodes) {
  * @param {Array<object>} viewNodes The import's `xml.viewNodes`.
  * @param {Array<object>} viewRelationships The import's `xml.viewRelationships`.
  * @return {{nodes: Array<object>, edges: Array<object>}}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 export function toCanvas(viewNodes = [], viewRelationships = []) {
 	const absolute = absolutePositions(viewNodes)
@@ -89,7 +89,7 @@ export function toCanvas(viewNodes = [], viewRelationships = []) {
  * @param {Array<object>} nodes The canvas nodes.
  * @param {Array<object>} edges The canvas edges.
  * @return {{viewNodes: Array<object>, viewRelationships: Array<object>}}
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 export function fromCanvas(nodes = [], edges = []) {
 	const byId = new Map(nodes.map((node) => [String(node.id), node]))

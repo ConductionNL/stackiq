@@ -192,7 +192,7 @@ import { layoutUnplacedNodes, toCanvas } from '../../utils/viewGraph.js'
  * (architecture-shared-usage-on-views). Saving writes new elements, then the relations behind new
  * connections, then the view, in the shape the GEMMA import stores.
  *
- * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
+ * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
  */
 export default {
 	name: 'ArchitectureViewEditor',
@@ -430,7 +430,7 @@ export default {
 		 * Take OpenRegister's object lock; a colleague's lock leaves the view read-only.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
+		 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
 		 */
 		async takeLock() {
 			try {
@@ -465,7 +465,7 @@ export default {
 		 * Copy to edit: a drawn copy that opens in edit mode.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
+		 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing
 		 */
 		async copyToEdit() {
 			this.saving = true
@@ -505,7 +505,7 @@ export default {
 		 * Save version: a numbered snapshot of the saved view.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+		 * @spec openspec/changes/archive/2026-11-26-architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
 		 */
 		async saveVersion() {
 			this.saving = true
