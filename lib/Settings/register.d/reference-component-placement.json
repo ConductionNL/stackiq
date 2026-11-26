@@ -4,6 +4,7 @@
       "module": {
         "properties": {
           "referenceComponents": {
+            "title": "Reference components",
             "hideOnForm": false,
             "description": "GEMMA referentiecomponenten die de applicatie implementeert. Offered on the application form (REQ-CLR-007); the picker lists the reference components of the vng-gemma register, which holds the GEMMA elements.",
             "items": {
