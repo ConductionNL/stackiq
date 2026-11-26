@@ -261,11 +261,16 @@ class PortfolioReportDerivation {
 	 * Normalize OpenRegister search results (ObjectEntity or plain array)
 	 * into plain data-bag arrays.
 	 *
+	 * An entity's getObject() holds its properties only, so the organisation
+	 * that owns the row is carried over as `_organisation`: the report costs
+	 * only the contracts the reporting organisation owns, and without it every
+	 * contract read from an entity was dropped.
+	 *
 	 * @param array<int,mixed> $results Raw search results.
 	 *
 	 * @return array<int,array<string,mixed>> Normalized data bags.
 	 *
-	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-aggregation-queries-are-bounded
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-value-assessment/spec.md#requirement-the-portfolio-report-shows-each-usage-s-yearly-cost-beside-its-value-and-risk-scores-req-clr-016
 	 */
 	public function normalizeResults(array $results): array {
 		return array_map(
@@ -274,11 +279,19 @@ class PortfolioReportDerivation {
 					return $object;
 				}
 
-				if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-					return $object->getObject();
+				if (is_object($object) === false || method_exists($object, 'getObject') === false) {
+					return [];
 				}
 
-				return [];
+				$data = $object->getObject();
+				if (isset($data['_organisation']) === false
+					&& isset($data['@self']['organisation']) === false
+					&& method_exists($object, 'getOrganisation') === true
+				) {
+					$data['_organisation'] = $object->getOrganisation();
+				}
+
+				return $data;
 			},
 			$results
 		);

@@ -687,6 +687,7 @@
 					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "ct-supplier", "component": "ContractSupplierPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12, "_note": "REQ-CLR-014: the supplier is the provider of the contract's service, read through that service and linked to its organisation page." },
 					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "ct-seats", "component": "ContractSeatsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
