@@ -5,14 +5,13 @@
  * the contract is for, linking to that supplier's organisation page.
  *
  * Seeds a supplier organisation, a service it provides and a contract for
- * that service, all carrying this run's RUN_ID, through the objects API, and
+ * that service (with the usage a contract requires), all carrying this run's RUN_ID, through the objects API, and
  * removes exactly those rows afterwards.
  *
- * The contract page (ContractDetail in src/manifest.json) has no supplier
- * field: catalogContract points at its service only, and the "Service &
- * usage" related widget (ct-related) declares no source that reads the
- * service's provider. The scenario is therefore marked fixme until the page
- * shows the supplier.
+ * catalogContract points at its service only; the contract page
+ * (ContractDetail in src/manifest.json) reads the supplier through that
+ * service in its ContractSupplierPanel body widget (ct-supplier), which links
+ * the supplier's name to its organisation page.
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
@@ -55,17 +54,28 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	ids.supplier = await seed('organization', { name: supplier, type: 'Supplier' })
+	ids.municipality = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
+	ids.app = await seed('module', { name: `${RUN_ID} application`, provider: ids.supplier })
+	ids.usage = await seed('usage', {
+		module: ids.app,
+		consumer: ids.municipality,
+		status: 'In production',
+	})
+	// type and usage are required by the schemas (catalogService.type, catalogContract.usage).
 	ids.service = await seed('catalogService', {
 		name: service,
 		provider: ids.supplier,
+		type: ['Application management'],
 	})
 	ids.contract = await seed('catalogContract', {
 		contractNumber: `${RUN_ID}-1`,
 		contractType: 'SLA',
-		status: 'Active',
+		// Active is reached only through an approved decision; the supplier does not depend on it.
+		status: 'In negotiation',
 		startDate: '2026-01-01',
 		cost: 5000,
 		costPeriod: 'Annually',
+		usage: ids.usage,
 		service: ids.service,
 	})
 })
@@ -79,15 +89,14 @@ test.afterAll(async () => {
 })
 
 // @e2e vendor-product-master-data::a-contract-manager-reads-a-contract-s-supplier
-// fixme: the contract page shows no supplier; neither ct-data nor ct-related reads the service's provider.
-test.fixme('the contract page shows the supplier of its service, linking to the organisation page', async ({
+test('the contract page shows the supplier of its service, linking to the organisation page', async ({
 	page,
 }) => {
 	await gotoAppRoute(page, `/contracten/${ids.contract}`)
 	await dismissSupportDialog(page)
 	await expect(page.getByText(service).first()).toBeVisible({ timeout: 30000 })
 
-	const link = page.getByRole('link', { name: supplier }).first()
+	const link = page.getByTestId('contract-supplier-name').getByRole('link', { name: supplier })
 	await expect(link).toBeVisible({ timeout: 30000 })
 	await link.click()
 	await expect(page).toHaveURL(new RegExp(`/organisaties/${ids.supplier}`), { timeout: 30000 })
