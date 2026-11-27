@@ -44,6 +44,7 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  * @spec openspec/changes/organisations-role-mapping-and-access-review/tasks.md
+ * @spec openspec/changes/insight-knowledge-base/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
@@ -936,6 +937,63 @@ test.describe('documentation screenshots: role mapping and access review', () =>
 		await expect(table).toContainText('Bram Jansen', { timeout: 30_000 })
 		await clearToasts()
 		await shoot(page.locator('#app-content, main').first(), 'access-review.png')
+	})
+})
+
+// Its own block: it seeds what it shows, so it does not wait on the catalogue seed above.
+// Needs the Collectives app; on an instance without it the block skips.
+test.describe('documentation screenshots: knowledge base', () => {
+	test('knowledge base: the Knowledge articles panel on an application and the search page', async ({ page, baseURL }) => {
+		const request = await api(baseURL)
+		const apps = await request.get('/ocs/v2.php/cloud/apps?filter=enabled&format=json')
+		const enabled: string[] = apps.ok() ? ((await apps.json())?.ocs?.data?.apps ?? []) : []
+		test.skip(!enabled.includes('collectives'), 'the Collectives app is not installed on this instance')
+
+		const register = await registerId(request)
+		const collectiveName = `${SEED_PREFIX} Application knowledge`
+		const articleTitle = `${SEED_PREFIX} Restore procedure`
+		const application = await ensure(request, register, 'module', { name: `${SEED_PREFIX} Zaaksysteem`, shortDescription: 'Registers and follows cases from intake to archive.', type: 'Application' })
+
+		// Reuse the collective of an earlier run: the OCS API of current releases, else the older _api routes.
+		const ocs = '/ocs/v2.php/apps/collectives/api/v1.0/collectives'
+		const listed = await request.get(`${ocs}?format=json`)
+		const collectives = (listed.ok() ? ((await listed.json())?.ocs?.data?.collectives ?? []) : []) as Array<{ id: number, name: string }>
+		let collectiveId = collectives.find((c) => c.name === collectiveName)?.id
+		if (collectiveId === undefined) {
+			const created = await request.post(`${ocs}?format=json`, { data: { name: collectiveName } })
+			if (created.ok()) {
+				collectiveId = (await created.json())?.ocs?.data?.collective?.id
+			} else {
+				const legacy = await request.post('/index.php/apps/collectives/_api/collectives', { data: { name: collectiveName } })
+				expect(legacy.ok(), `create collective: ${legacy.status()} ${await legacy.text()}`).toBe(true)
+				collectiveId = (await legacy.json())?.data?.id
+			}
+		}
+		expect(collectiveId, 'the collective has an id').toBeTruthy()
+
+		// Link the article once: a second run finds it already linked.
+		const links = await request.get(`${OBJECTS}/${register}/module/${application.id}/integrations/collectives`)
+		const linkedBody = links.ok() ? await links.json() : []
+		const linked = (Array.isArray(linkedBody) ? linkedBody : (linkedBody?.results ?? [])) as Array<{ title?: string }>
+		if (!linked.some((row) => row.title === articleTitle)) {
+			const made = await request.post(`${OBJECTS}/${register}/module/${application.id}/collectives/new`, {
+				data: { collectiveId: Number(collectiveId), title: articleTitle },
+			})
+			expect(made.status(), await made.text()).toBeLessThan(300)
+		}
+		await request.dispose()
+
+		await page.goto(`${APP}/modules/${application.id}`)
+		await settle(page)
+		const panel = await reveal(widget(page, 'md-knowledge'))
+		await expect(panel.getByRole('link', { name: articleTitle })).toBeVisible({ timeout: 30_000 })
+		await shoot(panel, 'knowledge-articles.png')
+
+		await page.goto(`${APP}/knowledge`)
+		await settle(page)
+		await page.getByLabel('Search the knowledge base').first().fill(`${SEED_PREFIX} restore`)
+		await expect(page.getByRole('link', { name: articleTitle }).first()).toBeVisible({ timeout: 30_000 })
+		await shoot(page.locator('#app-content, main').first(), 'knowledge-base-search.png')
 	})
 })
 

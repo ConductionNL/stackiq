@@ -31,6 +31,7 @@
   - GIVEN the docs WHEN a reader opens the feature page THEN it explains that articles live in Collectives, shows the panel and the search page in screenshots, and says what an administrator installs first
 - [ ] Implement
 - [ ] Test (docs build and a manual read against the running app)
+- Progress 27 Nov 2026: the feature page's text is written. `tests/e2e/docs/screenshots.spec.ts` now captures `docs/images/knowledge-articles.png` (the panel on an application with a linked article) and `docs/images/knowledge-base-search.png` (a title search on /knowledge); it skips without Collectives and has not run yet. Left: run it on an instance with Collectives, add both images to `docs/features/application-knowledge-base.md`, and the manual read.
 
 ## Verification
 
