@@ -235,4 +235,11 @@ webpackConfig.optimization = {
 	},
 }
 
-module.exports = webpackConfig
+// nextcloud-vue's stylesheet is linked by templates/index.php as css/nextcloud-vue.css
+// (LibraryStylesheetCopy) instead of inserted from the bundle as text.
+const { LibraryStylesheetCopy, withLeanBundles } = require('@conduction/nextcloud-vue/webpack')
+webpackConfig.plugins.push(new LibraryStylesheetCopy())
+
+// Shared chunks take only what every page loads (the library's icon packs, charts,
+// editors stay in their own async chunks), no CSS source maps inside the JavaScript.
+module.exports = withLeanBundles(webpackConfig)

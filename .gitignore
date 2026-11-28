@@ -86,3 +86,4 @@ tests/e2e/test-results/
 # are gate FIXTURES, not artefacts, and must stay tracked.
 /*.log
 /changed.tsv
+/css/nextcloud-vue.css
