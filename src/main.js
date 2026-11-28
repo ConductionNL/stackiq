@@ -43,7 +43,9 @@ import registry from './registry.js'
 import { routesFromManifest } from './router.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-import '@conduction/nextcloud-vue/css/index.css'
+// Library CSS: templates/index.php links css/nextcloud-vue.css (LibraryStylesheetCopy in
+// webpack.config.js), so the sheet stays parsed between page loads instead of being
+// inserted from this bundle as text.
 // gridstack is a peerDependency of @conduction/nextcloud-vue that no consumer
 // declares. The stylesheet is the silent half: v12 sizes dashboard items with
 // `width: var(--gs-column-width)`, so without it every widget renders 0 px wide
