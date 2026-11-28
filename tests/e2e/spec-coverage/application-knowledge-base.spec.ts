@@ -26,10 +26,10 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-001-the-application-detail-page-shall-show-the-knowledge-articles-linked-to-the-application
- * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-002-an-application-owner-shall-link-an-existing-article-or-create-a-new-one-from-the-application-page
- * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
- * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-001-the-application-detail-page-shall-show-the-knowledge-articles-linked-to-the-application
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-002-an-application-owner-shall-link-an-existing-article-or-create-a-new-one-from-the-application-page
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken
  */
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

@@ -99,7 +99,7 @@ final class IntegrationLeavesFragmentTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/insight-knowledge-base/tasks.md
+	 * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/tasks.md
 	 */
 	public function testTheApplicationCarriesBookmarksAndCollectivesOnce(): void {
 		$linked = $this->mergedRegister()['components']['schemas']['module']['configuration']['linkedTypes'];
