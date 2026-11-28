@@ -17,7 +17,7 @@
  * state. A named share lists the reader's OpenRegister organisation, which is
  * what the read rule's `$organisation` resolves to.
  *
- * @spec openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md
+ * @spec openspec/changes/archive/2026-11-28-sharing-compliance-documents/specs/shared-compliance-documents/spec.md
  */
 import type { APIRequestContext, Browser, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

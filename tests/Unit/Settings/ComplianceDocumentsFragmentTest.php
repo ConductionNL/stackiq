@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-002-the-audience-decides-who-reads-a-document
+ * @spec openspec/changes/archive/2026-11-28-sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-002-the-audience-decides-who-reads-a-document
  */
 
 declare(strict_types=1);
@@ -257,7 +257,7 @@ final class ComplianceDocumentsFragmentTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
+	 * @spec openspec/changes/archive/2026-11-28-sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
 	 */
 	public function testExpiringWithinNinetyDaysIsCalculatedFromTheValidity(): void {
 		$schema       = $this->schema();

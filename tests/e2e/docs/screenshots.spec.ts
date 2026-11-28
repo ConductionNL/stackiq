@@ -23,7 +23,7 @@
  *
  * @spec openspec/changes/archive/2026-11-25-landscape-application-components/tasks.md
  * @spec openspec/changes/archive/2026-11-25-connections-api-catalogue/tasks.md
- * @spec openspec/changes/sharing-compliance-documents/tasks.md
+ * @spec openspec/changes/archive/2026-11-28-sharing-compliance-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-change-entry-type/tasks.md
  * @spec openspec/changes/archive/2026-11-25-landscape-move-between-organisations/tasks.md
