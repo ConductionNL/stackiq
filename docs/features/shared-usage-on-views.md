@@ -33,6 +33,8 @@ When your organisation uses an application itself and a partner also shares it o
 
 The legend under the canvas lists the kinds that are switched on.
 
+![A reference component with an own application (solid border) and a shared one (dashed border, Shared), the two switches on and the legend under the canvas](../images/shared-usage-on-views.png)
+
 ## In the organisation export
 
 The ArchiMate export of an organisation draws the same split. An own application keeps the export's usual style. A shared application is drawn light blue (fill 210,225,255) with a dark blue border (40,80,170) and carries the property **Gedeeld door** with the partner's name, so it stays recognisable in Archi and other ArchiMate tools.

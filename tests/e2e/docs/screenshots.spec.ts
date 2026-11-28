@@ -45,11 +45,13 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  * @spec openspec/changes/organisations-role-mapping-and-access-review/tasks.md
  * @spec openspec/changes/insight-knowledge-base/tasks.md
+ * @spec openspec/changes/architecture-shared-usage-on-views/tasks.md
  */
 
 import type {APIRequestContext, Locator, Page, Route} from '@playwright/test';
 
 import { expect, request as playwrightRequest, test } from '@playwright/test'
+import * as fs from 'fs'
 import * as path from 'path'
 import { createObject } from '../workflows/_fixtures.ts'
 
@@ -1078,5 +1080,75 @@ test.describe('documentation screenshots: drawing views', () => {
 		await page.keyboard.press('Escape')
 		await expect(page.getByRole('row').filter({ hasText: `${SEED_PREFIX} Meldingen openbare ruimte` })).toHaveCount(1, { timeout: 30_000 })
 		await shoot(page.locator('#content-vue, #content').first(), 'architecture-views-list.png')
+	})
+})
+
+// Its own block: it imports the small view it shows (tests/e2e/fixtures/shared-usage-docs-view.xml),
+// because on the full GEMMA poster an application row is too small to read.
+test.describe('documentation screenshots: applications on a GEMMA view', () => {
+	test('shared usage: own and shared applications in a reference component, and the legend', async ({ page, baseURL }) => {
+		const viewId = 'id-docs-su-view'
+		const componentNode = 'id-docs-su-node-zaak'
+		const request = await api(baseURL)
+		const imported = await request.post(`${APP}/api/archimate/import`, {
+			multipart: {
+				archiMateFile: {
+					name: 'shared-usage-docs-view.xml',
+					mimeType: 'application/xml',
+					buffer: fs.readFileSync(path.resolve(__dirname, '../fixtures/shared-usage-docs-view.xml')),
+				},
+			},
+		})
+		expect(imported.status(), await imported.text()).toBeLessThan(300)
+		await request.dispose()
+
+		// Which applications are own and which shared depends on the organisation
+		// that installed the app, so the view answers with one of each on its first
+		// component, in the shape include_gebruik / include_deelnames_gebruik give.
+		await page.route(new RegExp(`/apps/stackiq/api/views/${viewId}(\\?|$)`), async (route: Route) => {
+			const url = new URL(route.request().url())
+			const response = await route.fetch()
+			const body = await response.json()
+			for (const node of body.view?.viewNodes ?? []) {
+				if (String(node.viewNodeId ?? node.identifier) === componentNode) {
+					node.usage = url.searchParams.get('include_gebruik') === 'true'
+						? [{ id: 'docs-own-usage', module: 'docs-own-module', moduleName: `${SEED_PREFIX} Zaaksysteem` }]
+						: []
+					node.deelnamesGebruik = url.searchParams.get('include_deelnames_gebruik') === 'true'
+						? [{ id: 'docs-shared-usage', module: 'docs-shared-module', moduleName: 'Zaken Regio', _sourceOrganization: 'Gemeente Oost' }]
+						: []
+				}
+			}
+			await route.fulfill({ response, json: body })
+		})
+
+		await page.setViewportSize({ width: 1440, height: 900 })
+		await page.goto(`${APP}/views/${viewId}`)
+		await settle(page)
+		const control = page.getByTestId('view-editor-usage-control')
+		await expect(control).toBeVisible()
+		// Each switch reloads the view: wait for its application before the next.
+		await control.getByRole('switch', { name: 'Shared with partners' }).check({ force: true })
+		const shared = page.locator('.view-editor__usage-node').filter({ hasText: 'Zaken Regio' })
+		await expect(shared).toContainText('Shared')
+		await control.getByRole('switch', { name: 'Our applications' }).check({ force: true })
+		await expect(page.locator('.view-editor__usage-node').filter({ hasText: `${SEED_PREFIX} Zaaksysteem` })).toBeVisible()
+		const legend = page.getByTestId('usage-overlay-legend')
+		await expect(legend).toContainText('Shared with a partner')
+
+		// The switches, the canvas and the legend under it.
+		const top = await control.boundingBox()
+		await legend.scrollIntoViewIfNeeded()
+		const bottom = await legend.boundingBox()
+		const area = await page.locator('.vue-flow').first().boundingBox()
+		expect(top && bottom && area).toBeTruthy()
+		const x = Math.max(0, Math.min(top!.x, area!.x) - 16)
+		const y = Math.max(0, top!.y - 16)
+		const right = Math.max(area!.x + area!.width, bottom!.x + bottom!.width) + 16
+		await page.screenshot({
+			path: path.join(IMAGES, 'shared-usage-on-views.png'),
+			clip: { x, y, width: right - x, height: bottom!.y + bottom!.height + 16 - y },
+			animations: 'disabled',
+		})
 	})
 })
