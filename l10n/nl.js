@@ -467,6 +467,7 @@ OC.L10N.register(
         "Calendar": "Agenda",
         "Deck": "Deck",
         "Bookmarks": "Bladwijzers",
+        "Collectives": "Collectives",
         "Delete publication": "Publicatie verwijderen",
         "Delete {count} publications": "{count} publicaties verwijderen",
         "Failed to delete {count} objects": "Kon {count} objecten niet verwijderen",

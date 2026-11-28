@@ -453,6 +453,7 @@
         "Calendar": "Calendar",
         "Deck": "Deck",
         "Bookmarks": "Bookmarks",
+        "Collectives": "Collectives",
         "Delete publication": "Delete publication",
         "Delete {count} publications": "Delete {count} publications",
         "Failed to delete {count} objects": "Failed to delete {count} objects",

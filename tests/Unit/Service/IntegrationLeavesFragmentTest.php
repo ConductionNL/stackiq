@@ -104,7 +104,7 @@ final class IntegrationLeavesFragmentTest extends TestCase {
 	public function testTheApplicationCarriesBookmarksAndCollectivesOnce(): void {
 		$linked = $this->mergedRegister()['components']['schemas']['module']['configuration']['linkedTypes'];
 
-		$this->assertSame(['bookmarks', 'collectives'], $linked);
+		$this->assertSame(expected: ['bookmarks', 'collectives'], actual: $linked);
 	}//end testTheApplicationCarriesBookmarksAndCollectivesOnce()
 
 	/**
