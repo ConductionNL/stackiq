@@ -6512,8 +6512,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "sharing-compliance-documents",
 				"requirement": [
-					"openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-001 An organisation publishes a compliance document about a product",
-					"openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-002 The audience decides who reads a document"
+					"openspec/changes/archive/2026-11-28-sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-001 An organisation publishes a compliance document about a product",
+					"openspec/changes/archive/2026-11-28-sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-002 The audience decides who reads a document"
 				]
 			},
 			"reachedOn": "KompliantieDetail /komplianties/:id Evidence documents; ModuleDetail DPIA document field",
@@ -6529,7 +6529,7 @@
 				"glpi": "source read at 11.0.9: documents (src/Document.php:67) are visible only inside the instance through entities and profiles; anonymous access is limited to FAQ attachments when use_public_faq is on (src/Document.php:717), and there is no sharing with other organisations.",
 				"topdesk": "unknown: assets hold documents in a Documents widget, but sharing them with other organisations is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/sharing-compliance-documents (OpenSpec pass 2026-09-27).",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/archive/2026-11-28-sharing-compliance-documents (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",

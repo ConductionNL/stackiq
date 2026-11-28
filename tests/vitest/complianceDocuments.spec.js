@@ -77,7 +77,7 @@ describe('the compliance documents pages', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/sharing-compliance-documents/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-28-sharing-compliance-documents/tasks.md#task-2
 	 */
 	it('the installed list widget asks the question only for a public pentest report', () => {
 		const list = page('ModuleDetail').config.widgets.find((w) => w.id === 'md-compliance-documents')
