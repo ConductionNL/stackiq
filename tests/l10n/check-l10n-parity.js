@@ -2,6 +2,9 @@
 /**
  * l10n translation-PARITY gate.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Guards that every REQUIRED locale carries a real translation for every
  * English source key. Without this, a new English string ships and the other
  * languages silently fall back to English with a green pipeline — the app
@@ -11,7 +14,8 @@
  * Russian and Turkish (ISO 639-1). Override with L10N_REQUIRED_LOCALES.
  *
  * For BOTH translation sets that exist in the app:
- *   • frontend  l10n/en.js   (OC.L10N.register)  -> l10n/<locale>.js
+ *   • frontend  l10n/en.json + l10n/en.js (OC.L10N.register) -> l10n/<locale>.js
+ *               (en.js carries no identity entries, so en.json lists the keys)
  *   • backend   l10n/en.json ({ translations })  -> l10n/<locale>.json
  * it asserts, for every required locale:
  *   1. the locale file exists,
@@ -30,9 +34,6 @@
  * Exit codes:
  *   0  every required locale is at full parity for every existing source set
  *   1  one or more locales are missing keys, missing files, or empty values
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 'use strict'
@@ -98,6 +99,25 @@ function isEmpty (v) {
 	return typeof v !== 'string' || v.trim() === ''
 }
 
+/**
+ * The English source keys a set must carry in every locale. The frontend
+ * en.js holds only the entries whose text differs from the key (the build
+ * drops identity entries, scripts/build-l10n-js.js), so its source keys are
+ * en.json's completed by en.js; every other locale .js is written in full.
+ */
+function sourceKeys (set) {
+	const keys = new Set(Object.keys(set.load(set.enFile)))
+	if (set.kind === 'frontend (.js)') {
+		const enJson = path.join(L10N_DIR, 'en.json')
+		if (fs.existsSync(enJson)) {
+			for (const k of Object.keys(loadJsonSet(enJson))) {
+				keys.add(k)
+			}
+		}
+	}
+	return [...keys]
+}
+
 const sets = [
 	{
 		kind: 'frontend (.js)',
@@ -121,7 +141,7 @@ for (const set of sets) {
 		continue // this app does not ship this translation set
 	}
 	checkedSets++
-	const enKeys = Object.keys(set.load(set.enFile))
+	const enKeys = sourceKeys(set)
 	for (const loc of REQUIRED) {
 		const locFile = set.file(loc)
 		if (!fs.existsSync(locFile)) {

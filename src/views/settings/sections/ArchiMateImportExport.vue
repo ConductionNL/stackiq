@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -18,10 +22,10 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="ArchiMate Import/Export"
-		description="Import and export ArchiMate models to/from OpenRegister"
+		:name="t('stackiq', 'ArchiMate Import/Export')"
+		:description="t('stackiq', 'Import and export ArchiMate models to/from OpenRegister')"
 		:loading="store.loading"
-		loadingText="Preparing ArchiMate tools..."
+		:loadingText="t('stackiq', 'Preparing ArchiMate tools…')"
 		:hasInfoContent="true">
 		<!-- ArchiMate Operations Section -->
 		<div class="operations-section">
@@ -47,7 +51,7 @@
 						<span>{{
 							selectedFile
 								? selectedFile.name
-								: 'Choose ArchiMate XML file'
+								: t('stackiq', 'Choose ArchiMate XML file')
 						}}</span>
 						<span v-if="selectedFile" class="file-size">{{
 							formatFileSize(selectedFile.size)
@@ -65,16 +69,16 @@
 						class="success-results">
 						<!-- File Information -->
 						<div class="result-card">
-							<h5>File Information</h5>
+							<h5>{{ t('stackiq', 'File Information') }}</h5>
 							<div class="info-grid">
 								<div class="info-item">
-									<span class="label">File Name:</span>
+									<span class="label">{{ t('stackiq', 'File Name:') }}</span>
 									<span class="value">{{
 										importResult.file_info.name
 									}}</span>
 								</div>
 								<div class="info-item">
-									<span class="label">File Size:</span>
+									<span class="label">{{ t('stackiq', 'File Size:') }}</span>
 									<span class="value">{{
 										formatFileSize(importResult.file_info.size)
 									}}</span>
@@ -84,7 +88,7 @@
 
 						<!-- Performance Metrics -->
 						<div class="result-card">
-							<h5>Performance Metrics</h5>
+							<h5>{{ t('stackiq', 'Performance Metrics') }}</h5>
 							<div class="metrics-grid">
 								<div class="metric-item">
 									<div class="metric-value">
@@ -95,7 +99,7 @@
 											)
 										}}
 									</div>
-									<div class="metric-label">Total Time</div>
+									<div class="metric-label">{{ t('stackiq', 'Total Time') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -103,7 +107,7 @@
 											importResult.performance_metrics.objects_processed.toLocaleString()
 										}}
 									</div>
-									<div class="metric-label">Objects Processed</div>
+									<div class="metric-label">{{ t('stackiq', 'Objects Processed') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -114,7 +118,7 @@
 											)
 										}}/s
 									</div>
-									<div class="metric-label">Items per Second</div>
+									<div class="metric-label">{{ t('stackiq', 'Items per Second') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -125,17 +129,17 @@
 											)
 										}}
 									</div>
-									<div class="metric-label">Peak Memory</div>
+									<div class="metric-label">{{ t('stackiq', 'Peak Memory') }}</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Processing Breakdown -->
 						<div class="result-card">
-							<h5>Processing Breakdown</h5>
+							<h5>{{ t('stackiq', 'Processing Breakdown') }}</h5>
 							<div class="breakdown-list">
 								<div class="breakdown-item">
-									<span class="breakdown-label">XML Parsing</span>
+									<span class="breakdown-label">{{ t('stackiq', 'XML Parsing') }}</span>
 									<span class="breakdown-value">{{
 										formatTime(
 											importResult.performance_metrics
@@ -155,7 +159,7 @@
 								</div>
 								<div class="breakdown-item">
 									<span class="breakdown-label"
-										>Data Transformation</span
+										>{{ t('stackiq', 'Data Transformation') }}</span
 									>
 									<span class="breakdown-value">{{
 										formatTime(
@@ -176,7 +180,7 @@
 								</div>
 								<div class="breakdown-item">
 									<span class="breakdown-label"
-										>Database Save</span
+										>{{ t('stackiq', 'Database Save') }}</span
 									>
 									<span class="breakdown-value">{{
 										formatTime(
@@ -205,7 +209,7 @@
 								&& importResult.statistics.omschrijving
 							"
 							class="result-card">
-							<h5>Import Summary</h5>
+							<h5>{{ t('stackiq', 'Import Summary') }}</h5>
 							<div class="summary-grid">
 								<div class="summary-item created">
 									<div class="summary-number">
@@ -214,7 +218,7 @@
 												.total_objects_created
 										}}
 									</div>
-									<div class="summary-label">Created</div>
+									<div class="summary-label">{{ t('stackiq', 'Created') }}</div>
 								</div>
 								<div class="summary-item updated">
 									<div class="summary-number">
@@ -223,7 +227,7 @@
 												.total_objects_updated
 										}}
 									</div>
-									<div class="summary-label">Updated</div>
+									<div class="summary-label">{{ t('stackiq', 'Updated') }}</div>
 								</div>
 								<div class="summary-item unchanged">
 									<div class="summary-number">
@@ -232,7 +236,7 @@
 												.total_objects_unchanged
 										}}
 									</div>
-									<div class="summary-label">Unchanged</div>
+									<div class="summary-label">{{ t('stackiq', 'Unchanged') }}</div>
 								</div>
 								<button
 									type="button"
@@ -246,7 +250,7 @@
 										importResult.statistics.omschrijving
 											.total_errors === 0
 									"
-									:aria-label="`Show details for ${importResult.statistics.omschrijving.total_errors} import errors`"
+									:aria-label="n('stackiq', 'Show details for {count} import error', 'Show details for {count} import errors', importResult.statistics.omschrijving.total_errors, { count: importResult.statistics.omschrijving.total_errors })"
 									@click="showErrorDetails">
 									<div class="summary-number">
 										{{
@@ -254,14 +258,14 @@
 												.total_errors
 										}}
 									</div>
-									<div class="summary-label">Errors</div>
+									<div class="summary-label">{{ t('stackiq', 'Errors') }}</div>
 									<div
 										v-if="
 											importResult.statistics.omschrijving
 												.total_errors > 0
 										"
 										class="click-hint">
-										Click to view details
+										{{ t('stackiq', 'Click to view details') }}
 									</div>
 								</button>
 							</div>
@@ -276,10 +280,10 @@
 							class="error-details-modal">
 							<div class="error-details-content">
 								<div class="error-details-header">
-									<h5>Import Errors Details</h5>
+									<h5>{{ t('stackiq', 'Import Errors Details') }}</h5>
 									<NcButton
 										variant="tertiary-no-background"
-										aria-label="Close import error details"
+										:aria-label="t('stackiq', 'Close import error details')"
 										@click="hideErrorDetails">
 										<template #icon>
 											<Close :size="20" />
@@ -296,7 +300,7 @@
 													.total_count
 											}}</span>
 											<span class="stat-label"
-												>Total Errors</span
+												>{{ t('stackiq', 'Total Errors') }}</span
 											>
 										</div>
 										<div class="stat-item">
@@ -307,7 +311,7 @@
 												).length
 											}}</span>
 											<span class="stat-label"
-												>Affected Sections</span
+												>{{ t('stackiq', 'Affected Sections') }}</span
 											>
 										</div>
 									</div>
@@ -321,7 +325,7 @@
 											.length > 0
 									"
 									class="common-errors-section">
-									<h6>Most Common Issues</h6>
+									<h6>{{ t('stackiq', 'Most Common Issues') }}</h6>
 									<div class="common-errors-list">
 										<div
 											v-for="error in importResult.detailed_errors.omschrijving.slice(
@@ -342,9 +346,8 @@
 												<div class="error-meta">
 													<span class="error-count"
 														>{{
-															error.total_count
-														}}
-														occurrences</span
+															n('stackiq', '{count} occurrence', '{count} occurrences', error.total_count, { count: error.total_count })
+														}}</span
 													>
 													<span
 														v-if="
@@ -354,11 +357,8 @@
 																.length > 0
 														"
 														class="affected-sections">
-														in
 														{{
-															error.affected_sections.join(
-																', ',
-															)
+															t('stackiq', 'in {sections}', { sections: error.affected_sections.join(', ') })
 														}}
 													</span>
 												</div>
@@ -369,7 +369,7 @@
 
 								<!-- Errors by Section -->
 								<div class="errors-by-section">
-									<h6>Errors by Section</h6>
+									<h6>{{ t('stackiq', 'Errors by Section') }}</h6>
 									<div class="section-errors-list">
 										<div
 											v-for="(
@@ -384,9 +384,8 @@
 												</h6>
 												<span class="section-error-count"
 													>{{
-														sectionData.total_errors
-													}}
-													errors</span
+														n('stackiq', '{count} error', '{count} errors', sectionData.total_errors, { count: sectionData.total_errors })
+													}}</span
 												>
 											</div>
 											<div class="section-error-details">
@@ -422,7 +421,7 @@
 														"
 														class="error-examples">
 														<span class="examples-label"
-															>Examples:</span
+															>{{ t('stackiq', 'Examples:') }}</span
 														>
 														<span
 															class="examples-list"
@@ -447,14 +446,14 @@
 						<NcNoteCard type="error">
 							<div class="error-header">
 								<AlertCircle :size="24" />
-								<h4>Import Failed</h4>
+								<h4>{{ t('stackiq', 'Import Failed') }}</h4>
 							</div>
 							<div class="error-details">
 								<!-- Configuration Error -->
 								<div
 									v-if="isConfigurationError(importError.message)"
 									class="configuration-error">
-									<p><strong>Configuration Missing:</strong></p>
+									<p><strong>{{ t('stackiq', 'Configuration Missing:') }}</strong></p>
 									<div class="configuration-issues">
 										<p>
 											{{
@@ -476,25 +475,15 @@
 										</div>
 									</div>
 									<div class="configuration-help">
-										<h5>How to Fix:</h5>
+										<h5>{{ t('stackiq', 'How to Fix:') }}</h5>
 										<ol>
+											<li>{{ t('stackiq', 'Go to the Registers section in these settings') }}</li>
+											<li>{{ t('stackiq', 'Use the Auto-Configure button to automatically set up AMEF schemas') }}</li>
 											<li>
-												Go to the
-												<strong>Registers</strong> section in
-												these settings
+												{{ t('stackiq', 'Or manually configure each schema ID in the register settings') }}
 											</li>
 											<li>
-												Use the
-												<strong>Auto-Configure</strong>
-												button to automatically set up AMEF
-												schemas
-											</li>
-											<li>
-												Or manually configure each schema ID
-												in the register settings
-											</li>
-											<li>
-												Return here to try the import again
+												{{ t('stackiq', 'Return here to try the import again') }}
 											</li>
 										</ol>
 									</div>
@@ -503,16 +492,16 @@
 								<!-- General Error -->
 								<div v-else>
 									<p>
-										<strong>Error:</strong>
+										<strong>{{ t('stackiq', 'Error:') }}</strong>
 										{{
 											importError.message
-											|| 'Unknown error occurred during import'
+											|| t('stackiq', 'Unknown error occurred during import')
 										}}
 									</p>
 									<div
 										v-if="importError.details"
 										class="error-additional">
-										<h5>Additional Details:</h5>
+										<h5>{{ t('stackiq', 'Additional Details:') }}</h5>
 										<pre>{{
 											JSON.stringify(
 												importError.details,
@@ -562,7 +551,7 @@
 							<NcLoadingIcon v-if="importing" :size="20" />
 							<CloudUpload v-else :size="20" />
 						</template>
-						{{ importing ? 'Importing...' : 'Import' }}
+						{{ importing ? t('stackiq', 'Importing…') : t('stackiq', 'Import') }}
 					</NcButton>
 
 					<NcButton
@@ -580,45 +569,50 @@
 						<template #icon>
 							<Refresh :size="20" />
 						</template>
-						Reset Import
+						{{ t('stackiq', 'Reset Import') }}
 					</NcButton>
 				</div>
 			</div>
 
 			<!-- Export Section -->
 			<div class="export-section">
-				<h4>Export</h4>
-				<p>Export ArchiMate models filtered by organization</p>
+				<h4>{{ t('stackiq', 'Export') }}</h4>
+				<p>{{ t('stackiq', 'Export ArchiMate models filtered by organization') }}</p>
 
 				<div class="export-controls">
 					<div class="control-group">
-						<label for="organization-select">Organization:</label>
+						<label for="organization-select">{{ t('stackiq', 'Organization:') }}</label>
 						<NcSelect
 							id="organization-select"
 							v-model="selectedOrganization"
 							:options="organizationOptions"
-							inputLabel="Select Organization"
-							placeholder="Generic"
+							:inputLabel="t('stackiq', 'Select Organization')"
+							:placeholder="t('stackiq', 'Generic')"
 							:disabled="exporting" />
 					</div>
 
 					<div v-if="selectedOrganization" class="control-group">
-						<label>Include in organization export:</label>
+						<label>{{ t('stackiq', 'Include in organization export:') }}</label>
 						<div class="checkbox-group">
 							<NcCheckboxRadioSwitch
 								v-model="includeModules"
 								:disabled="exportingOrg">
-								Modules
+								{{ t('stackiq', 'Modules') }}
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
 								v-model="includeDeelnames"
 								:disabled="exportingOrg">
-								Deelnames
+								{{ t('stackiq', 'Deelnames') }}
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
 								v-model="includeGebruik"
 								:disabled="exportingOrg">
-								Gebruik
+								{{ t('stackiq', 'Gebruik') }}
+							</NcCheckboxRadioSwitch>
+							<NcCheckboxRadioSwitch
+								v-model="includeConnections"
+								:disabled="exportingOrg">
+								{{ t('stackiq', 'Connections') }}
 							</NcCheckboxRadioSwitch>
 						</div>
 					</div>
@@ -631,7 +625,7 @@
 							<NcLoadingIcon v-if="exporting" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exporting ? 'Exporting...' : 'Export Base' }}
+						{{ exporting ? t('stackiq', 'Exporting…') : t('stackiq', 'Export Base') }}
 					</NcButton>
 
 					<NcButton
@@ -642,25 +636,26 @@
 							<NcLoadingIcon v-if="exportingOrg" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exportingOrg ? 'Exporting...' : 'Organization Export' }}
+						{{ exportingOrg ? t('stackiq', 'Exporting…') : t('stackiq', 'Organization Export') }}
 					</NcButton>
 				</div>
 			</div>
+
+			<ArchiMateRoundTripCheck />
 		</div>
 
 		<!-- Info Content Slot -->
 		<template #info-content>
 			<div class="archimate-info">
-				<h3>ArchiMate Operations</h3>
+				<h3>{{ t('stackiq', 'ArchiMate Operations') }}</h3>
 				<p>
-					Import and export ArchiMate models with organization filtering
-					support.
+					{{ t('stackiq', 'Import and export ArchiMate models with organization filtering support.') }}
 				</p>
 
-				<h4>Supported Formats</h4>
+				<h4>{{ t('stackiq', 'Supported Formats') }}</h4>
 				<ul>
 					<li>ArchiMate XML (.xml)</li>
-					<li>ArchiMate model files (.archimate)</li>
+					<li>{{ t('stackiq', 'ArchiMate model files (.archimate)') }}</li>
 				</ul>
 			</div>
 		</template>
@@ -681,6 +676,7 @@
  */
 
 import axios from '@nextcloud/axios'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 // Nextcloud Vue components
 import {
 	NcButton,
@@ -698,6 +694,7 @@ import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import ArchiMateRoundTripCheck from './ArchiMateRoundTripCheck.vue'
 import { settingsStore } from '../../../store/store.js'
 import {
 	cancelImport,
@@ -706,12 +703,93 @@ import {
 	startProgressPolling,
 } from '../../../utils/archiMateImportProgress.js'
 import { withHeartbeat } from '../../../utils/heartbeat.js'
+import {
+	fetchOrganizationOptions,
+	missingConfigItems,
+	organisationSource,
+} from './archiMateConfig.js'
+
+// The file name in a Content-Disposition header, quoted or not. The double
+// quote is written as \x22 because lizard reads a lone one as a string start.
+const FILENAME_PATTERN = /filename=\x22?([^\x22]*)\x22?/
+
+/**
+ * The download file name from a Content-Disposition header, or the fallback.
+ *
+ * @param {string|null} contentDisposition The header value.
+ * @param {string} fallbackName The name used when the header names no file.
+ * @return {string} The file name.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+function downloadFileName(contentDisposition, fallbackName) {
+	const match = contentDisposition
+		? contentDisposition.match(FILENAME_PATTERN)
+		: null
+	return match ? match[1] : fallbackName
+}
+
+/**
+ * Save a fetch answer as a file download in the browser.
+ *
+ * @param {Response} response The answer.
+ * @param {string} fallbackName The file name when the answer names none.
+ * @return {Promise<void>}
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+async function downloadResponse(response, fallbackName) {
+	const blob = await response.blob()
+	const url = window.URL.createObjectURL(blob)
+	const fileName = downloadFileName(
+		response.headers.get('content-disposition'),
+		fallbackName,
+	)
+	const a = document.createElement('a')
+	a.href = url
+	a.download = fileName
+	document.body.appendChild(a)
+	a.click()
+	window.URL.revokeObjectURL(url)
+	document.body.removeChild(a)
+}
+
+/**
+ * Throw the error of a failed export answer.
+ *
+ * @param {Response} response The answer.
+ * @param {string} fallbackMessage The message when the answer carries none.
+ * @return {Promise<never>}
+ * @throws {Error} Always.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+async function throwExportError(response, fallbackMessage) {
+	const errorData = await response.json()
+	throw new Error(errorData.message || fallbackMessage)
+}
+
+/**
+ * The import answer, unless it reports a failure.
+ *
+ * @param {object} result The parsed import answer.
+ * @return {object} The answer, also when the import was cancelled.
+ * @throws {Error} When the import did not succeed.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+function importResultOrThrow(result) {
+	if (result.cancelled) {
+		return result
+	}
+	if (!result.success) {
+		throw new Error(result.error || result.message || t('stackiq', 'Import failed'))
+	}
+	return result
+}
 
 export default {
 	name: 'ArchiMateImportExport',
 
 	components: {
 		AlwaysVisibleSection,
+		ArchiMateRoundTripCheck,
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,
@@ -752,7 +830,8 @@ export default {
 			includeModules: true,
 			includeDeelnames: false,
 			includeGebruik: false,
-			organizationOptions: [{ label: 'Generic', value: null }],
+			includeConnections: false,
+			organizationOptions: [{ label: t('stackiq', 'Generic'), value: null }],
 		}
 	},
 
@@ -788,6 +867,29 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The template's translate, imported rather than taken from the
+		 * app-wide mixin so the section translates wherever it is mounted.
+		 *
+		 * @param {...*} args - as `translate()` takes them.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-11-25-i18n-wrap-hardcoded-object-modal-strings/specs/fe-object-modals/spec.md#requirement-object-action-modal-text-must-be-translatable
+		 */
+		t(...args) {
+			return t(...args)
+		},
+
+		/**
+		 * The template's plural translate; see `t`.
+		 *
+		 * @param {...*} args - as `translatePlural()` takes them.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-11-25-i18n-wrap-hardcoded-object-modal-strings/specs/fe-object-modals/spec.md#requirement-object-action-modal-text-must-be-translatable
+		 */
+		n(...args) {
+			return n(...args)
+		},
+
 		/**
 		 * Handle file selection from file input
 		 *
@@ -865,7 +967,23 @@ export default {
 			if (!this.selectedFile) {
 				return
 			}
+			this.beginImport()
+			try {
+				this.finishImport(await this.uploadArchiMateFile())
+			} catch (error) {
+				this.failImport(error)
+			} finally {
+				this.endImport()
+			}
+		},
 
+		/**
+		 * Reset the import state and start polling the import progress.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		beginImport() {
 			this.importing = true
 			this.importResult = null
 			this.importError = null
@@ -879,77 +997,106 @@ export default {
 					this.importProgress = progress
 				},
 			})
+		},
 
-			try {
-				// Create FormData for file upload
-				const formData = new FormData()
-				formData.append('archiMateFile', this.selectedFile)
-				formData.append('operationId', this.operationId)
+		/**
+		 * Upload the selected file, kept alive by a heartbeat.
+		 *
+		 * @return {Promise<object>} The import answer.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async uploadArchiMateFile() {
+			const formData = new FormData()
+			formData.append('archiMateFile', this.selectedFile)
+			formData.append('operationId', this.operationId)
 
-				// Wrap the import operation with heartbeat to prevent 504 timeouts
-				const result = await withHeartbeat(async () => {
-					// Make the API call
-					// Note: Do not set Content-Type header for FormData - let browser set it with boundary
-					// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
-					const response = await fetch(
-						'/index.php/apps/stackiq/api/archimate/import',
-						{
-							method: 'POST',
-							headers: {
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: formData,
+			// Wrap the import operation with heartbeat to prevent 504 timeouts
+			return withHeartbeat(async () => {
+				// Note: Do not set Content-Type header for FormData - let browser set it with boundary
+				// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/import',
+					{
+						method: 'POST',
+						headers: {
+							requesttoken: OC.requestToken,
+							'X-Requested-With': 'XMLHttpRequest',
 						},
-					)
-
-					const result = await response.json()
-
-					if (result.cancelled) {
-						return result
-					}
-
-					if (!result.success) {
-						throw new Error(
-							result.error || result.message || 'Import failed',
-						)
-					}
-
-					return result
-				}, 30000) // 30-second heartbeat interval
-
-				if (result.cancelled) {
-					this.importCancelled = result
-					return
-				}
-
-				// Handle successful result
-				this.importResult = result
-				// Show success notification
-				OC.Notification.showTemporary(
-					`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
-					{ type: 'success' },
+						body: formData,
+					},
 				)
-			} catch (error) {
-				console.error('Error importing ArchiMate file:', error)
-				this.importError = {
-					message: error.message || 'Failed to import ArchiMate file',
-					details: error.details || null,
-				}
+				return importResultOrThrow(await response.json())
+			}, 30000) // 30-second heartbeat interval
+		},
 
-				// Show error notification
-				OC.Notification.showTemporary(
-					'Import failed: ' + this.importError.message,
-					{ type: 'error' },
-				)
-			} finally {
-				if (this.stopProgressPolling) {
-					this.stopProgressPolling()
-					this.stopProgressPolling = null
-				}
-				this.importing = false
-				this.cancelling = false
-				this.operationId = null
+		/**
+		 * Keep the import answer: a cancellation, or a result with a notification.
+		 *
+		 * @param {object} result The import answer.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		finishImport(result) {
+			if (result.cancelled) {
+				this.importCancelled = result
+				return
 			}
+			this.importResult = result
+			OC.Notification.showTemporary(
+				n(
+					'stackiq',
+					'Successfully imported {count} object in {time}',
+					'Successfully imported {count} objects in {time}',
+					result.performance_metrics.objects_processed,
+					{
+						count: result.performance_metrics.objects_processed,
+						time: this.formatTime(
+							result.performance_metrics.total_time_seconds,
+						),
+					},
+				),
+				{ type: 'success' },
+			)
+		},
+
+		/**
+		 * Keep and show the error of a failed import.
+		 *
+		 * @param {Error} error The error.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		failImport(error) {
+			console.error('Error importing ArchiMate file:', error)
+			this.importError = {
+				message:
+					error.message
+					|| t('stackiq', 'Failed to import ArchiMate file'),
+
+				details: error.details || null,
+			}
+			OC.Notification.showTemporary(
+				t('stackiq', 'Import failed: {message}', {
+					message: this.importError.message,
+				}),
+				{ type: 'error' },
+			)
+		},
+
+		/**
+		 * Stop the progress polling and clear the running-import state.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		endImport() {
+			if (this.stopProgressPolling) {
+				this.stopProgressPolling()
+				this.stopProgressPolling = null
+			}
+			this.importing = false
+			this.cancelling = false
+			this.operationId = null
 		},
 
 		/**
@@ -1003,54 +1150,41 @@ export default {
 						},
 					)
 
-					// Handle file download
-					if (response.ok) {
-						const blob = await response.blob()
-						const url = window.URL.createObjectURL(blob)
-
-						// Get filename from response headers or create default
-						const contentDisposition =
-							response.headers.get('content-disposition')
-						let fileName = 'archimate_export.xml'
-						if (contentDisposition) {
-							const match =
-								contentDisposition.match(/filename="?([^"]*)"?/)
-							if (match) {
-								fileName = match[1]
-							}
-						}
-
-						// Create download link and trigger download
-						const a = document.createElement('a')
-						a.href = url
-						a.download = fileName
-						document.body.appendChild(a)
-						a.click()
-						window.URL.revokeObjectURL(url)
-						document.body.removeChild(a)
-
-						// Show success notification
-						const orgName = this.selectedOrganization
-							? this.organizationOptions.find(
-									(opt) => opt.value === this.selectedOrganization,
-								)?.label
-							: 'Generic'
-						OC.Notification.showTemporary(
-							`ArchiMate file exported successfully for ${orgName}`,
-							{ type: 'success' },
+					if (!response.ok) {
+						await throwExportError(
+							response,
+							t('stackiq', 'Export failed'),
 						)
-					} else {
-						const errorData = await response.json()
-						throw new Error(errorData.message || 'Export failed')
 					}
+					await downloadResponse(response, 'archimate_export.xml')
+
+					// Show success notification
+					const orgName = this.selectedOrganization
+						? this.organizationOptions.find(
+								(opt) => opt.value === this.selectedOrganization,
+							)?.label
+						: t('stackiq', 'Generic')
+					OC.Notification.showTemporary(
+						t(
+							'stackiq',
+							'ArchiMate file exported successfully for {organization}',
+							{ organization: orgName },
+						),
+						{ type: 'success' },
+					)
 				}, 30000) // 30-second heartbeat interval
 			} catch (error) {
 				console.error('Error exporting ArchiMate file:', error)
 
 				// Show error notification
-				OC.Notification.showTemporary('Export failed: ' + error.message, {
-					type: 'error',
-				})
+				OC.Notification.showTemporary(
+					t('stackiq', 'Export failed: {message}', {
+						message: error.message,
+					}),
+					{
+						type: 'error',
+					},
+				)
 			} finally {
 				this.exporting = false
 			}
@@ -1074,6 +1208,7 @@ export default {
 				params.set('modules', String(this.includeModules))
 				params.set('deelnames', String(this.includeDeelnames))
 				params.set('usage', String(this.includeGebruik))
+				params.set('connections', String(this.includeConnections))
 
 				const url = `/index.php/apps/stackiq/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
 
@@ -1086,48 +1221,32 @@ export default {
 						},
 					})
 
-					if (response.ok) {
-						const blob = await response.blob()
-						const blobUrl = window.URL.createObjectURL(blob)
-
-						const contentDisposition =
-							response.headers.get('content-disposition')
-						let fileName = 'archimate_org_export.xml'
-						if (contentDisposition) {
-							const match =
-								contentDisposition.match(/filename="?([^"]*)"?/)
-							if (match) {
-								fileName = match[1]
-							}
-						}
-
-						const a = document.createElement('a')
-						a.href = blobUrl
-						a.download = fileName
-						document.body.appendChild(a)
-						a.click()
-						window.URL.revokeObjectURL(blobUrl)
-						document.body.removeChild(a)
-
-						const orgLabel =
-							this.organizationOptions.find(
-								(opt) => opt.value === orgUuid,
-							)?.label ?? 'Organization'
-						OC.Notification.showTemporary(
-							`Organization ArchiMate file exported for ${orgLabel}`,
-							{ type: 'success' },
-						)
-					} else {
-						const errorData = await response.json()
-						throw new Error(
-							errorData.message || 'Organization export failed',
+					if (!response.ok) {
+						await throwExportError(
+							response,
+							t('stackiq', 'Organization export failed'),
 						)
 					}
+					await downloadResponse(response, 'archimate_org_export.xml')
+
+					const orgLabel =
+						this.organizationOptions.find((opt) => opt.value === orgUuid)
+							?.label ?? t('stackiq', 'Organization')
+					OC.Notification.showTemporary(
+						t(
+							'stackiq',
+							'Organization ArchiMate file exported for {organization}',
+							{ organization: orgLabel },
+						),
+						{ type: 'success' },
+					)
 				}, 30000)
 			} catch (error) {
 				console.error('Error exporting organization ArchiMate file:', error)
 				OC.Notification.showTemporary(
-					'Organization export failed: ' + error.message,
+					t('stackiq', 'Organization export failed: {message}', {
+						message: error.message,
+					}),
 					{ type: 'error' },
 				)
 			} finally {
@@ -1197,15 +1316,15 @@ export default {
 		 */
 		formatErrorType(errorType) {
 			const typeMap = {
-				validation: 'Validation',
-				schema: 'Schema',
-				reference: 'Reference',
-				property: 'Property',
-				constraint: 'Constraint',
-				relationship: 'Relationship',
-				data_type: 'Data Type',
-				encoding: 'Encoding',
-				general: 'General',
+				validation: t('stackiq', 'Validation'),
+				schema: t('stackiq', 'Schema'),
+				reference: t('stackiq', 'Reference'),
+				property: t('stackiq', 'Property'),
+				constraint: t('stackiq', 'Constraint'),
+				relationship: t('stackiq', 'Relationship'),
+				data_type: t('stackiq', 'Data Type'),
+				encoding: t('stackiq', 'Encoding'),
+				general: t('stackiq', 'General'),
 			}
 			return (
 				typeMap[errorType]
@@ -1246,9 +1365,16 @@ export default {
 					/Schema ID for (\w+) '([^']+)' is not configured/,
 				)
 				if (schemaMatch) {
-					return `Missing configuration for ${schemaMatch[1]} schema (${schemaMatch[2]})`
+					return t(
+						'stackiq',
+						'Missing configuration for {type} schema ({name})',
+						{ type: schemaMatch[1], name: schemaMatch[2] },
+					)
 				}
-				return 'Required AMEF schema configuration is missing.'
+				return t(
+					'stackiq',
+					'Required AMEF schema configuration is missing.',
+				)
 			}
 
 			// Extract the main description before the missing items list (legacy format)
@@ -1257,7 +1383,10 @@ export default {
 			if (mainLine) {
 				return mainLine.replace('ArchiMate import ', 'Import ').trim()
 			}
-			return 'Required configuration is missing for ArchiMate import.'
+			return t(
+				'stackiq',
+				'Required configuration is missing for ArchiMate import.',
+			)
 		},
 
 		/**
@@ -1268,53 +1397,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getMissingConfigItems(errorMessage) {
-			if (!errorMessage) return []
-
-			// Handle new error format from updated validation
-			if (errorMessage.includes('is not configured')) {
-				const schemaMatch = errorMessage.match(
-					/Schema ID for (\w+) '([^']+)' is not configured/,
-				)
-				if (schemaMatch) {
-					return [
-						`${schemaMatch[2]} schema ID (for ${schemaMatch[1]} objects)`,
-					]
-				}
-
-				// Check for register ID configuration error
-				if (errorMessage.includes('register ID is not configured')) {
-					return ['AMEF Register ID']
-				}
-
-				return ['AMEF schema configuration']
-			}
-
-			// Handle legacy error format
-			const lines = errorMessage.split('\n')
-			const missingItems = []
-			let inMissingSection = false
-
-			for (const line of lines) {
-				if (line.includes('Missing configuration:')) {
-					inMissingSection = true
-					continue
-				}
-
-				if (inMissingSection && line.trim().startsWith('-')) {
-					// Clean up the item text
-					const item = line.replace(/^-\s*/, '').trim()
-					missingItems.push(item)
-				} else if (
-					inMissingSection
-					&& !line.trim().startsWith('-')
-					&& line.trim() !== ''
-				) {
-					// End of missing items list
-					break
-				}
-			}
-
-			return missingItems
+			return missingConfigItems(errorMessage)
 		},
 
 		/**
@@ -1326,79 +1409,55 @@ export default {
 		 */
 		async loadOrganizations() {
 			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/voorzieningen/config',
-					{
-						headers: {
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
-						},
-					},
-				)
-				if (!response.ok) throw new Error('Failed to load config')
-				const data = await response.json()
-
-				// Get voorzieningen register and organisatie schema from config
-				const voorzRegister = data?.config?.register
-				const orgSchema = data?.config?.organisatie_schema
-				if (!voorzRegister || !orgSchema) {
-					console.debug(
-						'Voorzieningen config not available, using default Generic option',
-					)
-					return
-				}
-
-				// Load organizations from OpenRegister.
-				//
-				// ⚠️ This used to request `_fields=id,naam` and then
-				// `.filter(org => org.name || org.name)`. `naam` was DROPPED from the
-				// organisatie schema when contact/organisation identity moved to the
-				// Nextcloud addressbook — the schema is now a relationship record
-				// (contactsUid / type / status / …) and its `objectNameField` is
-				// `contactsUid`. So every row came back without a `naam`, the filter
-				// discarded all of them, and `organizationOptions` stayed empty: the
-				// Organization select offered nothing but the built-in "Generic"
-				// placeholder and the whole per-organisation export was unreachable.
-				//
-				// Nothing errored — the fetch succeeded, the array was simply empty —
-				// which is why this survived unnoticed. Found by the e2e suite the
-				// first time it ran against a FRESH install carrying the current
-				// register (an older instance still had the pre-migration table).
-				//
-				// Fixed by asking for whole objects and labelling by the object's own
-				// name (`@self.name`, which OpenRegister derives from the schema's
-				// configured objectNameField), with the legacy identity fields kept as
-				// fallbacks so an instance that has not yet been re-imported still
-				// renders its organisations.
-				const orgResponse = await fetch(
-					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000`,
-					{
-						headers: {
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
-						},
-					},
-				)
-				if (!orgResponse.ok) throw new Error('Failed to load organizations')
-				const orgData = await orgResponse.json()
-
-				const orgs = orgData?.results || orgData || []
-				if (Array.isArray(orgs) && orgs.length > 0) {
-					this.organizationOptions = orgs
-						.map((org) => ({
-							label:
-								org['@self']?.name
-								|| org.name
-								|| org.name
-								|| org.contactsUid
-								|| '',
-							value: org.id || org['@self']?.id,
-						}))
-						.filter((option) => option.label !== '' && option.value)
-						.sort((a, b) => a.label.localeCompare(b.label))
-				}
+				await this.loadOrganizationOptions()
 			} catch (error) {
 				console.warn('Could not load organizations:', error.message)
+			}
+		},
+
+		/**
+		 * Replace the organization options with the organisations of the
+		 * voorzieningen register, when it is configured and lists any.
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 * @throws {Error} When the config or the organisations cannot be loaded.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async loadOrganizationOptions() {
+			const source = await organisationSource()
+			if (!source) {
+				console.debug(
+					'Voorzieningen config not available, using default Generic option',
+				)
+				return
+			}
+
+			// Load organizations from OpenRegister.
+			//
+			// ⚠️ This used to request `_fields=id,naam` and then
+			// `.filter(org => org.name || org.name)`. `naam` was DROPPED from the
+			// organisatie schema when contact/organisation identity moved to the
+			// Nextcloud addressbook — the schema is now a relationship record
+			// (contactsUid / type / status / …) and its `objectNameField` is
+			// `contactsUid`. So every row came back without a `naam`, the filter
+			// discarded all of them, and `organizationOptions` stayed empty: the
+			// Organization select offered nothing but the built-in "Generic"
+			// placeholder and the whole per-organisation export was unreachable.
+			//
+			// Nothing errored — the fetch succeeded, the array was simply empty —
+			// which is why this survived unnoticed. Found by the e2e suite the
+			// first time it ran against a FRESH install carrying the current
+			// register (an older instance still had the pre-migration table).
+			//
+			// Fixed by asking for whole objects and labelling by the object's own
+			// name (`@self.name`, which OpenRegister derives from the schema's
+			// configured objectNameField), with the legacy identity fields kept as
+			// fallbacks so an instance that has not yet been re-imported still
+			// renders its organisations.
+			const options = await fetchOrganizationOptions(source)
+			if (options) {
+				this.organizationOptions = options
 			}
 		},
 	},
@@ -2111,48 +2170,48 @@ button.omschrijving-item:disabled {
 
 /* Error type colors */
 .error-type-badge.validation {
-	background: #ffebee;
-	color: #c62828;
+	background: var(--color-background-hover, #ffebee);
+	color: var(--color-error-text, #c62828);
 }
 
 .error-type-badge.schema {
-	background: #e3f2fd;
-	color: #1565c0;
+	background: var(--color-primary-element-light, #e3f2fd);
+	color: var(--color-primary-element-light-text, #1565c0);
 }
 
 .error-type-badge.reference {
-	background: #f3e5f5;
-	color: #7b1fa2;
+	background: var(--color-background-hover, #f3e5f5);
+	color: var(--color-info-text, #7b1fa2);
 }
 
 .error-type-badge.property {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover, #e8f5e8);
+	color: var(--color-success-text, #2e7d32);
 }
 
 .error-type-badge.constraint {
-	background: #fff3e0;
-	color: #ef6c00;
+	background: var(--color-background-hover, #fff3e0);
+	color: var(--color-warning-text, #ef6c00);
 }
 
 .error-type-badge.relationship {
-	background: #fce4ec;
-	color: #ad1457;
+	background: var(--color-background-hover, #fce4ec);
+	color: var(--color-error-text, #ad1457);
 }
 
 .error-type-badge.data_type {
-	background: #e0f2f1;
-	color: #00695c;
+	background: var(--color-background-hover, #e0f2f1);
+	color: var(--color-success-text, #00695c);
 }
 
 .error-type-badge.encoding {
-	background: #f1f8e9;
-	color: #558b2f;
+	background: var(--color-background-hover, #f1f8e9);
+	color: var(--color-success-text, #558b2f);
 }
 
 .error-type-badge.general {
-	background: #f5f5f5;
-	color: #424242;
+	background: var(--color-background-dark, #f5f5f5);
+	color: var(--color-main-text, #424242);
 }
 
 .error-message {

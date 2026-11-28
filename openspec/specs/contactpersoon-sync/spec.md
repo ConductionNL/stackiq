@@ -34,3 +34,41 @@ Synchronises contact-person records into managed Nextcloud user accounts, creati
 - WHEN `disableUserForContactpersoon(id)` is called
 - THEN the linked account MUST be disabled
 
+
+### Requirement: The system SHALL only accept a contact person from someone who may add members to its organisation (REQ-003)
+The contact sync turns a contact person into an account in the contact's organisation, resets the role group of an existing account named by its e-mail address, and writes names and e-mail address to the account named by `username`. A create, or an update that changes any of `organisation`, `organization`, `email`, `e-mailadres` or `username`, SHALL be refused unless the caller is an administrator, or a member of the contact's OpenRegister organisation in `gebruik-beheerder` or `aanbod-beheerder`. Every one of these keys SHALL be checked on its own, and a contact whose two organisation keys or two e-mail keys hold different values SHALL be refused. A contact person SHALL NOT name an existing account other than the caller's own, in its e-mail keys or in `username`, unless that account already belongs to the contact's organisation, and `username` only when it is the caller's own account. A member MAY change the e-mail address of their own contact person in the same organisation. A contact for an organisation that has no OpenRegister organisation yet (a registration under review) is accepted when it names no existing account. Only the writes stackiq's own contact sync job and contact migration mark as system writes are not checked; other command line writes are.
+
+@e2e exclude Enforced in an OpenRegister pre-save listener; tests/Unit/EventListener/ContactPersonOrganisationListenerTest.php drives it with the real guard.
+
+#### Scenario: REQ-003 another organisation
+- GIVEN a signed-in user who is not a member of organisation X
+- WHEN they create a contact person for organisation X
+- THEN the create MUST be refused and no account is made
+
+#### Scenario: REQ-003 an existing account
+- GIVEN an existing account that belongs to organisation A
+- WHEN a member manager of organisation X creates a contact person for X with that account's e-mail address
+- THEN the create MUST be refused and the account's groups are left alone
+
+#### Scenario: REQ-003 own organisation
+- GIVEN a member of organisation X in `gebruik-beheerder`
+- WHEN they create a contact person for X with a new e-mail address
+- THEN the create MUST be accepted
+
+### Requirement: Converting a contact person takes the email address from its linked Nextcloud contact
+
+When a contact person is turned into a user account, manually or automatically, stackiq SHALL read the email address from the Nextcloud contact its `contactsUid` names. The account SHALL get the role group that matches the organisation's type.
+
+#### Scenario: A contact made with the current form becomes a user
+
+- **GIVEN** a contact person of a supplier whose `contactsUid` names a Nextcloud contact with email anna@leverancier.nl
+- **WHEN** a beheerder chooses Convert to user
+- **THEN** a Nextcloud account exists for anna@leverancier.nl
+- **AND** the account is in the role group for suppliers
+
+#### Scenario: A contact without an email address is reported
+
+- **GIVEN** a contact person whose linked contact has no email address
+- **WHEN** a beheerder chooses Convert to user
+- **THEN** stackiq answers with a message that the contact has no email address
+- **AND** no account is created

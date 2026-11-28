@@ -18,7 +18,6 @@ import {
 	registerIcons,
 	registerTranslations,
 	resolveManifestSentinels,
-	useAppManifest,
 } from '@conduction/nextcloud-vue'
 import {
 	loadTranslations,
@@ -29,19 +28,24 @@ import { generateUrl } from '@nextcloud/router'
 import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import ApiDocumentationWidget from './components/api/ApiDocumentationWidget.vue'
 import CatalogPanels from './components/CatalogPanels.vue'
 import UpcomingMaintenanceWidget from './components/maintenance/UpcomingMaintenanceWidget.vue'
+import LandscapeComparisonView from './views/architecture/LandscapeComparisonView.vue'
 import CmdbOverview from './views/cmdb/CmdbOverview.vue'
 import customComponents from './customComponents.js'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
+import { loadManifest } from './manifestOverride.js'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { routesFromManifest } from './router.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-import '@conduction/nextcloud-vue/css/index.css'
+// Library CSS: templates/index.php links css/nextcloud-vue.css (LibraryStylesheetCopy in
+// webpack.config.js), so the sheet stays parsed between page loads instead of being
+// inserted from this bundle as text.
 // gridstack is a peerDependency of @conduction/nextcloud-vue that no consumer
 // declares. The stylesheet is the silent half: v12 sizes dashboard items with
 // `width: var(--gs-column-width)`, so without it every widget renders 0 px wide
@@ -91,6 +95,24 @@ registerDashboardWidget('cmdb-overview', {
 	defaultContent: {},
 	displayName: 'CMDB',
 	icon: 'Sitemap',
+	card: true,
+})
+// The Compare with the plan page (architecture-future-state-scenarios): today's
+// landscape next to the plan on a date, from GET /api/landscape-comparison.
+registerDashboardWidget('landscape-comparison', {
+	renderer: LandscapeComparisonView,
+	defaultContent: {},
+	displayName: 'Compare with the plan',
+	icon: 'CompareHorizontal',
+	card: true,
+})
+// The API documentation page (sharing-generated-api-docs): the catalogue
+// register's OpenRegister document and the app's own, rendered in tabs.
+registerDashboardWidget('api-documentation', {
+	renderer: ApiDocumentationWidget,
+	defaultContent: {},
+	displayName: 'API documentation',
+	icon: 'Api',
 	card: true,
 })
 try {
@@ -198,9 +220,12 @@ function routerBase() {
  * `voorzieningen_register` there with the numeric register id. We pass the
  * resolved manifest into the in-memory `useAppManifest({ manifest })`
  * branch, which mounts it synchronously and issues NO backend fetch — so
- * nothing can clobber the resolved sentinels afterwards.
+ * nothing can clobber the resolved sentinels afterwards. When Buildiq is
+ * enabled, `loadManifest` merges its stored override delta over the resolved
+ * manifest instead (buildiq openbuild-inline-edit-persistence 5.1).
  *
  * @return {Promise<void>}
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(
@@ -220,10 +245,11 @@ async function bootstrap() {
 		routes: routesFromManifest(resolvedManifest),
 	})
 
-	// In-memory branch: mount the already-resolved manifest synchronously,
-	// no backend fetch (see bootstrap() docblock for why the fetch path is
-	// unusable for this app).
-	const { manifest: manifestRef } = useAppManifest({ manifest: resolvedManifest })
+	// Without Buildiq: the in-memory branch mounts the already-resolved
+	// manifest synchronously, no backend fetch (see bootstrap() docblock for
+	// why this app's own /api/manifest is unusable). With Buildiq enabled: the
+	// stored Buildiq override delta merges over it (manifestOverride.js).
+	const { manifest: manifestRef } = loadManifest(resolvedManifest)
 
 	const app = createApp({
 		render() {

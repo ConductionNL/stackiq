@@ -51,6 +51,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { roadmapEvents } from '../../utils/maintenance.js'
+import { ensureObjectType } from '../../utils/objectTypes.js'
 
 export default {
 	name: 'ProductRoadmap',
@@ -126,8 +127,8 @@ export default {
 			this.loading = true
 			this.error = false
 			try {
-				this.ensureType('module')
-				this.ensureType('moduleVersion')
+				await this.ensureType('module')
+				await this.ensureType('moduleVersion')
 				const module = await objectStore.fetchObject('module', this.objectId)
 				this.statement = module?.roadmapStatement || ''
 				const versions = await objectStore.fetchCollectionForOptions(
@@ -150,20 +151,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-004-a-product-page-shows-the-supplier-s-roadmap
 		 */
-		ensureType(type) {
-			if (
-				typeof objectStore.registerObjectType !== 'function'
-				|| objectStore.objectTypeRegistry?.[type]
-			) {
-				return
-			}
-			const config = objectStore.getSchemaConfig?.(type)
-			if (config?.register && config?.schema) {
-				objectStore.registerObjectType(type, config.schema, config.register)
-			}
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }

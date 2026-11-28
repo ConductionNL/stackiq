@@ -1,0 +1,62 @@
+# Tasks: connections-derived-dependencies
+
+## Implementation tasks
+
+### Task 1: Suggestion service
+- **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+- **files**: `lib/Service/ConnectionSuggestionService.php`, `lib/Settings/register.d/derived-connections.json`
+- **acceptance_criteria**:
+  - GIVEN applications X and Y share a connection and the organisation uses both WHEN suggestions are asked for its usage of X THEN the connection is suggested with reason shared-landscape
+  - GIVEN the organisation does not use Y WHEN suggestions are asked THEN that connection is not suggested
+- [x] Implement
+  - `lib/Service/ConnectionSuggestionService.php`; `dismissedConnectionSuggestions` on the usage in `lib/Settings/register.d/derived-connections.json`.
+- [x] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php` with an ObjectService double built on the real interface)
+  - `ConnectionSuggestionServiceTest` over `ConnectionSuggestionStore`, an in-memory store on OpenRegister's `ObjectServiceInterface` contract.
+
+### Task 2: Carry-over suggestions
+- **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+- **files**: `lib/Service/ConnectionSuggestionService.php`
+- **acceptance_criteria**:
+  - GIVEN an old usage of X at version 1 with two connections WHEN a usage of X at version 2 is created THEN both connections are suggested with reason carry-over
+  - GIVEN an old usage whose planned replacement is Z WHEN a usage of Z is created THEN draft connections from Z to the same ends are suggested
+- [x] Implement
+  - Same service: another version of the same application carries its connections over as they are; an application whose planned replacement is this one offers drafts in which the successor takes the replaced end, created with status `in development` on accept.
+- [x] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php`, carry-over cases)
+
+### Task 3: Endpoints with a per-object guard
+- **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
+- **files**: `lib/Controller/ConnectionSuggestionController.php`, `appinfo/routes.php`, `lib/AppInfo/Application.php`
+- **acceptance_criteria**:
+  - GIVEN a user of another organisation WHEN they post accept for this usage THEN the answer is 403 and nothing changes
+  - GIVEN the owning organisation WHEN it accepts a suggestion THEN the connection is in usage.koppelingen
+- [x] Implement
+  - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
+- [x] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes) (Newman run 25 Nov 2026 against a live sandbox instance, folder "Connection suggestions (connections-derived-dependencies)": 5 requests, 6 assertions, 0 failed; the environments' schema slugs were corrected to the renamed ones first)
+  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404), and the Newman requests in `postman/stackiq-tests.json` (08, "Connection suggestions"). Run 25 Nov 2026: 6/6 assertions green.
+  - Owner path by hand, same day, with the caller's active organisation set to the usage's consumer: GET 200 `{"results":[]}`, dismiss 200 `{"dismissed":[]}`, accept 200 `{"accepted":[]}`.
+
+### Task 4: Suggested connections panel
+- **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape
+- **files**: `src/components/connections/ConnectionSuggestionsPanel.vue`, `src/customComponents.js`, the usage detail page in `src/manifest.d/`, `l10n/en.json`, `l10n/nl.json`
+- **acceptance_criteria**:
+  - GIVEN one suggestion WHEN the user clicks Accept THEN it leaves the panel and appears in the usage's connections
+  - GIVEN one suggestion WHEN the user clicks Dismiss and reloads THEN it stays gone
+- [x] Implement
+  - `ConnectionSuggestionsPanel` registered in `src/customComponents.js` and placed after the data on `GebruikDetail` (`src/manifest.d/usages.json`); English and Dutch strings in `l10n/en.json`, `nl.json`, `en.js`, `nl.js`. Unit spec `tests/vitest/connectionSuggestionsPanel.spec.js` (listing, empty state, refusals, accept, dismiss, accept all).
+- [x] Test (Playwright `tests/e2e/workflows/connection-suggestions.spec.ts`) (run 25 Nov 2026 against a live sandbox instance, NC 34 + PostgreSQL 16 + OpenRegister main: 2 passed)
+  - The run found three faults on the way, fixed in the same PR: the organisation sync matched only status `actief` (the schema stores `Active`), so no register organisation got its OpenRegister organisation; the contact and user sync queried `eMailadres`/`username` columns the contactPerson schema no longer has and aborted the cron pass; and the owner write-back after creating an organisation ran under RBAC as the anonymous cron user. The carried-over national connection was labelled shared-landscape; carry-over now wins the dedupe (REQ-DCN-002). The spec triggers the administrator's manual sync while it waits, because the sync is cron-only.
+
+### Task 5: Documentation
+- **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
+- **files**: `docs/features/connection-suggestions.md`, `docs/images/connection-suggestions.png`
+- **acceptance_criteria**:
+  - GIVEN the docs site WHEN a reader opens Connection suggestions THEN both sources of suggestions are explained with a screenshot
+- [x] Implement
+  - Done: `docs/features/connection-suggestions.md` (both sources, accept and dismiss, the API) and its entry in `docs/features/README.md`. `docs/images/connection-suggestions.png` was added 25 Nov 2026.
+- [x] Test (docs build, screenshot with Playwright) (screenshot captured 25 Nov 2026 against a live sandbox instance with `npx playwright test --project docs` (`tests/e2e/docs/screenshots.spec.ts`); docs build passes)
+
+## Verification
+
+- `openspec validate connections-derived-dependencies --type change --strict` passes.
+- `composer check:strict` and `npm run lint` pass; PHPUnit, Newman and Playwright cases above pass.
+- English and Dutch strings for every new label (ADR-005); docs with a screenshot (ADR-010).

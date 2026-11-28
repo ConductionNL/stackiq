@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 use OCP\Util;
 
 $appId = OCA\Stackiq\AppInfo\Application::APP_ID;
@@ -7,6 +12,7 @@ $appId = OCA\Stackiq\AppInfo\Application::APP_ID;
 // plus shared vendor/nc-vue chunks. All must be loaded in dependency order BEFORE
 // the entry chunk, otherwise __webpack_require__ is never bootstrapped and Vue never
 // mounts. See GH issue #322 for the full diagnosis.
+Util::addStyle($appId, 'nextcloud-vue');
 Util::addScript($appId, $appId . '-runtime');
 Util::addScript($appId, $appId . '-shared-vendor');
 Util::addScript($appId, $appId . '-shared-nc-vue');

@@ -32,7 +32,7 @@ assessment" object.
 ## The BIO measures catalog
 
 A `bioMaatregel` object is one BIO 2.0 measure: `code`, `naam`,
-`omschrijving`, `thema`, `bioVersie`, the applicable `bbnNiveau`(s), and a
+`omschrijving`, `thema`, `bioVersie`, the applicable `bbnLevel`(s), and a
 `bron` reference to the published measure list. It is a publicly readable
 reference catalog (`authorization.read: ["public"]`), seeded on
 install/upgrade from `lib/Settings/softwarecatalogus_register.json`'s
@@ -120,8 +120,8 @@ PHP notification service):
     { "kind": "object-acl", "permission": "manage" }
   ],
   "subject": {
-    "nl": "DPIA-beoordeling verlopen: {{naam}} (uiterlijk {{dpiaVolgendeBeoordeling}})",
-    "en": "DPIA review overdue: {{naam}} (due {{dpiaVolgendeBeoordeling}})"
+    "nl": "DPIA-beoordeling verlopen: {{name}} (uiterlijk {{dpiaNextAssessment}})",
+    "en": "DPIA review overdue: {{name}} (due {{dpiaNextAssessment}})"
   }
 }
 ```

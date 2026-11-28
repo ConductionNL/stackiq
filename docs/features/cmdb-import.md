@@ -21,7 +21,7 @@ newer export later and the same applications are updated, not duplicated;
 applications that left the export are archived or moved to the trash (see
 [Repeat imports](#repeat-imports)).
 
-Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import); archiving and deleting on a repeat import in [`openspec/changes/cmdb-import-archive-reconciliation/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/cmdb-import-archive-reconciliation)).
+Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import); archiving and deleting on a repeat import in [`openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation)).
 
 ## Who can import
 
@@ -458,8 +458,7 @@ server is overwritten by the next app update.
 
 **What you need.** Editing the mapping needs an OpenRegister with the
 migration-pack editor, whose pack writes are admin-only and need a CSRF
-token (added in [openregister#4602](https://github.com/ConductionNL/openregister/pull/4602);
-the first OpenRegister release that contains it). On an older OpenRegister
+token: OpenRegister 2.1.41 or later. On an older OpenRegister
 nothing is stored in OpenRegister and there is nothing to edit: the import
 runs the packs that ship with stackiq, and the import result says so.
 Changing those shipped files on the server does not last, because the next

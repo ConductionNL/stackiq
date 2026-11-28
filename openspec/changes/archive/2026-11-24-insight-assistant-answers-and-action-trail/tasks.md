@@ -1,0 +1,56 @@
+# Tasks: insight-assistant-answers-and-action-trail
+
+## Implementation tasks
+
+### Task 1: Ask service and route
+- **spec_ref**: openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used
+- **files**: `lib/Service/AskService.php`, `lib/Controller/AskController.php`, `appinfo/routes.php`
+- **acceptance_criteria**:
+  - GIVEN a question WHEN `POST /api/ask` runs THEN OpenRegister's search runs as the caller over the seven schemas in design D1, capped at 20 entries
+  - GIVEN the search result WHEN hermiq replies THEN the answer holds `reply`, `sources` (cited refs only) and `searched`
+  - GIVEN an empty search WHEN asked THEN hermiq is not called
+  - GIVEN hermiq is absent WHEN asked THEN the answer is 503
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/AskServiceTest.php` with an ObjectService double on the real interface and a recorded converse reply; `tests/Unit/Controller/AskControllerTest.php` for 503 and the rate limit)
+  > Built: `AskService` (contract `AskServiceInterface`), `AskController`, route `POST /api/ask` (also documented in `openapi.json`). The search is one `searchObjectsPaginated` per schema, as the caller, until 20 entries; hermiq is resolved at runtime as `OCA\Hermiq\Kernel\Contracts\AssistantServiceInterface` and the citation instruction is appended to the question. Hermiq's own 400/403/404 pass through; any other assistant failure answers 502.
+
+### Task 2: Ask panel
+- **spec_ref**: openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-002-the-ask-panel-is-only-offered-when-hermiq-is-installed
+- **files**: `src/views/AskView.vue`, `src/manifest.json` (page `Ask` at `/ask`, menu entry under Reports & Compliance), `lib/Listener` or `lib/AppInfo` initial state `hermiqAvailable`, `l10n/en.json`, `l10n/nl.json`
+- **acceptance_criteria**:
+  - GIVEN hermiq enabled WHEN the user opens Ask and submits a question THEN the reply and a linked Sources list render
+  - GIVEN hermiq disabled WHEN the app loads THEN no Ask entry shows
+- [x] Implement
+- [x] Test (Playwright `tests/e2e/workflows/ask-the-catalogue.spec.ts`) (e2e written, runs in nightly; skips itself on an instance without hermiq; not verified on a live instance)
+  > Built: custom page `Ask` at `/ask` (`src/views/AskView.vue`, registered in `src/customComponents.js`) over `src/utils/askCatalogue.js`: one question (at most 2000 characters), the reply, the cited Sources linked, and the searched entries in a folded list; an empty search says "No catalogue entries matched this question."; 503, 429 and other failures read as a message. Menu entry `Ask` relocated under Reports & Compliance (`src/menu-layout.json`), gated with the library's `visibleIf: { appInstalled: "hermiq" }`, so no `hermiqAvailable` initial state is needed. Strings in en and nl. Vitest `tests/vitest/askCatalogue.spec.js` (10 tests: request, answer, failures, manifest wiring). Test box left open: the Playwright spec needs a live instance with hermiq.
+
+### Task 3: Assistant actions page
+- **spec_ref**: openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-003-assistant-actions-on-catalogue-records-are-listed
+- **files**: `src/views/AssistantActionsView.vue`, `src/manifest.json` (page `AssistantActions` at `/assistant-actions`), `l10n/en.json`, `l10n/nl.json`
+- **acceptance_criteria**:
+  - GIVEN audit records with `mcp.` actions and `stackiq.` tool ids WHEN an administrator opens the page THEN each shows when, user, tool, linked record and outcome
+  - GIVEN OpenRegister's `GET /api/audit-trails` WHEN the page loads THEN it filters server side on register and action prefix; if the API cannot, file the gap on OpenRegister and stop
+- [x] Implement
+- [x] Test (Playwright `tests/e2e/workflows/assistant-actions.spec.ts`) (e2e written, runs in nightly; not verified on a live instance)
+  > Built: custom page `AssistantActions` at `/assistant-actions` (`src/views/AssistantActionsView.vue`, registered in `src/customComponents.js`, menu entry under Reports & Compliance) over `src/utils/assistantActions.js`. It reads OpenRegister's cursor-paged `GET /api/audit-trails` with `actionPrefix=mcp.` and `toolPrefix=stackiq.`, filters added to OpenRegister for this (openregister PR #10589, branch `build/insight-assistant-answers-and-action-trail`); the tool, user and period filters are sent as `tool`, `actor`, `from` and `to`. Columns when, user, tool, record (linked to the stackiq detail page of the record's schema) and outcome (`resultSummary.isError`). Rows come from the cursor, a "Load more" button fetches the next page. Assistant tool calls carry no register of their own, so the tool prefix scopes the list, not the register. OpenRegister lets administrators read the list; anyone else sees "Only administrators can review assistant actions.". Vitest `tests/vitest/assistantActions.spec.js` (13). Test box left open: the Playwright spec needs a live instance with the openregister filters merged.
+
+### Task 4: History tab label
+- **spec_ref**: openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-004-the-history-tab-marks-assistant-actions
+- **files**: `src/manifest.json` (the `audit` widget config on the 11 detail pages)
+- **acceptance_criteria**:
+  - GIVEN the library audit widget takes a label per action WHEN configured THEN `mcp.*` entries read "Assistant: {toolId}"
+  - GIVEN it does not WHEN checked THEN an issue is filed on nextcloud-vue and the tab is left as it is
+- [x] Implement
+- [x] Test (vitest on the manifest config, or the library's own test once the label map exists)
+  > Checked: the `audit` widget's `CnAuditTrailCard` gained `actionLabels` in later `@conduction/nextcloud-vue` releases (stackiq is locked to 2.74.0, which has none), but it matches an action exactly (`labels[action]`) and fills only `{actor}`, `{state}`, `{changed.*}` and `{object.*}`: there is no `mcp.*` wildcard and no `{toolId}` token, so "Assistant: {toolId}" cannot be configured. Needed in nextcloud-vue `actionLabelFor`/`fillAuditLabel`: a prefix key (`mcp.*`) and a `{toolId}` token. The History tab is left as it is; the Assistant actions page carries these rows.
+  > Built 24 Nov: nextcloud-vue #2305 (an `actionLabels` key ending in `.*` covers every action under the prefix; `{toolId}` names the tool), #2306 (the sidebar `audit` widget, `CnAuditTrailTab`, takes `actionLabels`) and #2308 (the label goes through the app's l10n). Every detail page's `audit` widget (23, base manifest and fragments) carries `actionLabels: { "mcp.*": "Assistant: {toolId}" }`, with the Dutch "Assistent: {toolId}" in `l10n/nl.json`. Test: `tests/vitest/manifestHistoryTabs.spec.js` (every detail page words assistant actions).
+
+### Task 5: Documentation
+- **spec_ref**: openspec/changes/archive/2026-11-24-insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-001-an-answer-lists-the-catalogue-entries-it-used
+- **files**: `docs/features/ask-the-catalogue.md`, `docs/features/assistant-actions.md`
+- **acceptance_criteria**:
+  - GIVEN the docs site WHEN a reader opens either page THEN it explains what is searched, what is sent to hermiq, and where to review assistant actions
+- [x] Implement
+  > Written: `docs/features/ask-the-catalogue.md` (what is searched, what is sent to hermiq, the answer) and `docs/features/assistant-actions.md` (columns, filters, source, who can see it, the History tab).
+- [x] Test (docs build)
+  > 22 Nov: `npm ci --legacy-peer-deps && npm run build` in `docs/` passes (English and Dutch, all ten AI-baseline checks), and both pages render as `docs/features/ask-the-catalogue/` and `docs/features/assistant-actions/` with no broken-link warning.

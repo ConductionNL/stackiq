@@ -1,0 +1,61 @@
+{
+  "$comment": "landscape-migrate-from-previous-catalogue: the id a record had in the previous Softwarecatalogus, so a repeated import of the same export updates instead of duplicating. Set by the import; only a Nextcloud admin can change it.",
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.6.5",
+        "properties": {
+          "legacyId": {
+            "type": "string",
+            "title": "Previous catalogue id",
+            "description": "The id this usage had in the previous Softwarecatalogus. A repeated import of the same export matches on it. Set by the import; only a Nextcloud admin can change it.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": false,
+            "hideOnCollection": true,
+            "authorization": {
+              "update": ["admin"]
+            },
+            "order": 90
+          }
+        }
+      },
+      "module": {
+        "version": "0.3.16",
+        "properties": {
+          "legacyId": {
+            "type": "string",
+            "title": "Previous catalogue id",
+            "description": "The id this application had in the previous Softwarecatalogus. A repeated import of the same export matches on it. Set by the import; only a Nextcloud admin can change it.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": false,
+            "hideOnCollection": true,
+            "authorization": {
+              "update": ["admin"]
+            },
+            "order": 90
+          }
+        }
+      },
+      "organization": {
+        "version": "0.5.7",
+        "properties": {
+          "legacyId": {
+            "type": "string",
+            "title": "Previous catalogue id",
+            "description": "The id this organisation had in the previous Softwarecatalogus. A repeated import of the same export matches on it. Set by the import; only a Nextcloud admin can change it.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": false,
+            "hideOnCollection": true,
+            "authorization": {
+              "update": ["admin"]
+            },
+            "order": 90
+          }
+        }
+      }
+    }
+  }
+}

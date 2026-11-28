@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  SPDX-License-Identifier: EUPL-1.2
+
+  A small ArchiMate model with one view of three reference components, for the
+  documentation image of applications on a GEMMA view
+  (tests/e2e/docs/screenshots.spec.ts). The full GEMMA poster opens zoomed out
+  so far that an application row cannot be read, and a read-only view cannot
+  be panned to one component.
+-->
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="id-docs-shared-usage-model">
+  <name xml:lang="en">Docs: applications on a view</name>
+  <elements>
+    <element identifier="id-docs-su-zaak" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Zaakregistratiecomponent</name>
+    </element>
+    <element identifier="id-docs-su-dms" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Documentregistratiecomponent</name>
+    </element>
+    <element identifier="id-docs-su-portaal" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Klantportaal</name>
+    </element>
+  </elements>
+  <views>
+    <diagrams>
+      <view identifier="id-docs-su-view" xsi:type="Diagram">
+        <name xml:lang="en">Docs: case handling components</name>
+        <node identifier="id-docs-su-node-zaak" elementRef="id-docs-su-zaak" xsi:type="Element" x="0" y="0" w="300" h="160"/>
+        <node identifier="id-docs-su-node-dms" elementRef="id-docs-su-dms" xsi:type="Element" x="340" y="0" w="300" h="160"/>
+        <node identifier="id-docs-su-node-portaal" elementRef="id-docs-su-portaal" xsi:type="Element" x="680" y="0" w="300" h="160"/>
+      </view>
+    </diagrams>
+  </views>
+</model>

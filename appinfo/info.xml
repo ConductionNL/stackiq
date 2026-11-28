@@ -50,7 +50,8 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.6-unstable.20261012120000</version>
+    <version>0.2.40-unstable.20261128193138</version>
+    <!-- @spec openspec/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Stackiq</namespace>
@@ -99,6 +100,8 @@ Vrij en open source onder de EUPL-licentie.
 		<job>OCA\Stackiq\BackgroundJob\ContractStatusJob</job>
 		<job>OCA\Stackiq\BackgroundJob\FederationSyncJob</job>
 		<job>OCA\Stackiq\BackgroundJob\EolSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\RoleGrantSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\AttestationOverdueJob</job>
 	</background-jobs>
 
 	<repair-steps>
@@ -230,10 +233,39 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import adds connection.sharedWithOrganisations: fills it for
+			     usages shared before it existed, so their participants can read the connections. -->
+			<step>OCA\Stackiq\Repair\BackfillConnectionSharing</step>
+			<!-- Usages added on the usage form before the provider followed the application:
+			     set it, so the supplier sees them on its application page. -->
+			<step>OCA\Stackiq\Repair\BackfillUsageProvider</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
+			<!-- bio-measures-shipped-and-not-met: existing compliance claims get result=meets after InitializeSettings imports the property. Idempotent. -->
+			<step>OCA\Stackiq\Repair\DefaultComplianceResultToMeets</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
+			<!--
+				operations-record-reconciliation: every existing application and
+				service gets recordStatus Active, after InitializeSettings imported
+				the property, so no row is left without one.
+			-->
+			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
+			<!--
+				landscape-completeness-score: every module and usage saved before
+				the data quality rules existed is saved once so OpenRegister scores
+				it. After InitializeSettings, which imports the rules and the score
+				fields. Upgrade-only: a fresh install has no unscored rows.
+			-->
+			<step>OCA\Stackiq\Repair\RescoreDataQuality</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
@@ -258,6 +290,15 @@ Vrij en open source onder de EUPL-licentie.
 				throws, and does nothing without OpenRegister's store.
 			-->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!--
+				The organisation sync job honours its switch
+				(operations-sync-status-and-progress): warn once where it is off,
+				so nobody wonders why syncs stopped. Changes nothing.
+			-->
+			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
+			<!-- Before the role sync runs on its own: write each role group member's
+			     role onto their contact person, so the upgrade takes nobody's access. -->
+			<step>OCA\Stackiq\Repair\SeedRolesFromGroups</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -331,9 +372,19 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<!-- After the register import: re-import keeps the stored authorization of an
+			     existing schema, so an upgraded install can keep an unconditional public read
+			     on software reviews. This rewrites it to approved reviews only. -->
+			<step>OCA\Stackiq\Repair\RestoreReviewReadRule</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!-- An app-id rename presents as a fresh install; seed the role groups here too. -->
+			<step>OCA\Stackiq\Repair\SeedRolesFromGroups</step>
 		</install>
 	</repair-steps>
 
@@ -344,6 +395,14 @@ Vrij en open source onder de EUPL-licentie.
 		     shared `contractNumber`: a wrong cross-app link is worse than an
 		     empty one. -->
 		<command>OCA\Stackiq\Command\ReferencesAuditCommand</command>
+		<!-- Link an organisatie to an existing OpenRegister organisation. The
+		     organisation sync leaves an organisatie unlinked when another
+		     organisation already has its name; only an administrator links them. -->
+		<command>OCA\Stackiq\Command\OrganisationLinkCommand</command>
+		<!-- Back-fill the GEMMA standard links an import before the link fix
+		     saved without. Writes only link properties that differ; a second run
+		     writes nothing. dry-run reports without writing. -->
+		<command>OCA\Stackiq\Command\GemmaStandardLinksCommand</command>
 	</commands>
 
 	<settings>

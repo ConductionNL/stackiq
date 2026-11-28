@@ -47,6 +47,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { loadUpcomingMaintenance, refId } from '../../utils/maintenance.js'
+import { ensureObjectType } from '../../utils/objectTypes.js'
 
 export default {
 	name: 'UpcomingMaintenanceWidget',
@@ -154,7 +155,7 @@ export default {
 				this.windows = await loadUpcomingMaintenance(
 					organisationId,
 					async (type, params) => {
-						this.ensureType(type)
+						await this.ensureType(type)
 						return objectStore.fetchCollectionForOptions(type, params)
 					},
 				)
@@ -187,20 +188,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-002-organisations-that-use-a-product-see-its-planned-maintenance
 		 */
-		ensureType(type) {
-			if (
-				typeof objectStore.registerObjectType !== 'function'
-				|| objectStore.objectTypeRegistry?.[type]
-			) {
-				return
-			}
-			const config = objectStore.getSchemaConfig?.(type)
-			if (config?.register && config?.schema) {
-				objectStore.registerObjectType(type, config.schema, config.register)
-			}
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }

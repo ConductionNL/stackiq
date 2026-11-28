@@ -63,6 +63,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { loadApplicationContracts } from '../../utils/applicationContracts.js'
+import { ensureObjectType } from '../../utils/objectTypes.js'
 
 /**
  * The contracts behind one application, on its page: contracts on a usage of
@@ -139,7 +140,7 @@ export default {
 				this.contracts = await loadApplicationContracts(
 					this.objectId,
 					async (type, params) => {
-						this.ensureType(type)
+						await this.ensureType(type)
 						return objectStore.fetchCollectionForOptions(type, params)
 					},
 				)
@@ -155,20 +156,11 @@ export default {
 		 * Register an object type with the store when it is not known yet.
 		 *
 		 * @param {string} type The schema slug
-		 * @return {void}
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
 		 */
-		ensureType(type) {
-			if (
-				typeof objectStore.registerObjectType !== 'function'
-				|| objectStore.objectTypeRegistry?.[type]
-			) {
-				return
-			}
-			const config = objectStore.getSchemaConfig?.(type)
-			if (config?.register && config?.schema) {
-				objectStore.registerObjectType(type, config.schema, config.register)
-			}
+		async ensureType(type) {
+			await ensureObjectType(type)
 		},
 	},
 }

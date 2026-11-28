@@ -10,16 +10,37 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 |---------|-------------|
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
+| [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Synchronisation Status](sync-status-and-progress.md) | When the organisation sync runs, its last run and a running sync, for admins and functional administrators |
+| [Knowledge base](application-knowledge-base.md) | Link Nextcloud Collectives articles to applications and search them by title |
+| [Connection Suggestions](connection-suggestions.md) | Suggested connections for an application in use, from your landscape and earlier usages |
+| [Confirmation Rounds](owner-attestation.md) | Ask owners to confirm or correct their entries by a deadline, and follow who answered |
+| [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
+| [Applications on GEMMA views](shared-usage-on-views.md) | Show your own and partners' shared applications inside the components of a GEMMA view |
+| [Data model](data-model.md) | The GGM data entities and your own, their relations and attributes, and the applications that hold their data |
+| [Future-state scenarios](future-state-scenarios.md) | Compare today's landscape with the plan or a scenario on a date, and apply an adopted scenario |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
+| [Application Components](application-components.md) | Record the applications an application is made of, and list them on its page |
+| [Change Entry Type](change-entry-type.md) | Turn an application into a service or system software and back, keeping its identity |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
 | [Contract Management](#contract-management) | Track license and service agreements |
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
+| [Role Mapping and Access Review](role-mapping-and-access-review.md) | Map catalogue roles onto your own groups, and review who still needs access |
+| [Security classification (BIO)](baseline-classification.md) | Classify each application in use on availability, integrity and confidentiality, with a GEMMA suggestion and an anonymous comparison |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [ArchiMate round-trip check](archimate-import-export.md) | Check what a model file loses through the import and export, before or after importing it |
+| [Technology Components](technology-components.md) | Record the servers, databases and devices an organisation runs, what runs on them and when their support ends |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
+| [Bring over from the previous Softwarecatalogus](legacy-catalogue-migration.md) | Bring over what an organisation registered in the previous Softwarecatalogus, with a preview before anything is saved |
+| [Data quality](./data-quality.md) | A data quality score on every application and usage, a confirm-current action and a Data quality page per organisation |
+| [API documentation](api-documentation.md) | Read OpenRegister's document of the catalogue objects and stackiq's own endpoints in the app, and download either as JSON |
+| [Health and metrics](observability.md) | A public health check for uptime probes and Prometheus metrics for administrators, configured in the manifest |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
+| [Reference Component Coverage](reference-component-coverage.md) | Which GEMMA reference components an organisation covers, where it has gaps and where applications overlap, per GEMMA view, with what comparable organisations use |
+| [Catalogue Exports and Custom Reports](catalogue-exports-and-reports.md) | Export lists, faceted lists and one organisation as ArchiMate, and define your own reports |
 
 ## Software Registration
 
@@ -155,6 +176,8 @@ The ArchiMate integration maps GEMMA Softwarecatalogus objects to ArchiMate appl
 | Organisatie | BusinessActor |
 
 **Key services:** `lib/Service/ArchiMateService.php`, `lib/Service/ArchiMateImportService.php`, `lib/Service/ArchiMateExportService.php`
+
+To see what a model file loses on its way through stackiq, before or after importing it, see [ArchiMate import and export](archimate-import-export.md).
 
 ## CMDB Import
 

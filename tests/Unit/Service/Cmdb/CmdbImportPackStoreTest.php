@@ -12,7 +12,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -122,7 +122,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAnOpenRegisterWithoutTheHardenedStoreIsNotAvailable(): void {
 		$this->service->failure = new \RuntimeException('an unhardened store must not be asked');
@@ -146,7 +146,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testTheHardenedStoreIsMarkedByTheSlugLock(): void {
 		$this->assertSame('OCA\\OpenRegister\\Exception\\BuiltinPackSlugLockedException', CmdbImportPackStore::HARDENED_CLASS);
@@ -158,7 +158,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testASeedThatLosesARaceUsesThePackTheOtherRequestStored(): void {
 		$this->service->beforeCreate = function (array $definition): void {
@@ -180,7 +180,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAFailingSeedWithNoPackStoredIsMappingUnavailable(): void {
 		$this->service->beforeCreate = static function (array $definition): void {
@@ -374,6 +374,28 @@ class CmdbImportPackStoreTest extends TestCase {
 	}//end testARenamedPackFailsClosed()
 
 	/**
+	 * A recorded row that cannot be read is MAPPING_UNAVAILABLE naming the pack and the row, and nothing is seeded.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableRecordedPackFailsClosed(): void {
+		$this->config[CmdbImportPackStore::CONFIG_KEY] = (string)json_encode(['stackiq-topdesk-usage' => 7]);
+		$this->service->findFailure = new RuntimeException('connection reset');
+
+		try {
+			$this->store()->resolve(shipped: $this->shippedUsage());
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame('OpenRegister migration pack stackiq-topdesk-usage (id 7) could not be read: RuntimeException', $e->getMessage());
+			$this->assertSame(['pack' => 'stackiq-topdesk-usage', 'packId' => 7], $e->getDetails());
+			$this->assertInstanceOf(RuntimeException::class, $e->getPrevious());
+		}
+
+		$this->assertSame([], $this->service->writes, 'nothing seeded while the recorded row is unknown');
+	}//end testAnUnreadableRecordedPackFailsClosed()
+
+	/**
 	 * A pack whose recorded row was deleted is seeded again, and the new row id is recorded.
 	 *
 	 * @return void
@@ -412,7 +434,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAnEditSavedBetweenTheReadAndTheUpdateIsKept(): void {
 		$seeded = (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage());
@@ -439,7 +461,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAPackDeletedBetweenTheReadAndTheUpdateIsMappingUnavailable(): void {
 		$this->service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage()));
@@ -482,7 +504,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function testAnOpenedWriteRouteMakesTheStoreUnavailable(): void {
 		$support = __DIR__ . '/../../Support/OpenRegister/';

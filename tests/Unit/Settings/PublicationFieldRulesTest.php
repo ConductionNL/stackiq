@@ -12,6 +12,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/publication-field-rules/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -89,20 +92,40 @@ class PublicationFieldRulesTest extends TestCase {
 			'moduleVersion'  => ['usages'],
 			'catalogService' => ['contactPerson'],
 			'connection'     => ['provider', 'serviceDeskRecordId', 'serviceDeskUrl', 'longDescription'],
-			'usage'          => ['businessOwner', 'technicalOwner', 'contactPerson', 'timeClassification', 'businessValue', 'installedVersion', 'serviceDeskUrl'],
+			'usage'          => [
+				'businessOwner',
+				'technicalOwner',
+				'contactPerson',
+				'timeClassification',
+				'businessValue',
+				'installedVersion',
+				'serviceDeskUrl',
+			],
 			'organization'   => ['contactsUid', 'xml', 'pki', 'registrationStatus', 'mergedInto'],
 		];
 		foreach ($private as $schema => $fields) {
 			foreach ($fields as $field) {
-				$this->assertArrayHasKey($field, $schemas[$schema]['properties'], $schema . '.' . $field . ' exists');
+				$this->assertArrayHasKey(key: $field, array: $schemas[$schema]['properties'], message: $schema . '.' . $field . ' exists');
 				// Other fragments may add write rules (module.externalKey: update by admin only); the read rule is this one.
-				$this->assertSame(['authenticated'], $schemas[$schema]['properties'][$field]['authorization']['read'] ?? null, $schema . '.' . $field);
-				$this->assertArrayHasKey('type', $schemas[$schema]['properties'][$field], $schema . '.' . $field . ' is a real property, not a rule on nothing');
+				$this->assertSame(
+					expected: ['authenticated'],
+					actual: $schemas[$schema]['properties'][$field]['authorization']['read'] ?? null,
+					message: $schema . '.' . $field
+				);
+				$this->assertArrayHasKey(
+					key: 'type',
+					array: $schemas[$schema]['properties'][$field],
+					message: $schema . '.' . $field . ' is a real property, not a rule on nothing'
+				);
 			}
 		}
 
 		foreach (['module', 'catalogService', 'usage', 'connection'] as $schema) {
-			$this->assertArrayNotHasKey('authorization', $schemas[$schema]['properties']['publicationDate'] ?? [], $schema . '.publicationDate stays readable: the read rules match on it');
+			$this->assertArrayNotHasKey(
+				key: 'authorization',
+				array: $schemas[$schema]['properties']['publicationDate'] ?? [],
+				message: $schema . '.publicationDate stays readable: the read rules match on it'
+			);
 		}
 	}//end testPrivateFieldsReadForSignedInUsersOnly()
 
@@ -115,8 +138,14 @@ class PublicationFieldRulesTest extends TestCase {
 		$base   = $this->base()['components']['schemas'];
 		$merged = $this->register()['components']['schemas'];
 
-		$this->assertSame($base['usage']['properties']['interneAnnotation']['authorization'], $merged['usage']['properties']['interneAnnotation']['authorization']);
-		$this->assertSame($base['organization']['properties']['contactpersonen']['authorization'], $merged['organization']['properties']['contactpersonen']['authorization']);
+		$this->assertSame(
+			expected: $base['usage']['properties']['interneAnnotation']['authorization'],
+			actual: $merged['usage']['properties']['interneAnnotation']['authorization']
+		);
+		$this->assertSame(
+			expected: $base['organization']['properties']['contactpersonen']['authorization'],
+			actual: $merged['organization']['properties']['contactpersonen']['authorization']
+		);
 	}//end testExistingFieldRulesAreNotWidened()
 
 	/**
@@ -129,15 +158,21 @@ class PublicationFieldRulesTest extends TestCase {
 		$after  = $this->register()['components']['schemas']['usage']['authorization']['read'];
 
 		foreach ($before as $rule) {
-			$this->assertContains($rule, $after, 'an organisation read rule survived: ' . json_encode($rule));
+			$this->assertContains(needle: $rule, haystack: $after, message: 'an organisation read rule survived: ' . json_encode($rule));
 		}
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $after);
-		$this->assertCount(count($before) + 1, $after);
+		$this->assertContains(
+			needle: ['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
+			haystack: $after
+		);
+		// The shared-usage-visible-to-participants change adds the participant read rules (UsageParticipantReadRuleTest);
+		// apart from those, publication adds exactly the public rule.
+		$ownRules = array_filter($after, static fn (array $rule): bool => isset($rule['match']['participants']) === false);
+		$this->assertCount(expectedCount: count($before) + 1, haystack: $ownRules);
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
 	/**
-	 * A version is public under the same two conditions as its module, and signed-in users read every version.
+	 * A version is public under the same condition as its module, its publication date, and signed-in users read every version.
 	 *
 	 * @return void
 	 */
@@ -146,19 +181,28 @@ class PublicationFieldRulesTest extends TestCase {
 		$module  = $schemas['module']['authorization']['read'];
 		$version = $schemas['moduleVersion']['authorization']['read'];
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $module);
-		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier']], $module);
-		$this->assertSame(
-			[
-				'authenticated',
-				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']]],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier']],
-			],
-			$version
+		$this->assertContains(
+			needle: ['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
+			haystack: $module
 		);
-		$this->assertNotContains('public', $version, 'no unconditional public read is left');
-		$this->assertSame($schemas['module']['properties']['registeredBy']['enum'], $schemas['moduleVersion']['properties']['moduleRegisteredBy']['enum']);
-		$this->assertSame('date-time', $schemas['moduleVersion']['properties']['modulePublicationDate']['format']);
+		$this->assertNotContains(
+			needle: ['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true],
+			haystack: $module,
+			message: 'an unpublished supplier module is not public'
+		);
+		$this->assertSame(
+			expected: [
+				'authenticated',
+				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
+			],
+			actual: $version
+		);
+		$this->assertNotContains(needle: 'public', haystack: $version, message: 'no unconditional public read is left');
+		$this->assertSame(
+			expected: $schemas['module']['properties']['registeredBy']['enum'],
+			actual: $schemas['moduleVersion']['properties']['moduleRegisteredBy']['enum']
+		);
+		$this->assertSame(expected: 'date-time', actual: $schemas['moduleVersion']['properties']['modulePublicationDate']['format']);
 	}//end testAVersionFollowsItsApplication()
 
 	/**
@@ -170,11 +214,15 @@ class PublicationFieldRulesTest extends TestCase {
 		$base   = ['components' => ['schemas' => ['usage' => ['version' => '1.5.3', 'properties' => []]]]];
 		$merged = self::merge(base: $base, fragment: ['components' => ['schemas' => ['usage' => ['version' => '1.5.5']]]]);
 		$merged = self::merge(base: $merged, fragment: ['components' => ['schemas' => ['usage' => ['version' => '1.5.4']]]]);
-		$this->assertSame('1.5.5', $merged['components']['schemas']['usage']['version']);
+		$this->assertSame(expected: '1.5.5', actual: $merged['components']['schemas']['usage']['version']);
 
 		$schemas = $this->register()['components']['schemas'];
-		$this->assertSame('1.5.7', $schemas['usage']['version'], 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
-		$this->assertSame('0.3.5', $schemas['connection']['version']);
-		$this->assertSame('0.1.6', $schemas['moduleVersion']['version']);
+		$this->assertTrue(
+			condition: version_compare($schemas['usage']['version'], '1.5.8', '>='),
+			message: 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it'
+		);
+		// Application-interfaces.json (connections-api-catalogue) adds connection.interface at 0.3.6; later fragments may raise it.
+		$this->assertTrue(condition: version_compare($schemas['connection']['version'], '0.3.6', '>='));
+		$this->assertTrue(condition: version_compare($schemas['moduleVersion']['version'], '0.1.8', '>='), message: 'lifecycle-initial-defaults.json raises it to 0.1.9');
 	}//end testAFragmentNeverLowersAVersion()
 }//end class

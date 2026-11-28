@@ -1,14 +1,46 @@
 # Changelog
 
 ## [Unreleased]
+### Upgrade notes
+- Reviews: on an instance that imported stackiq before the review overlay was
+  keyed to `software-review`, the upgrade gates the review schema's public read
+  on `status: approved`. If an administrator edited that schema's authorization
+  by hand, OpenRegister keeps the local edit: read `authorization.read` of
+  `software-review` back. The empty `assessment` schema such an instance holds
+  can be removed with
+  `occ openregister:schemas:prune-retired --app=stackiq --slug=assessment --apply`
+  (run it without `--apply` first to see what it removes).
+
 ### Added
+- Health and metrics documentation (adopt-apphost): `docs/features/observability.md`
+  describes the public `/api/health` check, the administrator-only Prometheus
+  `/api/metrics`, the manifest's `observability` block that drives both, and
+  why `/api/settings/status` is not a health check.
+- MCP action surface (mcp-full-action-surface), for hermiq agents: 28 derived
+  read tools (search and get on 14 catalogue schemas), create and update on
+  `vulnerability`, and 27 curated tools in the `stackiq` provider. The curated
+  tools cover the caller's profile, offers and usages, portfolio report,
+  moderation, reviews, SBOM import and status, architecture views,
+  organisation merge (with a preview), publication and the end-of-life sync.
+  Every tool runs the guard its REST route runs; organisation membership
+  grant and revoke are not tools yet.
+- Integration leaves (adopt-integration-leaves): contact persons and
+  organisations link their Nextcloud contact (`contacts`), contracts and module
+  versions get a `calendar` tab, software reviews a `deck` tab, modules and
+  services `bookmarks`. A contract keeps its `decidesk-decisions` leaf.
+- Lifecycle dates on the calendar: saving a contract keeps one linked
+  "Contract ends: {contractNumber}" event on its end date, and saving a module
+  version one "End of support: {module} {version}" event on its end-of-support
+  date (including dates the EOL sync stamps again). A changed date moves the
+  event, a cleared date removes it, and an unavailable calendar only logs a
+  warning.
 - CMDB import: a Nextcloud admin imports a TOPdesk CMDB export (xlsx) for one
   municipality from the admin settings. Every application row of the two CMDB
   sheets becomes or updates a module, its vendor, a usage for the municipality
   and a contact person for its owner; a repeat import matches on APPID, so it
   updates instead of duplicating. See `docs/features/cmdb-import.md`.
 - CMDB import: on an OpenRegister with the migration-pack editor
-  (openregister#4602), the import runs the mapping packs kept in
+  (OpenRegister 2.1.41 or later), the import runs the mapping packs kept in
   OpenRegister's migration pack store, where an administrator edits them.
   The `SeedCmdbImportPacks` repair step stores them on install and upgrade;
   a pack nobody edited follows newer releases, an edited one is kept.

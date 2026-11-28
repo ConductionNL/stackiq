@@ -2,7 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
  * AI systems: an AI feature listed on its application's page, the high-risk
- * quick filter, and the missing FRIA warning in the list and on the page.
+ * quick filter, the missing FRIA warning in the list and on the page, and an
+ * AI agent linked to the business process it supports.
  *
  * Seeds one application and three AI systems carrying this run's RUN_ID
  * through the objects API (the call the Add form makes), and removes exactly
@@ -10,6 +11,7 @@
  * tests/vitest/aiSystems.spec.js.
  *
  * @spec openspec/specs/ai-system-inventory/spec.md
+ * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/ai-system-inventory/spec.md#requirement-an-ai-system-names-the-business-processes-it-supports-req-clr-006
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
@@ -22,7 +24,7 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from './_fixtures.ts'
-import { dismissSupportDialog, gotoAppRoute } from './_ui.ts'
+import { dismissSupportDialog, gotoAppRoute, revealSection } from './_ui.ts'
 
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
@@ -31,6 +33,8 @@ const ids: Record<string, string> = {}
 const chat = `${RUN_ID} chat assistant`
 const scoring = `${RUN_ID} scoring model`
 const checked = `${RUN_ID} checked model`
+const agent = `${RUN_ID} file assistant`
+const caseProcess = `${RUN_ID} case handling`
 
 /**
  * Create a row and remember it for cleanup.
@@ -69,6 +73,13 @@ test.beforeAll(async () => {
 		friaDocumentRef: '/AI/fria.pdf',
 		status: 'in use',
 	})
+	ids.agent = await seed('aiSystem', {
+		name: agent,
+		kind: 'AI agent',
+		aiActRiskCategory: 'minimal risk',
+		status: 'in use',
+	})
+	ids.process = await seed('process', { name: caseProcess, status: 'active' })
 })
 
 test.afterAll(async () => {
@@ -85,9 +96,7 @@ test('the application page lists its AI feature in the AI systems section', asyn
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.x}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByText('AI systems').first()).toBeVisible({
-		timeout: 30000,
-	})
+	await revealSection(page, 'AI systems')
 	await expect(page.getByText(chat).first()).toBeVisible({ timeout: 30000 })
 	await page.getByText(chat).first().click()
 	await expect(page).toHaveURL(new RegExp(`/ai-systems/${ids.chat}`))
@@ -126,4 +135,26 @@ test('a high-risk system without a FRIA is listed with a warning and its page ma
 		'data-present',
 		'false',
 	)
+})
+
+// @e2e ai-system-inventory::an-information-manager-links-an-ai-agent-to-a-process
+test('an AI agent linked to a business process is listed on the process page', async ({
+	page,
+}) => {
+	await gotoAppRoute(page, `/ai-systems/${ids.agent}`)
+	await dismissSupportDialog(page)
+	await page.getByRole('button', { name: 'Edit', exact: true }).first().click()
+	const dialog = page.locator('[role="dialog"], .modal-container').first()
+	await dialog.waitFor({ state: 'visible', timeout: 15000 })
+	const picker = dialog.getByLabel('Business processes').first()
+	await picker.click()
+	await picker.fill(caseProcess)
+	await page.getByRole('option', { name: new RegExp(caseProcess) }).first().click()
+	await dialog.getByRole('button', { name: /save/i }).last().click()
+	await expect(dialog).toBeHidden({ timeout: 30000 })
+	await expect(page.getByText(caseProcess).first()).toBeVisible({ timeout: 30000 })
+
+	await gotoAppRoute(page, `/processen/${ids.process}`)
+	await revealSection(page, 'AI systems')
+	await expect(page.getByText(agent).first()).toBeVisible({ timeout: 30000 })
 })

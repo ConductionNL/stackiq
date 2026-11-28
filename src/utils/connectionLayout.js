@@ -1,0 +1,233 @@
+// SPDX-License-Identifier: EUPL-1.2
+// Copyright (C) 2026 Conduction B.V.
+
+/**
+ * A stable, layered layout for the connections diagram.
+ *
+ * Applications that only send sit in the left column, those that only receive
+ * in the right column, and the rest (both, or bi-directional) in the middle;
+ * each column is sorted by name, then id. The same rows always give the same
+ * positions, so a re-render never moves a node, which a force layout would
+ * (design D2).
+ *
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+
+/** Horizontal distance between columns, in px. */
+export const COLUMN_GAP = 320
+
+/** Vertical distance between nodes in one column, in px. */
+export const ROW_GAP = 90
+
+/**
+ * The id and name of one end of a connection.
+ *
+ * @param {string|object|null} value A uuid, or a related object with `id`/`uuid` and `name`.
+ * @return {{id: string, name: string}|null} The end, or null when empty.
+ */
+export function connectionEnd(value) {
+	if (typeof value === 'string') {
+		const id = value.trim()
+		return id ? { id, name: id } : null
+	}
+	if (value && typeof value === 'object') {
+		const id = String(value.id ?? value.uuid ?? '').trim()
+		if (!id) {
+			return null
+		}
+		return { id, name: String(value.name ?? value.title ?? id) }
+	}
+	return null
+}
+
+/**
+ * The two ends of a connection: application A, and application B or the
+ * national provision it links to.
+ *
+ * @param {object} connection The connection object.
+ * @return {{a: ({id: string, name: string}|null), b: ({id: string, name: string, provision: boolean}|null)}} The ends.
+ */
+export function connectionEnds(connection) {
+	const a = connectionEnd(connection?.moduleA)
+	const module = connectionEnd(connection?.moduleB)
+	if (module) {
+		return { a, b: { ...module, provision: false } }
+	}
+	const provision = connectionEnd(connection?.nonMunicipalProvision)
+	return { a, b: provision ? { ...provision, provision: true } : null }
+}
+
+/**
+ * Which end sends: the sender and the receiver ids, or both ids as senders and
+ * receivers for a bi-directional connection.
+ *
+ * @param {string} direction `AtoB`, `BtoA` or `bi-directional`.
+ * @param {string} a Id of end A.
+ * @param {string} b Id of end B.
+ * @return {{senders: string[], receivers: string[]}} The roles.
+ */
+function roles(direction, a, b) {
+	if (direction === 'AtoB') {
+		return { senders: [a], receivers: [b] }
+	}
+	if (direction === 'BtoA') {
+		return { senders: [b], receivers: [a] }
+	}
+	return { senders: [a, b], receivers: [a, b] }
+}
+
+/**
+ * Nodes with positions and edges for the given connections.
+ *
+ * @param {Array<object>} connections The rows the list fetched.
+ * @return {{nodes: Array<{id: string, label: string, provision: boolean, position: {x: number, y: number}}>, edges: Array<{id: string, source: string, target: string, label: string, bidirectional: boolean}>}} The diagram.
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function layoutConnections(connections) {
+	const nodes = new Map()
+	const sends = new Set()
+	const receives = new Set()
+	const edges = []
+
+	for (const connection of connections || []) {
+		const { a, b } = connectionEnds(connection)
+		if (!a || !b) {
+			continue
+		}
+		nodes.set(a.id, nodes.get(a.id) || { id: a.id, label: a.name, provision: false })
+		nodes.set(b.id, nodes.get(b.id) || { id: b.id, label: b.name, provision: b.provision })
+
+		const direction = String(connection.dataExchangeDirection || 'bi-directional')
+		const { senders, receivers } = roles(direction, a.id, b.id)
+		senders.forEach((id) => sends.add(id))
+		receivers.forEach((id) => receives.add(id))
+
+		const reversed = direction === 'BtoA'
+		edges.push({
+			id: String(connection.id ?? connection.uuid ?? `${a.id}-${b.id}-${edges.length}`),
+			source: reversed ? b.id : a.id,
+			target: reversed ? a.id : b.id,
+			label: String(connection.type ?? ''),
+			bidirectional: direction !== 'AtoB' && direction !== 'BtoA',
+		})
+	}
+
+	const columns = [[], [], []]
+	for (const node of nodes.values()) {
+		const sender = sends.has(node.id)
+		const receiver = receives.has(node.id)
+		let column = 1
+		if (sender && !receiver) {
+			column = 0
+		} else if (receiver && !sender) {
+			column = 2
+		}
+		columns[column].push(node)
+	}
+
+	const byName = (x, y) => x.label.localeCompare(y.label) || x.id.localeCompare(y.id)
+	const placed = []
+	columns.forEach((column, index) => {
+		column.sort(byName).forEach((node, row) => {
+			placed.push({ ...node, position: { x: index * COLUMN_GAP, y: row * ROW_GAP } })
+		})
+	})
+
+	return { nodes: placed, edges }
+}
+
+/**
+ * The diagram in the shape the graph canvas takes: nodes with `position` and
+ * `data.label`, edges with the transport type as label.
+ *
+ * @param {Array<object>} connections The rows the list shows.
+ * @param {{[id: string]: string}} names Names for ends the rows carry as a bare id.
+ * @return {{nodes: Array<object>, edges: Array<object>}} The canvas nodes and edges.
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function diagramFlow(connections, names = {}) {
+	// An end the row carries as a bare id gets its name first, so the columns
+	// sort by name and the same rows and names always land in the same places.
+	const named = (value) => (typeof value === 'string' && names[value.trim()] ? { id: value.trim(), name: names[value.trim()] } : value)
+	const rows = (Array.isArray(connections) ? connections : [])
+		.map((connection) => ({ ...connection, moduleA: named(connection?.moduleA), moduleB: named(connection?.moduleB) }))
+	const { nodes, edges } = layoutConnections(rows)
+	return {
+		nodes: nodes.map((node) => ({
+			id: node.id,
+			type: 'default',
+			position: node.position,
+			data: { label: node.label, provision: node.provision },
+		})),
+		edges: edges.map((edge) => ({
+			id: edge.id,
+			source: edge.source,
+			target: edge.target,
+			label: edge.label,
+			markerEnd: 'arrowclosed',
+			...(edge.bidirectional ? { markerStart: 'arrowclosed' } : {}),
+		})),
+	}
+}
+
+/**
+ * The ids of applications the rows name only by a bare id that has no name yet.
+ *
+ * @param {Array<object>} connections The rows the list shows.
+ * @param {{[id: string]: string}} names The names read so far.
+ * @return {Array<string>} The ids, each once.
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function unnamedModuleIds(connections, names) {
+	const ids = new Set()
+	for (const connection of Array.isArray(connections) ? connections : []) {
+		const { a, b } = connectionEnds(connection)
+		;[a, b]
+			.filter((end) => end && !end.provision && end.name === end.id && !names[end.id])
+			.forEach((end) => ids.add(end.id))
+	}
+	return [...ids]
+}
+
+/**
+ * Names by id from the applications OpenRegister answered.
+ *
+ * @param {Array<object>|null} modules The applications.
+ * @return {{[id: string]: string}} The names.
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
+ */
+export function moduleNames(modules) {
+	const names = {}
+	for (const module of Array.isArray(modules) ? modules : []) {
+		const id = String(module?.id ?? module?.uuid ?? '')
+		if (id !== '' && typeof module?.name === 'string' && module.name !== '') {
+			names[id] = module.name
+		}
+	}
+	return names
+}
+
+/**
+ * The connections with each application end that OpenRegister returned as a
+ * bare id replaced by that id and its name, where the name is known.
+ *
+ * A connection read from OpenRegister names its ends by uuid only, so the
+ * application page's connection map labelled the other applications with
+ * their uuids.
+ *
+ * @param {Array<object>|null} connections The connections.
+ * @param {{[id: string]: string}} names Application names by id.
+ * @return {Array<object>} The connections, the named ends as {id, name}.
+ * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
+ */
+export function withEndNames(connections, names) {
+	const named = (value) => {
+		const id = typeof value === 'string' ? value.trim() : ''
+		return id !== '' && names[id] ? { id, name: names[id] } : value
+	}
+	return (Array.isArray(connections) ? connections : []).map((connection) => ({
+		...connection,
+		moduleA: named(connection?.moduleA),
+		moduleB: named(connection?.moduleB),
+	}))
+}

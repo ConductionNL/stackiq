@@ -1,0 +1,58 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "insight-knowledge-base (stackiq:ins-kb). Knowledge articles are Nextcloud Collectives pages (ADR-022 leaf `collectives`); stackiq keeps no article store. This page searches the Collectives pages the user is a member of through OpenRegister's page search (GET /apps/openregister/api/integrations/collectives/available?search=, which answers { results, total } with title and url per page, and 501 without Collectives, which the kb-search widget shows as its unavailable text). The search matches titles only, so a text widget beside it says so and links to Collectives for full text search. The menu entry is relocated under Applications by src/menu-layout.json (ADR-097: no new top-level entry) and hidden where Collectives is absent; the page's requiresApp says Collectives is needed when reached by URL. The application page's Knowledge articles panel is the md-knowledge widget in src/manifest.json.",
+	"menu": [
+		{
+			"id": "KnowledgeBaseMenu",
+			"label": "Knowledge base",
+			"icon": "BookOpenVariantOutline",
+			"route": "KnowledgeBase",
+			"order": 2,
+			"visibleIf": {
+				"appInstalled": "collectives"
+			}
+		}
+	],
+	"pages": [
+		{
+			"id": "KnowledgeBase",
+			"route": "/knowledge",
+			"type": "dashboard",
+			"title": "Knowledge base",
+			"requiresApp": {
+				"id": "collectives",
+				"name": "Collectives"
+			},
+			"config": {
+				"widgets": [
+					{
+						"id": "kb-search",
+						"type": "kb-search",
+						"title": "Search knowledge articles",
+						"content": {
+							"endpoint": "/apps/openregister/api/integrations/collectives/available",
+							"queryParam": "search",
+							"minChars": 2,
+							"limit": 20,
+							"externalOpen": true,
+							"unavailableFallback": "The knowledge base needs the Collectives app. Ask an administrator to install it."
+						}
+					},
+					{
+						"id": "kb-hint",
+						"type": "text",
+						"title": "About this search",
+						"content": {
+							"contentMode": "markdown",
+							"text": "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/)."
+						}
+					}
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "kb-search", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "kb-hint", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 }
+				]
+			}
+		}
+	]
+}

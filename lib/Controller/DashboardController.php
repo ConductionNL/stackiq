@@ -10,15 +10,20 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Controller;
 
+use OCA\Stackiq\Service\ShellPermissions;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -29,11 +34,15 @@ class DashboardController extends Controller {
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
 	 * @param IUserSession $userSession The user session
+	 * @param IInitialState|null $initialState Hands the shell its permission list
+	 * @param ShellPermissions|null $shellPermissions Works out that list
 	 */
 	public function __construct(
 		$appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
+		private readonly ?IInitialState $initialState = null,
+		private readonly ?ShellPermissions $shellPermissions = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -53,17 +62,7 @@ class DashboardController extends Controller {
 	 */
 	public function page(?string $getParameter): TemplateResponse {
 		try {
-			$response = new TemplateResponse(
-				$this->appName,
-				'index',
-				[]
-			);
-
-			$csp = new ContentSecurityPolicy();
-			$csp->addAllowedConnectDomain('*');
-			$response->setContentSecurityPolicy($csp);
-
-			return $response;
+			return $this->indexPage();
 		} catch (\Exception $e) {
 			return new TemplateResponse(
 				$this->appName,
@@ -74,6 +73,45 @@ class DashboardController extends Controller {
 			);
 		}
 	}//end page()
+
+	/**
+	 * The app's index template with a policy that lets it connect anywhere.
+	 *
+	 * @return TemplateResponse
+	 */
+	private function indexPage(): TemplateResponse {
+		$this->providePermissions();
+		$response = new TemplateResponse(
+			$this->appName,
+			'index',
+			[]
+		);
+
+		$csp = new ContentSecurityPolicy();
+		$csp->addAllowedConnectDomain('*');
+		$response->setContentSecurityPolicy($csp);
+
+		return $response;
+	}//end indexPage()
+
+	/**
+	 * Hand the shell the signed-in user's permission list, which its menu
+	 * filters entries such as Access review with.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
+	 */
+	private function providePermissions(): void {
+		if ($this->initialState === null || $this->shellPermissions === null) {
+			return;
+		}
+
+		$this->initialState->provideInitialState(
+			'permissions',
+			$this->shellPermissions->forUser(user: $this->userSession->getUser())
+		);
+	}//end providePermissions()
 
 	/**
 	 * Returns an empty JSON result.

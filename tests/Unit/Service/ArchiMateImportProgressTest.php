@@ -13,6 +13,9 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -95,6 +98,7 @@ class ArchiMateImportProgressTest extends TestCase {
 		$values  = [
 			'logger'          => $this->createMock(LoggerInterface::class),
 			'progressTracker' => $tracker,
+			'cachedConfig'    => ['registerId' => 1],
 		];
 		foreach ($values as $prop => $value) {
 			(new \ReflectionProperty(ArchiMateImportService::class, $prop))->setValue($service, $value);
@@ -136,7 +140,7 @@ class ArchiMateImportProgressTest extends TestCase {
 		);
 
 		$method = new \ReflectionMethod($service, 'saveSchemaGroups');
-		$method->invoke($service, $this->schemaGroups(), $objectService, 1);
+		$method->invoke($service, $this->schemaGroups(), $objectService);
 
 		// Before the first save nothing was saved, before the second the first group's three were.
 		$this->assertSame([0, 3], $seen);
@@ -164,7 +168,7 @@ class ArchiMateImportProgressTest extends TestCase {
 		);
 
 		$method = new \ReflectionMethod($service, 'saveSchemaGroups');
-		$result = $method->invoke($service, $this->schemaGroups(), $objectService, 1);
+		$result = $method->invoke($service, $this->schemaGroups(), $objectService);
 
 		$this->assertTrue($service->wasCancelled());
 		$this->assertCount(3, $result['stats']['saved']);
@@ -206,7 +210,7 @@ class ArchiMateImportProgressTest extends TestCase {
 		$objectService->expects($this->exactly(2))->method('saveObjects')->willReturn(
 			['saved' => [], 'updated' => [], 'unchanged' => [], 'invalid' => []]
 		);
-		(new \ReflectionMethod($service, 'saveSchemaGroups'))->invoke($service, $this->schemaGroups(), $objectService, 1);
+		(new \ReflectionMethod($service, 'saveSchemaGroups'))->invoke($service, $this->schemaGroups(), $objectService);
 		$this->assertFalse($service->wasCancelled());
 	}//end testAnOperationIdOutsideThePatternIsIgnored()
 }//end class

@@ -1,0 +1,331 @@
+<?php
+
+/**
+ * Golden test for the generic and role-based groups of GroupHandler.
+ *
+ * Pins, per case, which groups ensureGenericUserGroupsExist creates and
+ * which role-based groups updateRoleBasedGroups adds a user to or removes
+ * a user from (and which are kept), with every group manager, group and
+ * logger call in order.
+ *
+ * @category  Test
+ * @package   OCA\Stackiq\Tests\Unit\Service\Stackiq
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/specs/sc-handlers/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
+
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\Stackiq\GroupHandler;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IGroup;
+use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserManager;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\AbstractLogger;
+
+/**
+ * Golden cases for creating groups and syncing role-based group membership.
+ *
+ * @covers \OCA\Stackiq\Service\Stackiq\GroupHandler
+ *
+ * @spec openspec/specs/sc-handlers/spec.md
+ */
+class GroupHandlerGroupsGoldenTest extends TestCase {
+
+	/**
+	 * The role-based groups, in the order they are ensured.
+	 */
+	private const ROLE_GROUPS = [
+		'aanbod-beheerder',
+		'gebruik-beheerder',
+		'gebruik-raadpleger',
+		'functioneel-beheerder',
+		'vng-raadpleger',
+		'organisatie-beheerder',
+		'organisaties-beheerder',
+		'ambtenaar',
+	];
+
+	/**
+	 * Everything the doubles saw, in order.
+	 *
+	 * @var array<int, mixed>
+	 */
+	private array $trace = [];
+
+	/**
+	 * Per-case behaviour of the doubles.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $plan = [];
+
+	/**
+	 * A group double.
+	 *
+	 * @param string $gid The group id.
+	 *
+	 * @return IGroup
+	 */
+	private function group(string $gid): IGroup {
+		$group = $this->createMock(originalClassName: IGroup::class);
+		$group->method('inGroup')->willReturnCallback(
+			function () use ($gid) {
+				$this->trace[] = ['inGroup', $gid];
+				return in_array($gid, $this->plan['memberOf'], true);
+			}
+		);
+		$group->method('addUser')->willReturnCallback(
+			function () use ($gid) {
+				$this->trace[] = ['addUser', $gid];
+			}
+		);
+		$group->method('removeUser')->willReturnCallback(
+			function () use ($gid) {
+				$this->trace[] = ['removeUser', $gid];
+			}
+		);
+
+		return $group;
+
+	}//end group()
+
+	/**
+	 * Build the handler over the plan.
+	 *
+	 * @param array $plan existing: groups that exist; uncreatable: groups createGroup answers null for;
+	 *                    failing: groups createGroup throws for; configured: the stored generic groups JSON;
+	 *                    memberOf: the groups the user is in.
+	 *
+	 * @return GroupHandler
+	 */
+	private function handler(array $plan, ?RoleGrantSync $roleGrantSync=null): GroupHandler {
+		$this->trace = [];
+		$this->plan  = array_merge(['existing' => [], 'uncreatable' => [], 'failing' => [], 'configured' => '', 'memberOf' => []], $plan);
+
+		$config = $this->createMock(originalClassName: IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default='') {
+				$this->trace[] = ['getValueString', $app, $key];
+				return $this->plan['configured'];
+			}
+		);
+
+		$groups = $this->createMock(originalClassName: IGroupManager::class);
+		$groups->method('get')->willReturnCallback(
+			function (string $gid) {
+				$this->trace[] = ['get', $gid];
+				if (in_array($gid, $this->plan['existing'], true) === true) {
+					return $this->group(gid: $gid);
+				}
+
+				return null;
+			}
+		);
+		$groups->method('createGroup')->willReturnCallback(
+			function (string $gid) {
+				$this->trace[] = ['createGroup', $gid];
+				if (in_array($gid, $this->plan['failing'], true) === true) {
+					throw new \RuntimeException('backend refused');
+				}
+
+				if (in_array($gid, $this->plan['uncreatable'], true) === true) {
+					return null;
+				}
+
+				$this->plan['existing'][] = $gid;
+				return $this->group(gid: $gid);
+			}
+		);
+
+		$trace  = &$this->trace;
+		$logger = new class($trace) extends AbstractLogger {
+			/**
+			 * Build the logger.
+			 *
+			 * @param array $trace The shared trace.
+			 */
+			public function __construct(private array &$trace) {
+			}
+
+			/**
+			 * Record a log line, without exception objects.
+			 *
+			 * @param mixed              $level   The level.
+			 * @param string|\Stringable $message The message.
+			 * @param array              $context The context.
+			 *
+			 * @return void
+			 */
+			public function log($level, string|\Stringable $message, array $context=[]): void {
+				unset($context['exception']);
+				$this->trace[] = ['log', $level, (string) $message, $context];
+			}
+		};
+
+		return new GroupHandler(
+			_groupManager: $groups,
+			_userManager: $this->createMock(originalClassName: IUserManager::class),
+			_appConfig: $config,
+			_container: $this->createMock(originalClassName: ContainerInterface::class),
+			_appManager: $this->createMock(originalClassName: IAppManager::class),
+			_logger: $logger,
+			_roleGrantSync: $roleGrantSync
+		);
+
+	}//end handler()
+
+	/**
+	 * The user double.
+	 *
+	 * @return IUser
+	 */
+	private function user(): IUser {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		return $user;
+
+	}//end user()
+
+	/**
+	 * The calls ensuring one group that does not exist yet and is created.
+	 *
+	 * @param string $gid     The group.
+	 * @param string $message The log message.
+	 *
+	 * @return array
+	 */
+	private static function created(string $gid, string $message): array {
+		return [['get', $gid], ['createGroup', $gid], ['log', 'info', $message, ['groupName' => $gid]]];
+
+	}//end created()
+
+	/**
+	 * Missing generic and role-based groups are created, existing and uncreatable ones are not listed.
+	 *
+	 * @return void
+	 */
+	public function testMissingGroupsAreCreated(): void {
+		$handler = $this->handler(
+			plan: [
+				'configured'  => '["generic-a","aanbod-beheerder","generic-b"]',
+				'existing'    => ['generic-b', 'gebruik-beheerder', 'ambtenaar'],
+				'uncreatable' => ['vng-raadpleger', 'generic-a'],
+			]
+		);
+
+		$created = $handler->ensureGenericUserGroupsExist();
+
+		$this->assertSame(
+			expected: ['aanbod-beheerder', 'gebruik-raadpleger', 'functioneel-beheerder', 'organisatie-beheerder', 'organisaties-beheerder'],
+			actual: $created
+		);
+		$this->assertSame(
+			expected: array_merge(
+				[['getValueString', 'stackiq', 'generic_user_groups']],
+				[['get', 'generic-a'], ['createGroup', 'generic-a']],
+				self::created(gid: 'aanbod-beheerder', message: 'Created generic user group'),
+				[['get', 'generic-b']],
+				[['get', 'aanbod-beheerder']],
+				[['get', 'gebruik-beheerder']],
+				self::created(gid: 'gebruik-raadpleger', message: 'Created role-based group'),
+				self::created(gid: 'functioneel-beheerder', message: 'Created role-based group'),
+				[['get', 'vng-raadpleger'], ['createGroup', 'vng-raadpleger']],
+				self::created(gid: 'organisatie-beheerder', message: 'Created role-based group'),
+				self::created(gid: 'organisaties-beheerder', message: 'Created role-based group'),
+				[['get', 'ambtenaar']]
+			),
+			actual: $this->trace
+		);
+
+	}//end testMissingGroupsAreCreated()
+
+	/**
+	 * Without stored groups the default generic group is ensured; an invalid store ensures only the role-based groups.
+	 *
+	 * @return void
+	 */
+	public function testDefaultAndInvalidGenericGroups(): void {
+		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS]);
+		$this->assertSame(expected: ['software-catalog-users'], actual: $handler->ensureGenericUserGroupsExist());
+
+		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS, 'configured' => '"not-a-list"']);
+		$this->assertSame(expected: [], actual: $handler->ensureGenericUserGroupsExist());
+		$this->assertSame(
+			expected: array_merge(
+				[['getValueString', 'stackiq', 'generic_user_groups']],
+				array_map(fn (string $gid) => ['get', $gid], self::ROLE_GROUPS)
+			),
+			actual: $this->trace
+		);
+
+		$handler = $this->handler(plan: ['existing' => self::ROLE_GROUPS, 'configured' => '{"x":"keyed-a","y":"keyed-b"}']);
+		$this->assertSame(expected: ['keyed-a', 'keyed-b'], actual: $handler->ensureGenericUserGroupsExist());
+
+	}//end testDefaultAndInvalidGenericGroups()
+
+	/**
+	 * A failing group backend escapes from ensureGenericUserGroupsExist.
+	 *
+	 * @return void
+	 */
+	public function testFailingCreateEscapes(): void {
+		$handler = $this->handler(plan: ['configured' => '["generic-a"]', 'failing' => ['generic-a']]);
+
+		$this->expectException(exception: \RuntimeException::class);
+		$handler->ensureGenericUserGroupsExist();
+
+	}//end testFailingCreateEscapes()
+
+	/**
+	 * The role-based groups follow the role sync, the one role service every path uses.
+	 *
+	 * The handler no longer walks the generic groups itself: it hands the user
+	 * and the contact person data to RoleGrantSync, reads no group or config
+	 * on its own, and logs what the sync changed.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 *
+	 * @return void
+	 */
+	public function testRoleGroupsFollowTheRoleSync(): void {
+		$user = $this->user();
+		$objectData = ['roles' => [' Aanbod-Beheerder', 'gebruik-beheerder', 42, 'Ambtenaar ']];
+
+		$sync = $this->createMock(originalClassName: RoleGrantSync::class);
+		$sync->expects($this->once())
+			->method('sync')
+			->with($user, $objectData)
+			->willReturn(['added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']]);
+
+		$handler = $this->handler(plan: ['configured' => '["aanbod-beheerder","software-catalog-users"]'], roleGrantSync: $sync);
+		$handler->updateRoleBasedGroups($user, $objectData);
+
+		$this->assertSame(
+			expected: [
+				[
+					'log',
+					'info',
+					'Updated role-based groups for user',
+					['username' => 'alice', 'added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']],
+				],
+			],
+			actual: $this->trace
+		);
+
+	}//end testRoleGroupsFollowTheRoleSync()
+}//end class

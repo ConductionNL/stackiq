@@ -52,7 +52,7 @@
 				"_note": "Data 8 wide with the AI Act fields, documents 4 wide (the four evidence tags), the related panel, then the evidence checklist as a body widget. Status transitions come from the schema's x-openregister-lifecycle (release, withdraw).",
 				"lifecycleActions": { "field": "status" },
 				"widgets": [
-					{ "id": "ai-data", "type": "data", "title": "AI system", "icon": "RobotOutline", "content": { "columns": 2, "include": [ "name", "kind", "module", "provider", "purpose", "status", "aiActRiskCategory", "aiActRole", "assessedOn", "friaDocumentRef", "algorithmRegisterUrl", "description" ] } },
+					{ "id": "ai-data", "type": "data", "title": "AI system", "icon": "RobotOutline", "content": { "columns": 2, "include": [ "name", "kind", "module", "provider", "purpose", "processes", "status", "aiActRiskCategory", "aiActRole", "assessedOn", "friaDocumentRef", "algorithmRegisterUrl", "description" ] } },
 					{ "id": "ai-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "ai-related", "type": "related", "title": "Application and supplier", "icon": "LinkVariant" }
 				],
@@ -68,7 +68,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ] }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"

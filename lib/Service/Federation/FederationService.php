@@ -4,10 +4,11 @@
  * Federation Service.
  *
  * Cross-instance catalog federation by DELEGATING to OpenCatalogi's proven
- * federation stack (DirectoryService / BroadcastService) — never a bespoke
- * wire protocol (design constraint). stackiq contributes only its
- * schema mapping, the merge/provenance semantics, the sync schedule, and the
- * admin controls. When OpenCatalogi is not installed, every entry point
+ * federation stack (DirectoryService / BroadcastService) for announcing and
+ * discovery; a pull reads the peer's own public listing of published entries
+ * (OpenCatalogi's public publications API) through {@see PeerCatalogClient}.
+ * stackiq contributes only its schema mapping, the merge/provenance
+ * semantics, the sync schedule, and the admin controls. When OpenCatalogi is not installed, every entry point
  * degrades to a clean disabled state with a clear message — it never errors.
  *
  * @category  Service
@@ -27,8 +28,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCA\Stackiq\Service\ConnectionReportService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ObjectDataBag;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,7 +48,7 @@ use Psr\Log\LoggerInterface;
  * repeated per delegated operation and SHOULD be collapsed behind a single resolver helper;
  * noting that as a deliberate follow-up rather than claiming 84 is a healthy number.
  */
-class FederationService {
+class FederationService implements FederationServiceInterface {
 	/**
 	 * The OpenCatalogi app id (the hard runtime dependency for federation).
 	 */
@@ -62,7 +67,7 @@ class FederationService {
 	 * @param IAppManager $appManager Detects OpenCatalogi availability.
 	 * @param FederationConfig $config The federation configuration.
 	 * @param FederationMerger $merger The merge/staleness reconciler.
-	 * @param SettingsService|null $settingsService Resolves the mirror register/schema (lazy/optional).
+	 * @param ObjectTypeLocatorInterface|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
 	 *
@@ -73,7 +78,7 @@ class FederationService {
 		private readonly IAppManager $appManager,
 		private readonly FederationConfig $config,
 		private readonly FederationMerger $merger,
-		private readonly ?SettingsService $settingsService,
+		private readonly ?ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
@@ -99,15 +104,20 @@ class FederationService {
 	 * Federation status for the admin settings UI.
 	 *
 	 * Each entry in `peers` is a per-peer status object the settings UI renders:
-	 * the peer URL, its consecutive-failure streak, whether it has crossed the
-	 * stale threshold, and whether its host passes the SSRF allowlist guard. The
-	 * top-level `staleAfter` is the threshold those streaks are compared against.
+	 * the peer URL, its catalogue name (the host until a pull names it), the
+	 * last successful pull, the number of mirrored objects, the last error, its
+	 * consecutive-failure streak, whether it has crossed the stale threshold,
+	 * and whether its host passes the SSRF allowlist guard. The top-level
+	 * `staleAfter` is the threshold those streaks are compared against.
 	 *
 	 * @return array{available:bool, enabled:bool, directoryUrl:string,
-	 *               peers:array<int,array{url:string, failures:int, stale:bool,
+	 *               registration:array{state:string, reason:string, at:string|null},
+	 *               peers:array<int,array{url:string, name:string, lastPulledAt:?string,
+	 *               objectCount:int, lastError:?string, failures:int, stale:bool,
 	 *               allowed:bool}>, staleAfter:int, message:string}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function getStatus(): array {
 		$available = $this->isAvailable();
@@ -115,8 +125,13 @@ class FederationService {
 		$peers = [];
 		foreach ($this->config->getPeers() as $peerUrl) {
 			$failures = $this->config->getPeerFailures($peerUrl);
+			$state = $this->config->getPeerState(peerUrl: $peerUrl);
 			$peers[] = [
 				'url' => $peerUrl,
+				'name' => $this->peerName(peerUrl: $peerUrl, name: (string)($state['name'] ?? '')),
+				'lastPulledAt' => ($state['lastPulledAt'] ?? null),
+				'objectCount' => (int)($state['objectCount'] ?? 0),
+				'lastError' => ($state['lastError'] ?? null),
 				'failures' => $failures,
 				'stale' => ($failures >= $staleAfter),
 				'allowed' => $this->isPeerHostAllowed(url: $peerUrl),
@@ -133,10 +148,69 @@ class FederationService {
 			'enabled' => $this->config->isEnabled(),
 			'staleAfter' => $staleAfter,
 			'directoryUrl' => $this->config->getDirectoryUrl(),
+			'registration' => $this->config->getRegistration(),
 			'peers' => $peers,
 			'message' => $message,
 		];
 	}//end getStatus()
+
+	/**
+	 * Switch federation on or off; switching it on announces the instance.
+	 *
+	 * The outcome of the announce is recorded as the registration the settings
+	 * show: registered, unavailable (OpenCatalogi missing) or failed with the
+	 * reason. Switching off records `off`. Integriq is told the new state.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return array<string, mixed> The status after the switch, as getStatus() gives it.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the switch sets, not a mode
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	#[\Override]
+	public function setEnabled(bool $enabled): array {
+		$this->config->setEnabled(enabled: $enabled);
+		$state  = 'off';
+		$reason = '';
+		if ($enabled === true) {
+			$announced = $this->announce();
+			$state     = $this->registrationState(announced: $announced);
+			$reason    = $announced['reason'];
+			if ($state === 'registered') {
+				$reason = '';
+			}
+		}
+
+		$this->config->setRegistration(state: $state, reason: $reason, at: $this->now());
+		$status = $this->getStatus();
+		$this->connectionReports?->federationPeersChanged(status: $status);
+
+		return $status;
+	}//end setEnabled()
+
+	/**
+	 * The registration state an announce result stands for.
+	 *
+	 * @param array{ok: bool, reason: string} $announced The result of announce().
+	 *
+	 * @return string registered, unavailable or failed.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 */
+	private function registrationState(array $announced): string {
+		if ($announced['ok'] === true) {
+			return 'registered';
+		}
+
+		if ($announced['reason'] === 'OpenCatalogi unavailable') {
+			return 'unavailable';
+		}
+
+		return 'failed';
+	}//end registrationState()
 
 	/**
 	 * Add a peer to the federation allowlist (idempotent).
@@ -198,6 +272,7 @@ class FederationService {
 
 		$this->config->setPeers($filtered);
 		$this->config->setPeerFailures($peerUrl, 0);
+		$this->config->setPeerState(peerUrl: $peerUrl, changes: null);
 		$this->connectionReports?->federationPeersChanged(status: $this->getStatus());
 		return ['ok' => true, 'reason' => 'peer removed'];
 	}//end removePeer()
@@ -336,8 +411,8 @@ class FederationService {
 	 * Pull one peer's published catalog and reconcile it into local mirrors.
 	 *
 	 * Steps: (1) SSRF-guard the peer host; (2) fetch the peer's published
-	 * entries through OpenCatalogi's DirectoryService (never a bespoke HTTP
-	 * client); (3) load the locally-stored mirrors of THIS peer; (4) compute a
+	 * entries from its public listing over HTTP ({@see PeerCatalogClient});
+	 * (3) load the locally-stored mirrors of THIS peer; (4) compute a
 	 * create/update/withdraw plan via {@see FederationMerger}; (5) apply it via
 	 * the OpenRegister ObjectService abstraction (ADR-022). On a failed fetch the
 	 * peer's consecutive-failure count increments and, past the threshold, its
@@ -346,19 +421,27 @@ class FederationService {
 	 *
 	 * @param string $peerUrl The peer base URL (provenance instance).
 	 *
+	 * Every outcome is recorded on the peer's state for the peers table: a
+	 * blocked host and a failed fetch as its last error, a successful pull as
+	 * its name, time and object count.
+	 *
 	 * @return array{ok:bool, reason:string, created:int, updated:int, withdrawn:int, stale:bool}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
 	 */
 	public function pullPeer(string $peerUrl): array {
 		$empty = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 
 		if ($this->isPeerHostAllowed(url: $peerUrl) === false) {
+			$this->config->setPeerState(peerUrl: $peerUrl, changes: ['lastError' => 'blocked']);
 			return ['ok' => false, 'reason' => 'peer host blocked by SSRF guard'] + $empty;
 		}
 
 		$fetch = $this->fetchPeerCatalog(peerUrl: $peerUrl);
 		if ($fetch['ok'] === false) {
+			$this->config->setPeerState(peerUrl: $peerUrl, changes: ['lastError' => $fetch['reason']]);
 			return $this->recordPullFailure(peerUrl: $peerUrl, reason: $fetch['reason']) + ['ok' => false, 'reason' => $fetch['reason']];
 		}
 
@@ -373,13 +456,12 @@ class FederationService {
 		}
 
 		$localMirrors = $this->loadPeerMirrors(peerUrl: $peerUrl, target: $target);
-		$plan = $this->merger->plan(
-			$peerUrl,
-			(string)($fetch['organisation'] ?? $peerUrl),
-			$fetch['entries'],
-			$localMirrors,
-			$this->now()
-		);
+		$peer = [
+			'url' => $peerUrl,
+			'organisation' => (string)($fetch['organisation'] ?? $peerUrl),
+			'syncedAt' => $this->now(),
+		];
+		$plan = $this->merger->plan(peer: $peer, peerEntries: $fetch['entries'], localMirrors: $localMirrors);
 
 		$created = $this->applyMirrors(
 			objectService: $objectService,
@@ -403,6 +485,7 @@ class FederationService {
 		// Successful pull clears the failure streak and un-stales surviving mirrors.
 		$this->config->setPeerFailures($peerUrl, 0);
 		$this->clearStaleMirrors(objectService: $objectService, target: $target, peerUrl: $peerUrl);
+		$this->recordPullSuccess(peer: $peer, entries: $fetch['entries']);
 
 		return [
 			'ok' => true,
@@ -415,42 +498,81 @@ class FederationService {
 	}//end pullPeer()
 
 	/**
-	 * Fetch a peer's published catalog entries via OpenCatalogi's DirectoryService.
+	 * Fetch a peer's published catalog entries from its own public listing.
 	 *
-	 * Delegates the wire to OpenCatalogi — stackiq never speaks a bespoke
-	 * federation protocol. Only published entries are returned (the peer's own
-	 * `publicatiedatum<=$now` public RBAC gate governs that surface).
+	 * OpenCatalogi's DirectoryService answers this instance's directory, not
+	 * the peer's catalogue, so the pull reads the peer directly through
+	 * {@see PeerCatalogClient}, resolved from the container like the other
+	 * collaborators. Only published entries are returned: the peer's public
+	 * listing is governed by its own `publicatiedatum<=$now` gate.
 	 *
 	 * @param string $peerUrl The peer base URL.
 	 *
 	 * @return array{ok:bool, reason:string, organisation:?string, entries:array<int,array<string,mixed>>}
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-a-pull-reads-the-peers-own-published-catalogue-req-fed-010
 	 */
 	private function fetchPeerCatalog(string $peerUrl): array {
+		$unavailable = ['ok' => false, 'reason' => 'peer catalogue client unavailable', 'organisation' => null, 'entries' => []];
 		try {
-			$directory = $this->container->get('OCA\\OpenCatalogi\\Service\\DirectoryService');
-			// OpenCatalogi exposes a peer's published catalog through getDirectory
-			// / a peer-scoped fetch; we pass the peer URL so OC performs the
-			// SSRF-aware HTTP call and returns the published publications.
-			$listing = $directory->getDirectory(['url' => $peerUrl]);
+			$client = $this->container->get(PeerCatalogClient::class);
 		} catch (\Throwable $e) {
-			$this->logger->error('[Federation] peer fetch failed', ['peer' => $peerUrl, 'error' => $e->getMessage()]);
-			return ['ok' => false, 'reason' => $e->getMessage(), 'organisation' => null, 'entries' => []];
+			$this->logger->error('[Federation] peer catalogue client unavailable', ['error' => $e::class]);
+			return $unavailable;
 		}
 
-		$entries = [];
-		if (is_array($listing['results'] ?? null) === true) {
-			$entries = $listing['results'];
-		} elseif (is_array($listing) === true) {
-			$entries = $listing;
+		if ($client instanceof PeerCatalogClient === false) {
+			return $unavailable;
 		}
 
-		$organisation = null;
-		if (is_string($listing['organisation'] ?? null) === true) {
-			$organisation = $listing['organisation'];
-		}
-
-		return ['ok' => true, 'reason' => 'ok', 'organisation' => $organisation, 'entries' => array_values($entries)];
+		return $client->fetch(peerUrl: $peerUrl);
 	}//end fetchPeerCatalog()
+
+	/**
+	 * A peer's display name: the recorded catalogue name, else its host.
+	 *
+	 * @param string $peerUrl The peer base URL.
+	 * @param string $name    The recorded name ('' when none).
+	 *
+	 * @return string The name.
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	private function peerName(string $peerUrl, string $name): string {
+		if ($name !== '' && $name !== $peerUrl) {
+			return $name;
+		}
+
+		$host = parse_url($peerUrl, PHP_URL_HOST);
+		if (is_string($host) === true && $host !== '') {
+			return $host;
+		}
+
+		return $peerUrl;
+	}//end peerName()
+
+	/**
+	 * Record a successful pull on the peer's state: its catalogue name, the
+	 * moment, the number of mirrored objects, and no error.
+	 *
+	 * @param array{url: string, organisation: string, syncedAt: string} $peer    The pulled peer.
+	 * @param array<int,array<string,mixed>>                             $entries The peer's published entries.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+	 */
+	private function recordPullSuccess(array $peer, array $entries): void {
+		$this->config->setPeerState(
+			peerUrl: $peer['url'],
+			changes: [
+				'name' => $peer['organisation'],
+				'lastPulledAt' => $peer['syncedAt'],
+				'objectCount' => $this->merger->countMergeable(peerEntries: $entries),
+				'lastError' => null,
+			]
+		);
+	}//end recordPullSuccess()
 
 	/**
 	 * Record a failed pull: increment the peer's failure streak and, past the
@@ -518,7 +640,7 @@ class FederationService {
 
 		$mirrors = [];
 		foreach ($items as $object) {
-			$data = $this->toDataBag(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if ($this->isPeerSourced(objectData: $data) === true
 				&& (string)($data['_source']['instance'] ?? '') === $peerUrl
 			) {
@@ -550,9 +672,10 @@ class FederationService {
 			try {
 				$objectService->saveObject(
 					object: $mirror,
-					register: $target['register'],
-					schema: $target['schema'],
-					uuid: $uuid
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+						uuid: $uuid
+					)
 				);
 				$count++;
 			} catch (\Throwable $e) {
@@ -632,34 +755,6 @@ class FederationService {
 
 		return ['register' => (int)$register, 'schema' => (int)$schema];
 	}//end resolveMirrorTarget()
-
-	/**
-	 * Normalise an ObjectService result item to a data bag (with its OR id).
-	 *
-	 * @param mixed $object The result item (ObjectEntity or array).
-	 *
-	 * @return array<string,mixed> The data bag.
-	 */
-	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toDataBag()
 
 	/**
 	 * Get the OpenRegister ObjectService from the DI container.

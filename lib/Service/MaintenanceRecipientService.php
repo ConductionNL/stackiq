@@ -17,6 +17,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -27,6 +30,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -37,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
  */
-class MaintenanceRecipientService {
+class MaintenanceRecipientService implements MaintenanceRecipientServiceInterface {
 
 	/**
 	 * The usage fields that name an owner.
@@ -54,15 +62,15 @@ class MaintenanceRecipientService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService           $settingsService The register and schema lookups.
-	 * @param StackiqContactSyncService $contacts        The Nextcloud Contacts lookups.
-	 * @param IUserManager              $userManager     The Nextcloud user manager.
-	 * @param ContainerInterface        $container       The DI container, for OpenRegister's ObjectService.
-	 * @param LoggerInterface           $logger          The logger.
-	 * @param MaintenanceAnnouncerCheck $announcers      Who may have a product's owners notified.
+	 * @param ObjectTypeLocatorInterface $settingsService The register and schema lookups.
+	 * @param StackiqContactSyncService  $contacts        The Nextcloud Contacts lookups.
+	 * @param IUserManager               $userManager     The Nextcloud user manager.
+	 * @param ContainerInterface         $container       The DI container, for OpenRegister's ObjectService.
+	 * @param LoggerInterface            $logger          The logger.
+	 * @param MaintenanceAnnouncerCheck  $announcers      Who may have a product's owners notified.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly StackiqContactSyncService $contacts,
 		private readonly IUserManager $userManager,
 		private readonly ContainerInterface $container,
@@ -106,7 +114,12 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+		$window = $objectService->find(
+			id: $uuid,
+			options: new ObjectFindOptions(register: $register, schema: $schema),
+			_rbac: false,
+			_multitenancy: false
+		);
 		if ($window === null) {
 			return null;
 		}
@@ -138,6 +151,27 @@ class MaintenanceRecipientService {
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
 	public function recordRecipients(ObjectEntityInterface $window, ?DateTimeImmutable $now=null): ?array {
+		$recording = $this->startRecording(window: $window);
+		if ($recording === null) {
+			return null;
+		}
+
+		if ($this->announcers->mayAnnounce(objectService: $recording->objectService, window: $window, moduleId: $recording->moduleId) === false) {
+			$this->refuseForeignWindow(recording: $recording);
+			return null;
+		}
+
+		return $this->recordOwners(recording: $recording, now: $now);
+	}//end recordRecipients()
+
+	/**
+	 * The window's data, the product it names and the object service, when both are there.
+	 *
+	 * @param ObjectEntityInterface $window The maintenance window.
+	 *
+	 * @return RecipientRecording|null The recording, or null when the window names no product or OpenRegister is absent.
+	 */
+	private function startRecording(ObjectEntityInterface $window): ?RecipientRecording {
 		$data          = $window->getObject();
 		$moduleId      = self::referenceId(value: ($data['module'] ?? null));
 		$objectService = $this->getObjectService();
@@ -145,31 +179,59 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
-			$this->logger->warning(
-				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
-				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
-			);
-			if (empty($data['notifyUserIds']) === false) {
-				$data['notifyUserIds'] = [];
-				$this->saveWindow(objectService: $objectService, window: $window, data: $data);
-			}
+		$recording                = new RecipientRecording();
+		$recording->window        = $window;
+		$recording->data          = $data;
+		$recording->moduleId      = $moduleId;
+		$recording->objectService = $objectService;
+		return $recording;
+	}//end startRecording()
 
+	/**
+	 * Refuse a window that is not from the supplier of the product, clearing the owners it names.
+	 *
+	 * @param RecipientRecording $recording The recording.
+	 *
+	 * @return void
+	 *
+	 * @throws \Throwable When the window cannot be written.
+	 */
+	private function refuseForeignWindow(RecipientRecording $recording): void {
+		$this->logger->warning(
+			'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+			['uuid' => $recording->window->getUuid(), 'module' => $recording->moduleId, 'organisation' => $recording->window->getOrganisation()]
+		);
+		if (empty($recording->data['notifyUserIds']) === false) {
+			$data = $recording->data;
+			$data['notifyUserIds'] = [];
+			$this->saveWindow(objectService: $recording->objectService, window: $recording->window, data: $data);
+		}
+	}//end refuseForeignWindow()
+
+	/**
+	 * Record the owners of every usage of the product, and the moment of resolution, on a window not resolved yet.
+	 *
+	 * @param RecipientRecording     $recording The recording.
+	 * @param DateTimeImmutable|null $now       The moment of resolution (defaults to now).
+	 *
+	 * @return array<int, string>|null The user ids written, or null when the window already carries a resolved time.
+	 *
+	 * @throws \Throwable When the owners cannot be read, or the window cannot be written.
+	 */
+	private function recordOwners(RecipientRecording $recording, ?DateTimeImmutable $now): ?array {
+		if (empty($recording->data['recipientsResolvedAt']) === false) {
 			return null;
 		}
 
-		if (empty($data['recipientsResolvedAt']) === false) {
-			return null;
-		}
+		$userIds = $this->ownerUserIds(objectService: $recording->objectService, moduleId: $recording->moduleId);
 
-		$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
-
+		$data                         = $recording->data;
 		$data['notifyUserIds']        = $userIds;
 		$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-		$this->saveWindow(objectService: $objectService, window: $window, data: $data);
+		$this->saveWindow(objectService: $recording->objectService, window: $recording->window, data: $data);
 
 		return $userIds;
-	}//end recordRecipients()
+	}//end recordOwners()
 
 	/**
 	 * Write a maintenance window back, without RBAC: the two notification fields
@@ -186,10 +248,10 @@ class MaintenanceRecipientService {
 	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $window->getRegister(),
-			schema: $window->getSchema(),
-			uuid: $window->getUuid(),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $window->getRegister(), schema: $window->getSchema()),
+				uuid: $window->getUuid()
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -211,20 +273,9 @@ class MaintenanceRecipientService {
 			return [];
 		}
 
-		$register = $this->settingsService->getRegisterIdForObjectType('contactPerson');
-		$schema   = $this->settingsService->getSchemaIdForObjectType('contactPerson');
-		if ($register === null || $schema === null) {
-			return [];
-		}
-
 		// A failed read is thrown, not taken as "nobody to notify": the job tries
 		// again, while an empty list would be recorded as resolved for good.
-		$people = $objectService->searchObjects(
-			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-			_rbac: false,
-			_multitenancy: false,
-			ids: $contactIds
-		);
+		$people = $this->contactPeople(objectService: $objectService, contactIds: $contactIds);
 
 		$userIds = [];
 		foreach ((array) $people as $person) {
@@ -238,6 +289,74 @@ class MaintenanceRecipientService {
 	}//end ownerUserIds()
 
 	/**
+	 * The Nextcloud user of each contact person, by contact person id.
+	 *
+	 * A contact person without a matching user is left out. A failed read is
+	 * thrown, so a caller never mistakes it for "nobody has an account".
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param array<int, string>     $contactIds    The contact person ids.
+	 *
+	 * @return array<string, string> User id per contact person id.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 */
+	public function contactUserIds(ObjectServiceInterface $objectService, array $contactIds): array {
+		$contactIds = array_values(array_unique($contactIds));
+		if ($contactIds === []) {
+			return [];
+		}
+
+		$people = $this->contactPeople(objectService: $objectService, contactIds: $contactIds);
+
+		$userIds = [];
+		foreach ((array) $people as $person) {
+			$uid = $this->userIdForContactPerson(person: $person->getObject());
+			$id  = (string) $person->getUuid();
+			if ($uid !== null && in_array($id, $contactIds, true) === true) {
+				$userIds[$id] = $uid;
+			}
+		}
+
+		return $userIds;
+	}//end contactUserIds()
+
+	/**
+	 * The contact person objects with these ids, read without RBAC.
+	 *
+	 * OpenRegister main takes the id selection as one SearchOptions argument and
+	 * older releases take `ids`; SearchSelection picks the one this install has.
+	 * A failed read is thrown.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param array<int, string>     $contactIds    The contact person ids.
+	 *
+	 * @return array<int, ObjectEntityInterface> The people found; none when contactPerson is not configured.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
+	 */
+	private function contactPeople(ObjectServiceInterface $objectService, array $contactIds): array {
+		$register = $this->settingsService->getRegisterIdForObjectType('contactPerson');
+		$schema   = $this->settingsService->getSchemaIdForObjectType('contactPerson');
+		if ($register === null || $schema === null) {
+			return [];
+		}
+
+		return (array) $objectService->searchObjects(
+			...array_merge(
+				[
+					'query' => ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+					'_rbac' => false,
+					'_multitenancy' => false,
+				],
+				SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $contactIds)
+			)
+		);
+	}//end contactPeople()
+
+	/**
 	 * The contact person ids named as owner on the usages of a product.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
@@ -246,31 +365,54 @@ class MaintenanceRecipientService {
 	 * @return array<int, string> Unique contact person ids.
 	 */
 	private function ownerContactIds(ObjectServiceInterface $objectService, string $moduleId): array {
+		$ids = [];
+		foreach ((array) $this->usagesOfProduct(objectService: $objectService, moduleId: $moduleId) as $usage) {
+			$ids = self::withOwnerIds(ids: $ids, usage: $usage->getObject());
+		}
+
+		return $ids;
+	}//end ownerContactIds()
+
+	/**
+	 * The usages of a product.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param string                 $moduleId      The product's id.
+	 *
+	 * @return array|int The usages, or [] when the usage register or schema is not configured.
+	 */
+	private function usagesOfProduct(ObjectServiceInterface $objectService, string $moduleId): array|int {
 		$register = $this->settingsService->getRegisterIdForObjectType('usage');
 		$schema   = $this->settingsService->getSchemaIdForObjectType('usage');
 		if ($register === null || $schema === null) {
 			return [];
 		}
 
-		$usages = $objectService->searchObjects(
+		return $objectService->searchObjects(
 			query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
 			_rbac: false,
 			_multitenancy: false
 		);
+	}//end usagesOfProduct()
 
-		$ids = [];
-		foreach ((array) $usages as $usage) {
-			$data = $usage->getObject();
-			foreach (self::OWNER_FIELDS as $field) {
-				$id = self::referenceId(value: ($data[$field] ?? null));
-				if ($id !== null && in_array($id, $ids, true) === false) {
-					$ids[] = $id;
-				}
+	/**
+	 * Add the contact person ids a usage names as owner, skipping those already listed.
+	 *
+	 * @param array<int, string>   $ids   The contact person ids so far.
+	 * @param array<string, mixed> $usage The usage data.
+	 *
+	 * @return array<int, string> The ids, in the order found.
+	 */
+	private static function withOwnerIds(array $ids, array $usage): array {
+		foreach (self::OWNER_FIELDS as $field) {
+			$id = self::referenceId(value: ($usage[$field] ?? null));
+			if ($id !== null && in_array($id, $ids, true) === false) {
+				$ids[] = $id;
 			}
 		}
 
 		return $ids;
-	}//end ownerContactIds()
+	}//end withOwnerIds()
 
 	/**
 	 * The Nextcloud user a contact person stands for.
@@ -288,27 +430,80 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		if (($contact['isLocalSystemBook'] ?? false) === true && $this->userManager->userExists((string) ($contact['UID'] ?? '')) === true) {
+		if ($this->isSystemBookUser(contact: $contact) === true) {
 			return (string) $contact['UID'];
 		}
 
+		return $this->userIdForContactEmail(contact: $contact);
+	}//end userIdForContactPerson()
+
+	/**
+	 * Whether a contact is the system address book entry of an existing user.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return bool True when its UID is the id of an existing user.
+	 */
+	private function isSystemBookUser(array $contact): bool {
+		return ($contact['isLocalSystemBook'] ?? false) === true && $this->userManager->userExists((string) ($contact['UID'] ?? '')) === true;
+	}//end isSystemBookUser()
+
+	/**
+	 * The user of the first e-mail address of a contact that exactly one user has.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null The user id, or null when no address matches exactly one user.
+	 */
+	private function userIdForContactEmail(array $contact): ?string {
 		foreach ((array) ($contact['EMAIL'] ?? []) as $email) {
-			if (is_array($email) === true) {
-				$email = ($email['value'] ?? '');
-			}
-
-			if (is_string($email) === false || $email === '') {
-				continue;
-			}
-
-			$users = $this->userManager->getByEmail($email);
-			if (count($users) === 1) {
-				return $users[0]->getUID();
+			$uid = $this->userIdForEmail(email: self::emailAddress(email: $email));
+			if ($uid !== null) {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end userIdForContactPerson()
+	}//end userIdForContactEmail()
+
+	/**
+	 * The address of a contact e-mail entry: a plain string, or an entry carrying a value.
+	 *
+	 * @param mixed $email The e-mail entry.
+	 *
+	 * @return string The address, or '' when the entry carries none.
+	 */
+	private static function emailAddress(mixed $email): string {
+		if (is_array($email) === true) {
+			$email = ($email['value'] ?? '');
+		}
+
+		if (is_string($email) === false) {
+			return '';
+		}
+
+		return $email;
+	}//end emailAddress()
+
+	/**
+	 * The user an e-mail address belongs to, when exactly one user has it.
+	 *
+	 * @param string $email The address.
+	 *
+	 * @return string|null The user id, or null for an empty address or none or several users.
+	 */
+	private function userIdForEmail(string $email): ?string {
+		if ($email === '') {
+			return null;
+		}
+
+		$users = $this->userManager->getByEmail($email);
+		if (count($users) === 1) {
+			return $users[0]->getUID();
+		}
+
+		return null;
+	}//end userIdForEmail()
 
 	/**
 	 * The id a relation value points at: a plain id, or an object carrying one.
@@ -325,15 +520,28 @@ class MaintenanceRecipientService {
 		}
 
 		if (is_array($value) === true) {
-			foreach (['id', 'uuid'] as $key) {
-				if (is_string($value[$key] ?? null) === true && $value[$key] !== '') {
-					return $value[$key];
-				}
-			}
+			return self::relationObjectId(relation: $value);
 		}
 
 		return null;
 	}//end referenceId()
+
+	/**
+	 * The id a relation object carries: its non-empty string `id`, else its non-empty string `uuid`.
+	 *
+	 * @param array<string, mixed> $relation The stored relation object.
+	 *
+	 * @return string|null The id, or null when the object carries none.
+	 */
+	private static function relationObjectId(array $relation): ?string {
+		foreach (['id', 'uuid'] as $key) {
+			if (is_string($relation[$key] ?? null) === true && $relation[$key] !== '') {
+				return $relation[$key];
+			}
+		}
+
+		return null;
+	}//end relationObjectId()
 
 	/**
 	 * Lazily resolve OpenRegister's ObjectService.

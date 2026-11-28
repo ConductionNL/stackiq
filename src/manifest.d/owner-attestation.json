@@ -1,0 +1,107 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "landscape-owner-attestation (D5): an owner's own confirmation requests with Confirm and Open entry, and the information manager's rounds with Start round and a round page counting pending, confirmed, corrected and overdue requests. Both are children of Organisations (ADR-097: no new top-level entry). The request and round schemas are attestationRequest and attestationRound in softwarecatalogus_register.json.",
+	"menu": [
+		{
+			"id": "Organisaties",
+			"children": [
+				{ "id": "MyAttestations", "label": "My confirmation requests", "icon": "ClipboardCheckOutline", "route": "MyAttestations", "order": 40 },
+				{ "id": "AttestationRounds", "label": "Confirmation rounds", "icon": "ClipboardListOutline", "route": "AttestationRounds", "order": 41 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "MyAttestations",
+			"route": "/my-confirmations",
+			"type": "index",
+			"title": "My confirmation requests",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "attestationRequest",
+				"description": "The entries you are asked to confirm. Confirm an entry that is right, or open it and correct it: saving your change answers the request.",
+				"filter": { "assigneeUserId": "@me", "status": "pending" },
+				"showAdd": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"columns": [
+					{ "key": "entryName", "label": "Entry" },
+					{ "key": "entrySchema", "label": "Type" },
+					{ "key": "deadline", "label": "Deadline" },
+					{ "key": "status", "label": "Status" }
+				],
+				"actions": [
+					{ "id": "confirm-entry", "label": "Confirm", "icon": "CheckCircleOutline", "handler": "confirmAttestationRequest" },
+					{ "id": "open-entry", "label": "Open entry", "icon": "OpenInNew", "handler": "openAttestationEntry" }
+				],
+				"defaultSort": { "field": "deadline", "direction": "asc" },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "AttestationRounds",
+			"route": "/confirmation-rounds",
+			"type": "index",
+			"title": "Confirmation rounds",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "attestationRound",
+				"description": "Rounds in which owners confirm or correct their entries by a deadline.",
+				"showAdd": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"headerActions": [
+					{ "id": "start-round", "label": "Start round", "icon": "Send", "handler": "startAttestationRound" }
+				],
+				"columns": [
+					{ "key": "name", "label": "Name" },
+					{ "key": "scopeSchema", "label": "Entries" },
+					{ "key": "deadline", "label": "Deadline" },
+					{ "key": "status", "label": "Status" },
+					{ "key": "requestCount", "label": "Requests" },
+					{ "key": "answeredCount", "label": "Answered" }
+				],
+				"rowRoute": "AttestationRoundDetail",
+				"defaultSort": { "field": "deadline", "direction": "desc" },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "AttestationRoundDetail",
+			"route": "/confirmation-rounds/:id",
+			"type": "detail",
+			"title": "Confirmation round",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "attestationRound",
+				"_note": "REQ-OAT-004: the four counts as stat tiles counted by OpenRegister over the round's requests, the round's data, then the requests grouped by status with their owners. The entries no request could be sent for are in the round's unassigned list.",
+				"lifecycleActions": { "field": "status" },
+				"widgets": [
+					{ "id": "ar-pending", "type": "stat", "title": "Pending", "content": { "label": "Pending", "icon": "ClockOutline", "source": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "metric": "count", "filter": { "round": "@objectId", "status": "pending" } } } },
+					{ "id": "ar-confirmed", "type": "stat", "title": "Confirmed", "content": { "label": "Confirmed", "icon": "CheckCircleOutline", "source": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "metric": "count", "filter": { "round": "@objectId", "status": "confirmed" } } } },
+					{ "id": "ar-corrected", "type": "stat", "title": "Corrected", "content": { "label": "Corrected", "icon": "PencilOutline", "source": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "metric": "count", "filter": { "round": "@objectId", "status": "corrected" } } } },
+					{ "id": "ar-overdue", "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "AlertCircleOutline", "source": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "metric": "count", "filter": { "round": "@objectId", "status": "overdue" } } } },
+					{ "id": "ar-data", "type": "data", "title": "Round", "icon": "ClipboardListOutline", "content": { "columns": 2, "include": ["name", "scopeSchema", "scopeOrganisation", "deadline", "status", "startedBy", "requestCount", "answeredCount", "unassigned"] } },
+					{ "id": "ar-overdue-list", "type": "object-list", "title": "Overdue", "icon": "AlertCircleOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "filter": { "round": "@objectId", "status": "overdue" }, "columns": [ { "key": "entryName", "label": "Entry" }, { "key": "assigneeUserId", "label": "Owner" }, { "key": "deadline", "label": "Deadline" } ], "limit": 50, "allowCreate": false, "emptyText": "No overdue requests" } },
+					{ "id": "ar-pending-list", "type": "object-list", "title": "Pending", "icon": "ClockOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "filter": { "round": "@objectId", "status": "pending" }, "columns": [ { "key": "entryName", "label": "Entry" }, { "key": "assigneeUserId", "label": "Owner" }, { "key": "deadline", "label": "Deadline" } ], "limit": 50, "allowCreate": false, "emptyText": "No pending requests" } },
+					{ "id": "ar-corrected-list", "type": "object-list", "title": "Corrected", "icon": "PencilOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "filter": { "round": "@objectId", "status": "corrected" }, "columns": [ { "key": "entryName", "label": "Entry" }, { "key": "assigneeUserId", "label": "Owner" }, { "key": "respondedAt", "label": "Answered on" } ], "limit": 50, "allowCreate": false, "emptyText": "No corrected entries" } },
+					{ "id": "ar-confirmed-list", "type": "object-list", "title": "Confirmed", "icon": "CheckCircleOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "attestationRequest", "filter": { "round": "@objectId", "status": "confirmed" }, "columns": [ { "key": "entryName", "label": "Entry" }, { "key": "assigneeUserId", "label": "Owner" }, { "key": "respondedAt", "label": "Answered on" } ], "limit": 50, "allowCreate": false, "emptyText": "No confirmed entries" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ar-pending", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "2", "widgetId": "ar-confirmed", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "3", "widgetId": "ar-corrected", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "4", "widgetId": "ar-overdue", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": "5", "widgetId": "ar-data", "gridX": 0, "gridY": 2, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "6", "widgetId": "ar-overdue-list", "gridX": 0, "gridY": 7, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "7", "widgetId": "ar-pending-list", "gridX": 6, "gridY": 7, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "8", "widgetId": "ar-corrected-list", "gridX": 0, "gridY": 12, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "9", "widgetId": "ar-confirmed-list", "gridX": 6, "gridY": 12, "gridWidth": 6, "gridHeight": 5 }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true, "tabs": [ { "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ] } ] },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

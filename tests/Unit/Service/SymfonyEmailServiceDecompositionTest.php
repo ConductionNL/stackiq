@@ -14,13 +14,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -37,7 +40,7 @@ use Psr\Log\LoggerInterface;
 class SymfonyEmailServiceDecompositionTest extends TestCase {
 
 	/**
-	 * Build a service with stub collaborators. SettingsService is a real
+	 * Build a service with stub collaborators. EmailSettings is a real
 	 * partial-mock so the helpers can ask it for email settings.
 	 *
 	 * @param array $emailSettings Settings returned from getEmailSettings()
@@ -45,7 +48,7 @@ class SymfonyEmailServiceDecompositionTest extends TestCase {
 	 * @return SymfonyEmailService
 	 */
 	private function makeService(array $emailSettings): SymfonyEmailService {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(EmailSettings::class);
 		$settings->method('getEmailSettings')->willReturn($emailSettings);
 
 		return new SymfonyEmailService(
@@ -156,7 +159,7 @@ class SymfonyEmailServiceDecompositionTest extends TestCase {
 	 * @return void
 	 */
 	public function testEnsureEmailDeliveryReadySkipsWhenUnconfigured(): void {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(EmailSettings::class);
 		$settings->method('getEmailSettings')->willReturn([]);
 
 		$service = new SymfonyEmailService(
@@ -258,11 +261,11 @@ class SymfonyEmailServiceDecompositionTest extends TestCase {
 	}//end testEnsureEmailDeliveryReadyPasses()
 
 	/**
-	 * Internal helper: build a SettingsService mock returning the supplied
+	 * Internal helper: build an EmailSettings mock returning the supplied
 	 * email settings.
 	 */
-	private function makeSettingsReturning(array $emailSettings): SettingsService {
-		$settings = $this->createMock(SettingsService::class);
+	private function makeSettingsReturning(array $emailSettings): EmailSettings {
+		$settings = $this->createMock(EmailSettings::class);
 		$settings->method('getEmailSettings')->willReturn($emailSettings);
 		return $settings;
 	}

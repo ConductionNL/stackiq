@@ -281,7 +281,9 @@
         "Reports": "Berichte",
         "Pick a report to open it.": "Wählen Sie einen Bericht, um ihn zu öffnen.",
         "Overlapping and ageing software across the portfolio.": "Überlappende und veraltete Software im Portfolio.",
-        "Store": "Store",
-        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben."
+        "Marketplace": "Store",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben.",
+        "Anyone can read this pentest report, also without an account. Publish it publicly?": "Jeder kann diesen Pentest-Bericht lesen, auch ohne Konto. Öffentlich veröffentlichen?",
+        "Publish publicly": "Öffentlich veröffentlichen"
     }
 }

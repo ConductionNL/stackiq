@@ -3,6 +3,9 @@
 /**
  * Registration / review moderation / approval queue.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The admin-only counterpart to IntakeService (organisatie) and
  * ReviewService (beoordeeling) — a single generalised mechanism, not two
  * parallel ones (catalog-ratings, stackiq#375: "reuse the
@@ -36,15 +39,17 @@
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -54,11 +59,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ModerationService {
-	/**
-	 * The moderated catalog object type (default / legacy — organisatie).
-	 */
-	public const MODERATED_TYPE = 'organization';
+class ModerationService implements ModerationServiceInterface {
 
 	/**
 	 * The review moderated catalog object type.
@@ -86,15 +87,21 @@ class ModerationService {
 	public const STATUS_REJECTED = 'rejected';
 
 	/**
+	 * The organisation status an approved registration gets, so user
+	 * provisioning treats it as active.
+	 */
+	public const ORGANISATION_STATUS_ACTIVE = 'Active';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -169,6 +176,10 @@ class ModerationService {
 			type: $type,
 			mutator: static function (array $data) use ($config): array {
 				$data[$config['statusField']] = $config['approvedValue'];
+				foreach ($config['alsoOnApprove'] as $field => $value) {
+					$data[$field] = $value;
+				}
+
 				if ($config['stampPublication'] === true) {
 					$data['publicationDate'] = gmdate('Y-m-d\TH:i:sP');
 					$data['depublicationDate'] = null;
@@ -216,18 +227,27 @@ class ModerationService {
 	 * state, what its "approved" value is, and whether approval also stamps
 	 * `publicatiedatum` (organisatie only — beoordeeling's public visibility
 	 * is governed entirely by its own `status` field via the schema RBAC
-	 * rule, no publication date involved).
+	 * rule, no publication date involved), and the other fields approval sets
+	 * in the same save (organisatie: its own `status` becomes Active, so the
+	 * organisation is active everywhere, not only in the moderation queue).
 	 *
 	 * @param string $type The moderated object type.
 	 *
-	 * @return array{statusField:string, approvedValue:string, stampPublication:bool} The config.
+	 * @return array{statusField:string, approvedValue:string, stampPublication:bool, alsoOnApprove:array<string, string>} The config.
+	 *
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/open-data-publishing/spec.md#requirement-approving-a-self-registered-organisation-makes-it-active-req-clr-010
 	 */
 	private function typeConfig(string $type): array {
 		if ($type === self::MODERATED_TYPE_REVIEW) {
-			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false];
+			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false, 'alsoOnApprove' => []];
 		}
 
-		return ['statusField' => 'registrationStatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
+		return [
+			'statusField'      => 'registrationStatus',
+			'approvedValue'    => self::STATUS_ACTIVE,
+			'stampPublication' => true,
+			'alsoOnApprove'    => ['status' => self::ORGANISATION_STATUS_ACTIVE],
+		];
 	}//end typeConfig()
 
 	/**
@@ -260,8 +280,10 @@ class ModerationService {
 		try {
 			$entity = $objectService->find(
 				id: $uuid,
-				register: (string)$target['register'],
-				schema: (string)$target['schema'],
+				options: new ObjectFindOptions(
+					register: (string)$target['register'],
+					schema: (string)$target['schema']
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -290,9 +312,10 @@ class ModerationService {
 		try {
 			$objectService->saveObject(
 				object: $data,
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $uuid
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('ModerationService: ' . $action . ' failed', ['type' => $type, 'uuid' => $uuid, 'error' => $e->getMessage()]);
@@ -311,13 +334,7 @@ class ModerationService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(string $type): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType($type);
-		$schema = $this->settingsService->getSchemaIdForObjectType($type);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: $type);
 	}//end resolveTarget()
 
 	/**
@@ -328,24 +345,7 @@ class ModerationService {
 	 * @return array<string,mixed> The data bag.
 	 */
 	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
+		return (new ObjectDataBag())->fromItem(object: $object);
 	}//end toDataBag()
 
 	/**

@@ -1,0 +1,26 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "insight-exports-and-custom-reports (board SkRapportages): the Custom reports page, reached from its card on the Reports page (no menu entry, ADR-097). A custom page because a report is the caller's OpenRegister export profile over one catalogue schema: listed, defined in a CnFormDialog, run as OpenRegister's download and deleted. OpenRegister owns the profiles, their owner and the export right.",
+	"pages": [
+		{
+			"id": "CustomReports",
+			"route": "/reports/custom",
+			"type": "custom",
+			"title": "Custom reports",
+			"component": "CustomReportsView",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"description": "Your own reports over the catalogue: pick the fields, run them as a file.",
+				"schemas": [
+					{ "slug": "module", "label": "Applications" },
+					{ "slug": "catalogService", "label": "Services" },
+					{ "slug": "organization", "label": "Organisations" },
+					{ "slug": "catalogContract", "label": "Contracts" },
+					{ "slug": "moduleVersion", "label": "Application versions" },
+					{ "slug": "compliancy", "label": "Compliances" }
+				]
+			},
+			"_note": "REQ-CER-004: openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema"
+		}
+	]
+}

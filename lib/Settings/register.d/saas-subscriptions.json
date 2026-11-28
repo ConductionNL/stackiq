@@ -1,0 +1,31 @@
+{
+  "$comment": "capability-rows-the-code-does-not-yet-meet task 1 (REQ-CLR-001): a usage records who bought it, the buying department and whether it was bought outside IT, so the License posture page can list every SaaS subscription with its yearly cost, including the ones a department bought without IT.",
+  "components": {
+    "schemas": {
+      "usage": {
+        "slug": "usage",
+        "version": "1.6.4",
+        "properties": {
+          "buyingDepartment": {
+            "type": "string",
+            "title": "Buying department",
+            "description": "The department that bought this application, when it is not IT.",
+            "maxLength": 255,
+            "visible": true,
+            "facetable": true,
+            "order": 38
+          },
+          "boughtOutsideIt": {
+            "type": "boolean",
+            "title": "Bought outside IT",
+            "description": "Whether the department bought this application without IT being involved.",
+            "default": false,
+            "visible": true,
+            "facetable": true,
+            "order": 39
+          }
+        }
+      }
+    }
+  }
+}

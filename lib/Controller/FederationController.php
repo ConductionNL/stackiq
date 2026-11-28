@@ -33,8 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
-use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,13 +50,13 @@ class FederationController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param FederationService $federation The federation service.
+	 * @param FederationServiceInterface $federation The federation service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly FederationService $federation,
+		private readonly FederationServiceInterface $federation,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -129,4 +129,22 @@ class FederationController extends Controller {
 
 		return new JSONResponse(data: $result);
 	}//end pull()
+
+	/**
+	 * Switch federation on or off; switching it on announces the instance.
+	 *
+	 * @param bool $enabled Whether federation is on.
+	 *
+	 * @return JSONResponse The status after the switch, with the registration.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $enabled is the value the switch sets, not a mode
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
+	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+	 * @spec                                                                               openspec/changes/capability-rows-the-code-does-not-yet-meet/tasks.md#task-21-switch-federation-on-in-the-exchange-settings-and-show-the-registration-status
+	 */
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
+	public function setEnabled(bool $enabled = false): JSONResponse {
+		return new JSONResponse(data: $this->federation->setEnabled(enabled: $enabled));
+	}//end setEnabled()
 }//end class

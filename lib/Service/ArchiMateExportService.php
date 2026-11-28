@@ -11,6 +11,9 @@
  * @link      https://conduction.nl
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 /**
@@ -28,6 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\ArchiMate\ConnectionFlows;
+use OCA\Stackiq\Service\ArchiMate\XmlAttribute;
+use OCA\Stackiq\Service\ArchiMate\XmlAttributeRun;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -58,6 +64,50 @@ use Psr\Log\LoggerInterface;
  */
 class ArchiMateExportService {
 	/**
+	 * Fields that only belong in the <properties><property> structure, never as direct children.
+	 */
+	private const PROPERTY_LIKE_FIELDS = [
+		'availability',
+		'integrity',
+		'confidentiality',
+		'gemmaType',
+		'objectId',
+		'bivScoreBbn',
+		'belangrijksteReden',
+	];
+
+	/**
+	 * Nested structures whose property-like and invalid-tag fields are filtered out.
+	 */
+	private const NESTED_CONTAINER_KEYS = ['elementProperties', 'properties', 'viewNodes'];
+
+	/**
+	 * How many connections the last organisation export skipped.
+	 *
+	 * @var int
+	 */
+	private int $lastSkippedConnections = 0;
+
+	/**
+	 * The identifier of the "Gedeeld door" property definition the export adds.
+	 */
+	private const SHARED_BY_PROPDEF_ID = 'id-swc-propdef-gedeeld-door';
+
+	/**
+	 * The style of a nested application node, per kind: own or shared.
+	 */
+	private const APPLICATION_NODE_STYLES = [
+		'own' => [
+			'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
+			'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
+		],
+		'shared' => [
+			'fillColor' => ['_r' => '210', '_g' => '225', '_b' => '255', '_a' => '100'],
+			'lineColor' => ['_r' => '40', '_g' => '80', '_b' => '170'],
+		],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger The logger instance.
@@ -85,155 +135,246 @@ class ArchiMateExportService {
 	 * @spec   openspec/specs/archimate-export/spec.md
 	 */
 	public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement {
-		// First pass: attributes and text content.
-		$addedAttributes = [];
-		// Track attributes to avoid duplicates.
-		foreach ($data as $key => $value) {
-			if ($key === '_value' || $key === '_text') {
-				$xml[0] = (string)$value;
-				continue;
-			}
-
-			if (is_string($key) === true && str_starts_with($key, '_') === true && $key !== '_attributes') {
-				// Skip legacy _attributes bag, handle individual underscored keys as attributes.
-				$attrKey = substr($key, 1);
-
-				// Skip malformed attribute keys that would create invalid XML
-				// (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
-				if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
-					continue;
-				}
-
-				// Fix double underscores to colons (e.g., xml__lang -> xml:lang).
-				$attrKey = str_replace('__', ':', $attrKey);
-
-				// Skip if this attribute was already added.
-				if (in_array($attrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				[$nsPrefix, $local] = $this->splitNamespacedKey(key: $attrKey);
-
-				if ($nsPrefix !== null) {
-					// Namespaced attribute, ensure namespace is declared on element.
-					$nsUri = $this->getNamespaceUri(xml: $xml, prefix: $nsPrefix);
-					if (empty($nsUri) === false) {
-						$xml->addAttribute($nsPrefix . ':' . $local, (string)$value, $nsUri);
-						$addedAttributes[] = $nsPrefix . ':' . $local;
-					} else {
-						// Fallback to non-namespaced if namespace not found.
-						$xml->addAttribute($attrKey, (string)$value);
-						$addedAttributes[] = $attrKey;
-					}
-				} else {
-					$xml->addAttribute($local, (string)$value);
-					$addedAttributes[] = $local;
-				}
-			}//end if
-		}//end foreach
-
-		// Handle legacy _attributes array with duplicate filtering.
-		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
-			foreach ($data['_attributes'] as $attrKey => $attrValue) {
-				// Skip duplicate attributes with colon prefix or already added attributes.
-				if (str_starts_with($attrKey, ':') === true || in_array($attrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				// Fix double underscores to colons.
-				$cleanAttrKey = str_replace('__', ':', $attrKey);
-
-				// Skip if cleaned version was already added.
-				if (in_array($cleanAttrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				// Handle namespaced attributes (e.g., xml:lang, xsi:type).
-				[$nsPrefix, $local] = $this->splitNamespacedKey(key: $cleanAttrKey);
-				if ($nsPrefix !== null) {
-					$nsUri = $this->getNamespaceUri(xml: $xml, prefix: $nsPrefix);
-					if (empty($nsUri) === false) {
-						$xml->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
-						$addedAttributes[] = $nsPrefix . ':' . $local;
-						continue;
-					}
-				}
-
-				$xml->addAttribute($cleanAttrKey, (string)$attrValue);
-				$addedAttributes[] = $cleanAttrKey;
-			}//end foreach
-		}//end if
-
-		// Second pass: children.
-		foreach ($data as $key => $value) {
-			if ($key === '_value' || $key === '_text' || $key === '_attributes') {
-				continue;
-			}
-
-			if (is_string($key) === true && str_starts_with($key, '_') === true) {
-				// Already handled as attribute.
-				continue;
-			}
-
-			// Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing).
-			if (is_string($key) === true && str_starts_with($key, ':') === true) {
-				continue;
-			}
-
-			// Skip numeric keys - they indicate array items that should be handled differently.
-			if (is_int($key) === true) {
-				continue;
-			}
-
-			// Skip property-like fields that should be handled by specialized property methods.
-			// These fields often appear as direct data but should only be in <properties> structure.
-			$propertyLikeFields = [
-				'availability',
-				'integrity',
-				'confidentiality',
-				'gemmaType',
-				'objectId',
-				'bivScoreBbn',
-				'belangrijksteReden',
-			];
-			if (in_array($key, $propertyLikeFields, true) === true) {
-				continue;
-				// Skip these - they should only appear in proper <properties><property> structure.
-			}
-
-			// Special handling for elementProperties and other nested structures - filter out problematic fields.
-			$nestedKeys = ['elementProperties', 'properties', 'viewNodes'];
-			if (in_array($key, $nestedKeys, true) === true && is_array($value) === true) {
-				$value = $this->filterProblematicFields(data: $value, fieldsToRemove: $propertyLikeFields);
-			}
-
-			// Ensure key is always a string for XML tag names.
-			$tagName = (string)$key;
-
-			if (is_array($value) === true) {
-				// Handle list of children.
-				if ($this->isList(arr: $value) === true) {
-					foreach ($value as $item) {
-						$child = $xml->addChild($tagName);
-						if (is_array($item) === true) {
-							$this->arrayToXml(data: $item, xml: $child);
-						} else {
-							$child[0] = (string)$item;
-						}
-					}
-				} else {
-					$child = $xml->addChild($tagName);
-					$this->arrayToXml(data: $value, xml: $child);
-				}
-			} else {
-				// Scalar child node.
-				$child = $xml->addChild($tagName);
-				$child[0] = (string)$value;
-			}
-		}//end foreach
+		$run = new XmlAttributeRun(xml: $xml);
+		$this->writeAttributesAndText(run: $run, data: $data);
+		$this->writeLegacyAttributes(run: $run, data: $data);
+		$this->appendChildren(xml: $xml, children: $this->childEntries(data: $data));
 
 		return $xml;
 	}//end arrayToXml()
+
+	/**
+	 * Write the `_value`/`_text` node text and the underscored-key attributes, in data order.
+	 *
+	 * @param XmlAttributeRun $run  The element and the attributes written so far.
+	 * @param array           $data The data array being converted.
+	 *
+	 * @return void
+	 */
+	private function writeAttributesAndText(XmlAttributeRun $run, array $data): void {
+		foreach ($data as $key => $value) {
+			if ($key === '_value' || $key === '_text') {
+				$run->setText(text: (string)$value);
+				continue;
+			}
+
+			$name = $this->underscoredAttributeName(key: $key);
+			if ($name !== null) {
+				$this->writeAttribute(run: $run, attribute: new XmlAttribute(name: $name, value: $value));
+			}
+		}
+	}//end writeAttributesAndText()
+
+	/**
+	 * Resolve the attribute name an underscored key writes, e.g. `_xml__lang` to `xml:lang`.
+	 *
+	 * The legacy `_attributes` bag is not an attribute, and keys that would
+	 * create invalid XML (e.g. `___propertyDefinitionRef`, or a bare `_`) are skipped.
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return string|null The attribute name, or null when the key writes no attribute.
+	 */
+	private function underscoredAttributeName(string|int $key): ?string {
+		if ($this->isUnderscoredAttributeKey(key: $key) === false) {
+			return null;
+		}
+
+		$attrKey = substr($key, 1);
+		if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
+			return null;
+		}
+
+		// Fix double underscores to colons (e.g., xml__lang -> xml:lang).
+		return str_replace('__', ':', $attrKey);
+	}//end underscoredAttributeName()
+
+	/**
+	 * Whether a key is an underscored attribute key (not the legacy `_attributes` bag).
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return bool
+	 */
+	private function isUnderscoredAttributeKey(string|int $key): bool {
+		return is_string($key) === true && str_starts_with($key, '_') === true && $key !== '_attributes';
+	}//end isUnderscoredAttributeKey()
+
+	/**
+	 * Write the legacy `_attributes` bag, skipping colon-prefixed and already written keys.
+	 *
+	 * @param XmlAttributeRun $run  The element and the attributes written so far.
+	 * @param array           $data The data array being converted.
+	 *
+	 * @return void
+	 */
+	private function writeLegacyAttributes(XmlAttributeRun $run, array $data): void {
+		foreach ($this->legacyAttributes(data: $data) as $attrKey => $attrValue) {
+			if (str_starts_with($attrKey, ':') === true || $run->has(name: $attrKey) === true) {
+				continue;
+			}
+
+			// Fix double underscores to colons.
+			$this->writeAttribute(run: $run, attribute: new XmlAttribute(name: str_replace('__', ':', $attrKey), value: $attrValue));
+		}
+	}//end writeLegacyAttributes()
+
+	/**
+	 * The legacy `_attributes` bag of a data array, or an empty list when it has none.
+	 *
+	 * @param array $data The data array being converted.
+	 *
+	 * @return array
+	 */
+	private function legacyAttributes(array $data): array {
+		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
+			return $data['_attributes'];
+		}
+
+		return [];
+	}//end legacyAttributes()
+
+	/**
+	 * Write one attribute unless already written; a `prefix:local` name is written
+	 * namespaced when the element knows the prefix, and as a plain name otherwise.
+	 *
+	 * @param XmlAttributeRun $run       The element and the attributes written so far.
+	 * @param XmlAttribute    $attribute The attribute to write.
+	 *
+	 * @return void
+	 */
+	private function writeAttribute(XmlAttributeRun $run, XmlAttribute $attribute): void {
+		if ($run->has(name: $attribute->name) === true) {
+			return;
+		}
+
+		[$nsPrefix, $local] = $this->splitNamespacedKey(key: $attribute->name);
+		$nsUri = $this->attributeNamespaceUri(xml: $run->xml, prefix: $nsPrefix);
+		if (empty($nsUri) === false) {
+			$run->xml->addAttribute($nsPrefix . ':' . $local, (string)$attribute->value, $nsUri);
+			$run->record(name: $nsPrefix . ':' . $local);
+			return;
+		}
+
+		$run->xml->addAttribute($attribute->name, (string)$attribute->value);
+		$run->record(name: $attribute->name);
+	}//end writeAttribute()
+
+	/**
+	 * The namespace URI for an attribute prefix, or an empty string for an unprefixed name.
+	 *
+	 * @param \SimpleXMLElement $xml    The element the attribute is written onto.
+	 * @param string|null       $prefix The attribute's namespace prefix, null when it has none.
+	 *
+	 * @return string
+	 */
+	private function attributeNamespaceUri(\SimpleXMLElement $xml, ?string $prefix): string {
+		if ($prefix === null) {
+			return '';
+		}
+
+		return $this->getNamespaceUri(xml: $xml, prefix: $prefix);
+	}//end attributeNamespaceUri()
+
+	/**
+	 * The entries of a data array that become child elements, with nested
+	 * property containers filtered.
+	 *
+	 * @param array $data The data array being converted.
+	 *
+	 * @return array<string, mixed> Child values keyed by tag name.
+	 */
+	private function childEntries(array $data): array {
+		$children = [];
+		foreach ($data as $key => $value) {
+			if ($this->isChildKey(key: $key) === true) {
+				$children[$key] = $this->filterNestedContainer(key: $key, value: $value);
+			}
+		}
+
+		return $children;
+	}//end childEntries()
+
+	/**
+	 * Whether a data key becomes a child element.
+	 *
+	 * Underscored keys are attributes or text, colon-prefixed keys are
+	 * artifacts from XML-to-JSON parsing, numeric keys are list items, and
+	 * property-like fields only belong in the <properties> structure.
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return bool
+	 */
+	private function isChildKey(string|int $key): bool {
+		if (is_int($key) === true) {
+			return false;
+		}
+
+		if (str_starts_with($key, '_') === true || str_starts_with($key, ':') === true) {
+			return false;
+		}
+
+		return in_array($key, self::PROPERTY_LIKE_FIELDS, true) === false;
+	}//end isChildKey()
+
+	/**
+	 * Filter property-like and invalid-tag fields out of a nested container
+	 * (elementProperties, properties, viewNodes); other values pass unchanged.
+	 *
+	 * @param string $key   The child key.
+	 * @param mixed  $value The child value.
+	 *
+	 * @return mixed
+	 */
+	private function filterNestedContainer(string $key, mixed $value): mixed {
+		if (in_array($key, self::NESTED_CONTAINER_KEYS, true) === true && is_array($value) === true) {
+			return $this->filterProblematicFields(data: $value, fieldsToRemove: self::PROPERTY_LIKE_FIELDS);
+		}
+
+		return $value;
+	}//end filterNestedContainer()
+
+	/**
+	 * Append the child elements; a list value repeats the tag once per item.
+	 *
+	 * @param \SimpleXMLElement    $xml      The element to append to.
+	 * @param array<string, mixed> $children Child values keyed by tag name.
+	 *
+	 * @return void
+	 */
+	private function appendChildren(\SimpleXMLElement $xml, array $children): void {
+		foreach ($children as $key => $value) {
+			// Ensure key is always a string for XML tag names.
+			$tagName = (string)$key;
+			if (is_array($value) === true && $this->isList(arr: $value) === true) {
+				foreach ($value as $item) {
+					$this->fillNode(node: $xml->addChild($tagName), value: $item);
+				}
+
+				continue;
+			}
+
+			$this->fillNode(node: $xml->addChild($tagName), value: $value);
+		}
+	}//end appendChildren()
+
+	/**
+	 * Fill a child node: an array is converted recursively, a scalar becomes its text.
+	 *
+	 * @param \SimpleXMLElement $node  The child node.
+	 * @param mixed             $value The child value.
+	 *
+	 * @return void
+	 */
+	private function fillNode(\SimpleXMLElement $node, mixed $value): void {
+		if (is_array($value) === true) {
+			$this->arrayToXml(data: $value, xml: $node);
+			return;
+		}
+
+		$node[0] = (string)$value;
+	}//end fillNode()
 
 	/**
 	 * Check if an array is a numeric list (sequential integer keys).
@@ -254,24 +395,34 @@ class ArchiMateExportService {
 	 * @return array Array of [prefix, localName].
 	 */
 	private function splitNamespacedKey(string $key): array {
-		// Convert `xsi__type` to ['xsi', 'type'].
-		if (str_contains($key, '__') === true) {
-			$parts = explode('__', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
-			}
-		}
-
-		// Also handle already-converted colon notation (e.g., 'xml:lang').
-		if (str_contains($key, ':') === true) {
-			$parts = explode(':', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
+		// Convert `xsi__type` to ['xsi', 'type'], and also handle already-converted
+		// colon notation (e.g., 'xml:lang').
+		foreach (['__', ':'] as $separator) {
+			$parts = $this->splitOnSeparator(key: $key, separator: $separator);
+			if ($parts !== null) {
+				return $parts;
 			}
 		}
 
 		return [null, $key];
 	}//end splitNamespacedKey()
+
+	/**
+	 * Split a key on the first occurrence of a separator into two non-empty parts.
+	 *
+	 * @param string $key       The key to split.
+	 * @param string $separator The separator.
+	 *
+	 * @return array|null Array of [prefix, localName], or null when the key does not split.
+	 */
+	private function splitOnSeparator(string $key, string $separator): ?array {
+		$parts = explode($separator, $key, 2);
+		if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+			return [$parts[0], $parts[1]];
+		}
+
+		return null;
+	}//end splitOnSeparator()
 
 	/**
 	 * Recursively filter out problematic fields from nested data structures.
@@ -285,31 +436,7 @@ class ArchiMateExportService {
 		$filtered = [];
 
 		foreach ($data as $key => $value) {
-			if (is_string($key) === false) {
-				continue;
-			}
-
-			$shouldSkip = false;
-
-			// Skip exact matches.
-			if (in_array($key, $fieldsToRemove, true) === true) {
-				$shouldSkip = true;
-			}
-
-			// Skip fields that start with problematic patterns (e.g., "availabilityPrimaryReason").
-			foreach ($fieldsToRemove as $fieldPattern) {
-				if (str_starts_with($key, $fieldPattern) === true) {
-					$shouldSkip = true;
-					break;
-				}
-			}
-
-			// Skip fields with invalid XML tag name characters (parentheses, etc.).
-			if (preg_match('/[(),<>\/\\\]/', $key) === 1) {
-				$shouldSkip = true;
-			}
-
-			if ($shouldSkip === true) {
+			if (is_string($key) === false || $this->isProblematicField(key: $key, fieldsToRemove: $fieldsToRemove) === true) {
 				continue;
 			}
 
@@ -319,10 +446,30 @@ class ArchiMateExportService {
 			} else {
 				$filtered[$key] = $value;
 			}
-		}//end foreach
+		}
 
 		return $filtered;
 	}//end filterProblematicFields()
+
+	/**
+	 * Whether a field is problematic: it matches or starts with one of the fields
+	 * to remove (e.g., "availabilityPrimaryReason"), or it holds characters that
+	 * are invalid in an XML tag name (parentheses, etc.).
+	 *
+	 * @param string $key            The field name.
+	 * @param array  $fieldsToRemove List of field names to remove.
+	 *
+	 * @return bool
+	 */
+	private function isProblematicField(string $key, array $fieldsToRemove): bool {
+		foreach ($fieldsToRemove as $fieldPattern) {
+			if (str_starts_with($key, $fieldPattern) === true) {
+				return true;
+			}
+		}
+
+		return preg_match('/[(),<>\/\\\]/', $key) === 1;
+	}//end isProblematicField()
 
 	/**
 	 * Get the namespace URI for a given prefix from an XML element.
@@ -344,13 +491,11 @@ class ArchiMateExportService {
 		}
 
 		$docNamespaces = $xml->getDocNamespaces(true);
-		if ($docNamespaces !== false) {
-			$namespaces = $docNamespaces;
-		} else {
-			$namespaces = [];
+		if ($docNamespaces === false) {
+			return '';
 		}
 
-		return $namespaces[$prefix] ?? '';
+		return $docNamespaces[$prefix] ?? '';
 	}//end getNamespaceUri()
 
 	/**
@@ -843,7 +988,8 @@ XML;
 			];
 
 			try {
-				$schemaObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+				// Read across organisations, so only GEMMA content: drawn objects stay with their organisation.
+				$schemaObjects = ViewOrigin::importedOnly(objects: $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false));
 
 				// Inject 'section' field if missing (magic table objects don't store it).
 				$sectionName = $sectionNameMap[$schemaType] ?? $schemaType;
@@ -889,7 +1035,7 @@ XML;
 			];
 
 			try {
-				$allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+				$allObjects = ViewOrigin::importedOnly(objects: $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false));
 			} catch (\Exception $e) {
 				$this->logger->error(
 					'Failed to retrieve objects from AMEF register',
@@ -949,6 +1095,7 @@ XML;
 	 *
 	 * @return string Generated XML.
 	 * @spec   openspec/specs/archimate-export/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
 	public function exportArchiMateXml(
 		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
@@ -975,7 +1122,7 @@ XML;
 		$dbTime = microtime(true) - $startTime;
 
 		// Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-		$xml = $this->generateXmlDirectly(objects: $objects);
+		$xml = $this->generateXmlFromObjects(objects: $objects);
 
 		// Step 3: Run Quality Assurance checks on generated XML.
 		$this->runQualityAssuranceChecks(xmlString: $xml);
@@ -1004,11 +1151,16 @@ XML;
 	 * - Direct XML generation per section
 	 * - No unnecessary loops or checks
 	 *
-	 * @param array $objects Raw objects from database.
+	 * The one generation the full export and the round-trip check share. It takes
+	 * the objects as stored, or as the import's conversion builds them.
+	 *
+	 * @param array $objects Raw objects from database, or converted from a file.
 	 *
 	 * @return string Generated XML.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
 	 */
-	private function generateXmlDirectly(array $objects): string {
+	public function generateXmlFromObjects(array $objects): string {
 		$this->logger->info(
 			'Starting section-based XML generation from objects',
 			[
@@ -1145,7 +1297,7 @@ XML;
 		);
 
 		return $this->formatXmlOutput(xmlString: $xml->asXML());
-	}//end generateXmlDirectly()
+	}//end generateXmlFromObjects()
 
 	/**
 	 * Create section element in XML (matching original ArchiMate structure).
@@ -1920,57 +2072,6 @@ XML;
 	}//end addModelMetadataToXml()
 
 	/**
-	 * Optimized method to add data to XML node.
-	 *
-	 * @param \SimpleXMLElement $node The XML node.
-	 * @param array $data The data array.
-	 *
-	 * @return void
-	 */
-	private function addDataToXmlNode(\SimpleXMLElement $node, array $data): void {
-		// Add attributes first.
-		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
-			foreach ($data['_attributes'] as $attrName => $attrValue) {
-				$node->addAttribute($attrName, (string)$attrValue);
-			}
-		}
-
-		// Add text content.
-		if (isset($data['_value']) === true) {
-			$node[0] = (string)$data['_value'];
-		}
-
-		// Add child elements.
-		foreach ($data as $key => $value) {
-			if ($key === '_attributes' || $key === '_value' || is_int($key) === true) {
-				continue;
-			}
-
-			if (is_array($value) === true) {
-				if (isset($value[0]) === true) {
-					// Array of items.
-					foreach ($value as $item) {
-						$child = $node->addChild($key);
-						if (is_array($item) === true) {
-							$this->addDataToXmlNode(node: $child, data: $item);
-						} else {
-							$child[0] = (string)$item;
-						}
-					}
-				} else {
-					// Single object.
-					$child = $node->addChild($key);
-					$this->addDataToXmlNode(node: $child, data: $value);
-				}
-			} else {
-				// Scalar value.
-				$child = $node->addChild($key);
-				$child[0] = (string)$value;
-			}//end if
-		}//end foreach
-	}//end addDataToXmlNode()
-
-	/**
 	 * Convert OpenRegister objects back to ArchiMate format
 	 *
 	 * @param array $objects OpenRegister objects from all schemas.
@@ -2390,6 +2491,7 @@ XML;
 	 * @param array $modulesData Module objects.
 	 * @param array $deelnamesData Deelnames data.
 	 * @param array $options Export options.
+	 * @param array $connectionsData The connection objects, written as flows when options.connections is true (REQ-CDX-004).
 	 *
 	 * @return string Generated XML.
 	 * @spec   openspec/specs/archimate-export/spec.md
@@ -2404,8 +2506,10 @@ XML;
 		array $modulesData,
 		array $deelnamesData = [],
 		array $options = [],
+		array $connectionsData = [],
 	): string {
 		$startTime = microtime(true);
+		$this->lastSkippedConnections = 0;
 		$this->logger->info(
 			'Starting organization ArchiMate export',
 			[
@@ -2457,7 +2561,9 @@ XML;
 				moduleRefMap: $deelnameRefMap,
 				moduleNameMap: $deelnameNameMap,
 				sourcePropDefId: $sourcePropDefId,
-				prefix: 'deelname'
+				prefix: 'deelname',
+				kind: 'shared',
+				partnerMap: $this->buildPartnerMap(deelnamesData: $deelnamesData)
 			);
 			$deelnamesRelationships = $this->generateSpecializationRelationships(
 				moduleRefMap: $deelnameRefMap,
@@ -2479,6 +2585,18 @@ XML;
 			sourcePropDefId: $sourcePropDefId
 		);
 
+		// Step 4b: The organisation's connections as flows (REQ-CDX-004), in the model only.
+		$flows = [];
+		if (($options['connections'] ?? false) === true) {
+			$written = (new ConnectionFlows())->flows(
+				connections: $connectionsData,
+				elements: array_merge(self::elementIdentifiers(baseObjects: $baseObjects), self::applicationIdentifiers(appElements: $allAppElements)),
+				sourcePropDefId: $sourcePropDefId
+			);
+			$flows = $written['relationships'];
+			$this->lastSkippedConnections = $written['skipped'];
+		}
+
 		// Step 5: Build SWC organization folders with typed structure.
 		$swcFolders = $this->buildSwcOrganizationFolders(
 			gebruiktAppElements: $gebruiktAppElements,
@@ -2492,7 +2610,7 @@ XML;
 			baseObjects: $baseObjects,
 			orgName: $orgName,
 			appElements: $allAppElements,
-			relationships: $allRelationships,
+			relationships: array_merge($allRelationships, $flows),
 			viewCopies: $viewCopies,
 			swcFolders: $swcFolders,
 			sourcePropDefId: $sourcePropDefId
@@ -2597,6 +2715,51 @@ XML;
 	}//end buildModuleLookupMaps()
 
 	/**
+	 * The names of the partners that share each module, from deelname gebruik.
+	 *
+	 * The partner is the organisation that owns the gebruik: its consumer's
+	 * name, or the `_sourceOrganization` the view enrichment attaches.
+	 *
+	 * @param array $deelnamesData The deelname gebruik objects.
+	 *
+	 * @return array<string, list<string>> Module ID to partner names, in first-seen order.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function buildPartnerMap(array $deelnamesData): array {
+		$partnerMap = [];
+		foreach ($deelnamesData as $usage) {
+			if (is_object($usage) === true && method_exists($usage, 'jsonSerialize') === true) {
+				$usage = $usage->jsonSerialize();
+			}
+
+			if (is_array($usage) === false) {
+				continue;
+			}
+
+			$moduleId = $usage['module'] ?? null;
+			if (is_string($moduleId) === false && is_int($moduleId) === false) {
+				continue;
+			}
+
+			$partner = $usage['_sourceOrganization'] ?? null;
+			if (empty($partner) === true && is_array($usage['consumer'] ?? null) === true) {
+				$partner = $usage['consumer']['name'] ?? null;
+			}
+
+			if (is_string($partner) === false || $partner === '') {
+				continue;
+			}
+
+			$partnerMap[$moduleId] ??= [];
+			if (in_array($partner, $partnerMap[$moduleId], true) === false) {
+				$partnerMap[$moduleId][] = $partner;
+			}
+		}//end foreach
+
+		return $partnerMap;
+	}//end buildPartnerMap()
+
+	/**
 	 * Check if a Bron property definition exists in base objects, add one if not.
 	 *
 	 * @param array $baseObjects The base objects to check.
@@ -2631,12 +2794,68 @@ XML;
 	}//end ensureBronPropertyDefinition()
 
 	/**
+	 * How many connections the last organisation export skipped: an end was not in the model.
+	 *
+	 * @return int The count.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 */
+	public function lastSkippedConnections(): int {
+		return $this->lastSkippedConnections;
+	}//end lastSkippedConnections()
+
+	/**
+	 * The element identifier of every base element, by its object id: the national provisions a connection can target.
+	 *
+	 * @param array<int, mixed> $baseObjects The base AMEF objects.
+	 *
+	 * @return array<string, string> Identifiers by object id.
+	 */
+	private static function elementIdentifiers(array $baseObjects): array {
+		$identifiers = [];
+		foreach ($baseObjects as $object) {
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$object = $object->jsonSerialize();
+			}
+
+			$objectId = (string)($object['id'] ?? $object['@self']['id'] ?? '');
+			$identifier = (string)($object['xml']['_identifier'] ?? $object['identifier'] ?? '');
+			if (($object['section'] ?? '') === 'element' && $objectId !== '' && $identifier !== '') {
+				$identifiers[$objectId] = $identifier;
+			}
+		}
+
+		return $identifiers;
+	}//end elementIdentifiers()
+
+	/**
+	 * The element identifier of every exported application, by module id; the first one wins.
+	 *
+	 * @param array<int, array<string, mixed>> $appElements The generated application elements.
+	 *
+	 * @return array<string, string> Identifiers by module id.
+	 */
+	private static function applicationIdentifiers(array $appElements): array {
+		$identifiers = [];
+		foreach ($appElements as $element) {
+			$moduleId = (string)($element['moduleId'] ?? '');
+			if ($moduleId !== '' && isset($identifiers[$moduleId]) === false) {
+				$identifiers[$moduleId] = $element['identifier'];
+			}
+		}
+
+		return $identifiers;
+	}//end applicationIdentifiers()
+
+	/**
 	 * Generate ApplicationComponent element arrays for each module.
 	 *
 	 * @param array $moduleRefMap Module to ref component ID map.
 	 * @param array $moduleNameMap Module to name map.
 	 * @param string $sourcePropDefId Bron property definition ID.
 	 * @param string $prefix Optional prefix for IDs.
+	 * @param string $kind own for the organisation's own applications, shared for deelnames.
+	 * @param array $partnerMap Module ID to the names of the partners sharing it.
 	 *
 	 * @return array Array of element data arrays ready for XML generation.
 	 */
@@ -2645,6 +2864,8 @@ XML;
 		array $moduleNameMap,
 		string $sourcePropDefId,
 		string $prefix = '',
+		string $kind = 'own',
+		array $partnerMap = [],
 	): array {
 		$elements = [];
 		$idPrefix = 'id-swc-app-';
@@ -2656,12 +2877,19 @@ XML;
 			$appIdentifier = $idPrefix . $moduleId;
 			$name = $moduleNameMap[$moduleId] ?? 'Module';
 
+			$partner = null;
+			if ($kind === 'shared' && empty($partnerMap[$moduleId]) === false) {
+				$partner = implode(', ', $partnerMap[$moduleId]);
+			}
+
 			$elements[] = [
 				'identifier' => $appIdentifier,
 				'name' => $name,
 				'xsi_type' => 'ApplicationComponent',
 				'bronPropDefId' => $sourcePropDefId,
 				'moduleId' => $moduleId,
+				'kind' => $kind,
+				'partner' => $partner,
 			];
 		}
 
@@ -2739,28 +2967,7 @@ XML;
 
 		// Build a reverse lookup: refCompIdentifier => [(appIdentifier, relIdentifier, moduleName)].
 		// Derived from the actual generated elements and relationships (handles all prefixes).
-		$appNameMap = [];
-		foreach ($appElements as $el) {
-			$appNameMap[$el['identifier']] = $el['name'];
-		}
-
-		$refCompApps = [];
-		foreach ($relationships as $rel) {
-			$appIdentifier = $rel['source'];
-			$refCompIdentifier = $rel['target'];
-			$relIdentifier = $rel['identifier'];
-			$name = $appNameMap[$appIdentifier] ?? 'Module';
-
-			if (isset($refCompApps[$refCompIdentifier]) === false) {
-				$refCompApps[$refCompIdentifier] = [];
-			}
-
-			$refCompApps[$refCompIdentifier][] = [
-				'appIdentifier' => $appIdentifier,
-				'relIdentifier' => $relIdentifier,
-				'name' => $name,
-			];
-		}
+		$refCompApps = $this->buildRefCompApps(appElements: $appElements, relationships: $relationships);
 
 		// Iterate view objects.
 		foreach ($baseObjects as $obj) {
@@ -2813,6 +3020,61 @@ XML;
 		$this->logger->debug('Copied and enriched views', ['count' => count($viewCopies)]);
 		return $viewCopies;
 	}//end copyAndEnrichViews()
+
+	/**
+	 * The applications to nest per reference component, each with its kind.
+	 *
+	 * Every entry carries `kind` (own or shared) and `partner` (the partners'
+	 * names for a shared one, else null). An application both owned and
+	 * shared for the same reference component is listed once, as own.
+	 *
+	 * @param array $appElements Application elements.
+	 * @param array $relationships Relationship data.
+	 *
+	 * @return array Reference component identifier to its application entries.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function buildRefCompApps(array $appElements, array $relationships): array {
+		$elementMap = [];
+		foreach ($appElements as $el) {
+			$elementMap[$el['identifier']] = $el;
+		}
+
+		$refCompApps = [];
+		$ownModules = [];
+		foreach ($relationships as $rel) {
+			$element = $elementMap[$rel['source']] ?? [];
+			$kind = ($element['kind'] ?? 'own');
+			if ($kind === 'own' && isset($element['moduleId']) === true) {
+				$ownModules[$rel['target']][(string)$element['moduleId']] = true;
+			}
+		}
+
+		foreach ($relationships as $rel) {
+			$appIdentifier = $rel['source'];
+			$refCompIdentifier = $rel['target'];
+			$element = $elementMap[$appIdentifier] ?? [];
+			$kind = ($element['kind'] ?? 'own');
+			$moduleId = $element['moduleId'] ?? null;
+
+			if ($kind === 'shared' && $moduleId !== null
+				&& isset($ownModules[$refCompIdentifier][(string)$moduleId]) === true
+			) {
+				continue;
+			}
+
+			$refCompApps[$refCompIdentifier] ??= [];
+			$refCompApps[$refCompIdentifier][] = [
+				'appIdentifier' => $appIdentifier,
+				'relIdentifier' => $rel['identifier'],
+				'name' => $element['name'] ?? 'Module',
+				'kind' => $kind,
+				'partner' => $element['partner'] ?? null,
+			];
+		}
+
+		return $refCompApps;
+	}//end buildRefCompApps()
 
 	/**
 	 * Extract "Titel view SWC" property value from view XML data.
@@ -2916,7 +3178,7 @@ XML;
 		// Inject into top-level nodes.
 		if (isset($viewData['node']) === true && is_array($viewData['node']) === true) {
 			$nodes = $viewData['node'];
-			if ($this->isList(arr: $nodes) === true) {
+			if ($this->isList(arr: $nodes) === false) {
 				$nodes = [$nodes];
 			}
 
@@ -2931,7 +3193,7 @@ XML;
 			if (empty($newConnections) === false) {
 				if (isset($viewData['connection']) === false) {
 					$viewData['connection'] = [];
-				} elseif ($this->isList(arr: $viewData['connection']) === true) {
+				} elseif ($this->isList(arr: $viewData['connection']) === false) {
 					$viewData['connection'] = [$viewData['connection']];
 				}
 
@@ -2976,7 +3238,7 @@ XML;
 				// Ensure nested nodes array.
 				if (isset($node['node']) === false) {
 					$node['node'] = [];
-				} elseif ($this->isList(arr: $node['node']) === true) {
+				} elseif ($this->isList(arr: $node['node']) === false) {
 					$node['node'] = [$node['node']];
 				}
 
@@ -2999,11 +3261,7 @@ XML;
 						'_y' => (string)max(20, $childY),
 						'_w' => (string)$childW,
 						'_h' => (string)$childH,
-						'style' => [
-							'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
-							'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
-							'font' => ['_name' => 'Segoe UI', '_size' => '9'],
-						],
+						'style' => $this->applicationNodeStyle(kind: $app['kind'] ?? 'own'),
 					];
 
 					$node['node'][] = $childNode;
@@ -3025,7 +3283,7 @@ XML;
 			// Recurse into nested nodes.
 			if (isset($node['node']) === true && is_array($node['node']) === true) {
 				$nestedNodes = $node['node'];
-				if ($this->isList(arr: $nestedNodes) === true) {
+				if ($this->isList(arr: $nestedNodes) === false) {
 					$nestedNodes = [$nestedNodes];
 				}
 
@@ -3041,6 +3299,24 @@ XML;
 
 		return $nodes;
 	}//end processNodesForInjection()
+
+	/**
+	 * The style of a nested application node: own green, shared blue.
+	 *
+	 * @param string $kind own or shared; anything else is styled as own.
+	 *
+	 * @return array The style array, in the StyleType order of the writer.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function applicationNodeStyle(string $kind): array {
+		$colours = self::APPLICATION_NODE_STYLES[$kind] ?? self::APPLICATION_NODE_STYLES['own'];
+
+		return [
+			'fillColor' => $colours['fillColor'],
+			'lineColor' => $colours['lineColor'],
+			'font' => ['_name' => 'Segoe UI', '_size' => '9'],
+		];
+	}//end applicationNodeStyle()
 
 	/**
 	 * Build SWC organization folder items.
@@ -3190,6 +3466,7 @@ XML;
 		}
 
 		// Add SWC application elements.
+		$hasSharedBy = false;
 		foreach ($appElements as $appEl) {
 			$elNode = $elementsFolder->addChild('element');
 			$elNode->addAttribute('identifier', $appEl['identifier']);
@@ -3201,6 +3478,13 @@ XML;
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $appEl['bronPropDefId']);
 			$propEl->addChild('value', 'Stackiq');
+			// A shared application names the partner that shares it.
+			if (($appEl['kind'] ?? 'own') === 'shared' && empty($appEl['partner']) === false) {
+				$sharedByProp = $propsEl->addChild('property');
+				$sharedByProp->addAttribute('propertyDefinitionRef', self::SHARED_BY_PROPDEF_ID);
+				$sharedByProp->addChild('value', htmlspecialchars($appEl['partner']));
+				$hasSharedBy = true;
+			}
 		}
 
 		// --- Relationships section ---.
@@ -3233,6 +3517,11 @@ XML;
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $rel['bronPropDefId']);
 			$propEl->addChild('value', 'Stackiq');
+			foreach (($rel['properties'] ?? []) as $property) {
+				$extraEl = $propsEl->addChild('property');
+				$extraEl->addAttribute('propertyDefinitionRef', $property['ref']);
+				$extraEl->addChild('value', htmlspecialchars($property['value'], ENT_XML1));
+			}
 		}
 
 		// --- Property Definitions section ---.
@@ -3254,12 +3543,32 @@ XML;
 			}
 		}
 
+		// The connection flow properties (REQ-CDX-004), when a flow uses them.
+		if (str_contains(json_encode($relationships), 'id-swc-propdef-connection-') === true) {
+			foreach (ConnectionFlows::PROPERTY_DEFINITIONS as $identifier => $name) {
+				$flowPropNode = $propDefsFolder->addChild('propertyDefinition');
+				$flowPropNode->addAttribute('identifier', $identifier);
+				$flowPropNode->addAttribute('type', 'string');
+				$flowName = $flowPropNode->addChild('name', $name);
+				$flowName->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+			}
+		}
+
 		// Add Bron property definition if we created it.
 		if ($sourcePropDefId === 'id-swc-propdef-bron') {
 			$propDefNode = $propDefsFolder->addChild('propertyDefinition');
 			$propDefNode->addAttribute('identifier', $sourcePropDefId);
 			$propDefNode->addAttribute('type', 'string');
 			$nameChild = $propDefNode->addChild('name', 'Bron');
+			$nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+		}
+
+		// Add the Gedeeld door property definition when a shared element uses it.
+		if ($hasSharedBy === true) {
+			$propDefNode = $propDefsFolder->addChild('propertyDefinition');
+			$propDefNode->addAttribute('identifier', self::SHARED_BY_PROPDEF_ID);
+			$propDefNode->addAttribute('type', 'string');
+			$nameChild = $propDefNode->addChild('name', 'Gedeeld door');
 			$nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
 		}
 

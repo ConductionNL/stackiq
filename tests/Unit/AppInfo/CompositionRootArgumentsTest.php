@@ -3,7 +3,11 @@
 /**
  * Composition-root argument tests.
  *
- * `lib/AppInfo/Application.php` registers a handful of services with a
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * The composition root (`lib/AppInfo/Application.php` and the registrar of each
+ * component it calls) registers a handful of services with a
  * hand-written factory closure — `return new Foo(bar: $container->get(...))`
  * — instead of letting Nextcloud autowire them. That is a deliberate choice
  * (some of these classes need an argument the container cannot infer), but it
@@ -23,7 +27,7 @@
  * `GET /api/stackiq/api/me` returned **500 for every user** on
  * `development` until it was noticed by an end-to-end run.
  *
- * These tests close that hole. They read `Application.php`'s own source,
+ * These tests close that hole. They read the composition root's own source,
  * extract every `new <Class>(...)` in it, and compare the call against the
  * target class's real constructor via reflection.
  *
@@ -50,11 +54,17 @@ use ReflectionClass;
 class CompositionRootArgumentsTest extends TestCase {
 
 	/**
-	 * Absolute path to the composition root.
+	 * The composition root: the bootstrap and the registrar of each component.
 	 *
-	 * @var string
+	 * @var string[]
 	 */
-	private string $applicationPhp;
+	private const COMPOSITION_ROOT = [
+		'lib/AppInfo/Application.php',
+		'lib/Service/ServiceRegistrar.php',
+		'lib/Service/Registration/ServiceFactories.php',
+		'lib/BackgroundJob/JobRegistrar.php',
+		'lib/Controller/ControllerRegistrar.php',
+	];
 
 	/**
 	 * Parsed `new <Class>(...)` call sites found in the composition root.
@@ -74,15 +84,18 @@ class CompositionRootArgumentsTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->applicationPhp = dirname(__DIR__, 3) . '/lib/AppInfo/Application.php';
-		self::assertFileExists($this->applicationPhp, 'the composition root must exist');
-
-		$source = file_get_contents($this->applicationPhp);
-		$this->callSites = $this->parseNewCalls(
-			$source,
-			$this->buildUseMap($source),
-			$this->currentNamespace($source)
-		);
+		$this->callSites = [];
+		foreach (self::COMPOSITION_ROOT as $pattern) {
+			$paths = glob(dirname(__DIR__, 3) . '/' . $pattern);
+			self::assertNotEmpty($paths, 'the composition root must exist: ' . $pattern);
+			foreach ($paths as $path) {
+				$source = file_get_contents($path);
+				foreach ($this->parseNewCalls($source, $this->buildUseMap($source), $this->currentNamespace($source)) as $site) {
+					$site['file']      = basename($path);
+					$this->callSites[] = $site;
+				}
+			}
+		}
 
 	}//end setUp()
 
@@ -152,7 +165,7 @@ class CompositionRootArgumentsTest extends TestCase {
 						'%s:%d new %s — named argument $%s is passed %d times '
 						. '(PHP fatals with "Named parameter $%s overwrites '
 						. 'previous argument")',
-						basename($this->applicationPhp),
+						$site['file'],
 						$site['line'],
 						$reflection->getShortName(),
 						$name,
@@ -165,7 +178,7 @@ class CompositionRootArgumentsTest extends TestCase {
 					$problems[] = sprintf(
 						'%s:%d new %s — named argument $%s does not exist on '
 						. '%s::__construct() (it takes: %s)',
-						basename($this->applicationPhp),
+						$site['file'],
 						$site['line'],
 						$reflection->getShortName(),
 						$name,
@@ -193,7 +206,7 @@ class CompositionRootArgumentsTest extends TestCase {
 					'%s:%d new %s — required constructor parameter $%s is not '
 					. 'supplied (%d of %d arguments given). Every request that '
 					. 'resolves this service will die with ArgumentCountError.',
-					basename($this->applicationPhp),
+					$site['file'],
 					$site['line'],
 					$reflection->getShortName(),
 					$parameter->getName(),
@@ -238,7 +251,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		self::assertCount(
 			1,
 			$sites,
-			'Application.php must register exactly one hand-written '
+			'The composition root must register exactly one hand-written '
 			. 'ContactpersonenController factory (the /me endpoint).'
 		);
 
@@ -264,7 +277,7 @@ class CompositionRootArgumentsTest extends TestCase {
 			[],
 			$missing,
 			'GET /api/stackiq/api/me resolves ContactpersonenController '
-			. 'through the hand-written factory in Application.php. It does not '
+			. 'through the hand-written factory in ControllerRegistrar.php. It does not '
 			. 'pass: $' . implode(', $', $missing) . '. Every call to /me will '
 			. 'return 500 with "Too few arguments to function '
 			. 'ContactpersonenController::__construct()".'

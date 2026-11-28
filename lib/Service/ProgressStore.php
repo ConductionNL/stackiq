@@ -14,14 +14,17 @@
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -46,7 +49,7 @@ use OCP\IConfig;
  * sees, on instances that run without a shared cache; a dedicated table is
  * the alternative if it ever shows up.
  *
- * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
  */
 class ProgressStore {
 
@@ -103,7 +106,7 @@ class ProgressStore {
 	 * @param IConfig       $config       System config, which names the distributed cache class.
 	 * @param IAppConfig    $appConfig    App config, the store when no shared cache is configured.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function __construct(
 		ICacheFactory $cacheFactory,
@@ -150,7 +153,7 @@ class ProgressStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function setProgress(string $operationId, array $progress): void {
 		if ($this->cache === null) {
@@ -173,7 +176,7 @@ class ProgressStore {
 	 *
 	 * @return array<string, mixed>|null The snapshot, or null when there is none or it expired.
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(string $operationId): ?array {
 		$progress = $this->get(key: 'progress_' . $operationId);
@@ -183,6 +186,43 @@ class ProgressStore {
 
 		return null;
 	}//end getProgress()
+
+	/**
+	 * Point an operation type at its running operation, or at none.
+	 *
+	 * @param string      $operationType The operation type, e.g. `organisation_sync`.
+	 * @param string|null $operationId   The running operation, or null when none runs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function setCurrent(string $operationType, ?string $operationId): void {
+		if ($operationId === null) {
+			$this->remove(key: 'current_' . $operationType);
+			return;
+		}
+
+		$this->set(key: 'current_' . $operationType, value: $operationId);
+	}//end setCurrent()
+
+	/**
+	 * The running operation of an operation type, or null when none runs.
+	 *
+	 * @param string $operationType The operation type.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function getCurrent(string $operationType): ?string {
+		$operationId = $this->get(key: 'current_' . $operationType);
+		if (is_string($operationId) === false || $operationId === '') {
+			return null;
+		}
+
+		return $operationId;
+	}//end getCurrent()
 
 	/**
 	 * Record a cancel request for an operation.
@@ -241,7 +281,7 @@ class ProgressStore {
 			return;
 		}
 
-		$this->appConfig->deleteKey(Application::APP_ID, self::configKey(key: 'cancel_' . $operationId));
+		$this->appConfig->deleteKey(AppIdentity::APP_ID, self::configKey(key: 'cancel_' . $operationId));
 	}//end clearCancel()
 
 	/**
@@ -249,17 +289,17 @@ class ProgressStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 * @spec openspec/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function removeExpired(): void {
 		if ($this->cache !== null) {
 			return;
 		}
 
-		foreach ($this->appConfig->searchKeys(Application::APP_ID, self::CONFIG_PREFIX, lazy: true) as $configKey) {
-			$entry = $this->appConfig->getValueArray(Application::APP_ID, $configKey, [], lazy: true);
+		foreach ($this->appConfig->searchKeys(AppIdentity::APP_ID, self::CONFIG_PREFIX, lazy: true) as $configKey) {
+			$entry = $this->appConfig->getValueArray(AppIdentity::APP_ID, $configKey, [], lazy: true);
 			if ((int) ($entry['expires'] ?? 0) < time()) {
-				$this->appConfig->deleteKey(Application::APP_ID, $configKey);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, $configKey);
 			}
 		}
 	}//end removeExpired()
@@ -280,7 +320,7 @@ class ProgressStore {
 		}
 
 		$this->appConfig->clearCache();
-		$entry = $this->appConfig->getValueArray(Application::APP_ID, self::configKey(key: $key), [], lazy: true);
+		$entry = $this->appConfig->getValueArray(AppIdentity::APP_ID, self::configKey(key: $key), [], lazy: true);
 		if ((int) ($entry['expires'] ?? 0) < time()) {
 			return null;
 		}
@@ -303,12 +343,28 @@ class ProgressStore {
 		}
 
 		$this->appConfig->setValueArray(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::configKey(key: $key),
 			['expires' => time() + self::STORE_TTL, 'value' => $value],
 			lazy: true
 		);
 	}//end set()
+
+	/**
+	 * Remove an entry.
+	 *
+	 * @param string $key The entry.
+	 *
+	 * @return void
+	 */
+	private function remove(string $key): void {
+		if ($this->cache !== null) {
+			$this->cache->remove(key: $key);
+			return;
+		}
+
+		$this->appConfig->deleteKey(AppIdentity::APP_ID, self::configKey(key: $key));
+	}//end remove()
 
 	/**
 	 * The app config key of an entry, hashed: an operation id may be longer than a key may be (64).

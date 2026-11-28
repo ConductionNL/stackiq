@@ -50,7 +50,7 @@ async function seed(schema: string, data: Record<string, unknown>): Promise<stri
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.org = await seed('organization', { name: `${RUN_ID} municipality` })
+	ids.org = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality' })
 	ids.anna = await seed('contactPerson', {
 		contactsUid: anna,
 		organization: ids.org,
@@ -162,4 +162,18 @@ test('Go live moves a planned usage to In production', async ({ page }) => {
 	await expect(page.getByText('In production').first()).toBeVisible({
 		timeout: 30000,
 	})
+})
+
+// @e2e openspec/specs/application-page/spec.md#scenario-a-supplier-sees-which-organisations-use-its-product
+test('a usage saved without a provider carries the supplier of its application', async () => {
+	const supplier = await seed('organization', { name: `${RUN_ID} supplier`, type: 'Supplier' })
+	const product = await seed('module', { name: `${RUN_ID} supplied application`, provider: supplier })
+	// The usage form hides `provider`, so it saves none.
+	const usage = await seed('usage', { consumer: ids.org, module: product, status: 'Planned' })
+
+	const res = await apiCtx.get(`/index.php/apps/openregister/api/objects/${cfg.register}/usage/${usage}`)
+	expect(res.status()).toBe(200)
+	const body = await res.json()
+	const provider = body.provider
+	expect(typeof provider === 'string' ? provider : provider?.id ?? provider?.uuid).toBe(supplier)
 })

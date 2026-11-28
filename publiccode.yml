@@ -2,17 +2,32 @@ publiccodeYmlVersion: "0.4"
 
 name: Stackiq
 url: "https://github.com/ConductionNL/stackiq"
-softwareVersion: "0.2.2"
-releaseDate: "2026-05-26"
+landingURL: "https://stackiq.conduction.nl"
+softwareVersion: "0.2.0"
+releaseDate: "2026-09-06"
 developmentStatus: stable
 softwareType: "standalone/other"
+logo: img/app-store.svg
 
 platforms:
-  - nextcloud
+  - web
 
 categories:
   - it-asset-management
   - knowledge-management
+
+intendedAudience:
+  countries:
+    - nl
+  scope:
+    - government
+
+dependsOn:
+  open:
+    - name: Nextcloud
+      versionMin: "32"
+      versionMax: "35"
+    - name: OpenRegister
 
 description:
   en:
@@ -25,11 +40,23 @@ description:
       deployed applications. Built on Open Register, it integrates with Nextcloud's
       collaboration ecosystem and supports Dutch government software inventory
       requirements.
+      Conduction maintains this component within the Nextcloud ISV programme.
+      Install it from the Nextcloud App Store at https://apps.nextcloud.com/apps/stackiq.
     features:
-      - Software asset cataloguing
-      - License tracking
-      - Application landscape overview
-      - Integration with Nextcloud collaboration tools
+      - Register the applications in your organisation's IT landscape
+      - Track modules with their versions, suppliers and dependencies
+      - Map connections between applications and modules
+      - Link contracts and licence agreements to applications
+      - Manage organisations and their contact persons
+      - Create Nextcloud accounts from contact persons in OpenRegister
+      - Assign groups automatically by role
+      - Share and synchronise catalogue data over a federated network
+      - Publish your software catalogue as open data
+      - Synchronise organisation contacts in the background
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-applications.png
+      - img/screenshot-connections.png
 
   nl:
     shortDescription: >
@@ -41,11 +68,23 @@ description:
       te houden en een overzicht te bewaren van geïmplementeerde applicaties.
       Gebouwd op Open Register integreert het met het Nextcloud-ecosysteem en
       ondersteunt de vereisten voor softwareinventarisatie van de Nederlandse overheid.
+      Conduction onderhoudt dit component binnen het Nextcloud ISV-programma.
+      Installeer het vanuit de Nextcloud App Store op https://apps.nextcloud.com/apps/stackiq.
     features:
-      - Softwareactiva catalogiseren
-      - Licentiebeheer
-      - Overzicht applicatielandschap
-      - Integratie met Nextcloud-samenwerkingstools
+      - Applicaties in het IT-landschap van uw organisatie registreren
+      - Modules bijhouden met hun versies, leveranciers en afhankelijkheden
+      - Koppelingen tussen applicaties en modules vastleggen
+      - Contracten en licentieafspraken aan applicaties koppelen
+      - Organisaties en hun contactpersonen beheren
+      - Nextcloud-accounts aanmaken vanuit contactpersonen in OpenRegister
+      - Groepen automatisch toewijzen op basis van rol
+      - Catalogusgegevens delen en synchroniseren via een gefedereerd netwerk
+      - Uw softwarecatalogus publiceren als open data
+      - Organisatiecontacten op de achtergrond synchroniseren
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-applications.png
+      - img/screenshot-connections.png
 
 legal:
   license: EUPL-1.2
@@ -53,7 +92,12 @@ legal:
   repoOwner: "Conduction B.V."
 
 maintenance:
-  type: community
+  type: contract
+  contractors:
+    - name: Conduction B.V.
+      until: "2028-12-31"
+      email: info@conduction.nl
+      website: https://conduction.nl
   contacts:
     - name: Conduction B.V.
       email: info@conduction.nl
@@ -62,5 +106,45 @@ maintenance:
 localisation:
   localisationReady: true
   availableLanguages:
-    - nl
+    - be
+    - bg
+    - bs
+    - ca
+    - cs
+    - da
+    - de
+    - el
     - en
+    - en-US
+    - es
+    - et
+    - fi
+    - fr
+    - ga
+    - hr
+    - hu
+    - is
+    - it
+    - lb
+    - lt
+    - lv
+    - mk
+    - mt
+    - nb
+    - nl
+    - pl
+    - pt
+    - rm
+    - ro
+    - ru
+    - sk
+    - sl
+    - sq
+    - sr
+    - sv
+    - tr
+    - uk
+
+# Common Ground layer (nl.vng profile), as a standard supports entry.
+supports:
+  - id: https://commonground.nl/cms/view/54476261/5-lagen-model#process

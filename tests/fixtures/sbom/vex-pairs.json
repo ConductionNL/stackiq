@@ -1,0 +1,50 @@
+{
+    "empty": [],
+    "non-array entries": [],
+    "no id": [],
+    "empty id": [],
+    "numeric id": [],
+    "no affects": [],
+    "empty affects": [],
+    "odd affects": [],
+    "one pair": [
+        {
+            "cveId": "CVE-1",
+            "componentBomRef": "pkg:a"
+        }
+    ],
+    "id times refs": [
+        {
+            "cveId": "CVE-1",
+            "componentBomRef": "pkg:a"
+        },
+        {
+            "cveId": "CVE-1",
+            "componentBomRef": "pkg:b"
+        },
+        {
+            "cveId": "CVE-2",
+            "componentBomRef": "pkg:a"
+        },
+        {
+            "cveId": "CVE-1",
+            "componentBomRef": "pkg:a"
+        }
+    ],
+    "keyed affects": [
+        {
+            "cveId": "CVE-3",
+            "componentBomRef": "pkg:x"
+        },
+        {
+            "cveId": "CVE-3",
+            "componentBomRef": "pkg:y"
+        }
+    ],
+    "keyed block": [
+        {
+            "cveId": "CVE-4",
+            "componentBomRef": "pkg:z"
+        }
+    ]
+}

@@ -1,0 +1,75 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "operations-technology-components: the servers, virtual machines, databases, network devices and end-user devices an organisation runs, recorded by hand (stackiq records, it does not discover). The menu entry is a child of Applications (ADR-097: no new top-level entry). Technologie is a type:index page with quick filters for hardware and platform software (the class enum split in two); TechnologieDetail is a type:detail page with the component's data, what runs on it and the applications in use that run on it, each opening its own page. Status transitions come from the schema's x-openregister-lifecycle (plan-to-in-use, phase-out, retire).",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{ "id": "Technologie", "label": "Technology", "icon": "Server", "route": "Technologie", "order": 12 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Technologie",
+			"route": "/technologie",
+			"type": "index",
+			"title": "Technology",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "technologyComponent",
+				"description": "The servers, virtual machines, databases, network devices and other technology your organisation runs, and when their support ends.",
+				"columns": [
+					"name",
+					"class",
+					{ "key": "organization", "label": "Organisation", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "organization", "labelField": "name" } },
+					"status",
+					"endOfSupport"
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Hardware", "filter": { "class": ["Physical server", "Virtual machine", "Network device", "Storage", "End-user device"] }, "icon": "Server" },
+					{ "label": "Platform software", "filter": { "class": ["Container platform", "Database", "Middleware", "Runtime or framework", "Operating system"] }, "icon": "Database" },
+					{ "label": "To be phased out", "filter": { "status": "To be phased out" }, "icon": "AlertCircle" },
+					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" }
+				],
+				"defaultSort": { "field": "endOfSupport", "direction": "asc" },
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "TechnologieDetail",
+			"route": "/technologie/:id",
+			"type": "detail",
+			"title": "Technology component",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "technologyComponent",
+				"_note": "The component's data 8 wide (class, owner, status, software version, end of support with where the date came from, the hardware fields and what it runs on), then the components running on it and the applications in use running on it, both object lists filtered on runsOn. eolSource is shown so a reader sees whether a date came from the feed or was typed.",
+				"lifecycleActions": { "field": "status" },
+				"widgets": [
+					{ "id": "tc-data", "type": "data", "title": "Technology component", "icon": "Server", "content": { "columns": 2, "include": [ "name", "class", "archimateType", "organization", "status", "software", "endOfSupport", "eolSource", "eolUpdatedOn", "runsOn" ] } },
+					{ "id": "tc-hardware", "type": "data", "title": "Hardware", "icon": "TagOutline", "content": { "columns": 1, "include": [ "manufacturer", "model", "serialNumber", "assetTag", "location" ] } },
+					{ "id": "tc-runs-here", "type": "object-list", "title": "Runs on this component", "icon": "Server", "content": { "register": "@resolve:voorzieningen_register", "schema": "technologyComponent", "filter": { "runsOn": "@objectId" }, "columns": [ "name", "class", "status", "endOfSupport" ], "limit": 25, "rowRoute": "TechnologieDetail", "allowCreate": false, "emptyText": "Nothing runs on this component yet" } },
+					{ "id": "tc-usages", "type": "object-list", "title": "Applications in use here", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "runsOn": "@objectId" }, "columns": [ { "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, "status" ], "limit": 25, "rowRoute": "GebruikDetail", "allowCreate": false, "emptyText": "No application in use runs on this component yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "tc-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "2", "widgetId": "tc-hardware", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 },
+					{ "id": "3", "widgetId": "tc-runs-here", "gridX": 0, "gridY": 7, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "4", "widgetId": "tc-usages", "gridX": 6, "gridY": 7, "gridWidth": 6, "gridHeight": 5 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

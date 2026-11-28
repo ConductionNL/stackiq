@@ -28,6 +28,8 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserSession;
@@ -62,7 +64,7 @@ use RuntimeException;
  * deliberate follow-up; splitting it is a behaviour-affecting refactor and is out of scope for a
  * quality-gate-only change.
  */
-class FacetService {
+class FacetService implements FacetServiceInterface {
 
 	/**
 	 * Distributed cache for facet responses.
@@ -102,13 +104,6 @@ class FacetService {
 	private const SUPPORTED_SCHEMAS = ['module', 'catalogService'];
 
 	/**
-	 * GEMMA dimensions always present in the response (even when empty).
-	 *
-	 * @var string[]
-	 */
-	private const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain'];
-
-	/**
 	 * The element property the domain dimension reads: the register's
 	 * `element` schema declares it as `domein`, and the GEMMA import stores
 	 * the "Domein" property under that lower-cased name.
@@ -121,7 +116,7 @@ class FacetService {
 	 * Constructor for FacetService.
 	 *
 	 * @param ContainerInterface $container PSR-11 container interface (for lazy ObjectService lookup).
-	 * @param SettingsService $settingsService Settings service for voorzieningen register/schema configuration.
+	 * @param CatalogueLocator $catalogue The voorzieningen register/schema configuration.
 	 * @param ArchiMateService $archiMateService Reused for bounded `element`/`relationship` lookups
 	 *                                           (domain/applicationService resolution) instead of
 	 *                                           duplicating AMEF register/schema resolution logic.
@@ -132,7 +127,7 @@ class FacetService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly ArchiMateService $archiMateService,
 		private readonly ViewQueryBuilder $queryBuilder,
 		private readonly IUserSession $userSession,
@@ -197,10 +192,12 @@ class FacetService {
 
 		$result = $this->computeFacetsForRequest(
 			objectService: $objectService,
-			schema: $schema,
-			normalizedFilters: $normalizedFilters,
-			normalizedSearch: $normalizedSearch,
-			organization: $organization
+			request: [
+				'schema' => $schema,
+				'filters' => $normalizedFilters,
+				'search' => $normalizedSearch,
+				'organization' => $organization,
+			]
 		);
 
 		$this->facetsCache->set(key: $cacheKey, value: $result, ttl: self::CACHE_TTL);
@@ -237,30 +234,20 @@ class FacetService {
 	 * (including `_meta.matchedObjectIds` for the frontend's list narrowing).
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param string $schema `module` or `dienst`.
-	 * @param array<string,string[]> $normalizedFilters Normalized selected filters.
-	 * @param string|null $normalizedSearch Normalized free-text query.
-	 * @param string|null $organization Optional organisation override.
+	 * @param array $request The request: `schema` (`module` or `dienst`), `filters` (the normalized
+	 *                       selected filters), `search` (the normalized free-text query or null) and
+	 *                       `organization` (the optional organisation override).
 	 *
 	 * @return array{referenceComponent: array, standard: array, applicationService: array,
 	 *     domain: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 */
-	private function computeFacetsForRequest(
-		ObjectServiceInterface $objectService,
-		string $schema,
-		array $normalizedFilters,
-		?string $normalizedSearch,
-		?string $organization,
-	): array {
+	private function computeFacetsForRequest(ObjectServiceInterface $objectService, array $request): array {
 		$startTime = microtime(true);
+		$schema    = $request['schema'];
 
-		$baseObjects = $this->fetchBaseObjects(
-			objectService: $objectService,
-			schema: $schema,
-			search: $normalizedSearch,
-			organization: $organization
-		);
+		$fetched     = $this->fetchBaseObjects(objectService: $objectService, request: $request);
+		$baseObjects = $fetched['objects'];
 
 		$modulesByObjectId = $this->resolveModulesPerObject(
 			objectService: $objectService,
@@ -268,16 +255,28 @@ class FacetService {
 			baseObjects: $baseObjects
 		);
 
-		$dimValsByObjId = $this->buildDimensionValueMap(modulesByObjectId: $modulesByObjectId);
+		[$dimValsByObjId, $definitions] = $this->dimensionValuesAndDefinitions(modulesByObjectId: $modulesByObjectId);
+
+		// Supplier (insight-supplier-facet D3): the base object's OWN provider,
+		// for a service too, keyed by organisation id and labelled by name (D2).
+		$supplierIds = [];
+		foreach ($baseObjects as $object) {
+			$objectId = $this->objectIdentifier(object: $object);
+			$ids = self::relatedIdentifier(value: ($object['provider'] ?? null));
+			$dimValsByObjId[$objectId]['supplier'] = $ids;
+			$supplierIds = array_merge($supplierIds, $ids);
+		}
 
 		$facets = $this->computeFacets(
 			dimValsByObjId: $dimValsByObjId,
-			selectedFilters: $normalizedFilters
+			selectedFilters: $request['filters'],
+			labels: ['supplier' => $this->organisationNames(objectService: $objectService, identifiers: array_values(array_unique($supplierIds)))]
 		);
+		$facets['referenceComponent'] = self::withDefinitions(buckets: $facets['referenceComponent'], definitions: $definitions);
 
 		$matchedObjectIds = $this->filterObjectIds(
 			dimValsByObjId: $dimValsByObjId,
-			selectedFilters: $normalizedFilters,
+			selectedFilters: $request['filters'],
 			excludeDimension: null
 		);
 
@@ -300,6 +299,9 @@ class FacetService {
 					'processingTimeMs' => $processingTimeMs,
 					'cached' => false,
 					'matchedObjectIds' => array_values($matchedObjectIds),
+					// The base set stopped at the paging ceiling, so the ids may be incomplete
+					// (insight-exports-and-custom-reports: an export says so in its last row).
+					'truncated' => $fetched['truncated'],
 				],
 			]
 		);
@@ -361,12 +363,19 @@ class FacetService {
 	 * @param array<string,string[]> $filters Normalized filters.
 	 * @param string|null $search Free-text query.
 	 * @param string|null $organization Organisation override.
+	 * @param array $dimensions The facet dimension set the answer covers.
 	 *
 	 * @return string Cache key.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-results-are-cached
 	 */
-	private function buildCacheKey(string $schema, array $filters, ?string $search, ?string $organization): string {
+	private function buildCacheKey(
+		string $schema,
+		array $filters,
+		?string $search,
+		?string $organization,
+		array $dimensions = self::DIMENSIONS,
+	): string {
 		$user = $this->userSession->getUser();
 
 		$userId = 'anonymous';
@@ -385,6 +394,9 @@ class FacetService {
 			'search' => $search,
 			'organization' => $organization ?? $this->getCurrentOrganisation(),
 			'user' => $userId,
+			// The dimension set: an answer cached before a dimension was added
+			// (insight-supplier-facet) is not served after it.
+			'dimensions' => $dimensions,
 		];
 
 		return 'facets_' . md5(json_encode($keyData));
@@ -397,28 +409,98 @@ class FacetService {
 	 * unbounded `searchObjects()` call.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param string $schema `module` or `dienst`.
-	 * @param string|null $search Free-text query.
-	 * @param string|null $organization Organisation override.
+	 * @param array $request The request: `schema` (`module` or `dienst`), `search` (the free-text
+	 *                       query or null) and `organization` (the organisation override or null).
 	 *
-	 * @return array<int,array> The candidate objects.
+	 * @return array{objects: array<int,array>, truncated: bool} The candidate objects, and whether the paging ceiling cut them.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-must-respect-the-callers-rbactenant-context
+	 * @spec openspec/changes/archive/2026-11-25-insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
 	 */
-	private function fetchBaseObjects(ObjectServiceInterface $objectService, string $schema, ?string $search, ?string $organization): array {
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+	private function fetchBaseObjects(ObjectServiceInterface $objectService, array $request): array {
+		$baseQuery = $this->baseObjectQuery(request: $request);
+		if ($baseQuery === null) {
+			return ['objects' => [], 'truncated' => false];
+		}
+
+		$fetched   = $this->fetchBasePages(objectService: $objectService, baseQuery: $baseQuery);
+		$truncated = ($fetched['page'] > self::MAX_BASE_PAGES);
+		if ($truncated === true) {
+			$this->logPagingCeiling(schema: $request['schema']);
+		}
+
+		return ['objects' => self::withoutMerged(objects: $fetched['objects']), 'truncated' => $truncated];
+	}//end fetchBaseObjects()
+
+	/**
+	 * The objects without those OpenRegister merged into another record, so
+	 * the lists and their facet counts leave them out. A merged record keeps
+	 * its own detail page.
+	 *
+	 * @param array<int, array<string, mixed>> $objects The normalised objects.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 */
+	public static function withoutMerged(array $objects): array {
+		return array_values(
+			array_filter(
+				$objects,
+				static fn (array $object): bool => ($object['recordStatus'] ?? null) !== 'Merged'
+			)
+		);
+	}//end withoutMerged()
+
+	/**
+	 * The base query of a facet request: the configured register and schema,
+	 * the organisation scope and the search filter; null (logged) when the
+	 * register or schema is not configured.
+	 *
+	 * @param array $request The request: `schema`, `search` and `organization`.
+	 *
+	 * @return array|null
+	 */
+	private function baseObjectQuery(array $request): ?array {
+		$ids = $this->configuredRegisterSchema(schema: $request['schema']);
+		if ($ids === null) {
+			return null;
+		}
+
+		$baseQuery = ['@self' => ['register' => (int)$ids['register'], 'schema' => (int)$ids['schema']]];
+
+		// RBAC/tenant scoping: identical convention to ViewService — an explicit
+		// organisation filter, `_rbac`/`_multitenancy` left at their `true`
+		// defaults (no separate unscoped counting path).
+		$orgToApply = $request['organization'] ?? $this->getCurrentOrganisation();
+		if ($orgToApply !== null) {
+			$baseQuery['@self']['organisation'] = $orgToApply;
+		}
+
+		return $this->queryBuilder->applySearchFilter(baseQuery: $baseQuery, search: $request['search']);
+	}//end baseObjectQuery()
+
+	/**
+	 * The voorzieningen register and the schema's id, or null (logged) when either is not configured.
+	 *
+	 * @param string $schema The facet schema.
+	 *
+	 * @return array{register: mixed, schema: mixed}|null
+	 */
+	private function configuredRegisterSchema(string $schema): ?array {
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		// NOT `$schema . '_schema'`: the slugs are English now and the stored
 		// config keys are still Dutch, so the derived key would miss and this
 		// method would log "not configured" and return an empty facet set —
 		// which renders as a page with no filters rather than as an error.
 		//
-		// Read as a CONSTANT rather than through SettingsService: this class
+		// Read as a CONSTANT rather than through CatalogueLocator: this class
 		// takes that service as a collaborator and every test mocks it, so a
 		// method call here returns the mock's default and the lookup misses in
 		// exactly the tests meant to catch that.
-		$schemaKey = (SettingsService::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
+		$schemaKey = (CatalogueLocator::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
 		$schemaId = ($voorzieningenConfig[$schemaKey] ?? null);
 
 		if (empty($registerId) === true || empty($schemaId) === true) {
@@ -426,60 +508,73 @@ class FacetService {
 				message: 'FacetService: voorzieningen register/schema not configured',
 				context: ['schema' => $schema]
 			);
-			return [];
+			return null;
 		}
 
-		$baseQuery = [
-			'@self' => [
-				'register' => (int)$registerId,
-				'schema' => (int)$schemaId,
-			],
-		];
+		return ['register' => $registerId, 'schema' => $schemaId];
+	}//end configuredRegisterSchema()
 
-		// RBAC/tenant scoping: identical convention to ViewService — an explicit
-		// organisation filter, `_rbac`/`_multitenancy` left at their `true`
-		// defaults (no separate unscoped counting path).
-		$orgToApply = $organization ?? $this->getCurrentOrganisation();
-		if ($orgToApply !== null) {
-			$baseQuery['@self']['organisation'] = $orgToApply;
-		}
-
-		$baseQuery = $this->queryBuilder->applySearchFilter(baseQuery: $baseQuery, search: $search);
-
+	/**
+	 * Read the base query page by page until a short or the last page, or the paging ceiling.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param array $baseQuery The base query.
+	 *
+	 * @return array{objects: array<int, array>, page: int} The objects, and the page paging stopped at.
+	 */
+	private function fetchBasePages(ObjectServiceInterface $objectService, array $baseQuery): array {
 		$allObjects = [];
 		$page = 1;
 
 		while ($page <= self::MAX_BASE_PAGES) {
-			$pagedQuery = $baseQuery;
-			$pagedQuery['_limit'] = self::BASE_OBJECT_LIMIT;
-			$pagedQuery['_page'] = $page;
-
-			$paginated = $objectService->searchObjectsPaginated($pagedQuery);
+			$paginated = $objectService->searchObjectsPaginated($this->pagedQuery(baseQuery: $baseQuery, page: $page));
 			$results = array_map(fn (mixed $entry): array => $this->normalizeObject(object: $entry), ($paginated['results'] ?? []));
 			$allObjects = array_merge($allObjects, $results);
 
-			$totalPages = (int)($paginated['pages'] ?? 1);
-			if (count($results) < self::BASE_OBJECT_LIMIT || $page >= $totalPages) {
+			if (count($results) < self::BASE_OBJECT_LIMIT || $page >= (int)($paginated['pages'] ?? 1)) {
 				break;
 			}
 
 			$page++;
 		}
 
-		if ($page > self::MAX_BASE_PAGES) {
-			$this->logger->warning(
-				message: 'FacetService: base object set exceeded the documented paging ceiling — '
-					. 'facet counts are computed over a bounded subset, not the full register',
-				context: [
-					'schema' => $schema,
-					'maxPages' => self::MAX_BASE_PAGES,
-					'limitPerPage' => self::BASE_OBJECT_LIMIT,
-				]
-			);
-		}
+		return ['objects' => $allObjects, 'page' => $page];
+	}//end fetchBasePages()
 
-		return $allObjects;
-	}//end fetchBaseObjects()
+	/**
+	 * One page of the base query.
+	 *
+	 * @param array $baseQuery The base query.
+	 * @param int $page The page.
+	 *
+	 * @return array
+	 */
+	private function pagedQuery(array $baseQuery, int $page): array {
+		$pagedQuery = $baseQuery;
+		$pagedQuery['_limit'] = self::BASE_OBJECT_LIMIT;
+		$pagedQuery['_page'] = $page;
+
+		return $pagedQuery;
+	}//end pagedQuery()
+
+	/**
+	 * Warn that the base object set was cut at the paging ceiling.
+	 *
+	 * @param string $schema The facet schema.
+	 *
+	 * @return void
+	 */
+	private function logPagingCeiling(string $schema): void {
+		$this->logger->warning(
+			message: 'FacetService: base object set exceeded the documented paging ceiling — '
+				. 'facet counts are computed over a bounded subset, not the full register',
+			context: [
+				'schema' => $schema,
+				'maxPages' => self::MAX_BASE_PAGES,
+				'limitPerPage' => self::BASE_OBJECT_LIMIT,
+			]
+		);
+	}//end logPagingCeiling()
 
 	/**
 	 * Normalize a single OpenRegister search result into a plain data-bag
@@ -592,13 +687,14 @@ class FacetService {
 	 * @return array<string,array> Module id => module object.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
 	 */
 	private function fetchModulesByIdentifiers(ObjectServiceInterface $objectService, array $identifiers): array {
 		if (empty($identifiers) === true) {
 			return [];
 		}
 
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		$schemaId = $voorzieningenConfig['module_schema'] ?? null;
 
@@ -616,7 +712,7 @@ class FacetService {
 		];
 
 		try {
-			$results = $objectService->searchObjects($query);
+			$results = $objectService->searchObjects(...SearchSelection::fromQuery(service: $objectService, method: 'searchObjects', query: $query));
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				message: 'FacetService: failed to batch-resolve linked modules',
@@ -646,38 +742,20 @@ class FacetService {
 	 * Build the per-object GEMMA dimension value map: for every base object,
 	 * the set of referenceComponent/standard names it carries directly, and
 	 * the set of domain/applicationService names resolved transitively via its
-	 * linked `element` objects.
+	 * linked `element` objects. From the same element lookup, the GEMMA
+	 * definition of each referenceComponent value by its display name.
 	 *
 	 * @param array<string,array<int,array>> $modulesByObjectId Object id => module objects.
 	 *
-	 * @return array<string,array<string,string[]>> Object id => dimension => distinct values.
+	 * @return array{0: array<string,array<string,string[]>>, 1: array<string,array{documentation: string, gemmaUrl: string}>}
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
 	 */
-	private function buildDimensionValueMap(array $modulesByObjectId): array {
+	private function dimensionValuesAndDefinitions(array $modulesByObjectId): array {
 		// Pass 1: direct fields (referenceComponent identifiers + standard identifiers).
-		$refCompIdsByObjId = [];
-		$stdValsByObjId = [];
-		$allRefCompIds = [];
-
-		foreach ($modulesByObjectId as $objectId => $modules) {
-			$refCompIds = [];
-			$standards = [];
-
-			foreach ($modules as $module) {
-				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
-				$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
-			}
-
-			$refCompIds = array_values(array_unique($refCompIds));
-			$standards = array_values(array_unique(array_filter($standards)));
-
-			$refCompIdsByObjId[$objectId] = $refCompIds;
-			$stdValsByObjId[$objectId] = $standards;
-			$allRefCompIds = array_merge($allRefCompIds, $refCompIds);
-		}
-
-		$allRefCompIds = array_values(array_unique($allRefCompIds));
+		$direct = array_map(fn (array $modules): array => $this->directDimensions(modules: $modules), $modulesByObjectId);
+		$allRefCompIds = array_values(array_unique(array_merge([], ...array_values(array_column($direct, 'refCompIds')))));
 
 		// Pass 2: resolve referenceComponent elements themselves (for the
 		// referenceComponent facet's display value + the `domain` field).
@@ -685,51 +763,153 @@ class FacetService {
 
 		// Pass 3: resolve applicationService elements reachable via a `relation`
 		// touching one of the referenceComponent elements.
-		$appSvcNmByRefComp = $this->resolveApplicatieservicesForReferentiecomponenten(
-			refCompIds: $allRefCompIds
+		$resolution = new DimensionResolution(
+			elementsById: $elementsById,
+			applicationServices: $this->resolveApplicatieservicesForReferentiecomponenten(refCompIds: $allRefCompIds)
 		);
 
 		// Assemble the final per-object dimension map.
-		$dimValsByObjId = [];
+		return [
+			array_map(fn (array $values): array => $this->objectDimensions(resolution: $resolution, direct: $values), $direct),
+			$this->definitionsByName(elementsById: $elementsById, refCompIds: $allRefCompIds),
+		];
+	}//end dimensionValuesAndDefinitions()
 
-		foreach ($modulesByObjectId as $objectId => $modules) {
-			$refCompIds = $refCompIdsByObjId[$objectId] ?? [];
-
-			$refCompNames = [];
-			$domeinValues = [];
-			$appSvcValues = [];
-
-			foreach ($refCompIds as $refCompId) {
-				$element = $elementsById[$refCompId] ?? null;
-
-				// `elementDisplayName()` itself falls back to `$refCompId` when
-				// `$element` carries no usable `name` — pass an empty element
-				// array when unresolved so the same call covers both cases.
-				$refCompNames[] = $this->elementDisplayName(
-					element: $element ?? [],
-					fallbackIdentifier: $refCompId
-				);
-
-				$domain = $element[self::ELEMENT_DOMAIN_PROPERTY] ?? null;
-				if (is_string($domain) === true && trim($domain) !== '') {
-					$domeinValues[] = trim($domain);
-				}
-
-				foreach (($appSvcNmByRefComp[$refCompId] ?? []) as $appSvcName) {
-					$appSvcValues[] = $appSvcName;
-				}
+	/**
+	 * The GEMMA definition and GEMMA Online link of each referenceComponent,
+	 * by the display name its facet value carries. The first element with a
+	 * name keeps it.
+	 *
+	 * @param array<string,array> $elementsById Element identifier => element object.
+	 * @param array<int,string> $refCompIds The referenceComponent identifiers.
+	 *
+	 * @return array<string,array{documentation: string, gemmaUrl: string}>
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 */
+	private function definitionsByName(array $elementsById, array $refCompIds): array {
+		$definitions = [];
+		foreach ($refCompIds as $refCompId) {
+			$element = ($elementsById[$refCompId] ?? []);
+			$name = $this->elementDisplayName(element: $element, fallbackIdentifier: $refCompId);
+			if (isset($definitions[$name]) === true) {
+				continue;
 			}
 
-			$dimValsByObjId[$objectId] = [
-				'referenceComponent' => array_values(array_unique($refCompNames)),
-				'standard' => $stdValsByObjId[$objectId] ?? [],
-				'domain' => array_values(array_unique($domeinValues)),
-				'applicationService' => array_values(array_unique($appSvcValues)),
+			$definitions[$name] = [
+				'documentation' => self::trimmedString(value: ($element['documentation'] ?? null)),
+				'gemmaUrl' => self::trimmedString(value: ($element['gemmaUrl'] ?? null)),
 			];
-		}//end foreach
+		}
 
-		return $dimValsByObjId;
-	}//end buildDimensionValueMap()
+		return $definitions;
+	}//end definitionsByName()
+
+	/**
+	 * A value as a trimmed string, '' when it is not a string.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string The string.
+	 */
+	private static function trimmedString(mixed $value): string {
+		if (is_string($value) === true) {
+			return trim($value);
+		}
+
+		return '';
+	}//end trimmedString()
+
+	/**
+	 * The referenceComponent buckets, each with its GEMMA definition and
+	 * GEMMA Online link ('' when the element has none).
+	 *
+	 * @param array<int,array{value:string,label:string,count:int}> $buckets The buckets.
+	 * @param array<string,array{documentation: string, gemmaUrl: string}> $definitions By display name.
+	 *
+	 * @return array<int,array{value:string,label:string,count:int,documentation:string,gemmaUrl:string}>
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-gemma-terms-show-their-definition-where-they-appear-req-gpl-003
+	 */
+	private static function withDefinitions(array $buckets, array $definitions): array {
+		return array_map(
+			static fn (array $bucket): array => array_merge(
+				$bucket,
+				($definitions[$bucket['value']] ?? ['documentation' => '', 'gemmaUrl' => ''])
+			),
+			$buckets
+		);
+	}//end withDefinitions()
+
+	/**
+	 * The referenceComponent identifiers and the standard names an object's modules carry, each distinct.
+	 *
+	 * @param array<int, array> $modules The object's modules.
+	 *
+	 * @return array{refCompIds: array<int, string>, standards: array<int, string>}
+	 */
+	private function directDimensions(array $modules): array {
+		$refCompIds = [];
+		$standards = [];
+
+		foreach ($modules as $module) {
+			$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
+			$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
+		}
+
+		return [
+			'refCompIds' => array_values(array_unique($refCompIds)),
+			'standards' => array_values(array_unique(array_filter($standards))),
+		];
+	}//end directDimensions()
+
+	/**
+	 * The four dimension values of one object.
+	 *
+	 * @param DimensionResolution $resolution The resolved elements and application services.
+	 * @param array{refCompIds: array<int, string>, standards: array<int, string>} $direct The object's direct values.
+	 *
+	 * @return array<string, array<int, string>>
+	 */
+	private function objectDimensions(DimensionResolution $resolution, array $direct): array {
+		// `elementDisplayName()` itself falls back to the identifier when the
+		// element carries no usable `name` — pass an empty element array when
+		// unresolved so the same call covers both cases.
+		$refCompNames = array_map(
+			fn ($refCompId): string => $this->elementDisplayName(element: ($resolution->elementsById[$refCompId] ?? []), fallbackIdentifier: $refCompId),
+			$direct['refCompIds']
+		);
+
+		$domeinValues = [];
+		$appSvcValues = [];
+		foreach ($direct['refCompIds'] as $refCompId) {
+			$domeinValues = array_merge($domeinValues, self::elementDomain(element: ($resolution->elementsById[$refCompId] ?? null)));
+			$appSvcValues = array_merge($appSvcValues, array_values($resolution->applicationServices[$refCompId] ?? []));
+		}
+
+		return [
+			'referenceComponent' => array_values(array_unique($refCompNames)),
+			'standard' => $direct['standards'],
+			'domain' => array_values(array_unique($domeinValues)),
+			'applicationService' => array_values(array_unique($appSvcValues)),
+		];
+	}//end objectDimensions()
+
+	/**
+	 * The trimmed domain of an element, as a list of none or one.
+	 *
+	 * @param array|null $element The element, or null when unresolved.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function elementDomain(?array $element): array {
+		$domain = $element[self::ELEMENT_DOMAIN_PROPERTY] ?? null;
+		if (is_string($domain) === true && trim($domain) !== '') {
+			return [trim($domain)];
+		}
+
+		return [];
+	}//end elementDomain()
 
 	/**
 	 * Resolve `element` objects by identifier, bounded by an explicit `_limit`.
@@ -899,12 +1079,14 @@ class FacetService {
 	 *
 	 * @param array $dimValsByObjId Object id => dimension => values.
 	 * @param array $selectedFilters Normalized selected filters.
+	 * @param array<string, array<string, string>> $labels Per dimension, the label of a value (the supplier's name
+	 *                                                     by its id); a value without one is its own label.
 	 *
 	 * @return array<string,array<int,array{value:string,label:string,count:int}>>
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 	 */
-	private function computeFacets(array $dimValsByObjId, array $selectedFilters): array {
+	private function computeFacets(array $dimValsByObjId, array $selectedFilters, array $labels = []): array {
 		$facets = [];
 
 		foreach (self::DIMENSIONS as $dimension) {
@@ -926,9 +1108,10 @@ class FacetService {
 
 			$bucket = [];
 			foreach ($counts as $value => $count) {
+				$value = (string)$value;
 				$bucket[] = [
 					'value' => $value,
-					'label' => $value,
+					'label' => ($labels[$dimension][$value] ?? $value),
 					'count' => $count,
 				];
 			}
@@ -980,6 +1163,94 @@ class FacetService {
 
 		return $matched;
 	}//end filterObjectIds()
+
+	/**
+	 * The identifier of a single related object: a uuid string, or an object
+	 * carrying `id` (or `@self.id`). An empty relation (`{}` or null) gives
+	 * none. Unlike {@see self::extractRelatedIdentifiers()} this never reads
+	 * the fields of a related object as a list of identifiers.
+	 *
+	 * @param mixed $value The relation value.
+	 *
+	 * @return list<string> Zero or one identifier.
+	 *
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 */
+	private static function relatedIdentifier(mixed $value): array {
+		if (is_string($value) === true && trim($value) !== '') {
+			return [trim($value)];
+		}
+
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$id = ($value['id'] ?? $value['@self']['id'] ?? null);
+		if ((is_string($id) === true && $id !== '') || is_int($id) === true) {
+			return [(string)$id];
+		}
+
+		return [];
+	}//end relatedIdentifier()
+
+	/**
+	 * The names of the organisations, by id, from one bounded read on the
+	 * configured organisation schema (insight-supplier-facet D2). An
+	 * organisation without a name, or one the read did not return, is
+	 * labelled by its id.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param list<string>           $identifiers   The organisation ids.
+	 *
+	 * @return array<string, string> Name by id.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SearchSelection is a stateless adapter between OpenRegister search signatures.
+	 *
+	 * @spec openspec/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 */
+	private function organisationNames(ObjectServiceInterface $objectService, array $identifiers): array {
+		$names = array_combine($identifiers, $identifiers);
+		$config = $this->catalogue->getVoorzieningenConfig();
+		$registerId = ($config['register'] ?? null);
+		$schemaId = ($config['organisatie_schema'] ?? null);
+		if ($identifiers === [] || empty($registerId) === true || empty($schemaId) === true) {
+			return $names;
+		}
+
+		try {
+			// OpenRegister main takes the id selection as a SearchOptions
+			// argument and ignores an `id` list in the query, which then
+			// matched nothing and left every supplier labelled by its id.
+			$results = $objectService->searchObjects(
+				...array_merge(
+					[
+						'query' => [
+							'@self' => ['register' => (int)$registerId, 'schema' => (int)$schemaId],
+							'_limit' => self::ELEMENT_LOOKUP_LIMIT,
+						],
+					],
+					SearchSelection::ids(service: $objectService, method: 'searchObjects', ids: $identifiers)
+				)
+			);
+		} catch (\Exception $e) {
+			$this->logger->warning(message: 'FacetService: failed to read supplier names', context: ['error' => $e->getMessage()]);
+			return $names;
+		}
+
+		if (is_array($results) === false) {
+			return $names;
+		}
+
+		foreach ($results as $entry) {
+			$organisation = $this->normalizeObject(object: $entry);
+			$id = $this->objectIdentifier(object: $organisation);
+			if (isset($names[$id]) === true) {
+				$names[$id] = $this->elementDisplayName(element: $organisation, fallbackIdentifier: $id);
+			}
+		}
+
+		return $names;
+	}//end organisationNames()
 
 	/**
 	 * Extract related-object identifiers from an array/relation field, tolerant

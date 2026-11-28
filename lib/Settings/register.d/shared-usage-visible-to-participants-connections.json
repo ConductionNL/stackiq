@@ -1,0 +1,75 @@
+{
+  "$comment": "shared-usage-visible-to-participants (REQ-DLG-011): a usage manager or reader of an organisation that takes part in a shared usage may READ the connections that usage lists. OpenRegister cannot match a read rule through usage.koppelingen, so stackiq keeps the participant organisations of every usage that lists a connection on the connection itself, in sharedWithOrganisations (ConnectionShareSubscriber on every usage save, BackfillConnectionSharing for existing data), and the rule matches that field. Update and delete are untouched. The read list restates the monolith's because a fragment's list replaces the list before it.",
+  "components": {
+    "schemas": {
+      "connection": {
+        "slug": "connection",
+        "version": "0.3.7",
+        "properties": {
+          "sharedWithOrganisations": {
+            "description": "Derived: the participant organisations of the shared usages that list this connection. Written by stackiq on every usage save; not edited by hand.",
+            "type": "array",
+            "title": "Shared with organisations",
+            "visible": false,
+            "readOnly": true,
+            "facetable": false,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "authorization": {
+          "read": [
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "publicationDate": {
+                  "$lte": "$now"
+                }
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "provider": "$organisation"
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "sharedWithOrganisations": {
+                  "$contains": "$organisation"
+                }
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "gebruik-raadpleger",
+              "match": {
+                "sharedWithOrganisations": {
+                  "$contains": "$organisation"
+                }
+              },
+              "crossOrganisation": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

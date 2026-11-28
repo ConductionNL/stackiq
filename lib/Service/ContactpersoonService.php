@@ -15,12 +15,24 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -58,7 +70,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactpersoonService {
+class ContactpersoonService implements ContactpersoonServiceInterface {
 	/**
 	 * ContactpersoonService constructor.
 	 *
@@ -69,7 +81,8 @@ class ContactpersoonService {
 	 * @param ContainerInterface $container Container interface.
 	 * @param IAppManager $appManager App manager.
 	 * @param IAppConfig $config Configuration service.
-	 * @param SettingsService $settingsService Settings service.
+	 * @param RegisterConfigReaderInterface $settingsService Settings service.
+	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 */
 	public function __construct(
 		private readonly ContactPersonHandler $contactPersonHandler,
@@ -79,10 +92,31 @@ class ContactpersoonService {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Tracks contact UUIDs currently being processed to prevent event recursion.
@@ -93,6 +127,17 @@ class ContactpersoonService {
 	 * @var array
 	 */
 	private static array $processingContacts = [];
+
+	/**
+	 * The contactpersoon fields that are synced to its Nextcloud user.
+	 */
+	private const NAME_SYNC_FIELDS = [
+		'voornaam',
+		'tussenvoegsel',
+		'achternaam',
+		'role',
+		'e-mailadres',
+	];
 
 	/**
 	 * Processes a contactpersoon object to create a user account.
@@ -125,7 +170,7 @@ class ContactpersoonService {
 
 			self::$processingContacts[$contactId] = true;
 
-			$emailValue = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			$emailValue = $this->contactPersonEmailOf(contactData: $contactData);
 			$hasEmail = empty($emailValue) === false;
 			$hasOrganisation = empty($contactData['organisation']) === false;
 			$this->logger->info(
@@ -139,8 +184,9 @@ class ContactpersoonService {
 			);
 
 			// Check if contactpersoon has required data.
-			// Schema uses 'e-mailadres' but some data may use 'email'.
-			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			// The linked Nextcloud contact holds the address; older records carry
+			// it themselves as 'email' or 'e-mailadres'.
+			$email = $emailValue;
 			if ($this->isContactPersonEmailUsable(email: $email, contactId: (string)$contactId) === false) {
 				return false;
 			}
@@ -173,12 +219,14 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
+							$settingsService = $this->container->get(RegisterConfigReaderInterface::class);
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
-								register: ($voorzieningenConfig['register'] ?? ''),
-								schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+								options: new ObjectFindOptions(
+									register: $voorzieningenConfig['register'] ?? '',
+									schema: $voorzieningenConfig['organisatie_schema'] ?? ''
+								),
 								_rbac: false,
 								_multitenancy: false
 							);
@@ -193,7 +241,7 @@ class ContactpersoonService {
 										'entitiesUpdated' => 0,
 									];
 									$organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic(
-										orgObject: $orgObject,
+										organisationObject: $orgObject,
 										stats: $backupStats
 									);
 									$this->logger->info(
@@ -448,10 +496,18 @@ class ContactpersoonService {
 	/**
 	 * Updates contactpersoon object with username.
 	 *
+	 * The contactPerson schema lets only an admin write `username` through the
+	 * object API, because role-group sync and the access review find a person's
+	 * account by it. This sync writes it for whoever's session triggered the
+	 * event, so it saves as the system (`_rbac: false`, `_multitenancy: false`),
+	 * after the account itself has been created or found.
+	 *
 	 * @param object $contactPersonObject The contactpersoon object.
 	 * @param string $username The username to set.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	private function updateContactPersonUsername(object $contactPersonObject, string $username): void {
 		try {
@@ -474,11 +530,16 @@ class ContactpersoonService {
 			if ($objectService !== null) {
 				$objectService->saveObject(
 					object: $contactData,
-					register: $contactPersonObject->getRegister(),
-					schema: $contactPersonObject->getSchema(),
-					uuid: $contactPersonObject->getUuid(),
-					silent: true,
-					_validation: false
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contactPersonObject->getRegister(),
+								schema: $contactPersonObject->getSchema()
+							),
+						uuid: $contactPersonObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false)
+					),
+					_rbac: false,
+					_multitenancy: false
 				);
 			}
 
@@ -572,67 +633,104 @@ class ContactpersoonService {
 	 */
 	private function syncNameFieldsToUser(object $contactPersonObject, ?object $oldContactPersonObject): void {
 		$newData = $contactPersonObject->getObject();
-		$oldData = [];
-		if ($oldContactPersonObject !== null) {
-			$oldData = $oldContactPersonObject->getObject();
-		}
-
-		// Check if any name/functie fields have changed.
-		$nameFields = [
-			'voornaam',
-			'tussenvoegsel',
-			'achternaam',
-			'role',
-			'e-mailadres',
-		];
-		$hasNameChanges = false;
-
-		foreach ($nameFields as $field) {
-			if (($newData[$field] ?? '') !== ($oldData[$field] ?? '')) {
-				$hasNameChanges = true;
-				break;
-			}
-		}
-
-		if ($hasNameChanges === false) {
+		if ($this->hasNameChanges(newData: $newData, oldContactPersonObject: $oldContactPersonObject) === false) {
 			return;
 		}
 
 		// Find the corresponding Nextcloud user.
-		$username = ($newData['username'] ?? '');
-		if (empty($username) === true) {
-			return;
-		}
-
-		$userManager = $this->container->get('OCP\IUserManager');
-		$user = $userManager->get($username);
-
+		$user = $this->nameSyncUser(newData: $newData);
 		if ($user === null) {
-			$this->logger->debug(
-				'ContactpersoonService: No Nextcloud user found for name sync',
-				['username' => $username]
-			);
 			return;
 		}
 
-		$this->logger->info(
-			'ContactpersoonService: Syncing contactpersoon name fields to user',
-			[
-				'username' => $username,
-				'contactId' => $contactPersonObject->getId(),
-				'changedData' => array_intersect_key(
-					$newData,
-					array_flip($nameFields)
-				),
-			]
-		);
-
+		$this->logNameSync(contactPersonObject: $contactPersonObject, newData: $newData);
 		$this->contactPersonHandler->storeContactNameFields(
 			user: $user,
 			contactData: $newData
 		);
 
 	}//end syncNameFieldsToUser()
+
+	/**
+	 * The data of the previous contactpersoon object, or none.
+	 *
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object.
+	 *
+	 * @return array The previous data.
+	 */
+	private function previousContactData(?object $oldContactPersonObject): array {
+		if ($oldContactPersonObject === null) {
+			return [];
+		}
+
+		return $oldContactPersonObject->getObject();
+	}//end previousContactData()
+
+	/**
+	 * Whether any name/functie field differs between the new and the previous data.
+	 *
+	 * @param array $newData The updated contactpersoon data.
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object.
+	 *
+	 * @return bool True when a name field changed.
+	 */
+	private function hasNameChanges(array $newData, ?object $oldContactPersonObject): bool {
+		$oldData = $this->previousContactData(oldContactPersonObject: $oldContactPersonObject);
+		foreach (self::NAME_SYNC_FIELDS as $field) {
+			if (($newData[$field] ?? '') !== ($oldData[$field] ?? '')) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasNameChanges()
+
+	/**
+	 * The Nextcloud user the contactpersoon names by its username, if it exists.
+	 *
+	 * @param array $newData The updated contactpersoon data.
+	 *
+	 * @return mixed The user, or null without a username or when no such user exists.
+	 */
+	private function nameSyncUser(array $newData): mixed {
+		$username = ($newData['username'] ?? '');
+		if (empty($username) === true) {
+			return null;
+		}
+
+		$userManager = $this->container->get('OCP\IUserManager');
+		$user = $userManager->get($username);
+		if ($user === null) {
+			$this->logger->debug(
+				'ContactpersoonService: No Nextcloud user found for name sync',
+				['username' => $username]
+			);
+		}
+
+		return $user;
+	}//end nameSyncUser()
+
+	/**
+	 * Log that the name fields of a contactpersoon are written to its user.
+	 *
+	 * @param object $contactPersonObject The updated contactpersoon object.
+	 * @param array $newData The updated contactpersoon data.
+	 *
+	 * @return void
+	 */
+	private function logNameSync(object $contactPersonObject, array $newData): void {
+		$this->logger->info(
+			'ContactpersoonService: Syncing contactpersoon name fields to user',
+			[
+				'username' => ($newData['username'] ?? ''),
+				'contactId' => $contactPersonObject->getId(),
+				'changedData' => array_intersect_key(
+					$newData,
+					array_flip(self::NAME_SYNC_FIELDS)
+				),
+			]
+		);
+	}//end logNameSync()
 
 	/**
 	 * Handles role changes between old and new contactpersoon objects
@@ -831,132 +929,7 @@ class ContactpersoonService {
 	 */
 	public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array {
 		try {
-			$this->logger->info(
-				'ContactpersoonService: Getting contact persons with user details for organization',
-				['organizationUuid' => $organizationUuid]
-			);
-
-			// Get contact persons for the organization.
-			$contactPersons = $this->getContactPersonsForOrganization(organizationUuid: $organizationUuid);
-
-			if (empty($contactPersons) === true) {
-				$this->logger->info(
-					'ContactpersoonService: No contact persons found for organization',
-					['organizationUuid' => $organizationUuid]
-				);
-				return [];
-			}
-
-			$this->logger->info(
-				'ContactpersoonService: Found contact persons, fetching user details',
-				[
-					'organizationUuid' => $organizationUuid,
-					'contactPersonCount' => count($contactPersons),
-				]
-			);
-
-			// Get user manager to fetch user details.
-			$userManager = $this->container->get('OCP\IUserManager');
-			$enhancedContactPersons = [];
-
-			// Loop through each contact person and fetch user details.
-			foreach ($contactPersons as $contactPerson) {
-				try {
-					$contactData = $contactPerson->getObject();
-					$username = ($contactData['username'] ?? null);
-
-					// Initialize user details as null.
-					$userDetails = null;
-
-					// If username exists, fetch user details.
-					if ($username === null) {
-						$this->logger->debug(
-							'ContactpersoonService: No username found for contact person',
-							[
-								'contactPersonId' => $contactPerson->getId(),
-							]
-						);
-					}
-
-					if ($username !== null) {
-						$user = $userManager->get($username);
-						if ($user !== null) {
-							$userDetails = [
-								'uid' => $user->getUID(),
-								'email' => $user->getEMailAddress(),
-								'displayName' => $user->getDisplayName(),
-								'enabled' => $user->isEnabled(),
-								'lastLogin' => $user->getLastLogin(),
-								'backend' => $user->getBackendClassName(),
-								'home' => $user->getHome(),
-								'avatarImage' => $user->getAvatarImage(64)->data(),
-								'quota' => $user->getQuota(),
-								'freeQuota' => $user->getFreeQuota(),
-							];
-
-							$this->logger->debug(
-								'ContactpersoonService: Fetched user details',
-								[
-									'contactPersonId' => $contactPerson->getId(),
-									'username' => $username,
-									'userEnabled' => $user->isEnabled(),
-								]
-							);
-						}//end if
-
-						if ($user === null) {
-							$this->logger->warning(
-								'ContactpersoonService: User not found for username',
-								[
-									'contactPersonId' => $contactPerson->getId(),
-									'username' => $username,
-								]
-							);
-						}
-					}//end if
-
-					// Create enhanced contact person object with user details spliced in.
-					$enhancedContactData = $contactData;
-					$enhancedContactData['userDetails'] = $userDetails;
-
-					// Create a new object with the enhanced data.
-					$enhancedContactPerson = clone $contactPerson;
-					$enhancedContactPerson->setObject($enhancedContactData);
-
-					$enhancedContactPersons[] = $enhancedContactPerson;
-				} catch (\Exception $e) {
-					$this->logger->error(
-						'ContactpersoonService: Failed to process contact person',
-						[
-							'contactPersonId' => $contactPerson->getId(),
-							'organizationUuid' => $organizationUuid,
-							'error' => $e->getMessage(),
-						]
-					);
-
-					// Still add the contact person without user details.
-					$enhancedContactPersons[] = $contactPerson;
-				}//end try
-			}//end foreach
-
-			$this->logger->info(
-				'ContactpersoonService: Successfully enhanced contact persons with user details',
-				[
-					'organizationUuid' => $organizationUuid,
-					'totalContactPersons' => count($enhancedContactPersons),
-					'contactPersonsWithUserDetails' => count(
-						array_filter(
-							$enhancedContactPersons,
-							static function ($cp) {
-								$data = $cp->getObject();
-								return $data['userDetails'] !== null;
-							}
-						)
-					),
-				]
-			);
-
-			return $enhancedContactPersons;
+			return $this->enhanceOrganisationContactPersons(organizationUuid: $organizationUuid);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'ContactpersoonService: Failed to get contact persons with user details for organization',
@@ -970,6 +943,110 @@ class ContactpersoonService {
 		}//end try
 
 	}//end getContactPersonsWithUserDetailsForOrganization()
+
+	/**
+	 * Read the contact persons of an organisation and splice in their user details.
+	 *
+	 * @param string $organizationUuid The organization UUID to get contact persons for
+	 *
+	 * @return array Array of contact person objects with user details spliced in
+	 */
+	private function enhanceOrganisationContactPersons(string $organizationUuid): array {
+		$this->logger->info(
+			'ContactpersoonService: Getting contact persons with user details for organization',
+			['organizationUuid' => $organizationUuid]
+		);
+
+		// Get contact persons for the organization.
+		$contactPersons = $this->getContactPersonsForOrganization(organizationUuid: $organizationUuid);
+		if ($this->hasContactPersonsToEnhance(organizationUuid: $organizationUuid, contactPersons: $contactPersons) === false) {
+			return [];
+		}
+
+		// Get user manager to fetch user details.
+		$userDetails = new ContactPersonUserDetails(logger: $this->logger, userManager: $this->container->get('OCP\IUserManager'));
+		$enhancedContactPersons = $userDetails->enhanceAll(contactPersons: $contactPersons, organizationUuid: $organizationUuid);
+
+		$this->logEnhancedContactPersons(organizationUuid: $organizationUuid, enhancedContactPersons: $enhancedContactPersons);
+		return $enhancedContactPersons;
+	}//end enhanceOrganisationContactPersons()
+
+	/**
+	 * Log whether an organisation has contact persons to enhance.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $contactPersons The contact persons of the organisation
+	 *
+	 * @return bool True when there is at least one contact person
+	 */
+	private function hasContactPersonsToEnhance(string $organizationUuid, array $contactPersons): bool {
+		if (empty($contactPersons) === true) {
+			$this->logger->info(
+				'ContactpersoonService: No contact persons found for organization',
+				['organizationUuid' => $organizationUuid]
+			);
+			return false;
+		}
+
+		$this->logContactPersonsFound(organizationUuid: $organizationUuid, contactPersons: $contactPersons);
+		return true;
+	}//end hasContactPersonsToEnhance()
+
+	/**
+	 * Log how many contact persons an organisation has before their user details are read.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $contactPersons The contact persons of the organisation
+	 *
+	 * @return void
+	 */
+	private function logContactPersonsFound(string $organizationUuid, array $contactPersons): void {
+		$this->logger->info(
+			'ContactpersoonService: Found contact persons, fetching user details',
+			[
+				'organizationUuid' => $organizationUuid,
+				'contactPersonCount' => count($contactPersons),
+			]
+		);
+	}//end logContactPersonsFound()
+
+	/**
+	 * Log how many contact persons of an organisation carry user details.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $enhancedContactPersons The contact persons after the enhancement
+	 *
+	 * @return void
+	 */
+	private function logEnhancedContactPersons(string $organizationUuid, array $enhancedContactPersons): void {
+		$this->logger->info(
+			'ContactpersoonService: Successfully enhanced contact persons with user details',
+			[
+				'organizationUuid' => $organizationUuid,
+				'totalContactPersons' => count($enhancedContactPersons),
+				'contactPersonsWithUserDetails' => $this->countWithUserDetails(contactPersons: $enhancedContactPersons),
+			]
+		);
+	}//end logEnhancedContactPersons()
+
+	/**
+	 * Count the contact persons whose data carries user details.
+	 *
+	 * @param array $contactPersons The contact person objects
+	 *
+	 * @return int The number with user details
+	 */
+	private function countWithUserDetails(array $contactPersons): int {
+		return count(
+			array_filter(
+				$contactPersons,
+				static function ($cp) {
+					$data = $cp->getObject();
+					return $data['userDetails'] !== null;
+				}
+			)
+		);
+	}//end countWithUserDetails()
 
 	/**
 	 * Gets bulk user information for multiple contact persons
@@ -1039,10 +1116,7 @@ class ContactpersoonService {
 					try {
 						$contactObject = $objectService->findSilent(
 							id: $contactPersonId,
-							_extend: [],
-							files: false,
-							register: $contactRegister,
-							schema: $contactSchema
+							options: new ObjectFindOptions(register: $contactRegister, schema: $contactSchema)
 						);
 					} catch (DoesNotExistException $e) {
 						$this->logger->warning(
@@ -1243,12 +1317,15 @@ class ContactpersoonService {
 
 				$objectService->saveObject(
 					object: $payload,
-					register: $contactObject->getRegister(),
-					schema: $contactObject->getSchema(),
-					uuid: $contactObject->getUuid(),
-					silent: true,
-					_validation: false,
-					currentUser: $actingUser
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $contactObject->getRegister(),
+								schema: $contactObject->getSchema()
+							),
+						uuid: $contactObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false),
+						actor: new SaveActor(currentUser: $actingUser)
+					)
 				);
 			}
 
@@ -1300,8 +1377,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1371,8 +1447,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);

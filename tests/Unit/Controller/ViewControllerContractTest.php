@@ -22,6 +22,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/dashboard-views-api/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -318,6 +321,8 @@ class ViewControllerContractTest extends TestCase {
 		$paths = array_column($data['endpoints'], 'path');
 		$this->assertContains('/api/views', $paths);
 		$this->assertContains('/api/views/{viewId}', $paths);
+		$this->assertSame(expected: '/apps/stackiq/api-docs', actual: $data['documentation']['page']);
+		$this->assertSame(expected: '/apps/stackiq/api/openapi.json', actual: $data['documentation']['openapi']);
 
 	}//end testGetApiDocumentationDescribesTheRegisteredViewEndpoints()
 }//end class

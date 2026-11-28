@@ -1,10 +1,15 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2026 Conduction B.V. <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - Federation settings admin section: view federation availability + the
  - configured peers, add/remove a peer (subject to the server-side SSRF
- - allowlist), trigger a manual pull, and show per-peer status (failure streak
+ - allowlist), trigger a manual pull, and show per-peer status (catalogue
+ - name, address, last pull, mirrored objects, last error, failure streak
  - + stale flag). Rendered inside the admin settings panel — admin-gated by the
  - IDelegatedSettings framework and by the AuthorizedAdminSetting attribute on
  - every FederationController method; NOT registered in the in-app router.
@@ -57,10 +62,29 @@
 			{{
 				t(
 					'stackiq',
-					'Federation is available but disabled. Enable it in the app configuration to pull peer catalogs.',
+					'Federation is available but disabled. Switch it on below to announce this catalog and pull peer catalogs.',
 				)
 			}}
 		</NcNoteCard>
+
+		<!-- The switch, and whether this catalog is registered with the directory. -->
+		<div class="federation-switch">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				data-testid="federation-switch"
+				:modelValue="status.enabled"
+				:disabled="switching"
+				@update:modelValue="setEnabled">
+				{{ t('stackiq', 'Federation is on') }}
+			</NcCheckboxRadioSwitch>
+			<p
+				class="help-text federation-registration"
+				:class="{ 'federation-registration--failed': status.registration.state === 'failed' }"
+				data-testid="federation-registration"
+				role="status">
+				{{ registrationText }}
+			</p>
+		</div>
 
 		<div class="federation-directory">
 			<h3>{{ t('stackiq', 'Directory') }}</h3>
@@ -118,6 +142,7 @@
 			<ul v-else class="peer-list">
 				<li v-for="peer in status.peers" :key="peer.url" class="peer-item">
 					<div class="peer-info">
+						<span class="peer-name">{{ peer.name }}</span>
 						<span class="peer-url">{{ peer.url }}</span>
 						<span class="peer-badges">
 							<span
@@ -133,6 +158,19 @@
 							<span v-else class="peer-badge peer-badge--ok">
 								{{ t('stackiq', 'Healthy') }}
 							</span>
+						</span>
+						<span class="peer-last-pulled help-text">
+							{{
+								peer.lastPulledAt
+									? t('stackiq', 'Last pulled {date}', { date: pulledAt(peer.lastPulledAt) })
+									: t('stackiq', 'Never pulled')
+							}}
+						</span>
+						<span class="peer-objects help-text">
+							{{ n('stackiq', '{count} object', '{count} objects', peer.objectCount, { count: peer.objectCount }) }}
+						</span>
+						<span v-if="peer.lastError" class="peer-error" role="status">
+							{{ t('stackiq', 'Error: {reason}', { reason: errorReason(peer.lastError) }) }}
 						</span>
 						<span class="peer-failures help-text">
 							{{
@@ -177,6 +215,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
@@ -188,7 +227,7 @@ import LanDisconnect from 'vue-material-design-icons/LanDisconnect.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-import { apiRequest, normaliseFederationStatus } from '../../../utils/adminApi.js'
+import { apiRequest, federationRegistrationText, normaliseFederationStatus } from '../../../utils/adminApi.js'
 
 /**
  * Federation settings admin section.
@@ -200,6 +239,7 @@ export default defineComponent({
 	components: {
 		AlwaysVisibleSection,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -218,6 +258,7 @@ export default defineComponent({
 			loading: false,
 			adding: false,
 			pulling: false,
+			switching: false,
 			removingUrl: null,
 			newPeerUrl: '',
 			pullSummary: '',
@@ -225,11 +266,24 @@ export default defineComponent({
 				available: false,
 				enabled: false,
 				directoryUrl: '',
+				registration: { state: 'none', reason: '', at: null },
 				staleAfter: 3,
 				message: '',
 				peers: [],
 			},
 		}
+	},
+
+	computed: {
+		/**
+		 * Whether this catalog is registered with the directory, and if not why.
+		 *
+		 * @return {string} The line under the switch.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+		 */
+		registrationText() {
+			return federationRegistrationText(this.status.registration, (text, vars) => t('stackiq', text, vars))
+		},
 	},
 
 	/**
@@ -244,6 +298,34 @@ export default defineComponent({
 	methods: {
 		t,
 		n,
+
+		/**
+		 * A pull moment as date and time in UTC, the zone the server records.
+		 *
+		 * @param {string} iso - The ISO-8601 moment.
+		 * @return {string} For example "2026-11-20 08:00 UTC".
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		pulledAt(iso) {
+			const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso)
+			return match ? match[1] + ' ' + match[2] + ' UTC' : iso
+		},
+
+		/**
+		 * The words for a peer's last error: the known codes translated, any
+		 * other reason as the server gave it.
+		 *
+		 * @param {string} reason - The recorded error.
+		 * @return {string} The words.
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-mirrored-entries-show-where-they-came-from-req-fed-011
+		 */
+		errorReason(reason) {
+			const known = {
+				'not reachable': t('stackiq', 'not reachable'),
+				blocked: t('stackiq', 'blocked by the SSRF guard'),
+			}
+			return known[reason] || reason
+		},
 
 		/**
 		 * Load federation status from the admin endpoint.
@@ -264,6 +346,34 @@ export default defineComponent({
 				)
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Switch federation on or off. Switching it on announces this catalog to
+		 * the directory; the answer is the status with the registration.
+		 *
+		 * @param {boolean} enabled - Whether federation is on.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/federated-catalog-sync/spec.md#requirement-instance-registers-with-an-opencatalogi-directory
+		 */
+		async setEnabled(enabled) {
+			this.switching = true
+			try {
+				const data = await apiRequest('federation/enabled', {
+					method: 'PUT',
+					body: { enabled: enabled === true },
+				})
+				this.status = normaliseFederationStatus(data)
+				if (enabled === true && this.status.registration.state === 'registered') {
+					showSuccess(t('stackiq', 'Federation is on and this catalog is registered'))
+				} else if (enabled !== true) {
+					showSuccess(t('stackiq', 'Federation is off'))
+				}
+			} catch (error) {
+				showError(t('stackiq', 'Could not switch federation') + ': ' + error.message)
+			} finally {
+				this.switching = false
 			}
 		},
 
@@ -357,6 +467,14 @@ export default defineComponent({
 	margin: 0;
 }
 
+.federation-switch {
+	margin-bottom: calc(var(--default-grid-baseline) * 4);
+}
+
+.federation-registration--failed {
+	color: var(--color-error-text);
+}
+
 .federation-directory,
 .federation-add-peer,
 .federation-peers {
@@ -397,9 +515,17 @@ export default defineComponent({
 	min-width: 0;
 }
 
-.peer-url {
+.peer-name {
 	font-weight: 600;
+}
+
+.peer-url {
 	word-break: break-all;
+}
+
+.peer-error {
+	color: var(--color-error-text);
+	font-size: 12px;
 }
 
 .peer-badge {

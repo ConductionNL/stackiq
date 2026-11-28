@@ -16,7 +16,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+ * @spec openspec/specs/organisatie-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -37,7 +40,7 @@ use ReflectionMethod;
  * Tests for OrganisatieService::linkParentOrganisation() and the
  * self-parent / null-parent guards.
  *
- * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+ * @spec openspec/specs/organisatie-service/spec.md
  */
 class OrganisatieServiceParentHierarchyTest extends TestCase {
 

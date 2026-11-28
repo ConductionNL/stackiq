@@ -1,16 +1,48 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Pinia store for GEMMA view enrichment state.
  *
  * Manages the include_gebruik, include_deelnames_gebruik and include_products
  * toggle state and fetches enriched views from the backend API.
  *
  * @spec openspec/changes/deelnames-gebruik/tasks.md#task-5
- * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
+ * @spec openspec/changes/archive/2026-11-24-view-products-enrichment/specs/view-enrichment-api/spec.md
  */
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+
+/**
+ * The store flags that ask the views endpoint for extra data, with the
+ * query parameter each one sets.
+ *
+ * @type {Array<[string, string]>}
+ */
+const INCLUDE_PARAMS = [
+	['includeGebruik', 'include_gebruik'],
+	['includeDeelnamesGebruik', 'include_deelnames_gebruik'],
+	['includeProducts', 'include_products'],
+]
+
+/**
+ * The include query parameters for the flags that are on.
+ *
+ * @param {object} store The view store.
+ * @return {object} The parameters.
+ */
+function includeParams(store) {
+	const params = {}
+	for (const [flag, param] of INCLUDE_PARAMS) {
+		if (store[flag]) {
+			params[param] = true
+		}
+	}
+	return params
+}
 
 export const useViewStore = defineStore('view', {
 	state: () => ({
@@ -72,20 +104,7 @@ export const useViewStore = defineStore('view', {
 			this.error = null
 
 			try {
-				const params = {}
-
-				if (this.includeGebruik) {
-					params.include_gebruik = true
-				}
-
-				if (this.includeDeelnamesGebruik) {
-					params.include_deelnames_gebruik = true
-				}
-
-				if (this.includeProducts) {
-					params.include_products = true
-				}
-
+				const params = includeParams(this)
 				const url = generateUrl('/apps/stackiq/api/views')
 				const response = await axios.get(url, { params })
 
@@ -110,20 +129,7 @@ export const useViewStore = defineStore('view', {
 			this.error = null
 
 			try {
-				const params = {}
-
-				if (this.includeGebruik) {
-					params.include_gebruik = true
-				}
-
-				if (this.includeDeelnamesGebruik) {
-					params.include_deelnames_gebruik = true
-				}
-
-				if (this.includeProducts) {
-					params.include_products = true
-				}
-
+				const params = includeParams(this)
 				const url = generateUrl(
 					'/apps/stackiq/api/views/' + encodeURIComponent(viewId),
 				)

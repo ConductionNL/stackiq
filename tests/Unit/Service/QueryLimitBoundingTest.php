@@ -19,7 +19,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/bound-unbounded-searchobjects-scans/tasks.md#task-5-1
+ * @spec openspec/changes/archive/2026-11-21-bound-unbounded-searchobjects-scans/tasks.md#task-5-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -31,6 +34,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCA\Stackiq\Service\ViewService;
@@ -49,7 +53,7 @@ use ReflectionProperty;
 /**
  * Regression backstop for the unbounded-`searchObjects()` fix.
  *
- * @spec openspec/changes/bound-unbounded-searchobjects-scans/tasks.md#task-5-1
+ * @spec openspec/changes/archive/2026-11-21-bound-unbounded-searchobjects-scans/tasks.md#task-5-1
  */
 class QueryLimitBoundingTest extends TestCase {
 
@@ -177,8 +181,8 @@ class QueryLimitBoundingTest extends TestCase {
 			}
 		);
 
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			['register' => '1', 'module_schema' => '2', 'dienst_schema' => '3']
 		);
 
@@ -193,7 +197,7 @@ class QueryLimitBoundingTest extends TestCase {
 
 		$service = new FacetService(
 			container: $container,
-			settingsService: $settingsService,
+			catalogue: $catalogue,
 			archiMateService: $archiMateService,
 			queryBuilder: new ViewQueryBuilder(),
 			userSession: $this->createMock(IUserSession::class),

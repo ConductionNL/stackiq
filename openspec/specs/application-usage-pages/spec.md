@@ -87,3 +87,14 @@ The contact person page and the Name column of an organisation's contact person 
 - **AND** a contact in an address book the user cannot read reads that the name is kept in Nextcloud Contacts, in an address book the user cannot read
 - **AND** a request that failed (for example rate limited) reads that the name could not be loaded, to reload the page
 - **AND** the list column keeps the contact person's id in each of these cases
+
+### Requirement: REQ-UAP-006 A usage records the connections the organisation runs within it
+
+The usage form SHALL let an organisation pick the connections it actually runs for that application. The usage page SHALL list those connections, each opening the connection page.
+
+#### Scenario: An information manager records a running connection
+
+- **GIVEN** a usage of application X and a published connection between X and Y
+- **WHEN** the information manager edits the usage, picks that connection and saves
+- **THEN** the usage page lists the connection under Connections and services
+- **AND** clicking it opens the connection page

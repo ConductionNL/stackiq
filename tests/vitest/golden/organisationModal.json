@@ -1,0 +1,3079 @@
+{
+	"initial data": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"reset after edits": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load without organisation": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save invalid form": {
+		"trace": [
+			[
+				"showError",
+				"Please fill in all required fields"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | full | create": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | full | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Gemeente Test",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1"
+					],
+					"contactpersonen": [
+						"c1"
+					]
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | full | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": [
+						"c1"
+					]
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | full | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1"
+					],
+					"contactpersonen": [
+						"c1"
+					]
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | full | edit": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | full | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "No changes to save",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "No changes to save",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save changed | full | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam",
+					"participants": [
+						"p1",
+						"p2"
+					]
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-1",
+				{
+					"name": "Nieuwe naam",
+					"participants": [
+						"p1",
+						"p2"
+					]
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationUpdated",
+					"organisationId": "org-1"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | full | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam"
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-1",
+				{
+					"name": "Nieuwe naam"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": [
+					"c1"
+				]
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | full | copy": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | full | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Gemeente Test",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Gemeente Test",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | full | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | full | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "https://example.org",
+					"type": "Municipality",
+					"shortDescription": "Short",
+					"e-mailadres": "org@example.org",
+					"telefoonnummer": "0101234567",
+					"oin": "0000001",
+					"cbs": "0363",
+					"status": "Active",
+					"participants": [
+						"p1"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "https://example.org",
+				"type": "Municipality",
+				"shortDescription": "Short",
+				"e-mailadres": "org@example.org",
+				"telefoonnummer": "0101234567",
+				"oin": "0000001",
+				"cbs": "0363",
+				"status": "Active",
+				"participants": [
+					"p1"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": {
+				"value": "Municipality",
+				"label": "Municipality"
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | sparse | create": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | sparse | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Alleen naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | sparse | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | sparse | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | sparse | edit": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | sparse | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-2",
+				{
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationUpdated",
+					"organisationId": "org-2"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | sparse | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-2",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationUpdated",
+					"organisationId": "org-2"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | sparse | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-2",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | sparse | copy": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | sparse | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Alleen naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Alleen naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | sparse | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | sparse | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "Unknown type",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "Unknown type",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | falsy values | create": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | falsy values | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | falsy values | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | falsy values | create": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | falsy values | edit": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | falsy values | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-3",
+				{
+					"name": "Naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationUpdated",
+					"organisationId": "org-3"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | falsy values | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-3",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationUpdated",
+					"organisationId": "org-3"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation updated successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | falsy values | edit": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"console.info",
+				"Detected changes:",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"patchObject",
+				"organization",
+				"org-3",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"load | falsy values | copy": {
+		"trace": [],
+		"during": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	},
+	"save unchanged | falsy values | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save changed | falsy values | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [
+						"p1",
+						"p2"
+					],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"setTransferData",
+				{
+					"action": "organisationCreated"
+				}
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 3,
+			"countdownRunning": true
+		},
+		"traceAfterTimers": [
+			[
+				"$emit",
+				"close"
+			]
+		],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [
+					"p1",
+					"p2"
+				],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": true,
+			"successMessage": "Organisation created successfully",
+			"countdown": 0,
+			"countdownRunning": true
+		}
+	},
+	"save fails | falsy values | copy": {
+		"trace": [
+			[
+				"getSchemaConfig",
+				"organization"
+			],
+			[
+				"saveObject",
+				{
+					"name": "Nieuwe naam",
+					"website": "",
+					"type": "",
+					"shortDescription": "",
+					"e-mailadres": "",
+					"telefoonnummer": "",
+					"oin": "",
+					"cbs": "",
+					"status": "Draft",
+					"participants": [],
+					"contactpersonen": []
+				},
+				{
+					"register": "reg-1",
+					"schema": "schema-1"
+				}
+			],
+			[
+				"console.error",
+				"Error saving organisation:",
+				"server down"
+			],
+			[
+				"showError",
+				"Failed to save organisation: {error} {\"error\":\"server down\"}"
+			]
+		],
+		"during": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		},
+		"traceAfterTimers": [],
+		"after": {
+			"formData": {
+				"name": "Nieuwe naam",
+				"website": "",
+				"type": "",
+				"shortDescription": "",
+				"e-mailadres": "",
+				"telefoonnummer": "",
+				"oin": "",
+				"cbs": "",
+				"status": "Draft",
+				"participants": [],
+				"contactpersonen": []
+			},
+			"selectedType": null,
+			"loading": false,
+			"success": false,
+			"successMessage": "",
+			"countdown": 3,
+			"countdownRunning": false
+		}
+	}
+}

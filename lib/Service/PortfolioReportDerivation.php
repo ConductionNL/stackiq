@@ -37,11 +37,27 @@ use DateTimeImmutable;
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
  */
 class PortfolioReportDerivation {
+	use ParsesStoredDates;
+
 	/**
 	 * End-of-support "approaching" look-ahead window in days, matching
 	 * `application-lifecycle-tracking`'s default `eol_warning_window_days`.
 	 */
 	public const EOL_WINDOW_DAYS = 180;
+
+	/**
+	 * The TIME class per business value band and technical fit band.
+	 */
+	private const TIME_CLASSIFICATION = [
+		'high' => [
+			'high' => 'Invest',
+			'low' => 'Migrate',
+		],
+		'low' => [
+			'high' => 'Tolerate',
+			'low' => 'Eliminate',
+		],
+	];
 
 	/**
 	 * Derive the lifecycle phase of a gebruik — the most advanced phase
@@ -87,15 +103,8 @@ class PortfolioReportDerivation {
 	 */
 	public function deriveEolState(?array $moduleVersion, DateTimeImmutable $now): array {
 		$endRaw = $moduleVersion['dateEndSupport'] ?? null;
-		$withdrawnRaw = $moduleVersion['dateWithdrawn'] ?? null;
-		if (is_string($withdrawnRaw) === false || trim($withdrawnRaw) === '') {
-			$withdrawnRaw = null;
-		}
-
-		$endDate = null;
-		if (is_string($endRaw) === true) {
-			$endDate = $endRaw;
-		}
+		$withdrawnRaw = $this->withdrawnDate(value: $moduleVersion['dateWithdrawn'] ?? null);
+		$endDate = $this->stringOrNull(value: $endRaw);
 
 		$end = $this->parseDate(value: $endRaw);
 
@@ -106,6 +115,36 @@ class PortfolioReportDerivation {
 			'withdrawnDate' => $withdrawnRaw,
 		];
 	}//end deriveEolState()
+
+	/**
+	 * The withdrawn date as recorded, or null when it is not a non-blank string.
+	 *
+	 * @param mixed $value The raw `dateWithdrawn`.
+	 *
+	 * @return string|null The withdrawn date, or null.
+	 */
+	private function withdrawnDate(mixed $value): ?string {
+		if (is_string($value) === false || trim($value) === '') {
+			return null;
+		}
+
+		return $value;
+	}//end withdrawnDate()
+
+	/**
+	 * A value when it is a string, else null.
+	 *
+	 * @param mixed $value The raw value.
+	 *
+	 * @return string|null The string, or null.
+	 */
+	private function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === true) {
+			return $value;
+		}
+
+		return null;
+	}//end stringOrNull()
 
 	/**
 	 * Whether a moduleVersie's end-of-support falls within the approaching
@@ -215,26 +254,23 @@ class PortfolioReportDerivation {
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 	 */
 	public function parseDate(mixed $value): ?DateTimeImmutable {
-		if (is_string($value) === false || trim($value) === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (\Exception $e) {
-			return null;
-		}
+		return $this->storedDate(value: $value);
 	}//end parseDate()
 
 	/**
 	 * Normalize OpenRegister search results (ObjectEntity or plain array)
 	 * into plain data-bag arrays.
 	 *
+	 * An entity's getObject() holds its properties only, so the organisation
+	 * that owns the row is carried over as `_organisation`: the report costs
+	 * only the contracts the reporting organisation owns, and without it every
+	 * contract read from an entity was dropped.
+	 *
 	 * @param array<int,mixed> $results Raw search results.
 	 *
 	 * @return array<int,array<string,mixed>> Normalized data bags.
 	 *
-	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-aggregation-queries-are-bounded
+	 * @spec openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-value-assessment/spec.md#requirement-the-portfolio-report-shows-each-usage-s-yearly-cost-beside-its-value-and-risk-scores-req-clr-016
 	 */
 	public function normalizeResults(array $results): array {
 		return array_map(
@@ -243,11 +279,19 @@ class PortfolioReportDerivation {
 					return $object;
 				}
 
-				if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-					return $object->getObject();
+				if (is_object($object) === false || method_exists($object, 'getObject') === false) {
+					return [];
 				}
 
-				return [];
+				$data = $object->getObject();
+				if (isset($data['_organisation']) === false
+					&& isset($data['@self']['organisation']) === false
+					&& method_exists($object, 'getOrganisation') === true
+				) {
+					$data['_organisation'] = $object->getOrganisation();
+				}
+
+				return $data;
 			},
 			$results
 		);
@@ -288,24 +332,28 @@ class PortfolioReportDerivation {
 	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
 	 */
 	public function suggestTimeClassification(?int $businessValue, ?int $technicalFit): ?string {
-		if ($businessValue === null || $technicalFit === null) {
+		// No class while either score is missing.
+		if (in_array(null, [$businessValue, $technicalFit], true) === true) {
 			return null;
 		}
 
-		if ($businessValue >= 3) {
-			if ($technicalFit >= 3) {
-				return 'Invest';
-			}
-
-			return 'Migrate';
-		}
-
-		if ($technicalFit >= 3) {
-			return 'Tolerate';
-		}
-
-		return 'Eliminate';
+		return self::TIME_CLASSIFICATION[$this->scoreBand(score: $businessValue)][$this->scoreBand(score: $technicalFit)];
 	}//end suggestTimeClassification()
+
+	/**
+	 * Whether a 1 to 5 score is high (3 or more) or low.
+	 *
+	 * @param int $score The score.
+	 *
+	 * @return string 'high' or 'low'.
+	 */
+	private function scoreBand(int $score): string {
+		if ($score >= 3) {
+			return 'high';
+		}
+
+		return 'low';
+	}//end scoreBand()
 
 	/**
 	 * The value assessment of one gebruik: its scores, the suggested TIME class
@@ -360,4 +408,104 @@ class PortfolioReportDerivation {
 
 		return 'no';
 	}//end mismatchLabel()
+
+	/**
+	 * Mark the rows whose application shares a reference component with another
+	 * application in use (architecture-reference-component-coverage D4).
+	 *
+	 * A row counts when its usage status is not one of
+	 * {@see ReferenceComponentCoverageDerivation::NOT_COUNTING}; two rows of the same
+	 * module are one application. Each row gains `referenceComponents` (the names
+	 * of the components its usage names) and `overlapsWith`: per shared component,
+	 * the other applications that cover it.
+	 *
+	 * @param array<int,array<string,mixed>> $rows           The report rows, each with `moduleId` and `moduleName`.
+	 * @param array<int,array<string,mixed>> $usages         The usages the rows were built from, in the same order.
+	 * @param array<string,string>           $componentNames Component names by id.
+	 *
+	 * @return array<int,array<string,mixed>> The rows with `referenceComponents` and `overlapsWith`.
+	 *
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	public function withOverlap(array $rows, array $usages, array $componentNames): array {
+		$componentIds = [];
+		$counting = [];
+		$applications = [];
+		foreach ($rows as $index => $row) {
+			$usage = ($usages[$index] ?? []);
+			$componentIds[$index] = $this->componentIdsOf(usage: $usage);
+			$counting[$index] = in_array((string)($usage['status'] ?? ''), ReferenceComponentCoverageDerivation::NOT_COUNTING, true) === false;
+			if ($counting[$index] === false) {
+				continue;
+			}
+
+			foreach ($componentIds[$index] as $componentId) {
+				$applications[$componentId][(string)$row['moduleId']] = (string)$row['moduleName'];
+			}
+		}
+
+		foreach ($rows as $index => $row) {
+			$rows[$index]['referenceComponents'] = array_map(
+				static fn (string $id): string => ($componentNames[$id] ?? $id),
+				$componentIds[$index]
+			);
+			$rows[$index]['overlapsWith'] = [];
+			if ($counting[$index] === false) {
+				continue;
+			}
+
+			foreach ($componentIds[$index] as $componentId) {
+				$others = ($applications[$componentId] ?? []);
+				unset($others[(string)$row['moduleId']]);
+				if ($others === []) {
+					continue;
+				}
+
+				$rows[$index]['overlapsWith'][] = [
+					'componentId' => $componentId,
+					'component' => ($componentNames[$componentId] ?? $componentId),
+					'modules' => array_values($others),
+				];
+			}
+		}//end foreach
+
+		return $rows;
+	}//end withOverlap()
+
+	/**
+	 * The `overlapsWith` CSV cell: `component: module | module`, one component
+	 * after another separated by `; `, empty without overlap.
+	 *
+	 * @param array<string,mixed> $row The report row.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	public function overlapLabel(array $row): string {
+		$parts = [];
+		foreach (($row['overlapsWith'] ?? []) as $overlap) {
+			$parts[] = $overlap['component'] . ': ' . implode(' | ', $overlap['modules']);
+		}
+
+		return implode('; ', $parts);
+	}//end overlapLabel()
+
+	/**
+	 * The distinct reference component ids a usage names.
+	 *
+	 * @param array<string,mixed> $usage The usage.
+	 *
+	 * @return array<int,string>
+	 */
+	public function componentIdsOf(array $usage): array {
+		$values = ($usage['usedForReferenceComponents'] ?? []);
+		if (is_array($values) === false) {
+			return [];
+		}
+
+		$ids = array_map(fn (mixed $value): string => $this->resolveRelationId(value: $value), $values);
+
+		return array_values(array_unique(array_filter($ids, static fn (string $id): bool => $id !== '')));
+	}//end componentIdsOf()
 }//end class

@@ -18,6 +18,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -128,5 +131,30 @@ class AangebodenGebruikControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 
 	}//end testAuthenticatedCallerReachesService()
+
+	/**
+	 * GET /api/aangeboden-gebruik/docs keeps its body and points an old
+	 * integration to the API documentation page and the OpenAPI document.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-sharing-generated-api-docs/specs/generated-api-docs/spec.md#requirement-req-gad-003-the-hand-written-documentation-points-to-the-generated-documents
+	 *
+	 * @return void
+	 */
+	public function testDocsCarryALinkToTheApiDocumentationPage(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
+		$this->gebruikSvc->expects($this->never())->method($this->anything());
+
+		$response = $controller->getApiDocumentation();
+		$data     = $response->getData();
+
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: '/api/aangeboden-gebruik', actual: $data['base_url']);
+		$this->assertNotEmpty(actual: $data['endpoints']);
+		$this->assertSame(expected: '/apps/stackiq/api-docs', actual: $data['documentation']['page']);
+		$this->assertSame(expected: '/apps/stackiq/api/openapi.json', actual: $data['documentation']['openapi']);
+		$this->assertStringContainsString(needle: 'deprecated', haystack: $data['documentation']['note']);
+
+	}//end testDocsCarryALinkToTheApiDocumentationPage()
 
 }//end class

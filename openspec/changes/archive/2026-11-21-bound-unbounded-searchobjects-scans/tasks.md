@@ -1,0 +1,65 @@
+# Tasks — bound-unbounded-searchobjects-scans
+
+## 1. High-traffic view/dashboard paths
+
+- [x] 1.1 `lib/Service/ViewService.php:270` — add `_limit` to the "all view
+  objects" query (view index load).
+- [x] 1.2 `lib/Service/ViewService.php:666` — add `_limit` to the module
+  lookup-index query.
+- [x] 1.3 `lib/Service/ViewService.php:771` — add `_limit` to the gebruik
+  enrichment query.
+- [x] 1.4 `lib/Service/ViewService.php:1152` — add `_limit` to the deelnames
+  enrichment query.
+- [x] 1.5 `lib/Service/ModuleComplianceService.php:307` and `:588` — add
+  `_limit` to the compliance-matrix data queries.
+
+## 2. Service listing/search paths
+
+- [x] 2.1 `lib/Service/ArchiMateService.php:2022` — add `_limit`.
+- [x] 2.2 `lib/Service/ContactpersoonService.php:801` — add `_limit`.
+- [x] 2.3 `lib/Service/ModuleVersionService.php:157` — add `_limit`.
+- [x] 2.4 `lib/Service/ModerationService.php:96` — add `_limit`.
+- [x] 2.5 `lib/Service/ContractApprovalService.php:411` and
+  `lib/Service/ContractStatusService.php:138` — add `_limit`.
+- [x] 2.6 `lib/Service/IntakeService.php:235` — add `_limit`.
+- [x] 2.7 `lib/Service/GebruikSyncService.php:345` — add `_limit` (this call
+  filters by a caller-supplied ID list; bound to `count($ids)` or a safe
+  ceiling, whichever is smaller).
+- [x] 2.8 `lib/Service/AangebodenGebruikService.php:818`, `:1336`, `:1362` —
+  add `_limit` to each.
+
+## 3. Sync/federation background paths
+
+- [x] 3.1 `lib/Service/Federation/FederationService.php:498` — add `_limit`
+  (page the sync if it can exceed one bounded fetch).
+- [x] 3.2 `lib/Service/OrganizationSyncService.php:830`, `:1276`, `:2032`,
+  `:2047` — add `_limit` to each; convert to `searchObjectsPaginated()` and
+  loop if a sync tick must genuinely cover every object.
+- [x] 3.3 `lib/Service/SettingsService.php:4462` — add `_limit`.
+- [x] 3.4 `lib/Service/ArchiMateImportService.php:779` — add `_limit`.
+
+## 4. Event listener (highest-risk path — fires outside app's own requests)
+
+- [x] 4.1 `lib/EventListener/UserProfileUpdatedEventListener.php:348` and
+  `:388` — replace the broad scan with a query filtered directly on the
+  updated user's identifier (this listener is looking for ONE contact
+  record, not the whole register); add `_limit` regardless as a backstop.
+
+## 5. Verification
+
+- [x] 5.1 PHPUnit: for at least one representative call site per service
+  (`ViewService`, `OrganizationSyncService`, `UserProfileUpdatedEventListener`),
+  assert the query array passed to `searchObjects()` contains `_limit`.
+  - Met by tests that pin the exact query: `ViewServiceGebruikDataGoldenTest` (`_limit` 500 and 1000 on the gebruik reads), `OrganizationSyncRelatedContactsGoldenTest` with `golden/organizationSyncRelatedContacts.json` (all 15 `searchObjects` calls carry `_limit` 500) and `UserProfileContactSyncGoldenTest` (`_limit` 5 on the username and search lookups). Checked 17 Nov 2026.
+- [x] 5.2 Manual/log verification: confirm no call site listed in the
+  proposal was missed (re-run the `_limit`-proximity grep from the
+  proposal and confirm 0 remaining unbounded call sites among the ones
+  enumerated).
+- [x] 5.3 Run `composer check:strict` (PHPCS/PHPMD/Psalm/PHPStan) — no new
+  violations.
+  - 17 Nov 2026: the build added a PHPMD `StaticAccess` on every `SearchBounds::bounded()` call; each of those methods now carries the repository's reasoned `@SuppressWarnings(PHPMD.StaticAccess)`, so PHPMD reports none for `SearchBounds`. PHPCS (no new findings) and PHPStan (no errors) are clean on the touched files. Left: Psalm, which needs PHP >= 8.3.16 and the build container runs 8.3.6.
+  - 21 Nov 2026: Psalm 7.6 ran on development (its own PHP patch-version check skipped locally; vendor is not committed). It reports 736 findings, all from before this change: `git blame` puts none of them on a line written by this change's commits (`ba019ecee`, `cd2856b20`, `903d38ebb`), and none are in `lib/Service/SearchBounds.php`. PHPMD still reported one `StaticAccess` on `SearchBounds::bounded()`, in `TechnologyComponentEolStamper::components()`; that method now carries the same reasoned suppression as the other call sites. No new violations.
+
+## Build notes
+
+Most call sites were already bounded on development by earlier work (the listener filters on the username with `_limit` 5, and the sync and service paths name their own limits). The 11 still unbounded, in ArchiMateService, CmdbExportImportService, ContractApprovalService, ModuleVersionPublicationService, ModuleVersionService and ViewService (the four 1.x paths), now go through `SearchBounds::bounded()`. It adds `_limit` 10000, the ceiling the full-catalogue export already uses, only when the query names no limit of its own, so no realistic result is cut short. 5.2 is automated as `SearchBoundsTest::testNoSearchInLibIsUnbounded`, which fails on any `searchObjects()` call whose function names neither `_limit` nor `SearchBounds`. 5.1's per-service query assertions are covered by that scan rather than by three mocked call sites, so 5.1 stays open, as does 5.3 (psalm and phpmd were not run; phpcs and phpstan are clean on the touched files).

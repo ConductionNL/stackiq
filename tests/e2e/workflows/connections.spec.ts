@@ -94,7 +94,8 @@ test('the connections list shows both connections and opens one', async ({
 	await dismissSupportDialog(page)
 	await expect(page.getByText(apiName).first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText(fileName).first()).toBeVisible()
-	await page.getByText(apiName).first().click()
+	// A full-row link lies over each row and takes the click.
+	await page.getByRole('link', { name: apiName }).first().click()
 	await expect(page).toHaveURL(new RegExp(`/koppelingen/${ids.api}`))
 })
 
@@ -110,9 +111,17 @@ test('the application page lists the connection from it and the connection to it
 }) => {
 	await gotoAppRoute(page, `/modules/${ids.x}`)
 	await dismissSupportDialog(page)
-	await expect(
-		page.getByText('Connections from this application').first(),
-	).toBeVisible({ timeout: 30000 })
+	// The connection lists sit below the fold and mount when scrolled into view.
+	const outgoing = page.getByText('Connections from this application').first()
+	await page.mouse.move(800, 450)
+	await expect
+		.poll(async () => {
+			await page.mouse.wheel(0, 800)
+			return await outgoing.count()
+		}, { timeout: 30000 })
+		.toBeGreaterThan(0)
+	await outgoing.scrollIntoViewIfNeeded()
+	await expect(outgoing).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText(apiName).first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText(fileName).first()).toBeVisible()
 	await page.getByText(fileName).first().click()
@@ -124,7 +133,9 @@ test('a connection in development can be released from its page', async ({
 }) => {
 	await gotoAppRoute(page, `/koppelingen/${ids.api}`)
 	await dismissSupportDialog(page)
-	const release = page.getByRole('button', { name: /release/i }).first()
+	// The lifecycle transitions are offered in the page's Actions menu.
+	await page.getByRole('button', { name: /^Actions$|^Acties$/ }).first().click()
+	const release = page.getByRole('menuitem', { name: /release|vrijgeven/i }).first()
 	await expect(release).toBeVisible({ timeout: 30000 })
 	await release.click()
 	const url = `/index.php/apps/openregister/api/objects/${cfg.register}/connection/${ids.api}`

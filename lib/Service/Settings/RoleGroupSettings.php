@@ -1,0 +1,592 @@
+<?php
+
+/**
+ * Role Group Settings for Stackiq
+ *
+ * Moved out of the general settings service: the configured generic,
+ * organisation admin and super user group lists, the validation of group
+ * names, the group listing for the settings page, and the combined user
+ * groups configuration read and update.
+ *
+ * @category  Service
+ * @package   OCA\Stackiq\Service\Settings
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/specs/settings-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Service\Settings;
+
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IGroupManager;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Reads, validates and writes the role group lists.
+ *
+ * Not final, like the other settings handlers in this directory, so the
+ * services that depend on it can be tested against a mock.
+ *
+ * @spec openspec/specs/settings-service/spec.md
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Reading, validating and remapping the role groups share one settings shape.
+*/
+class RoleGroupSettings implements RoleGroupSettingsInterface {
+
+	/**
+	 * The name each role group list goes by in result messages and logs.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ROLE_GROUP_LABELS = [
+		'generic' => 'generic user groups',
+		'organizationAdmin' => 'organization admin groups',
+		'superUser' => 'super user groups',
+	];
+
+	/**
+	 * The role mapping, the organisation type roles and the review interval.
+	 *
+	 * @var RoleGroupMap
+	 */
+	private readonly RoleGroupMap $roleGroupMap;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig              $config       The app config holding the group lists.
+	 * @param IAppManager             $appManager   Tells whether user_management is installed.
+	 * @param IGroupManager           $groupManager Lists the Nextcloud groups.
+	 * @param LoggerInterface         $logger       The logger.
+	 * @param RoleGroupMap|null       $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 * @param ContainerInterface|null $container    Resolves RoleGrantSync when a remapped group is synced; null leaves that to the nightly job.
+	 *                                              Looked up on use, not injected: RoleGrantSync reads the register through SettingsService,
+	 *                                              which takes this class, so a constructor dependency is a cycle that recurses until the
+	 *                                              stack runs out on PHP 8.3 (`occ app:enable stackiq` died on it).
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		private readonly IAppManager $appManager,
+		private readonly IGroupManager $groupManager,
+		private readonly LoggerInterface $logger,
+		?RoleGroupMap $roleGroupMap = null,
+		private readonly ?ContainerInterface $container = null,
+	) {
+		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $config);
+	}//end __construct()
+
+	/**
+	 * Gets the list of generic user groups from configuration
+	 *
+	 * @return array Array of generic user groups
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function getGenericUserGroups(): array {
+		$groupsJson = $this->config->getValueString(AppIdentity::APP_ID, 'generic_user_groups', '');
+
+		if (empty($groupsJson) === true) {
+			// Return only truly generic groups as default (not role-specific).
+			// Role-specific groups are now assigned based on organization type.
+			return [
+				'software-catalog-users'
+			];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === true) {
+			return $groups;
+		}
+
+		return [];
+	}//end getGenericUserGroups()
+
+	/**
+	 * Sets the list of generic user groups in configuration
+	 *
+	 * @param array $groups Array of generic user groups
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function setGenericUserGroups(array $groups): void {
+		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+		$this->config->setValueString(AppIdentity::APP_ID, 'generic_user_groups', $groupsJson);
+
+		$this->logger->info(
+			'Updated generic user groups configuration',
+			[
+				'groups' => $groups,
+			]
+		);
+	}//end setGenericUserGroups()
+
+	/**
+	 * Gets the list of organization admin groups from configuration
+	 *
+	 * Returns the list an admin saved under `organization_admin_groups`, or an
+	 * empty list when nothing is saved. There is no default list: commit
+	 * bc4dc9ea dropped the old default (organisaties-beheerder) on purpose,
+	 * and first contacts are not added to these groups automatically (see
+	 * ContactPersonHandler::assignUserGroups()). Until stackiq#1136 this getter
+	 * returned an empty list unconditionally, which discarded the saved
+	 * setting as well.
+	 *
+	 * @return array Array of organization admin groups
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function getOrganizationAdminGroups(): array {
+		$groupsJson = $this->config->getValueString(AppIdentity::APP_ID, 'organization_admin_groups', '');
+
+		if (empty($groupsJson) === true) {
+			return [];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === true) {
+			return $groups;
+		}
+
+		return [];
+	}//end getOrganizationAdminGroups()
+
+	/**
+	 * Sets the list of organization admin groups in configuration
+	 *
+	 * @param array $groups Array of organization admin groups
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function setOrganizationAdminGroups(array $groups): void {
+		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+		$this->config->setValueString(AppIdentity::APP_ID, 'organization_admin_groups', $groupsJson);
+
+		$this->logger->info(
+			'Updated organization admin groups configuration',
+			[
+				'groups' => $groups,
+			]
+		);
+	}//end setOrganizationAdminGroups()
+
+	/**
+	 * Gets the list of super user groups from configuration
+	 *
+	 * @return array Array of super user groups
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function getSuperUserGroups(): array {
+		$groupsJson = $this->config->getValueString(AppIdentity::APP_ID, 'super_user_groups', '');
+
+		if (empty($groupsJson) === true) {
+			// Return default groups if no configuration exists.
+			return [
+				'admin',
+				'software-catalog-admins',
+			];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === true) {
+			return $groups;
+		}
+
+		return [];
+	}//end getSuperUserGroups()
+
+	/**
+	 * Sets the list of super user groups in configuration
+	 *
+	 * @param array $groups Array of super user groups
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function setSuperUserGroups(array $groups): void {
+		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
+		$this->config->setValueString(AppIdentity::APP_ID, 'super_user_groups', $groupsJson);
+
+		$this->logger->info(
+			'Updated super user groups configuration',
+			[
+				'groups' => $groups,
+			]
+		);
+	}//end setSuperUserGroups()
+
+	/**
+	 * Validates a list of group names
+	 *
+	 * @param array $groups Array of group names to validate
+	 *
+	 * @return array Array with validation results
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function validateGroups(array $groups): array {
+		$results = [
+			'valid' => [],
+			'invalid' => [],
+			'errors' => [],
+		];
+
+		foreach ($groups as $groupName) {
+			if (empty($groupName) === true || is_string($groupName) === false) {
+				$results['invalid'][] = $groupName;
+				$results['errors'][] = 'Group name cannot be empty';
+				continue;
+			}
+
+			// Check for invalid characters.
+			if (preg_match('/[^a-zA-Z0-9._-]/', $groupName) === 1) {
+				$results['invalid'][] = $groupName;
+				$results['errors'][] = "Group name '{$groupName}' contains invalid characters";
+				continue;
+			}
+
+			$results['valid'][] = $groupName;
+		}
+
+		return $results;
+	}//end validateGroups()
+
+	/**
+	 * Gets all available groups with their information
+	 *
+	 * @return array Array of group information
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function getAllGroups(): array {
+		$groups = [];
+
+		// Get group manager if possible.
+		if ($this->appManager->isInstalled('user_management') === true) {
+			try {
+				$groupManager = $this->groupManager;
+				$allGroups = $groupManager->search('');
+
+				foreach ($allGroups as $group) {
+					$groups[] = [
+						'id' => $group->getGID(),
+						'displayName' => $group->getDisplayName(),
+						'memberCount' => count($group->getUsers()),
+						'isGeneric' => in_array($group->getGID(), $this->getGenericUserGroups()) === true,
+					];
+				}
+			} catch (\Exception $e) {
+				$this->logger->error('Failed to get all groups: ' . $e->getMessage());
+			}
+		}
+
+		return $groups;
+	}//end getAllGroups()
+
+	/**
+	 * Update generic user groups with validation
+	 *
+	 * @param array $groups Groups to set.
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function updateGenericUserGroups(array $groups): array {
+		return $this->updateRoleGroups(groups: $groups, role: 'generic');
+	}//end updateGenericUserGroups()
+
+	/**
+	 * Update organization admin groups with validation
+	 *
+	 * @param array $groups Groups to set.
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function updateOrganizationAdminGroups(array $groups): array {
+		return $this->updateRoleGroups(groups: $groups, role: 'organizationAdmin');
+	}//end updateOrganizationAdminGroups()
+
+	/**
+	 * Update super user groups with validation
+	 *
+	 * @param array $groups Groups to set.
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function updateSuperUserGroups(array $groups): array {
+		return $this->updateRoleGroups(groups: $groups, role: 'superUser');
+	}//end updateSuperUserGroups()
+
+	/**
+	 * Validate a role's group list and store it when every name is valid.
+	 *
+	 * @param array  $groups Groups to set.
+	 * @param string $role   The role: generic, organizationAdmin or superUser.
+	 *
+	 * @psalm-param 'generic'|'organizationAdmin'|'superUser' $role
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function updateRoleGroups(array $groups, string $role): array {
+		$label = self::ROLE_GROUP_LABELS[$role];
+		try {
+			$validation = $this->validateGroups(groups: $groups);
+
+			if (empty($validation['invalid']) === false) {
+				return [
+					'success' => false,
+					'message' => 'Invalid group names provided',
+					'validation' => $validation,
+				];
+			}
+
+			match ($role) {
+				'generic' => $this->setGenericUserGroups(groups: $validation['valid']),
+				'organizationAdmin' => $this->setOrganizationAdminGroups(groups: $validation['valid']),
+				'superUser' => $this->setSuperUserGroups(groups: $validation['valid']),
+			};
+
+			return [
+				'success' => true,
+				'message' => ucfirst($label) . ' updated successfully',
+				'groups' => $validation['valid'],
+			];
+		} catch (\Exception $e) {
+			$this->logger->error('SettingsService: Failed to update ' . $label, ['exception' => $e->getMessage()]);
+			return [
+				'success' => false,
+				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
+			];
+		}//end try
+	}//end updateRoleGroups()
+
+	/**
+	 * Get user groups configuration only
+	 *
+	 * Next to the three group lists it carries the catalogue role mapping:
+	 * `roleMapping`, `organisationTypeRoles` and `accessReviewIntervalDays`.
+	 *
+	 * @return array User groups configuration
+	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+	 */
+	public function getUserGroupsConfig(): array {
+		try {
+			$config = array_merge(
+				[
+					'generic' => $this->getGenericUserGroups(),
+					'organizationAdmin' => $this->getOrganizationAdminGroups(),
+					'superUser' => $this->getSuperUserGroups(),
+					'allGroups' => $this->getAllGroups(),
+				],
+				$this->roleGroupMap->toArray()
+			);
+
+			return [
+				'success' => true,
+				'config' => $config,
+				'timestamp' => time(),
+			];
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'Failed to get user groups config',
+				[
+					'exception' => $e->getMessage(),
+				]
+			);
+			return [
+				'success' => false,
+				'message' => 'Failed to get user groups config: ' . $e->getMessage(),
+			];
+		}//end try
+	}//end getUserGroupsConfig()
+
+	/**
+	 * Sync the members of every group whose mapped roles changed.
+	 *
+	 * Runs only once the role groups are seeded; a member without a contact
+	 * person is left alone, and a failed sync is logged without failing the save.
+	 *
+	 * @param array<string, list<string>> $before The source groups per role before the save.
+	 * @param array<string, list<string>> $after  The source groups per role after the save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	private function syncRemappedGroups(array $before, array $after): void {
+		if ($this->container === null || $this->roleGroupMap->grantsSeeded() === false) {
+			return;
+		}
+
+		$roleGrantSync = $this->roleGrantSync();
+		if ($roleGrantSync === null) {
+			return;
+		}
+
+		$rolesBefore = self::rolesPerGroup(sourceGroups: $before);
+		$rolesAfter = self::rolesPerGroup(sourceGroups: $after);
+		$groups = array_unique(array_merge(array_keys($rolesBefore), array_keys($rolesAfter)));
+
+		$synced = [];
+		foreach ($groups as $groupId) {
+			if (($rolesBefore[$groupId] ?? []) === ($rolesAfter[$groupId] ?? [])) {
+				continue;
+			}
+
+			$group = $this->groupManager->get((string) $groupId);
+			if ($group === null) {
+				continue;
+			}
+
+			foreach ($group->getUsers() as $user) {
+				if (isset($synced[$user->getUID()]) === true) {
+					continue;
+				}
+
+				$synced[$user->getUID()] = true;
+				try {
+					$roleGrantSync->syncCatalogueUser(user: $user);
+				} catch (\Throwable $e) {
+					$this->logger->warning(
+						'Role groups of a remapped group member not synced',
+						['username' => $user->getUID(), 'group' => $groupId, 'error' => $e->getMessage()]
+					);
+				}
+			}
+		}//end foreach
+	}//end syncRemappedGroups()
+
+	/**
+	 * The role grant sync, resolved on use so the constructors do not form a cycle.
+	 *
+	 * @return RoleGrantSync|null The sync, or null when the container cannot build it (logged).
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	private function roleGrantSync(): ?RoleGrantSync {
+		try {
+			$sync = $this->container?->get(RoleGrantSync::class);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Role grant sync unavailable; remapped groups sync on the nightly job', ['error' => $e->getMessage()]);
+			return null;
+		}
+
+		if ($sync instanceof RoleGrantSync) {
+			return $sync;
+		}
+
+		return null;
+	}//end roleGrantSync()
+
+	/**
+	 * The roles each source group grants.
+	 *
+	 * @param array<string, list<string>> $sourceGroups The source groups per role.
+	 *
+	 * @return array<string, list<string>> The sorted roles per group id, as the mapping names it.
+	 */
+	private static function rolesPerGroup(array $sourceGroups): array {
+		$roles = [];
+		foreach ($sourceGroups as $role => $groups) {
+			foreach ($groups as $group) {
+				$roles[(string) $group][] = (string) $role;
+			}
+		}
+
+		foreach ($roles as $group => $list) {
+			sort($list);
+			$roles[$group] = $list;
+		}
+
+		return $roles;
+	}//end rolesPerGroup()
+
+	/**
+	 * Update user groups configuration
+	 *
+	 * The role mapping parts are validated and saved together by RoleGroupMap,
+	 * all or nothing.
+	 *
+	 * @param array $config User groups configuration data
+	 *
+	 * @return array Result of the update operation
+	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
+	 */
+	public function updateUserGroupsConfig(array $config): array {
+		try {
+			$results = [];
+
+			if (isset($config['generic']) === true) {
+				$results['generic'] = $this->updateGenericUserGroups(groups: $config['generic']);
+			}
+
+			if (isset($config['organizationAdmin']) === true) {
+				$results['organizationAdmin'] = $this->updateOrganizationAdminGroups(groups: $config['organizationAdmin']);
+			}
+
+			if (isset($config['superUser']) === true) {
+				$results['superUser'] = $this->updateSuperUserGroups(groups: $config['superUser']);
+			}
+
+			$roleMapKeys = array_intersect_key($config, array_flip(['roleMapping', 'organisationTypeRoles', 'accessReviewIntervalDays']));
+			if ($roleMapKeys !== []) {
+				$before = $this->roleGroupMap->sourceGroups();
+				$results['roleMapping'] = $this->roleGroupMap->update(config: $roleMapKeys);
+				if ($results['roleMapping']['success'] === true) {
+					$this->syncRemappedGroups(before: $before, after: $this->roleGroupMap->sourceGroups());
+				}
+			}
+
+			// Check if any updates failed.
+			$failed = array_filter(
+				$results,
+				function ($result) {
+					return $result['success'] === false;
+				}
+			);
+
+			if (empty($failed) === false) {
+				return [
+					'success' => false,
+					'message' => 'Some user group updates failed',
+					'results' => $results,
+				];
+			}
+
+			return [
+				'success' => true,
+				'message' => 'User groups configuration updated successfully',
+				'config' => $this->getUserGroupsConfig(),
+			];
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'Failed to update user groups config',
+				[
+					'exception' => $e->getMessage(),
+					'config' => $config,
+				]
+			);
+			return [
+				'success' => false,
+				'message' => 'Failed to update user groups config: ' . $e->getMessage(),
+			];
+		}//end try
+	}//end updateUserGroupsConfig()
+}//end class

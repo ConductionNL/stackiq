@@ -1,11 +1,15 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog name="Upload Object" size="normal" :canClose="false">
+	<NcDialog :name="t('stackiq', 'Upload Object')" size="normal" :canClose="false">
 		<NcNoteCard v-if="success" type="success">
-			<p>Object successfully uploaded</p>
+			<p>{{ t('stackiq', 'Object successfully uploaded') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -19,7 +23,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back to Register
+				{{ t('stackiq', 'Back to Register') }}
 			</NcButton>
 			<NcButton
 				v-if="registers.value?.id && schemas.value?.id"
@@ -28,13 +32,13 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back to Schema
+				{{ t('stackiq', 'Back to Schema') }}
 			</NcButton>
 			<NcButton @click="closeModal">
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success ? 'Close' : 'Cancel' }}
+				{{ success ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
@@ -50,18 +54,22 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Upload v-if="!loading" :size="20" />
 				</template>
-				Upload
+				{{ t('stackiq', 'Upload') }}
 			</NcButton>
 		</template>
 
 		<div v-if="!success" class="formContainer">
 			<div v-if="registers?.value?.id && success === null">
-				<b>Register:</b> {{ registers.value.label }}
-				<NcButton @click="registers.value = null"> Edit Register </NcButton>
+				<b>{{ t('stackiq', 'Register:') }}</b> {{ registers.value.label }}
+				<NcButton @click="registers.value = null">
+					{{ t('stackiq', 'Edit Register') }}
+				</NcButton>
 			</div>
 			<div v-if="schemas.value?.id && success === null">
-				<b>Schema:</b> {{ schemas.value.label }}
-				<NcButton @click="schemas.value = null"> Edit Schema </NcButton>
+				<b>{{ t('stackiq', 'Schema:') }}</b> {{ schemas.value.label }}
+				<NcButton @click="schemas.value = null">
+					{{ t('stackiq', 'Edit Schema') }}
+				</NcButton>
 			</div>
 
 			<!-- STAGE 1 -->
@@ -69,7 +77,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<NcSelect
 					v-bind="registers"
 					v-model="registers.value"
-					inputLabel="Register"
+					:inputLabel="t('stackiq', 'Register')"
 					:loading="registersLoading"
 					:disabled="loading" />
 			</div>
@@ -79,7 +87,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<NcSelect
 					v-bind="schemas"
 					v-model="schemas.value"
-					inputLabel="Schemas"
+					:inputLabel="t('stackiq', 'Schemas')"
 					:loading="schemasLoading"
 					:disabled="loading" />
 			</div>
@@ -89,25 +97,25 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<NcSelect
 					v-bind="mappings"
 					v-model="mappings.value"
-					inputLabel="Mappings"
+					:inputLabel="t('stackiq', 'Mappings')"
 					:loading="mappingsLoading"
 					:disabled="loading || !mappings.options?.length" />
 
 				<div :class="`codeMirrorContainer ${getTheme()}`">
-					<p>Object</p>
+					<p>{{ t('stackiq', 'Object') }}</p>
 					<CodeMirror
 						v-model="object"
 						:basic="true"
 						:dark="getTheme() === 'dark'"
 						:lang="json()"
 						:linter="jsonParseLinter()"
-						placeholder="Enter your object here..." />
+						:placeholder="t('stackiq', 'Enter your object here…')" />
 
 					<NcButton class="prettifyButton" @click="prettifyJson">
 						<template #icon>
 							<AutoFix :size="20" />
 						</template>
-						Prettify
+						{{ t('stackiq', 'Prettify') }}
 					</NcButton>
 				</div>
 			</div>
@@ -117,6 +125,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 <script>
 import { json, jsonParseLinter } from '@codemirror/lang-json'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcDialog,
@@ -282,7 +291,10 @@ export default {
 					this.success = false
 					this.error =
 						error.message
-						|| 'An error occurred while uploading the object'
+						|| t(
+							'stackiq',
+							'An error occurred while uploading the object',
+						)
 				})
 				.finally(() => {
 					this.loading = false
@@ -341,103 +353,6 @@ export default {
 .codeMirrorContainer :deep(.cm-editor) {
 	outline: none !important;
 }
-
-.codeMirrorContainer.light > .vue-codemirror {
-	border: 1px dotted silver;
-}
-
-.codeMirrorContainer.dark > .vue-codemirror {
-	border: 1px dotted grey;
-}
-
-/* value text color */
-/* string */
-.codeMirrorContainer.light :deep(.ͼe) {
-	color: #448c27;
-}
-
-.codeMirrorContainer.dark :deep(.ͼe) {
-	color: #88c379;
-}
-
-/* boolean */
-.codeMirrorContainer.light :deep(.ͼc) {
-	color: #221199;
-}
-
-.codeMirrorContainer.dark :deep(.ͼc) {
-	color: #8d64f7;
-}
-
-/* null */
-.codeMirrorContainer.light :deep(.ͼb) {
-	color: #770088;
-}
-
-.codeMirrorContainer.dark :deep(.ͼb) {
-	color: #be55cd;
-}
-
-/* number */
-.codeMirrorContainer.light :deep(.ͼd) {
-	color: #d19a66;
-}
-
-.codeMirrorContainer.dark :deep(.ͼd) {
-	color: #9d6c3a;
-}
-
-/* text cursor */
-.codeMirrorContainer :deep(.cm-content) * {
-	cursor: text !important;
-}
-
-/* selection color */
-.codeMirrorContainer.light :deep(.cm-line)::selection,
-.codeMirrorContainer.light :deep(.cm-line) ::selection {
-	background-color: #d7eaff !important;
-	color: black;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line)::selection,
-.codeMirrorContainer.dark :deep(.cm-line) ::selection {
-	background-color: #8fb3e6 !important;
-	color: black;
-}
-
-/* string */
-.codeMirrorContainer.light :deep(.cm-line .ͼe)::selection {
-	color: #2d770f;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼe)::selection {
-	color: #104e0c;
-}
-
-/* boolean */
-.codeMirrorContainer.light :deep(.cm-line .ͼc)::selection {
-	color: #221199;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼc)::selection {
-	color: #4026af;
-}
-
-/* null */
-.codeMirrorContainer.light :deep(.cm-line .ͼb)::selection {
-	color: #770088;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼb)::selection {
-	color: #770088;
-}
-
-/* number */
-.codeMirrorContainer.light :deep(.cm-line .ͼd)::selection {
-	color: #8c5c2c;
-}
-
-.codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
-	color: #623907;
-}
 </style>
+
+<style scoped src="./codeMirrorJsonTheme.css"></style>

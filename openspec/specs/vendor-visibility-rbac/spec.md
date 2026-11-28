@@ -96,24 +96,34 @@ This change MUST NOT restrict the existing, correct relationship-based reads: an
 - THEN both records MUST be returned
 - AND this MUST remain consistent with `deelnames-gebruik`'s existing RBAC-disabled, `deelnemers`-filtered query behaviour
 
-### Requirement: Contract reads MUST deny non-counterparty cross-organisation access via the OpenRegister schema RBAC rule (REQ-006)
+### Requirement: Contracts MUST be readable only by the owning organisation and admins (REQ-006)
 
-Because contract CRUD runs entirely through the OpenRegister object store (ADR-022, `contract-administration`), contract read visibility MUST be governed by the `contract` schema's RBAC read rule denying any caller whose active organisation is neither the contract's owning organisation, the `admin` group, the app's designated super-user group `software-catalog-admins`, nor `ambtenaar`. Every role granted a contract read beyond those three exceptions MUST be match-scoped to the caller's own organisation via the schema's `_organisation` field — an unscoped, bare grant for any other role is a spec violation. If verification finds the deployed rule does not deny this case, the schema's RBAC read rule in `lib/Settings/softwarecatalogus_register.json` MUST be corrected as part of this change.
+Because contract CRUD runs entirely through the OpenRegister object store (ADR-022, `contract-administration`), contract read visibility MUST be governed by the `contract` schema's RBAC read rule. A contract MUST be readable only by users whose active organisation is the contract's owning organisation (`_organisation`), plus the `admin` group and the app's super-user group `software-catalog-admins`. Every other role granted a contract read, `ambtenaar` included, MUST be match-scoped to the caller's own organisation via the schema's `_organisation` field. An unscoped grant or a `crossOrganisation` grant for any role other than `admin` and `software-catalog-admins` is a spec violation. A custom endpoint that reads a contract with RBAC or multitenancy switched off MUST check the owning organisation before it reads.
 
 #### Scenario: Vendor cannot read another organisation's contract
-- GIVEN a contract owned by municipality A, and a user in the `aanbod-beheerder` group whose active organisation is vendor V (not a counterparty on this contract)
+- GIVEN a contract owned by municipality A, and a user in the `aanbod-beheerder` group whose active organisation is vendor V
 - WHEN the user attempts to read the contract via the OpenRegister object API
 - THEN the read MUST be denied (empty/404, governed by the schema RBAC rule)
 - AND V MUST NOT receive any field of the contract object
 
-#### Scenario: Counterparty and owner retain contract read access
-- GIVEN a contract owned by municipality A referencing vendor V as counterparty
-- WHEN A or V (whichever the schema's counterparty rule recognises) reads the contract
+#### Scenario: The owning organisation and admins read the contract
+- GIVEN a contract owned by municipality A
+- WHEN a user whose active organisation is A, or a user in the `admin` group, reads the contract
 - THEN the read MUST succeed
-- AND `admin` and `ambtenaar` MUST also retain read access regardless of counterparty status
+
+#### Scenario: A civil servant of another organisation cannot read the contract
+- GIVEN a contract owned by organisation A, and a user in the `ambtenaar` group, not `admin`, not `software-catalog-admins`, whose active organisation is B
+- WHEN the user lists contracts or reads this contract via the OpenRegister object API
+- THEN the contract MUST NOT be in the list and the read MUST be denied, empty result or 404
+- AND B MUST NOT receive any field of the contract object
+
+#### Scenario: A civil servant of the owning organisation reads the contract
+- GIVEN a contract owned by organisation A, and a user in the `ambtenaar` group whose active organisation is A
+- WHEN the user reads the contract
+- THEN the read MUST succeed
 
 #### Scenario: Municipality-side role cannot read another organisation's contract
-- GIVEN a contract owned by organisation A, and a user in the `gebruik-beheerder` group, not `admin`, not `software-catalog-admins`, not `ambtenaar`, whose active organisation is B, not A
+- GIVEN a contract owned by organisation A, and a user in the `gebruik-beheerder` group, not `admin`, not `software-catalog-admins`, whose active organisation is B, not A
 - WHEN the user attempts to read the contract via the OpenRegister object API
 - THEN the read MUST be denied, empty result or 404, governed by the schema RBAC rule
 - AND B MUST NOT receive any field of the contract object
@@ -122,6 +132,11 @@ Because contract CRUD runs entirely through the OpenRegister object store (ADR-0
 - GIVEN a contract owned by any organisation
 - WHEN a user in the `software-catalog-admins` group reads the contract via the OpenRegister object API
 - THEN the read MUST succeed regardless of the user's active organisation
+
+#### Scenario: A custom endpoint checks the owner before an unscoped read
+- GIVEN an app endpoint that reads a contract with `_rbac: false` or `_multitenancy: false`
+- WHEN a user whose active organisation is not the contract's owner, and who is not an admin, calls it
+- THEN the endpoint MUST refuse before the unscoped read is issued
 
 ### Requirement: Every route touching gebruik, koppeling, or contract objects MUST have a documented, tested authorization posture (REQ-007)
 
@@ -173,19 +188,19 @@ The `gebruik`, `koppeling`, and `organisatie` schemas' OpenRegister `authorizati
 - WHEN a user in the `gebruik-beheerder` group whose active organisation is A reads the gebruik object via OpenRegister's standard object API
 - THEN the read MUST succeed
 
-### Requirement: The aanbod listing endpoint MUST require authentication explicitly, not implicitly (REQ-009)
+### Requirement: The aanbod listing endpoint serves anonymous callers published entries only (REQ-009)
 
-`AanbodController::getAanbod()` MUST explicitly reject an unauthenticated caller before invoking `AanbodService::getAanbod()`, rather than relying on the service's internal `getCurrentOrganisation()` returning `null` for anonymous sessions as the only safeguard.
+`AanbodController::getAanbod()` MUST decide explicitly what an unauthenticated caller gets, before it invokes `AanbodService::getAanbod()`, and MUST NOT rely on `getCurrentOrganisation()` returning `null` as the only safeguard. An unauthenticated caller MUST receive only published aanbod entries (`publicatiedatum` at or before now and no `depublicatiedatum` passed) in the sanitized open-data projection, as `open-data-publishing` says. Every other aanbod entry, and every organisation-scoped field, MUST need login.
 
-#### Scenario: Unauthenticated caller is explicitly rejected
-- GIVEN no authenticated user session
+#### Scenario: An anonymous caller lists the aanbod
+- GIVEN a published aanbod entry "Zaaksysteem X" and an unpublished entry "Concept Y"
+- AND no authenticated user session
 - WHEN `GET /api/aanbod` is called
-- THEN the controller MUST return the empty-result envelope, or 401, without depending on `AanbodService::getCurrentOrganisation()` resolving to null as the sole guard
-- AND a test MUST assert `AanbodService::getAanbod()` is never invoked for this request
+- THEN the response contains "Zaaksysteem X" in the sanitized open-data projection
+- AND it does not contain "Concept Y" or any organisation-scoped field
 
 #### Scenario: Authenticated caller with no active organisation gets the documented empty envelope
 - GIVEN an authenticated user with no active organisation set
 - WHEN `GET /api/aanbod` is called
 - THEN the response MUST be the empty-result envelope
 - AND no cross-organisation data MUST be returned
-

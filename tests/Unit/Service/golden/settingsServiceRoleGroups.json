@@ -1,0 +1,293 @@
+{
+    "updateGenericUserGroups / valid groups": {
+        "result": {
+            "success": true,
+            "message": "Generic user groups updated successfully",
+            "groups": [
+                "admin",
+                "team.a",
+                "x_y-z"
+            ]
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "generic_user_groups",
+                "[\"admin\",\"team.a\",\"x_y-z\"]"
+            ],
+            [
+                "log.info",
+                "Updated generic user groups configuration",
+                {
+                    "groups": [
+                        "admin",
+                        "team.a",
+                        "x_y-z"
+                    ]
+                }
+            ]
+        ]
+    },
+    "updateGenericUserGroups / no groups": {
+        "result": {
+            "success": true,
+            "message": "Generic user groups updated successfully",
+            "groups": []
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "generic_user_groups",
+                "[]"
+            ],
+            [
+                "log.info",
+                "Updated generic user groups configuration",
+                {
+                    "groups": []
+                }
+            ]
+        ]
+    },
+    "updateGenericUserGroups / invalid groups": {
+        "result": {
+            "success": false,
+            "message": "Invalid group names provided",
+            "validation": {
+                "valid": [
+                    "ok"
+                ],
+                "invalid": [
+                    "",
+                    "bad name",
+                    7,
+                    null
+                ],
+                "errors": [
+                    "Group name cannot be empty",
+                    "Group name 'bad name' contains invalid characters",
+                    "Group name cannot be empty",
+                    "Group name cannot be empty"
+                ]
+            }
+        },
+        "trace": []
+    },
+    "updateGenericUserGroups / config write fails": {
+        "result": {
+            "success": false,
+            "message": "Failed to update generic user groups: config down"
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "generic_user_groups",
+                "[\"admin\"]"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to update generic user groups",
+                {
+                    "exception": "config down"
+                }
+            ]
+        ]
+    },
+    "updateOrganizationAdminGroups / valid groups": {
+        "result": {
+            "success": true,
+            "message": "Organization admin groups updated successfully",
+            "groups": [
+                "admin",
+                "team.a",
+                "x_y-z"
+            ]
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "organization_admin_groups",
+                "[\"admin\",\"team.a\",\"x_y-z\"]"
+            ],
+            [
+                "log.info",
+                "Updated organization admin groups configuration",
+                {
+                    "groups": [
+                        "admin",
+                        "team.a",
+                        "x_y-z"
+                    ]
+                }
+            ]
+        ]
+    },
+    "updateOrganizationAdminGroups / no groups": {
+        "result": {
+            "success": true,
+            "message": "Organization admin groups updated successfully",
+            "groups": []
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "organization_admin_groups",
+                "[]"
+            ],
+            [
+                "log.info",
+                "Updated organization admin groups configuration",
+                {
+                    "groups": []
+                }
+            ]
+        ]
+    },
+    "updateOrganizationAdminGroups / invalid groups": {
+        "result": {
+            "success": false,
+            "message": "Invalid group names provided",
+            "validation": {
+                "valid": [
+                    "ok"
+                ],
+                "invalid": [
+                    "",
+                    "bad name",
+                    7,
+                    null
+                ],
+                "errors": [
+                    "Group name cannot be empty",
+                    "Group name 'bad name' contains invalid characters",
+                    "Group name cannot be empty",
+                    "Group name cannot be empty"
+                ]
+            }
+        },
+        "trace": []
+    },
+    "updateOrganizationAdminGroups / config write fails": {
+        "result": {
+            "success": false,
+            "message": "Failed to update organization admin groups: config down"
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "organization_admin_groups",
+                "[\"admin\"]"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to update organization admin groups",
+                {
+                    "exception": "config down"
+                }
+            ]
+        ]
+    },
+    "updateSuperUserGroups / valid groups": {
+        "result": {
+            "success": true,
+            "message": "Super user groups updated successfully",
+            "groups": [
+                "admin",
+                "team.a",
+                "x_y-z"
+            ]
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "super_user_groups",
+                "[\"admin\",\"team.a\",\"x_y-z\"]"
+            ],
+            [
+                "log.info",
+                "Updated super user groups configuration",
+                {
+                    "groups": [
+                        "admin",
+                        "team.a",
+                        "x_y-z"
+                    ]
+                }
+            ]
+        ]
+    },
+    "updateSuperUserGroups / no groups": {
+        "result": {
+            "success": true,
+            "message": "Super user groups updated successfully",
+            "groups": []
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "super_user_groups",
+                "[]"
+            ],
+            [
+                "log.info",
+                "Updated super user groups configuration",
+                {
+                    "groups": []
+                }
+            ]
+        ]
+    },
+    "updateSuperUserGroups / invalid groups": {
+        "result": {
+            "success": false,
+            "message": "Invalid group names provided",
+            "validation": {
+                "valid": [
+                    "ok"
+                ],
+                "invalid": [
+                    "",
+                    "bad name",
+                    7,
+                    null
+                ],
+                "errors": [
+                    "Group name cannot be empty",
+                    "Group name 'bad name' contains invalid characters",
+                    "Group name cannot be empty",
+                    "Group name cannot be empty"
+                ]
+            }
+        },
+        "trace": []
+    },
+    "updateSuperUserGroups / config write fails": {
+        "result": {
+            "success": false,
+            "message": "Failed to update super user groups: config down"
+        },
+        "trace": [
+            [
+                "config.set",
+                "stackiq",
+                "super_user_groups",
+                "[\"admin\"]"
+            ],
+            [
+                "log.error",
+                "SettingsService: Failed to update super user groups",
+                {
+                    "exception": "config down"
+                }
+            ]
+        ]
+    }
+}

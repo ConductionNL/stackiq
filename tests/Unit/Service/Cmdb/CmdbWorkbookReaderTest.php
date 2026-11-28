@@ -513,7 +513,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 * differently from PhpSpreadsheet charges the light entry: an entry of another namespace before the
 	 * headers (PhpSpreadsheet numbers only its own), a decoy `<v>` of another namespace before the real one
 	 * (PhpSpreadsheet reads only its own), a table whose part name does not end in `.xml`, and a `<v>` whose
-	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text).
+	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text), either way round.
 	 *
 	 * @return void
 	 */
@@ -528,6 +528,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 			'a decoy value of another namespace' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<o:v xmlns:o="urn:x">99</o:v><v>2</v>'),
 			'a table not named .xml' => self::sharedStringWorkbook(entry: $rich, cells: 50, part: 'sharedStrings.bin'),
 			'a value with a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">9</o:x>2</v>'),
+			'a value whose text is all in a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">2</o:x></v>'),
 		];
 		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
 		$reader = new class extends CmdbWorkbookReader {
@@ -924,7 +925,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheArchiveSheetYieldsItsAppIds(): void {
 		$result = $this->read(name: 'topdesk-export-anonymised.xlsx');
@@ -941,7 +942,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheArchivedApplicationsVariantListsOnlyTheArchive(): void {
 		$result = $this->read(name: 'topdesk-archived-applications.xlsx');
@@ -956,7 +957,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheArchiveSheetIsOptionalAndReadForItsKeyOnly(): void {
 		$this->requireSpreadsheet();
@@ -999,7 +1000,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAWorkbookWithSomeSourceSheetsNamesTheAbsentOnes(): void {
 		$this->requireSpreadsheet();
@@ -1034,7 +1035,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAnArchiveSheetOverTheRowLimitIsRefused(): void {
 		$this->requireSpreadsheet();
@@ -1066,7 +1067,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAnUncachedArchiveKeyIsListedNotDropped(): void {
 		$this->requireSpreadsheet();
@@ -1095,7 +1096,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAnEmptyCmdbRowWithAnUncachedKeyIsListed(): void {
 		$this->requireSpreadsheet();
@@ -1122,7 +1123,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAnArchiveSheetRowSpanBeyondTheLimitStopsBeforeLoading(): void {
 		$this->requireSpreadsheet();
@@ -1162,7 +1163,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testAnArchiveSheetPartBeyondThePartLimitIsRefusedNotBlanked(): void {
 		$this->requireSpreadsheet();
@@ -1205,7 +1206,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheReferencedStringBudgetIsDividedOverTheArchiveSheetToo(): void {
 		$this->requireSpreadsheet();
@@ -1235,7 +1236,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheDataPassAdmitsOnlyTheKeyColumnOfTheArchiveSheet(): void {
 		$this->requireSpreadsheet();
@@ -1272,7 +1273,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/archive/2026-11-24-cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function testTheArchiveSheetNameIsNullWhenTheProfileCannotNameOne(): void {
 		$this->requireSpreadsheet();
