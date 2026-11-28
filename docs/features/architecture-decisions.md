@@ -7,7 +7,7 @@
 
 An architecture decision records why your organisation chose one direction over another: the context, the decision, the options you did not choose and the consequences. A colleague reviews it before it counts, and each decision links to the applications in use and the GEMMA elements it affects.
 
-Specification: [`openspec/changes/architecture-decision-register`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/architecture-decision-register).
+Specification: [`openspec/changes/archive/2026-11-28-architecture-decision-register`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-11-28-architecture-decision-register).
 
 ## Recording a decision
 
