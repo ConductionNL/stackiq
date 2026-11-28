@@ -53,6 +53,7 @@
 - [x] Implement
 - [ ] Test (`tests/l10n` key parity, screenshots captured with Playwright)
   - 25 Nov 2026, live sandbox: `npm run test:l10n` OK; the three screenshots are in `docs/features/architecture-decisions.md` (`architecture-decision.png`, `architecture-decision-review.png` with the reviewer's Accept/Reject/Rework, `usage-architecture-decisions.png`). In Dutch every label and enum value reads in Dutch (Categorie Applicatie, Impact Hoog, Status In beoordeling) except the Alternatives table's column headers, which show the raw keys `option` and `reasonRejected` in every language: the data widget heads an array of objects with property keys, not the item schema's titles. Stays open until those headers read Option / Reason rejected (Optie / Reden van afwijzing).
+  - 28 Nov 2026: with @conduction/nextcloud-vue 2.234.0 (#2321) the data widget heads the table with the item schema's titles, so English reads Option / Reason rejected. The header is not run through the host translate (`objectArrayColumnLabel` in CnObjectDataWidget, still so in 2.244.1), so Dutch stays English until nextcloud-vue passes it through `cnTranslate`; the nl strings `Optie` and `Reden van afwijzing` are already in `l10n/nl.json`. Left: that library change, then the screenshots.
 
 ## Verification
 
