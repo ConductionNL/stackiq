@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -16,6 +18,7 @@ import { describe, expect, it } from 'vitest'
 import register from '../../lib/Settings/softwarecatalogus_register.json'
 import manifestSchema from '../../node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json'
 import { buildManifest } from '../../node_modules/@conduction/nextcloud-vue/src/utils/buildManifest.js'
+import { createConfirmationFor } from '../../node_modules/@conduction/nextcloud-vue/src/utils/createConfirmation.js'
 import * as icons from '../../src/icons.js'
 import base from '../../src/manifest.json'
 import menuLayout from '../../src/menu-layout.json'
@@ -71,6 +74,24 @@ describe('the compliance documents pages', () => {
 		const nl = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
 		expect(nl[rule.text]).toBeTruthy()
 		expect(nl[rule.confirmLabel]).toBeTruthy()
+	})
+
+	/**
+	 * @spec openspec/changes/sharing-compliance-documents/tasks.md#task-2
+	 */
+	it('the installed list widget asks the question only for a public pentest report', () => {
+		const list = page('ModuleDetail').config.widgets.find((w) => w.id === 'md-compliance-documents')
+		const rules = list.content.confirmCreate
+		const asked = createConfirmationFor(rules, { documentType: 'pentest report', audience: 'public' })
+		expect(asked).not.toBeNull()
+		expect(asked.text).toBe(rules[0].text)
+		expect(createConfirmationFor(rules, { documentType: 'pentest report', audience: 'government' })).toBeNull()
+		expect(createConfirmationFor(rules, { documentType: 'DPIA', audience: 'public' })).toBeNull()
+		const widget = fs.readFileSync(
+			path.resolve(__dirname, '../../node_modules/@conduction/nextcloud-vue/src/components/CnObjectListWidget/CnObjectListWidget.vue'),
+			'utf8',
+		)
+		expect(widget).toContain('confirmCreate')
 	})
 
 	it('offers a quick filter for every document type, on fields the schema has', () => {
