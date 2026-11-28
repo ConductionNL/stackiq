@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/architecture-decision-register/tasks.md#task-2-review-guard
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/tasks.md#task-2-review-guard
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

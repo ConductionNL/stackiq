@@ -15,9 +15,9 @@
  *
  * Written from the change's scenarios; not yet run against a live instance.
  *
- * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-001-an-information-manager-shall-record-an-architecture-decision-with-its-context-options-and-consequences
- * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
- * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-004-a-decision-shall-link-to-the-applications-and-elements-it-affects-and-to-board-decisions
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-001-an-information-manager-shall-record-an-architecture-decision-with-its-context-options-and-consequences
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-004-a-decision-shall-link-to-the-applications-and-elements-it-affects-and-to-board-decisions
  */
 import type { APIRequestContext, Browser, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'

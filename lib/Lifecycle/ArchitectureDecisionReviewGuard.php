@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) GuardResult's named constructors are OpenRegister's lifecycle-guard API.
  *
- * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
+ * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
  */
 class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	/**
@@ -90,7 +90,7 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/architecture-decision-register/tasks.md#task-2-review-guard
+	 * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/tasks.md#task-2-review-guard
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		return match ($action) {
@@ -109,7 +109,7 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/architecture-decision-register/tasks.md#task-2-review-guard
+	 * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/tasks.md#task-2-review-guard
 	 */
 	private function checkSubmit(string $reviewer, string $userId): GuardResult {
 		if ($reviewer === '') {
@@ -135,7 +135,7 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/architecture-decision-register/tasks.md#task-2-review-guard
+	 * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/tasks.md#task-2-review-guard
 	 */
 	private function checkConclude(string $reviewer, string $userId): GuardResult {
 		if ($reviewer === '' || $reviewer !== $userId) {
@@ -152,7 +152,7 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	 *
 	 * @return GuardResult
 	 *
-	 * @spec openspec/changes/architecture-decision-register/tasks.md#task-2-review-guard
+	 * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/tasks.md#task-2-review-guard
 	 */
 	private function checkSupersede(mixed $supersededBy): GuardResult {
 		if ($this->statusOf(decision: $supersededBy) !== self::ACCEPTED) {
@@ -216,7 +216,7 @@ class ArchitectureDecisionReviewGuard implements LifecycleGuardInterface {
 	 *
 	 * @return ObjectServiceInterface
 	 *
-	 * @spec openspec/changes/architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
+	 * @spec openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register/spec.md#requirement-req-adreg-002-a-decision-shall-be-reviewed-by-a-second-person-through-a-declared-lifecycle
 	 */
 	private function objectService(): ObjectServiceInterface {
 		return $this->container->get(ObjectServiceInterface::class);

@@ -7312,9 +7312,9 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-decision-register",
 				"requirement": [
-					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-001 An information manager SHALL record an architecture decision with its context, options and consequences",
-					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-002 A decision SHALL be reviewed by a second person through a declared lifecycle",
-					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-004 A decision SHALL link to the applications and elements it affects and to board decisions"
+					"openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-001 An information manager SHALL record an architecture decision with its context, options and consequences",
+					"openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-002 A decision SHALL be reviewed by a second person through a declared lifecycle",
+					"openspec/changes/archive/2026-11-28-architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-004 A decision SHALL link to the applications and elements it affects and to board decisions"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -7330,7 +7330,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'architecture decision' over src/ locales/glpi.pot returns nothing; the only status and review flow is ITIL approval on changes (src/ChangeValidation.php:39), not a decision record linked to applications.",
 				"topdesk": "unknown: architecture decisions are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/architecture-decision-register (OpenSpec pass 2026-09-27).",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/archive/2026-11-28-architecture-decision-register (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
