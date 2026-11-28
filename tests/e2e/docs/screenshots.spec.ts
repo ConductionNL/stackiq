@@ -44,7 +44,7 @@
  * @spec openspec/changes/archive/2026-11-25-architecture-views-to-office-documents/tasks.md
  * @spec openspec/changes/archive/2026-11-25-architecture-assistant-drafted-views/tasks.md
  * @spec openspec/changes/organisations-role-mapping-and-access-review/tasks.md
- * @spec openspec/changes/insight-knowledge-base/tasks.md
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/tasks.md
  * @spec openspec/changes/architecture-shared-usage-on-views/tasks.md
  */
 

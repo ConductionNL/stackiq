@@ -5651,15 +5651,15 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "insight-knowledge-base",
 				"requirement": [
-					"openspec/changes/insight-knowledge-base/specs/application-knowledge-base :: REQ-AKB-003 The Knowledge base page SHALL search the articles the user can read and open them in Collectives",
-					"openspec/changes/insight-knowledge-base/specs/application-knowledge-base :: REQ-AKB-001 The application detail page SHALL show the knowledge articles linked to the application"
+					"openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base :: REQ-AKB-003 The Knowledge base page SHALL search the articles the user can read and open them in Collectives",
+					"openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base :: REQ-AKB-001 The application detail page SHALL show the knowledge articles linked to the application"
 				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles. Specified in openspec/changes/insight-knowledge-base (OpenSpec pass 2026-09-27).",
+			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles. Specified in openspec/changes/archive/2026-11-28-insight-knowledge-base (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/KnowbaseItem.php:57 knowledge base articles with categories and visibility, linked to items through src/KnowbaseItem_Item.php:45 and shown on the appliance Knowledge base tab (src/Appliance.php:104); menu src/Html.php:1307. Reached on: Tools > Knowledge base (front/knowbaseitem.php). Driven on the lab at 11.0.9 (2026-09-26): /front/knowbaseitem.php opens the knowledge base with Search and Browse.",
 				"topdesk": "https://docs.topdesk.com/en/knowledge-management.html: \"The Knowledge Base is set up and managed by your organization's knowledge managers. Every operator is able to use information from the Knowledge Base\" (read 2026-09-26). Reached on: Modules > Knowledge Management.",

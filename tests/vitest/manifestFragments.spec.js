@@ -9,7 +9,7 @@
  * `kb-search` widget; these specs pin that configuration, and run the library's
  * own default provider against the OpenRegister page-search response shape.
  *
- * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md
+ * @spec openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md
  */
 
 import addFormats from 'ajv-formats'

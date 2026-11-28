@@ -9,7 +9,7 @@ Knowledge articles about an application, such as how it is set up, how to recove
 
 Stackiq keeps no copy of an article. The text, its history and its sharing are Collectives': who can read an article is decided by the membership of its collective, not by a stackiq role.
 
-Specification: [`openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md).
+Specification: [`openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md).
 
 ## Before you start
 

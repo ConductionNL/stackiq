@@ -3,7 +3,7 @@
 ## Implementation tasks
 
 ### Task 1: Put the Collectives leaf on the application page
-- **spec_ref**: openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-001-the-application-detail-page-shall-show-the-knowledge-articles-linked-to-the-application
+- **spec_ref**: openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-001-the-application-detail-page-shall-show-the-knowledge-articles-linked-to-the-application
 - **files**: `src/manifest.json`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN an application with a linked Collectives page WHEN /modules/:id opens THEN the Knowledge articles panel lists it with collective and last change
@@ -14,7 +14,7 @@
 - [x] Test (Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts) (verified live 28 Nov 2026, see Task 3)
 
 ### Task 2: Add the Knowledge base page and its menu entry under Applications
-- **spec_ref**: openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
+- **spec_ref**: openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
 - **files**: `src/manifest.d/insight-knowledge-base.json`, `src/menu-layout.json`, `tests/vitest/manifestFragments.spec.js`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the merged manifest WHEN it is built THEN KnowledgeBase exists at /knowledge with one kb-search widget whose endpoint is the OpenRegister collectives page search and whose queryParam is search
@@ -25,7 +25,7 @@
 - [x] Test (vitest tests/vitest/manifestFragments.spec.js and Playwright tests/e2e/spec-coverage/application-knowledge-base.spec.ts) (verified live 28 Nov 2026, see Task 3)
 
 ### Task 3: Document the knowledge base
-- **spec_ref**: openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken
+- **spec_ref**: openspec/changes/archive/2026-11-28-insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken
 - **files**: `docs/features/application-knowledge-base.md`
 - **acceptance_criteria**:
   - GIVEN the docs WHEN a reader opens the feature page THEN it explains that articles live in Collectives, shows the panel and the search page in screenshots, and says what an administrator installs first
@@ -40,7 +40,7 @@
     - ModuleDetail declared its own sidebar tabs, so the collectives leaf tab (link, create, unlink: REQ-AKB-002) never showed. It is now declared there like bookmarks.
     - The spec scrolls to the card, opens the sidebar and expands the Applications menu group first.
     - Creating a page needs openregister#11395. Collectives 4.x refuses parent 0 ('File not found: 0'); the page is now created under the landing page.
-  - The archive waits for that PR.
+  - The archive waited for that PR; it merged on 28 Nov 2026 (19:47Z).
 
 ## Verification
 
