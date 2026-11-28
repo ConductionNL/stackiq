@@ -28,7 +28,7 @@
       },
       "module": {
         "configuration": {
-          "linkedTypes": ["bookmarks"]
+          "linkedTypes": ["bookmarks", "collectives"]
         }
       },
       "catalogService": {

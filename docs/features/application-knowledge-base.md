@@ -23,9 +23,11 @@ Without Collectives the knowledge base is absent, not broken:
 
 ## Articles on the application page
 
-Open **Applications**, then an application. Below the other sections, the **Knowledge articles** panel lists the Collectives pages linked to this application, with their collective and last change. Choosing one opens it in Collectives.
+Open **Applications**, then an application. Below the other sections, the **Knowledge articles** panel lists the Collectives pages linked to this application, each with the collective it belongs to. Choosing one opens it in Collectives.
 
-From the panel an application owner can:
+![The Knowledge articles panel on an application, listing a linked article and its collective](../images/knowledge-articles.png)
+
+In the application's sidebar (open it with the button at the top right), the **Collectives** tab lets an application owner:
 
 - **link** an existing Collectives page they can read;
 - **create** a new page in one of their collectives, which is linked in the same step;
@@ -41,8 +43,10 @@ Open **Applications**, then **Knowledge base**. Type at least two characters in 
 
 The search matches titles only. To search the text of the articles, use the search in Collectives itself; the hint beside the search box links to it.
 
+![The Knowledge base page with a title search and its result](../images/knowledge-base-search.png)
+
 ## For administrators
 
-- The panel is OpenRegister's `collectives` integration: the links are stored by OpenRegister, per application.
+- The panel and the sidebar's **Collectives** tab are OpenRegister's `collectives` integration: the links are stored by OpenRegister, per application.
 - The search page calls OpenRegister's Collectives page search (`/apps/openregister/api/integrations/collectives/available?search=`).
-- Both are configuration in the app manifest (`src/manifest.json`, widget `md-knowledge`, and `src/manifest.d/insight-knowledge-base.json`); there is no stackiq schema, endpoint or setting for articles.
+- All of it is configuration in the app manifest (`src/manifest.json`: widget `md-knowledge` and the application page's sidebar tab `collectives`; `src/manifest.d/insight-knowledge-base.json`); there is no stackiq schema, endpoint or setting for articles.

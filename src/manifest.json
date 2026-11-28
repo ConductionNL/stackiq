@@ -608,6 +608,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "bookmarks", "label": "Bookmarks", "icon": "BookmarkOutline", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "bookmarks" } } ], "_note": "adopt-integration-leaves 3.1: the schema declares the bookmarks leaf in linkedTypes, and a page with its own sidebar tabs does not get the registry's leaf tabs, so the leaf is declared here." },
+						{ "id": "collectives", "label": "Collectives", "icon": "BookOpenVariant", "widgets": [ { "type": "IntegrationLeafTab", "props": { "integrationId": "collectives" } } ], "_note": "insight-knowledge-base REQ-AKB-002: the Knowledge articles card (md-knowledge) only lists the linked pages; linking an existing page, creating and linking a new one, and unlinking are the collectives leaf's tab, which a page with its own sidebar tabs only gets when it declares it, as for bookmarks." },
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit", "props": { "actionLabels": { "mcp.*": "Assistant: {toolId}" } } } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},

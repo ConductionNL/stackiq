@@ -31,7 +31,7 @@
  * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-003-the-knowledge-base-page-shall-search-the-articles-the-user-can-read-and-open-them-in-collectives
  * @spec openspec/changes/insight-knowledge-base/specs/application-knowledge-base/spec.md#requirement-req-akb-004-without-the-collectives-app-the-knowledge-base-must-be-absent-not-broken
  */
-import type { APIRequestContext, Page } from '@playwright/test'
+import type { APIRequestContext, Locator, Page } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
 
 import { expect, test } from '@playwright/test'
@@ -158,17 +158,30 @@ async function searchPages(term: string): Promise<LinkedPage[]> {
  */
 async function openCollectivesTab(page: Page): Promise<void> {
 	await gotoAppRoute(page, `/modules/${appId}`)
-	await page.getByRole('tab', { name: 'Collectives' }).first().click({ timeout: 30000 })
+	// The object sidebar opens collapsed.
+	const tab = page.getByRole('tab', { name: 'Collectives' }).first()
+	const openSidebar = page.getByRole('button', { name: 'Open sidebar' })
+	await expect(tab.or(openSidebar).first()).toBeVisible({ timeout: 30000 })
+	if (await openSidebar.isVisible()) {
+		await openSidebar.click()
+	}
+	await tab.click({ timeout: 30000 })
 }
 
 /**
- * The Knowledge articles card on the application page.
+ * The Knowledge articles card on the application page, scrolled into view.
+ *
+ * The card sits at the end of the page and loads once it is in view, so it is
+ * found by its widget group (`md-knowledge`) and scrolled to before use.
  *
  * @param page The page.
  * @return The card.
  */
-function knowledgeCard(page: Page) {
-	return page.locator('.cn-detail-card, [data-testid="cn-detail-widget-leaf-card"]').filter({ hasText: 'Knowledge articles' }).first()
+async function knowledgeCard(page: Page): Promise<Locator> {
+	const card = page.getByRole('group', { name: 'md-knowledge', exact: true })
+	await card.scrollIntoViewIfNeeded({ timeout: 30000 })
+	await expect(card.locator('.loading-icon')).toHaveCount(0, { timeout: 30000 })
+	return card
 }
 
 test.beforeAll(async () => {
@@ -206,7 +219,7 @@ test('the application page lists its linked article with its collective, beside 
 	test.skip(!collectivesEnabled, 'the Collectives app is not installed on this instance')
 	await gotoAppRoute(page, `/modules/${appId}`)
 
-	const card = knowledgeCard(page)
+	const card = await knowledgeCard(page)
 	await expect(card).toBeVisible({ timeout: 30000 })
 	await expect(card.getByRole('link', { name: restoreTitle })).toBeVisible({ timeout: 30000 })
 	await expect(card.getByText(collectiveName).first()).toBeVisible()
@@ -230,7 +243,7 @@ test('creating an article from the application page makes the page in Collective
 	await expect.poll(async () => (await searchPages(onboardingTitle)).map((found) => found.title), { timeout: 30000 }).toContain(onboardingTitle)
 
 	await gotoAppRoute(page, `/modules/${appId}`)
-	await expect(knowledgeCard(page).getByRole('link', { name: onboardingTitle })).toBeVisible({ timeout: 30000 })
+	await expect((await knowledgeCard(page)).getByRole('link', { name: onboardingTitle })).toBeVisible({ timeout: 30000 })
 })
 
 // @e2e application-knowledge-base::unlinking-keeps-the-article
@@ -247,8 +260,9 @@ test('unlinking an article removes it from the panel and the page still opens in
 	await expect(page.locator('.cn-collectives-tab__row').filter({ hasText: restoreTitle })).toHaveCount(0, { timeout: 30000 })
 
 	await gotoAppRoute(page, `/modules/${appId}`)
-	await expect(knowledgeCard(page)).toBeVisible({ timeout: 30000 })
-	await expect(knowledgeCard(page).getByRole('link', { name: restoreTitle })).toHaveCount(0)
+	const card = await knowledgeCard(page)
+	await expect(card).toBeVisible({ timeout: 30000 })
+	await expect(card.getByRole('link', { name: restoreTitle })).toHaveCount(0)
 
 	await page.goto(String(linked?.url), { waitUntil: 'domcontentloaded' })
 	await expect(page).toHaveURL(/\/apps\/collectives\//)
@@ -285,14 +299,15 @@ test('Knowledge base is a child of Applications in the menu, not a top-level ent
 	await nav.waitFor({ state: 'visible', timeout: 30000 })
 
 	const applications = nav.locator('li').filter({ has: page.getByRole('link', { name: 'Applications', exact: true }) }).first()
+	const knowledge = nav.getByRole('link', { name: 'Knowledge base', exact: true })
+	// The group opens collapsed, and a collapsed group renders no children.
+	if (!(await knowledge.isVisible().catch(() => false))) {
+		await applications.getByRole('button', { name: 'Open menu' }).first().click()
+	}
 	await expect(applications.getByRole('link', { name: 'Knowledge base', exact: true })).toHaveCount(1)
 	// Nested one list deeper than the top-level entries.
 	await expect(nav.locator('li li').filter({ has: page.getByRole('link', { name: 'Knowledge base', exact: true }) })).not.toHaveCount(0)
 
-	const knowledge = nav.getByRole('link', { name: 'Knowledge base', exact: true })
-	if (!(await knowledge.isVisible().catch(() => false))) {
-		await applications.getByRole('button', { name: 'Open menu' }).first().click()
-	}
 	await knowledge.click()
 	await expect(page).toHaveURL(/\/knowledge$/)
 })
@@ -301,7 +316,8 @@ test('Knowledge base is a child of Applications in the menu, not a top-level ent
 test('without Collectives the panel shows a set-up state naming it and the menu has no Knowledge base', async ({ page }) => {
 	test.skip(collectivesEnabled, 'the Collectives app is installed on this instance; this scenario needs an instance without it')
 	await gotoAppRoute(page, `/modules/${appId}`)
-	await expect(page.getByText('Collectives is not installed').first()).toBeVisible({ timeout: 30000 })
+	const card = await knowledgeCard(page)
+	await expect(card.getByText('Collectives is not installed').first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText('Documentation', { exact: true }).first()).toBeVisible()
 
 	await expect(appNav(page).getByRole('link', { name: 'Knowledge base', exact: true })).toHaveCount(0)

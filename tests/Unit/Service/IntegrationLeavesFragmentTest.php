@@ -94,6 +94,20 @@ final class IntegrationLeavesFragmentTest extends TestCase {
 	}//end testEverySchemaCarriesItsLeafOnce()
 
 	/**
+	 * The application also carries the collectives leaf, once: its Collectives
+	 * sidebar tab links, creates and unlinks knowledge articles.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/insight-knowledge-base/tasks.md
+	 */
+	public function testTheApplicationCarriesBookmarksAndCollectivesOnce(): void {
+		$linked = $this->mergedRegister()['components']['schemas']['module']['configuration']['linkedTypes'];
+
+		$this->assertSame(expected: ['bookmarks', 'collectives'], actual: $linked);
+	}//end testTheApplicationCarriesBookmarksAndCollectivesOnce()
+
+	/**
 	 * Merging the fragment over a contract with the full array would list the
 	 * decision leaf twice: lists concatenate, which is why the fragment adds
 	 * only the new leaf.
