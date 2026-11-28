@@ -299,14 +299,15 @@ test('Knowledge base is a child of Applications in the menu, not a top-level ent
 	await nav.waitFor({ state: 'visible', timeout: 30000 })
 
 	const applications = nav.locator('li').filter({ has: page.getByRole('link', { name: 'Applications', exact: true }) }).first()
+	const knowledge = nav.getByRole('link', { name: 'Knowledge base', exact: true })
+	// The group opens collapsed, and a collapsed group renders no children.
+	if (!(await knowledge.isVisible().catch(() => false))) {
+		await applications.getByRole('button', { name: 'Open menu' }).first().click()
+	}
 	await expect(applications.getByRole('link', { name: 'Knowledge base', exact: true })).toHaveCount(1)
 	// Nested one list deeper than the top-level entries.
 	await expect(nav.locator('li li').filter({ has: page.getByRole('link', { name: 'Knowledge base', exact: true }) })).not.toHaveCount(0)
 
-	const knowledge = nav.getByRole('link', { name: 'Knowledge base', exact: true })
-	if (!(await knowledge.isVisible().catch(() => false))) {
-		await applications.getByRole('button', { name: 'Open menu' }).first().click()
-	}
 	await knowledge.click()
 	await expect(page).toHaveURL(/\/knowledge$/)
 })
@@ -315,7 +316,8 @@ test('Knowledge base is a child of Applications in the menu, not a top-level ent
 test('without Collectives the panel shows a set-up state naming it and the menu has no Knowledge base', async ({ page }) => {
 	test.skip(collectivesEnabled, 'the Collectives app is installed on this instance; this scenario needs an instance without it')
 	await gotoAppRoute(page, `/modules/${appId}`)
-	await expect(page.getByText('Collectives is not installed').first()).toBeVisible({ timeout: 30000 })
+	const card = await knowledgeCard(page)
+	await expect(card.getByText('Collectives is not installed').first()).toBeVisible({ timeout: 30000 })
 	await expect(page.getByText('Documentation', { exact: true }).first()).toBeVisible()
 
 	await expect(appNav(page).getByRole('link', { name: 'Knowledge base', exact: true })).toHaveCount(0)
